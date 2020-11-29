@@ -1,6 +1,6 @@
 import React from "react";
-import { Navbar, Nav, NavDropdown, Form, FormControl, Button } from 'react-bootstrap'; // Check out drizzle's react components at @drizzle/react-components
-import { Link, NavLink } from 'react-router-dom'
+import { Navbar, Nav, NavDropdown, Dropdown } from 'react-bootstrap'; // Check out drizzle's react components at @drizzle/react-components
+import { Link, NavLink } from 'react-router-dom';
 
 class NavbarPage extends React.Component {
 
@@ -16,11 +16,23 @@ class NavbarPage extends React.Component {
                             <Nav.Link as={NavLink} to='/'>Home</Nav.Link>
                         </Nav>
                         <NavDropdown title="Upload" id="basic-nav-dropdown">
+
+
+                            {/*  <Link to="/uploadcard">
+                                <MenuItem href="/uploadcar">
+                                    Car
+                                </MenuItem>
+                            </Link>
+                            <Link to="/uploadskin">
+                                <MenuItem href="/uploadskin">
+                                    Skin
+                                </MenuItem>
+                            </Link> */}
                             <Nav>
-                                <Nav.Link as={NavLink} to='/uploadcar'>Car</Nav.Link>
+                                <Nav.Link as={NavLink} to='/uploadcar'><bold>Car</bold></Nav.Link>
                             </Nav>
                             <Nav>
-                                <Nav.Link as={NavLink} to='/uploadskin'>Skin</Nav.Link>
+                                <Nav.Link as={NavLink} to='/uploadskin'><bold>Skin</bold></Nav.Link>
                             </Nav>
                         </NavDropdown>
                     </Nav>
