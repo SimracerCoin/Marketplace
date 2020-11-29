@@ -1,16 +1,9 @@
 import React, { Component } from 'react';
 import { Button, Card, ListGroup } from 'react-bootstrap';
+import { Link } from 'react-router-dom';
+import { Redirect } from "react-router-dom";
+
 import "../css/mainpage.css";
-
-const listStyle = {
-    overflowY: "scroll",
-    border: '1px solid red',
-    width: '500px',
-    float: 'left',
-    height: '500px',
-    position: 'relative'
-}
-
 
 class MainPage extends Component {
 
@@ -22,6 +15,12 @@ class MainPage extends Component {
             drizzleState: props.drizzleState,
             listCars: [],
             listSkins: [],
+            redirectBuyItem: false,
+            selectedTrack: "",
+            selectedSimulator: "",
+            selectedSeason: "",
+            selectedPrice: "",
+            selectedCarBrand: "",
         }
 
     }
@@ -33,18 +32,19 @@ class MainPage extends Component {
         this.setState({ listCars: response_cars, listSkins: response_skins });
     }
 
-    getLists = async (event) => {
-        event.preventDefault();
-        for (const [index, value] of this.state.listCars.entries()) {
-            let ipfsHash = this.state.listCars[index].ipfsHash
-            let carBrand = this.state.listCars[index].carBrand
-            let track = this.state.listCars[index].track
-            let simulator = this.state.listCars[index].simulator
-            let season = this.state.listCars[index].season
-            let price = this.state.listCars[index].price
 
-            console.log(value)
-        }
+    buyItem = async (event, track, simulator, season, price, carBrand, address) => {
+        event.preventDefault();
+
+        this.setState({
+            redirectBuyItem: true,
+            selectedTrack: track,
+            selectedSimulator: simulator,
+            selectedSeason: season,
+            selectedPrice: price,
+            selectedCarBrand: carBrand,
+            vendorAddress: address
+        });
     }
 
 
@@ -53,28 +53,43 @@ class MainPage extends Component {
         const cars = [];
         const skins = [];
 
-        if (!this.state.listCars.isEmpty || !this.state.listSkins.isEmpty) {
+        if (this.state.redirectBuyItem == true) {
+            return (<Redirect
+                to={{
+                    pathname: "/item",
+                    state: {
+                        selectedTrack: this.state.selectedTrack,
+                        selectedSimulator: this.state.selectedSimulator,
+                        selectedSeason: this.state.selectedSeason,
+                        selectedPrice: this.state.selectedPrice,
+                        selectedCarBrand: this.state.selectedCarBrand,
+                    }
+                }}
+            />)
+        }
+
+        if (this.state.listCars != null || this.state.listSkins != null) {
 
             for (const [index, value] of this.state.listCars.entries()) {
-                let ipfsHash = value.ipfsHash
                 let carBrand = value.carBrand
                 let track = value.track
                 let simulator = value.simulator
                 let season = value.season
                 let price = value.price
+                let address = value._address
                 cars.push(
                     <ListGroup.Item key={index}>
-                        <Card style={{ width: '18rem' }} key={index}>
+                        <Card className="card-block" key={index}>
                             <Card.Body>
                                 <Card.Title>{carBrand}</Card.Title>
                                 <Card.Text>
-                                    <div><b>IPFS hash:</b> {ipfsHash}</div>
                                     <div><b>Track:</b> {track}</div>
                                     <div><b>Simulator:</b> {simulator}</div>
                                     <div><b>Season:</b> {season}</div>
                                     <div><b>Price:</b> {price}</div>
+                                    <div><b>Vendor address:</b> {address}</div>
                                 </Card.Text>
-                                {/*  <Button variant="primary">Go somewhere</Button> */}
+                                <Button variant="primary" onClick={(e) => this.buyItem(e, track, simulator, season, price, carBrand, address)}> Buy</Button>
                             </Card.Body>
                         </Card>
                     </ListGroup.Item>
@@ -82,48 +97,53 @@ class MainPage extends Component {
             }
 
             for (const [index, value] of this.state.listSkins.entries()) {
-                let ipfsHash = value.ipfsHash
                 let carBrand = value.carBrand
                 let simulator = value.simulator
                 let price = value.price
+                let address = value._address
                 skins.push(
                     <ListGroup.Item key={index}>
-                        <Card className="card">
+                        <Card className="card-block">
                             <Card.Body>
                                 <Card.Title>{carBrand}</Card.Title>
                                 <Card.Text>
-                                    <div><b>IPFS hash:</b> {ipfsHash}</div>
                                     <div><b>Simulator:</b> {simulator}</div>
                                     <div><b>Price:</b> {price}</div>
+                                    <div><b>Vendor address:</b> {address}</div>
                                 </Card.Text>
-                                {/*  <Button variant="primary">Go somewhere</Button> */}
+                                <Button variant="primary" onClick={(e) => this.buyItem(e, null, simulator, null, price, carBrand , address)}> Buy</Button>
                             </Card.Body>
                         </Card>
                     </ListGroup.Item>
                 )
             }
         }
+
         return (
             <div>
                 <div className="center-text">
                     <h1 >Items</h1>
                 </div>
-                <div>Available Cars</div>
-                <div style={{ listStyle }}>
-                    <ListGroup>
+                <div>
+                    <h4>Available Cars Setups</h4>
+                </div>
+                <div>
+                    <ListGroup className="list-group list-group-horizontal scrolling-wrapper">
                         {cars}
                     </ListGroup>
 
                 </div>
-                <div>Available Skins</div>
+                <br></br>
                 <div>
-                    <ListGroup bsStyle="default" className="list-group list-group-horizontal nopadding">
+                    <h4> Available Cars Skins</h4>
+                </div>
+                <div>
+                    <ListGroup className="list-group list-group-horizontal scrolling-wrapper">
                         {skins}
                     </ListGroup>
                 </div>
                 <br>
                 </br>
-                {/* <Button onClick={this.getLists}>Get list</Button> */}
             </div>
         );
     }

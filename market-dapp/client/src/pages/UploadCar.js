@@ -18,7 +18,7 @@ class UploadCar extends Component {
             currentSeason: null,
             currentFilePrice: null,
             contract: null,
-            ipfsHash: null,
+            ipfsHash: "",
             formIPFS: "",
             formAddress: "",
             receivedIPFS: ""
@@ -107,7 +107,6 @@ class UploadCar extends Component {
 
         const price = this.state.drizzle.web3.utils.toBN(this.state.currentFilePrice);
 
-        //document.getElementById('formInsertCar').reset()
         console.log("Current account: " + this.state.currentAccount);
         console.log("Current hash: " + this.state.ipfsHash);
         console.log("Current car: " + this.state.currentCar);
@@ -156,15 +155,14 @@ class UploadCar extends Component {
                             onChange={this.captureFile}
                         />
                         <br></br>
-                        <Button type="submit">Send It</Button>
+                        <Button type="submit">Generate IPFS Hash</Button>
                     </Form>
-                    <p> The IPFS hash is: {this.state.ipfsHash}</p>
                 </div>
                 <div>
                     <Form>
                         <Form.Group controlId="formInsertCar">
                             <Form.Label>Insert Car</Form.Label>
-                            <Form.Control type="text" placeholder="Enter IPFS Hash" onChange={this.handleChangeHash} />
+                            <Form.Control type="text" placeholder="Generate IPFS Hash" value={this.state.ipfsHash} onChange={this.handleChangeHash} readOnly/>
                             <br></br>
                             <Form.Control type="text" placeholder="Enter File Price" onChange={this.handleFilePrice} />
                             <br></br>

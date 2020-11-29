@@ -9,6 +9,8 @@ import MainPage from "./MainPage";
 import UploadCar from "./UploadCar";
 import UploadSkin from "./UploadSkin";
 import NavbarPage from "./NavbarPage";
+import RegisterVendor from "./RegisterVendor";
+import ItemPage from "./ItemPage";
 import { Navbar, Nav, NavDropdown, Form, FormControl } from 'react-bootstrap'; // Check out drizzle's react components at @drizzle/react-components
 
 
@@ -20,8 +22,6 @@ class RouterPage extends Component {
         this.state = {
             drizzle: props.drizzle,
             drizzleState: props.drizzleState,
-            listCars: null,
-            listSkins: null,
         }
 
     }
@@ -29,10 +29,6 @@ class RouterPage extends Component {
     componentDidMount = async () => {
         const contract = this.state.drizzle.contract;
         console.log(this.state.drizzle)
-        /*
-        const response_cars = await contract.methods.getCars().call();
-        const response_skins = await contract.methods.getSkins().call();
-        this.setState({ listCars: response_cars, listSkins: response_skins });*/
     }
 
 
@@ -47,6 +43,12 @@ class RouterPage extends Component {
                         </Route>
                         <Route exact path="/uploadskin">
                             <UploadSkin drizzle={this.state.drizzle} drizzleState={this.state.drizzleState} />
+                        </Route>
+                        <Route exact path="/registorvendor">
+                            <RegisterVendor drizzle={this.state.drizzle} drizzleState={this.state.drizzleState}/>
+                        </Route>
+                        <Route path="/item">
+                            <ItemPage drizzle={this.state.drizzle} drizzleState={this.state.drizzleState} />
                         </Route>
                         <Route exact
                             path="/"

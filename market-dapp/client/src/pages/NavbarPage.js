@@ -16,25 +16,21 @@ class NavbarPage extends React.Component {
                             <Nav.Link as={NavLink} to='/'>Home</Nav.Link>
                         </Nav>
                         <NavDropdown title="Upload" id="basic-nav-dropdown">
-
-
-                            {/*  <Link to="/uploadcard">
-                                <MenuItem href="/uploadcar">
+                            <Link to="/uploadcar">
+                                <NavDropdown.Item as="div">
                                     Car
-                                </MenuItem>
+                            </NavDropdown.Item>
                             </Link>
+
                             <Link to="/uploadskin">
-                                <MenuItem href="/uploadskin">
+                                <NavDropdown.Item as="div">
                                     Skin
-                                </MenuItem>
-                            </Link> */}
-                            <Nav>
-                                <Nav.Link as={NavLink} to='/uploadcar'><bold>Car</bold></Nav.Link>
-                            </Nav>
-                            <Nav>
-                                <Nav.Link as={NavLink} to='/uploadskin'><bold>Skin</bold></Nav.Link>
-                            </Nav>
+                            </NavDropdown.Item>
+                            </Link>
                         </NavDropdown>
+                        <Nav>
+                            <Nav.Link as={NavLink} to='/registorvendor'>Register</Nav.Link>
+                        </Nav>
                     </Nav>
                 </Navbar.Collapse>
             </Navbar>

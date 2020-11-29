@@ -10,6 +10,7 @@ contract IPFSInbox {
         string simulator;
         string season;
         uint256 price;
+        string _address;
     }
     
     struct skin {
@@ -17,6 +18,7 @@ contract IPFSInbox {
         string carBrand;
         string simulator;
         uint256 price;
+        string _address;
     }
     
     
@@ -47,7 +49,8 @@ contract IPFSInbox {
     
 
     function saveCar(address _address, string memory _ipfsHash, string memory _carBrand, string memory _track, string memory _simulator, string memory _season, uint256 _price) public {
-        carSetup memory car = carSetup(_ipfsHash, _carBrand, _track, _simulator, _season, _price);
+        string memory string_address = addressToString(_address);
+        carSetup memory car = carSetup(_ipfsHash, _carBrand, _track, _simulator, _season, _price, string_address);
         carsInbox[_address].push(car);
         carsCounter++;
         ipfsList.push(_ipfsHash);
@@ -62,7 +65,8 @@ contract IPFSInbox {
     
     
     function saveSkin(address _address, string memory _ipfsHash, string memory _carBrand, string memory _simulator, uint256 _price) public {
-        skin memory newSkin = skin(_ipfsHash, _carBrand,  _simulator, _price);
+        string memory string_address = addressToString(_address);
+        skin memory newSkin = skin(_ipfsHash, _carBrand,  _simulator, _price, string_address);
         skinsInbox[_address].push(newSkin);
         skinsCounter++;
         ipfsList.push(_ipfsHash);
@@ -71,6 +75,15 @@ contract IPFSInbox {
             userExists[_address] = true;
             userAddresses.push(_address);    
         }
+    }
+
+    function saveVendor(address _address) public returns(bool){
+        if(userExists[_address] == false) {
+            userExists[_address] = true;
+            userAddresses.push(_address);
+            return true;    
+        }
+        return false;
     }
     
     function getCars() public view returns(carSetup[] memory allCars){
@@ -102,6 +115,10 @@ contract IPFSInbox {
         }
         return skins;
     }
+
+    function isVendor(address _address) public view returns(bool) {
+        return userExists[_address];
+    }
     
     
     function getNumberVendors() public view returns(uint256) {
@@ -116,5 +133,18 @@ contract IPFSInbox {
         return skinsCounter;
     }
     
-    
+    function addressToString(address _addr) public pure returns(string memory) 
+    {
+        bytes32 value = bytes32(uint256(_addr));
+        bytes memory alphabet = "0123456789abcdef";
+
+        bytes memory str = new bytes(51);
+        str[0] = '0';
+        str[1] = 'x';
+        for (uint256 i = 0; i < 20; i++) {
+            str[2+i*2] = alphabet[uint8(value[i + 12] >> 4)];
+            str[3+i*2] = alphabet[uint8(value[i + 12] & 0x0f)];
+        }
+        return string(str);
+    }
 }
