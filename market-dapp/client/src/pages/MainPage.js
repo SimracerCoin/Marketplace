@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { Button, Card, ListGroup } from 'react-bootstrap';
+import "../css/mainpage.css";
 
 const listStyle = {
     overflowY: "scroll",
@@ -34,11 +35,6 @@ class MainPage extends Component {
 
     getLists = async (event) => {
         event.preventDefault();
-        /*    console.log(this.state.listCars);
-           console.log(this.state.listSkins);
-           console.log(this.state.drizzle.contracts.IPFSInbox) */
-        /*         console.log(this.state.listCars.entries())
-         */
         for (const [index, value] of this.state.listCars.entries()) {
             let ipfsHash = this.state.listCars[index].ipfsHash
             let carBrand = this.state.listCars[index].carBrand
@@ -92,7 +88,7 @@ class MainPage extends Component {
                 let price = value.price
                 skins.push(
                     <ListGroup.Item key={index}>
-                        <Card style={{ width: '18rem' }} key={index}>
+                        <Card className="card">
                             <Card.Body>
                                 <Card.Title>{carBrand}</Card.Title>
                                 <Card.Text>
@@ -109,6 +105,9 @@ class MainPage extends Component {
         }
         return (
             <div>
+                <div className="center-text">
+                    <h1 >Items</h1>
+                </div>
                 <div>Available Cars</div>
                 <div style={{ listStyle }}>
                     <ListGroup>
@@ -118,7 +117,7 @@ class MainPage extends Component {
                 </div>
                 <div>Available Skins</div>
                 <div>
-                    <ListGroup>
+                    <ListGroup bsStyle="default" className="list-group list-group-horizontal nopadding">
                         {skins}
                     </ListGroup>
                 </div>

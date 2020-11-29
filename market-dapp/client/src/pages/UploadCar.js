@@ -35,7 +35,7 @@ class UploadCar extends Component {
     componentDidMount = async () => {
         const currentAccount = this.state.drizzleState.accounts[0];
         const contract = this.state.drizzle.contracts.IPFSInbox;
-        this.setState({ currentAccount, contract });
+        this.setState({ currentAccount: currentAccount, contract: contract });
     };
 
 

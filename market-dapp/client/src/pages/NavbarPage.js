@@ -7,7 +7,7 @@ class NavbarPage extends React.Component {
 
     render() {
         return (
-            <Navbar bg="light" expand="lg">
+            <Navbar className="navbar navbar-expand-lg navbar-dark bg-dark border-nav zi-3" expand="lg">
                 <Navbar.Brand href="/">Market DApp</Navbar.Brand>
                 <Navbar.Toggle aria-controls="basic-navbar-nav" />
                 <Navbar.Collapse id="basic-navbar-nav">
