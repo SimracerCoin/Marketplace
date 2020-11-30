@@ -36,7 +36,7 @@ class RouterPage extends Component {
         return (
             <div>
                 <Router>
-                    <NavbarPage />
+                    <NavbarPage drizzle={this.state.drizzle} drizzleState={this.state.drizzleState}/>
                     <Switch>
                         <Route exact path="/uploadcar">
                             <UploadCar drizzle={this.state.drizzle} drizzleState={this.state.drizzleState} />

@@ -17,6 +17,7 @@ class ItemPage extends Component {
             season: props.location.state.selectedSeason,
             price: props.location.state.selectedPrice,
             car: props.location.state.selectedCarBrand,
+            vendorAddress: props.location.state.vendorAddress,
             contract: null,
             currentAccount: "",
         }
@@ -60,6 +61,7 @@ class ItemPage extends Component {
             item = "Skin"
             toRender = (
                 <div>
+                    <div><b>Seller:</b> {this.state.vendorAddress}</div>
                     <div><b>Car Brand:</b> {this.state.car}</div>
                     <div><b>Simulator:</b> {this.state.simulator}</div>
                     <div><b>Price:</b> {this.state.price}</div>
@@ -69,6 +71,7 @@ class ItemPage extends Component {
             item = "Car Setup"
             toRender = (
                 <div>
+                    <div><b>Seller:</b> {this.state.vendorAddress}</div>
                     <div><b>Car Brand:</b> {this.state.car}</div>
                     <div><b>Track:</b> {this.state.track}</div>
                     <div><b>Simulator:</b> {this.state.simulator}</div>

@@ -22,6 +22,7 @@ class MainPage extends Component {
             selectedSeason: "",
             selectedPrice: "",
             selectedCarBrand: "",
+            vendorAddress: "",
         }
 
     }
@@ -66,6 +67,7 @@ class MainPage extends Component {
                         selectedSeason: this.state.selectedSeason,
                         selectedPrice: this.state.selectedPrice,
                         selectedCarBrand: this.state.selectedCarBrand,
+                        vendorAddress: this.state.vendorAddress,
                     }
                 }}
             />)
@@ -91,7 +93,7 @@ class MainPage extends Component {
                                     <div><b>Simulator:</b> {simulator}</div>
                                     <div><b>Season:</b> {season}</div>
                                     <div><b>Price:</b> {price}</div>
-                                    <div><b>Vendor address:</b> {address}</div>
+                                    {/* <div><b>Vendor address:</b> {address}</div> */}
                                 </Card.Text>
                                 <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, track, simulator, season, price, carBrand, address)}> Buy</Button>
                             </Card.Body>
@@ -114,7 +116,7 @@ class MainPage extends Component {
                                 <Card.Text>
                                     <div><b>Simulator:</b> {simulator}</div>
                                     <div><b>Price:</b> {price}</div>
-                                    <div><b>Vendor address:</b> {address}</div>
+                                    {/* <div><b>Vendor address:</b> {address}</div> */}
                                 </Card.Text>
                                 <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, price, carBrand , address)}> Buy</Button>
                             </Card.Body>
@@ -127,7 +129,9 @@ class MainPage extends Component {
         return (
             <div>
                 <div className="center-text">
-                    <h1 >Items</h1>
+                    <h1 >Welcome to Simthunder!</h1>
+                    <h2 >The largest marketplace for sim racing assets</h2>
+                    <h5> Buy, sell, discover, and trade sim racing goods</h5>
                 </div>
                 <div>
                     <h4>Latest Car Setups</h4>
