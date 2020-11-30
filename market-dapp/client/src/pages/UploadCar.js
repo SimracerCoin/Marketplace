@@ -115,7 +115,7 @@ class UploadCar extends Component {
         console.log("Current season: " + this.state.currentSeason);
         console.log("Current price: " + this.state.currentFilePrice);
 
-        const response = await this.state.contract.methods.saveCar(this.state.currentAccount, this.state.ipfsHash, this.state.currentCar, this.state.currentTrack,
+        const response = await this.state.contract.methods.newCarSetup(this.state.ipfsHash, this.state.currentCar, this.state.currentTrack,
             this.state.currentSimulator, this.state.currentSeason, price).send({ from: this.state.currentAccount });
         console.log(response);
     }

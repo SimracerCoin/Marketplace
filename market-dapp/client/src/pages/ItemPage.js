@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
 import { Button } from 'react-bootstrap';
 import { withRouter } from "react-router";
+import { confirmAlert } from 'react-confirm-alert';
+import 'react-confirm-alert/src/react-confirm-alert.css';
 
 class ItemPage extends Component {
 
@@ -29,7 +31,28 @@ class ItemPage extends Component {
     buyItem = async (event) => {
         event.preventDefault();
 
-        alert("Congratulations!")
+        /*
+
+        const response = await this.state.contract.methods.newCarSetup(this.state.ipfsHash, this.state.currentCar, this.state.currentTrack,
+            this.state.currentSimulator, this.state.currentSeason, price).send({ from: this.state.currentAccount });
+        console.log(response);
+
+        */
+
+        confirmAlert({
+            title: 'Review purchased item',
+            message: 'Review the purchased item and accept it or challenge the purchase if you found any issue. Purchase will be automatically accepted if not challenged within 10 minutes.',
+            buttons: [
+              {
+                label: 'Accept',
+                onClick: () => alert('Thank you for your purchase!')
+              },
+              {
+                label: 'Reject/Challenge',
+                onClick: () => alert('Seller will be notified.')
+              }
+            ]
+          });
     }
 
     render() {

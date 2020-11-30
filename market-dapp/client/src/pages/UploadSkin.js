@@ -101,7 +101,7 @@ class UploadSkin extends Component {
         console.log("Current simulator: " + this.state.currentSimulator);
         console.log("Current price: " + this.state.currentFilePrice);
 
-        const response = await this.state.contract.methods.saveSkin(this.state.currentAccount, this.state.ipfsHash, this.state.currentCar,
+        const response = await this.state.contract.methods.newSkin(this.state.ipfsHash, this.state.currentCar,
             this.state.currentSimulator, price).send({ from: this.state.currentAccount });
         console.log(response);
     }

@@ -27,7 +27,7 @@ class MainPage extends Component {
 
     componentDidMount = async () => {
         const contract = await this.state.drizzle.contracts.IPFSInbox
-        const response_cars = await contract.methods.getCars().call();
+        const response_cars = await contract.methods.getCarSetups().call();
         const response_skins = await contract.methods.getSkins().call();
         this.setState({ listCars: response_cars, listSkins: response_skins });
     }
