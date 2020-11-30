@@ -30,7 +30,7 @@ class UploadSkin extends Component {
 
     componentDidMount = async () => {
         const currentAccount = this.state.drizzleState.accounts[0];
-        const contract = this.state.drizzle.contracts.IPFSInbox;
+        const contract = this.state.drizzle.contracts.STMarketplace;
         this.setState({ currentAccount, contract });
     };
 

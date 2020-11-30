@@ -1,3 +1,3 @@
-var IPFSInbox = artifacts.require("./IPFSInbox.sol");module.exports = function(deployer) {
-  deployer.deploy(IPFSInbox);
+var STMarketplace = artifacts.require("./STMarketplace.sol");module.exports = function(deployer) {
+  deployer.deploy(STMarketplace);
 };

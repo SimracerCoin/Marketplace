@@ -18,9 +18,9 @@ This project has 2 folders - **backend** and **frontend**:
     
     **truffle migrate**
     
-4) Inside **build/contracts** folder copy **IPFSInbox.json**
+4) Inside **build/contracts** folder copy **STMarketplace.json**
 
-    **past IPFSInbox.json to folder --> client/src/**
+    **past STMarketplace.json to folder --> client/src/**
 
 5) Go to folder **client** and run command
 

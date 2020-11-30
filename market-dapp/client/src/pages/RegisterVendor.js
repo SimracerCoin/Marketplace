@@ -15,7 +15,7 @@ class RegisterVendor extends Component {
     }
 
     componentDidMount = async (event) => {
-        const contract = await this.state.drizzle.contracts.IPFSInbox;
+        const contract = await this.state.drizzle.contracts.STMarketplace;
         const currentAccount = await this.state.drizzleState.accounts[0];
         const isVendor = await contract.methods.isVendor(currentAccount).call();
         

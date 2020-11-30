@@ -1,11 +1,11 @@
 import React from 'react';
 import { DrizzleContext } from "@drizzle/react-plugin";
 import { Drizzle } from "@drizzle/store";
-import IPFSInbox from "./IPFSInbox.json";
+import STMarketplace from "./STMarketplace.json";
 import RouterPage from "./pages/RouterPage";
 
 const drizzleOptions = {
-  contracts: [IPFSInbox]
+  contracts: [STMarketplace]
 };
 
 const drizzle = new Drizzle(drizzleOptions);

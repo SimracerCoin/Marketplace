@@ -1,7 +1,7 @@
 pragma solidity ^0.5.1;
 pragma experimental ABIEncoderV2;
 
-contract IPFSInbox {    
+contract STMarketplace {    
     
     struct carSetup {
         uint256 itemId;
@@ -47,7 +47,7 @@ contract IPFSInbox {
 
     mapping (address => purchase[]) purchasesBySeller;
 
-    // Events
+    /// @notice Events
     event ipfsSaved(string _ipfsHash, address _address);
     event carSetupSaved(address _address, string _ipfsHash, string _carBrand, string _track, string _simulator, string _season, uint256 _price);
     event skinSaved(address _address, string _ipfsHash, string _carBrand, string _simulator, uint256 _price);
@@ -102,6 +102,7 @@ contract IPFSInbox {
         return purchaseId;
     }
 
+    /// @notice saves seller
     function saveSeller(address _address) public returns(bool){
         if(userExists[_address] == false) {
             userExists[_address] = true;
@@ -111,6 +112,7 @@ contract IPFSInbox {
         return false;
     }
     
+    /// @notice get the list of all car setup files
     function getCarSetups() public view returns(carSetup[] memory allCars){
         carSetup[] memory cars = new carSetup[](carSetupCounter);
         uint256 i = 0;
@@ -126,6 +128,7 @@ contract IPFSInbox {
         return cars;
     }
     
+    /// @notice get the list of all skin files
     function getSkins() public view returns(skin[] memory allSkins){
         skin[] memory skins = new skin[](skinsCounter);
         uint256 i = 0;

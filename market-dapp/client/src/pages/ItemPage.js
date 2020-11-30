@@ -24,7 +24,7 @@ class ItemPage extends Component {
     }
 
     componentDidMount = async (event) => {
-        const contract = await this.state.drizzle.contracts.IPFSInbox;
+        const contract = await this.state.drizzle.contracts.STMarketplace;
         const currentAccount = this.state.drizzleState.accounts[0];
         this.setState({ currentAccount: currentAccount, contract: contract });
     }
