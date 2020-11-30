@@ -11,6 +11,7 @@ class ItemPage extends Component {
         this.state = {
             drizzle: props.drizzle,
             drizzleState: props.drizzleState,
+            itemId: props.location.state.selectedItemId,
             track: props.location.state.selectedTrack,
             simulator: props.location.state.selectedSimulator,
             season: props.location.state.selectedSeason,
@@ -25,19 +26,14 @@ class ItemPage extends Component {
     componentDidMount = async (event) => {
         const contract = await this.state.drizzle.contracts.IPFSInbox;
         const currentAccount = this.state.drizzleState.accounts[0];
-
+        this.setState({ currentAccount: currentAccount, contract: contract });
     }
 
     buyItem = async (event) => {
         event.preventDefault();
 
-        /*
-
-        const response = await this.state.contract.methods.newCarSetup(this.state.ipfsHash, this.state.currentCar, this.state.currentTrack,
-            this.state.currentSimulator, this.state.currentSeason, price).send({ from: this.state.currentAccount });
+        const response = await this.state.contract.methods.purchaseRequest(this.state.itemId).send({ from: this.state.currentAccount });
         console.log(response);
-
-        */
 
         confirmAlert({
             title: 'Review purchased item',

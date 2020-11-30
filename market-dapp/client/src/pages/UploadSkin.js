@@ -104,6 +104,8 @@ class UploadSkin extends Component {
         const response = await this.state.contract.methods.newSkin(this.state.ipfsHash, this.state.currentCar,
             this.state.currentSimulator, price).send({ from: this.state.currentAccount });
         console.log(response);
+
+        alert("The new skin is available for sale!");
     }
 
     render() {
@@ -128,7 +130,7 @@ class UploadSkin extends Component {
         return (
             <div className="App">
                 <div>
-                    <h2> Add file to IPFS </h2>
+                    <h2> Add new Car Skin for sale </h2>
                     <Form onSubmit={this.onIPFSSubmit}>
                         <input
                             type="file"
@@ -143,9 +145,9 @@ class UploadSkin extends Component {
                     <Form>
                         <Form.Group controlId="formInsertCar">
                             <Form.Label>Insert Car</Form.Label>
-                            <Form.Control type="text" placeholder="Generate IPFS Hash" value={this.state.ipfsHash} readonly />
+                            <Form.Control type="text" placeholder="Generate IPFS Hash" value={this.state.ipfsHash} onChange={this.handleChangeHash} readOnly/>
                             <br></br>
-                            <Form.Control type="text" placeholder="Enter File Price" onChange={this.handleFilePrice} />
+                            <Form.Control type="number" placeholder="Enter File Price" onChange={this.handleFilePrice} />
                             <br></br>
                             <DropdownButton id="dropdown-cars-button" title={this.state.currentCar} onSelect={this.onSelectCar}>
                                 {cars}

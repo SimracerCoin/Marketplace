@@ -16,6 +16,7 @@ class MainPage extends Component {
             listCars: [],
             listSkins: [],
             redirectBuyItem: false,
+            selectedItemId: "",
             selectedTrack: "",
             selectedSimulator: "",
             selectedSeason: "",
@@ -33,11 +34,12 @@ class MainPage extends Component {
     }
 
 
-    buyItem = async (event, track, simulator, season, price, carBrand, address) => {
+    buyItem = async (event, itemId, track, simulator, season, price, carBrand, address) => {
         event.preventDefault();
 
         this.setState({
             redirectBuyItem: true,
+            selectedItemId: itemId,
             selectedTrack: track,
             selectedSimulator: simulator,
             selectedSeason: season,
@@ -58,6 +60,7 @@ class MainPage extends Component {
                 to={{
                     pathname: "/item",
                     state: {
+                        selectedItemId: this.state.selectedItemId,
                         selectedTrack: this.state.selectedTrack,
                         selectedSimulator: this.state.selectedSimulator,
                         selectedSeason: this.state.selectedSeason,
@@ -77,6 +80,7 @@ class MainPage extends Component {
                 let season = value.season
                 let price = value.price
                 let address = value._address
+                let itemId = value.itemId
                 cars.push(
                     <ListGroup.Item key={index}>
                         <Card className="card-block" key={index}>
@@ -89,7 +93,7 @@ class MainPage extends Component {
                                     <div><b>Price:</b> {price}</div>
                                     <div><b>Vendor address:</b> {address}</div>
                                 </Card.Text>
-                                <Button variant="primary" onClick={(e) => this.buyItem(e, track, simulator, season, price, carBrand, address)}> Buy</Button>
+                                <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, track, simulator, season, price, carBrand, address)}> Buy</Button>
                             </Card.Body>
                         </Card>
                     </ListGroup.Item>
@@ -101,6 +105,7 @@ class MainPage extends Component {
                 let simulator = value.simulator
                 let price = value.price
                 let address = value._address
+                let itemId = value.itemId
                 skins.push(
                     <ListGroup.Item key={index}>
                         <Card className="card-block">
@@ -111,7 +116,7 @@ class MainPage extends Component {
                                     <div><b>Price:</b> {price}</div>
                                     <div><b>Vendor address:</b> {address}</div>
                                 </Card.Text>
-                                <Button variant="primary" onClick={(e) => this.buyItem(e, null, simulator, null, price, carBrand , address)}> Buy</Button>
+                                <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, price, carBrand , address)}> Buy</Button>
                             </Card.Body>
                         </Card>
                     </ListGroup.Item>
@@ -125,7 +130,7 @@ class MainPage extends Component {
                     <h1 >Items</h1>
                 </div>
                 <div>
-                    <h4>Available Cars Setups</h4>
+                    <h4>Latest Car Setups</h4>
                 </div>
                 <div>
                     <ListGroup className="list-group list-group-horizontal scrolling-wrapper">
@@ -135,7 +140,7 @@ class MainPage extends Component {
                 </div>
                 <br></br>
                 <div>
-                    <h4> Available Cars Skins</h4>
+                    <h4>Latest Car Skins</h4>
                 </div>
                 <div>
                     <ListGroup className="list-group list-group-horizontal scrolling-wrapper">

@@ -118,6 +118,8 @@ class UploadCar extends Component {
         const response = await this.state.contract.methods.newCarSetup(this.state.ipfsHash, this.state.currentCar, this.state.currentTrack,
             this.state.currentSimulator, this.state.currentSeason, price).send({ from: this.state.currentAccount });
         console.log(response);
+
+        alert("The new car setup is available for sale!");
     }
 
     render() {
@@ -148,7 +150,7 @@ class UploadCar extends Component {
         return (
             <div className="App">
                 <div>
-                    <h2> Add file to IPFS </h2>
+                    <h2> Add new Car Setup for sale </h2>
                     <Form onSubmit={this.onIPFSSubmit}>
                         <input
                             type="file"
@@ -161,7 +163,7 @@ class UploadCar extends Component {
                 <div>
                     <Form>
                         <Form.Group controlId="formInsertCar">
-                            <Form.Label>Insert Car</Form.Label>
+                            <Form.Label>Car Setup data</Form.Label>
                             <Form.Control type="text" placeholder="Generate IPFS Hash" value={this.state.ipfsHash} onChange={this.handleChangeHash} readOnly/>
                             <br></br>
                             <Form.Control type="text" placeholder="Enter File Price" onChange={this.handleFilePrice} />
