@@ -3723,6 +3723,15 @@ input[type="button"].btn-block {
     color: #ffffff;
     background-color: #00a8ff;
     border-color: #00a8ff; }
+  .list-group-item div, .list-group-item div.h5 {
+    color: #757575!important;
+  }
+  .list-group-item .card-body {
+    text-align: center;
+  }
+  .list-group-item .card-body .card-text {
+    text-align: left;
+  }
 
 .list-group-flush .list-group-item {
   border-right: 0;
@@ -20315,3 +20324,11 @@ ul.list-style-square {
   margin-right: 2.25rem !important; }
 
 /*# sourceMappingURL=main.css.map */
+
+#latest-container .list-group {
+  flex-direction: row;
+}
+#latest-container .list-group-item {
+  margin-left: 0.5rem;
+  width: 320px;
+}

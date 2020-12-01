@@ -148,46 +148,50 @@ class UploadCar extends Component {
 
 
         return (
-            <div className="App">
-                <div>
-                    <h2> Add new Car Setup for sale </h2>
-                    <Form onSubmit={this.onIPFSSubmit}>
-                        <input
-                            type="file"
-                            onChange={this.captureFile}
-                        />
-                        <br></br>
-                        <Button type="submit">Generate IPFS Hash</Button>
-                    </Form>
-                </div>
-                <div>
-                    <Form>
-                        <Form.Group controlId="formInsertCar">
-                            <Form.Label>Car Setup data</Form.Label>
-                            <Form.Control type="text" placeholder="Generate IPFS Hash" value={this.state.ipfsHash} onChange={this.handleChangeHash} readOnly/>
-                            <br></br>
-                            <Form.Control type="text" placeholder="Enter File Price" onChange={this.handleFilePrice} />
-                            <br></br>
-                            <Form.Control type="text" placeholder="Enter Season" onChange={this.handleSeason} />
-                            <br></br>
-                            <DropdownButton id="dropdown-cars-button" title={this.state.currentCar} onSelect={this.onSelectCar}>
-                                {cars}
-                            </DropdownButton>
-                            <br></br>
-                            <DropdownButton id="dropdown-track-button" title={this.state.currentTrack} onSelect={this.onSelectTrack}>
-                                {tracks}
-                            </DropdownButton>
-                            <br></br>
-                            <DropdownButton id="dropdown-skin-button" title={this.state.currentSimulator} onSelect={this.onSelectSim}>
-                                {sims}
-                            </DropdownButton>
-                        </Form.Group>
-                    </Form>
-                </div>
-                <div>
-                    <Button onClick={this.saveCar}>Save Car</Button>
-                </div>
-            </div>
+            <header className="header">
+                <section className="content-section text-light br-n bs-c bp-c pb-8" style={{ backgroundImage: 'url(\'/assets/img/bg/bg_shape.png\')' }}>
+                    <div className="container">
+                        <div>
+                            <h2> Add new Car Setup for sale </h2>
+                            <Form onSubmit={this.onIPFSSubmit}>
+                                <input
+                                    type="file"
+                                    onChange={this.captureFile}
+                                />
+                                <br></br>
+                                <Button type="submit">Generate IPFS Hash</Button>
+                            </Form>
+                        </div>
+                        <div>
+                            <Form>
+                                <Form.Group controlId="formInsertCar">
+                                    <Form.Label>Car Setup data</Form.Label>
+                                    <Form.Control type="text" placeholder="Generate IPFS Hash" value={this.state.ipfsHash} onChange={this.handleChangeHash} readOnly />
+                                    <br></br>
+                                    <Form.Control type="text" placeholder="Enter File Price" onChange={this.handleFilePrice} />
+                                    <br></br>
+                                    <Form.Control type="text" placeholder="Enter Season" onChange={this.handleSeason} />
+                                    <br></br>
+                                    <DropdownButton id="dropdown-cars-button" title={this.state.currentCar} onSelect={this.onSelectCar}>
+                                        {cars}
+                                    </DropdownButton>
+                                    <br></br>
+                                    <DropdownButton id="dropdown-track-button" title={this.state.currentTrack} onSelect={this.onSelectTrack}>
+                                        {tracks}
+                                    </DropdownButton>
+                                    <br></br>
+                                    <DropdownButton id="dropdown-skin-button" title={this.state.currentSimulator} onSelect={this.onSelectSim}>
+                                        {sims}
+                                    </DropdownButton>
+                                </Form.Group>
+                            </Form>
+                        </div>
+                        <div>
+                            <Button onClick={this.saveCar}>Save Car</Button>
+                        </div>
+                    </div>
+                </section>
+            </header>
         );
     }
 }

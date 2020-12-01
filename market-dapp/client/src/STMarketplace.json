@@ -17166,12 +17166,12 @@
         }
       },
       "links": {},
-      "address": "0x04a727bE65DceD725cd6E4d3d0e037177B718E44",
-      "transactionHash": "0xccb11a0f6d90a750de00d9162d53b77e7b0cd976de73c912233cad34e546a8b7"
+      "address": "0x638d0d3bdd0eec5d775d7124459b0324e04FfEC8",
+      "transactionHash": "0x6efdae1f9869c364003326b6e886975370dc84778352323d55a675f23f6493a6"
     }
   },
   "schemaVersion": "3.3.2",
-  "updatedAt": "2020-11-30T23:25:25.058Z",
+  "updatedAt": "2020-12-01T03:42:49.667Z",
   "networkType": "ethereum",
   "devdoc": {
     "methods": {}

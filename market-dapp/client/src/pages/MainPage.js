@@ -128,12 +128,12 @@ class MainPage extends Component {
 
         return (
             <header className="header">
-                <section className="content-section text-light br-n bs-c bp-c pb-8" style={{backgroundImage: 'url(\'/assets/img/bg/bg-5.jpg\')'}}>
-                    <div className="container">
+                <section className="content-section text-light br-n bs-c bp-c pb-8" style={{backgroundImage: 'url(\'/assets/img/bg/bg_shape.png\')'}}>
+                    <div id="latest-container" className="container">
                         <div className="center-text">
                             <h1>Welcome to Simthunder!</h1>
                             <h2>The largest marketplace for sim racing assets</h2>
-                            <h5> Buy, sell, discover, and trade sim racing goods</h5>
+                            <h5>Buy, sell, discover, and trade sim racing goods</h5>
                         </div>
                         <div>
                             <h4>Latest Car Setups</h4>
