@@ -2,12 +2,12 @@
 Sim racing assets marketplace DApp powered by Simracer Coin
 
 ## Introduction
-The marketplace DApp and contracts are in the markep-dapp folder. 
+The marketplace DApp and contracts are in the market-dapp folder. 
 
-This project has 2 folders - **backend** and **frontend**:
+This project has 2 folders, **backend** and **frontend**:
     
-    -**backend**: Has all files related to smart contracts and IPFS
-    -**frontend**: Has all **react** files
+    **backend**: Has all files related to smart contracts and IPFS
+    **frontend**: Has all **react** files
     
 ##### How to run project
 1) Install truffle 
