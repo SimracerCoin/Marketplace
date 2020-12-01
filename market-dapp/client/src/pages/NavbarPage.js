@@ -35,26 +35,26 @@ class NavbarPage extends React.Component {
                 <Navbar.Toggle aria-controls="basic-navbar-nav" />
                 <Navbar.Collapse id="basic-navbar-nav">
                     <Nav className="mr-auto">
-                        <Nav>
-                            <Nav.Link as={NavLink} to='/'>Home</Nav.Link>
-                        </Nav>
-                        <NavDropdown title="Sell" id="basic-nav-dropdown">
+                        {/* <Nav>
+                            <Nav.Link as={NavLink} to='/'>Browse</Nav.Link>
+                        </Nav> */}
+                        <NavDropdown title={this.state.currentAccount} id="basic-nav-dropdown">
                             <Link to="/uploadcar">
                                 <NavDropdown.Item as="div">
-                                    Car Setup
+                                    Sell Car Setup
                             </NavDropdown.Item>
                             </Link>
 
                             <Link to="/uploadskin">
                                 <NavDropdown.Item as="div">
-                                    Skin
+                                    Sell Skin
                             </NavDropdown.Item>
                             </Link>
                         </NavDropdown>
                         {/* <Nav>
                             <Nav.Link as={NavLink} to='/registorvendor'>Register</Nav.Link>
                         </Nav> */}
-                        <Navbar.Text>{this.state.currentAccount}</Navbar.Text>
+                        {/* <Navbar.Text>{this.state.currentAccount}</Navbar.Text> */}
                     </Nav>
                 </Navbar.Collapse>
             </Navbar>

@@ -99,12 +99,14 @@ class MainPage extends Component {
                                     <div><b>Price:</b> {price}</div>
                                     {/* <div><b>Vendor address:</b> {address}</div> */}
                                 </Card.Text>
-                                <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, track, simulator, season, price, carBrand, address, ipfsHash)}> Buy</Button>
+                                <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, track, simulator, season, price, carBrand, address, ipfsHash)}> View item</Button>
                             </Card.Body>
                         </Card>
                     </ListGroup.Item>
                 )
             }
+
+            cars.reverse();
 
             for (const [index, value] of this.state.listSkins.entries()) {
                 let carBrand = value.carBrand
@@ -123,12 +125,14 @@ class MainPage extends Component {
                                     <div><b>Price:</b> {price}</div>
                                     {/* <div><b>Vendor address:</b> {address}</div> */}
                                 </Card.Text>
-                                <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, price, carBrand , address, ipfsHash)}> Buy</Button>
+                                <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, price, carBrand , address, ipfsHash)}> View item</Button>
                             </Card.Body>
                         </Card>
                     </ListGroup.Item>
                 )
             }
+
+            skins.reverse();
         }
 
         return (
