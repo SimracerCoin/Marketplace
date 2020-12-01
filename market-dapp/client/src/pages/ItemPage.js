@@ -40,16 +40,16 @@ class ItemPage extends Component {
             title: 'Review purchased item',
             message: 'Review the purchased item and accept it or challenge the purchase if you found any issue. Purchase will be automatically accepted if not challenged within 10 minutes.',
             buttons: [
-              {
-                label: 'Accept',
-                onClick: () => alert('Thank you for your purchase!')
-              },
-              {
-                label: 'Reject/Challenge',
-                onClick: () => alert('Seller will be notified.')
-              }
+                {
+                    label: 'Accept',
+                    onClick: () => alert('Thank you for your purchase!')
+                },
+                {
+                    label: 'Reject/Challenge',
+                    onClick: () => alert('Seller will be notified.')
+                }
             ]
-          });
+        });
     }
 
     render() {
@@ -82,13 +82,17 @@ class ItemPage extends Component {
         }
 
         return (
-            <div>
-                <h1>Buy {item}</h1>
-                <br></br>
-                {toRender}
-                <br></br>
-                <Button onClick={this.buyItem}>Buy Item</Button>
-            </div>
+            <header className="header">
+                <section className="content-section text-light br-n bs-c bp-c pb-8" style={{ backgroundImage: 'url(\'/assets/img/bg/bg_shape.png\')' }}>
+                    <div className="container">
+                        <h1>Buy {item}</h1>
+                        <br></br>
+                        {toRender}
+                        <br></br>
+                        <Button onClick={this.buyItem}>Buy Item</Button>
+                    </div>
+                </section>
+            </header>
 
         )
     }
