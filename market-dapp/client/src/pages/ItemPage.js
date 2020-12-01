@@ -3,6 +3,8 @@ import { Button } from 'react-bootstrap';
 import { withRouter } from "react-router";
 import { confirmAlert } from 'react-confirm-alert';
 import 'react-confirm-alert/src/react-confirm-alert.css';
+import ipfs from "../ipfs";
+const BufferList = require('bl/BufferList');
 
 class ItemPage extends Component {
 
@@ -18,6 +20,7 @@ class ItemPage extends Component {
             price: props.location.state.selectedPrice,
             car: props.location.state.selectedCarBrand,
             vendorAddress: props.location.state.vendorAddress,
+            ipfsHash: props.location.state.ipfsHash,
             contract: null,
             currentAccount: "",
         }
@@ -35,6 +38,19 @@ class ItemPage extends Component {
 
         const response = await this.state.contract.methods.purchaseRequest(this.state.itemId).send({ from: this.state.currentAccount });
         console.log(response);
+
+        // const responseFile = await ipfs.get(this.state.ipfsHash);
+        // for await (const file of ipfs.get(this.state.ipfsHash)) {
+        //     console.log(file.path)
+        //     console.log(file);
+          
+        //     const content = new BufferList()
+        //     for await (const chunk of file.content) {
+        //       content.append(chunk)
+        //     }
+        //     console.log(content.toString())
+        //   }
+        alert('Download you file at https://ipfs.io/ipfs/' + this.state.ipfsHash);
 
         confirmAlert({
             title: 'Review purchased item',

@@ -23,6 +23,7 @@ class MainPage extends Component {
             selectedPrice: "",
             selectedCarBrand: "",
             vendorAddress: "",
+            ipfsHash:"",
         }
 
     }
@@ -35,7 +36,7 @@ class MainPage extends Component {
     }
 
 
-    buyItem = async (event, itemId, track, simulator, season, price, carBrand, address) => {
+    buyItem = async (event, itemId, track, simulator, season, price, carBrand, address, ipfsHash) => {
         event.preventDefault();
 
         this.setState({
@@ -46,7 +47,8 @@ class MainPage extends Component {
             selectedSeason: season,
             selectedPrice: price,
             selectedCarBrand: carBrand,
-            vendorAddress: address
+            vendorAddress: address,
+            ipfsHash: ipfsHash,
         });
     }
 
@@ -68,6 +70,7 @@ class MainPage extends Component {
                         selectedPrice: this.state.selectedPrice,
                         selectedCarBrand: this.state.selectedCarBrand,
                         vendorAddress: this.state.vendorAddress,
+                        ipfsHash: this.state.ipfsHash,
                     }
                 }}
             />)
@@ -83,6 +86,7 @@ class MainPage extends Component {
                 let price = value.price
                 let address = value._address
                 let itemId = value.itemId
+                let ipfsHash = value.ipfsHash
                 cars.push(
                     <ListGroup.Item key={index}>
                         <Card className="card-block" key={index}>
@@ -95,12 +99,14 @@ class MainPage extends Component {
                                     <div><b>Price:</b> {price}</div>
                                     {/* <div><b>Vendor address:</b> {address}</div> */}
                                 </Card.Text>
-                                <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, track, simulator, season, price, carBrand, address)}> Buy</Button>
+                                <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, track, simulator, season, price, carBrand, address, ipfsHash)}> View item</Button>
                             </Card.Body>
                         </Card>
                     </ListGroup.Item>
                 )
             }
+
+            cars.reverse();
 
             for (const [index, value] of this.state.listSkins.entries()) {
                 let carBrand = value.carBrand
@@ -108,6 +114,7 @@ class MainPage extends Component {
                 let price = value.price
                 let address = value._address
                 let itemId = value.itemId
+                let ipfsHash = value.ipfsHash
                 skins.push(
                     <ListGroup.Item key={index}>
                         <Card className="card-block">
@@ -118,12 +125,14 @@ class MainPage extends Component {
                                     <div><b>Price:</b> {price}</div>
                                     {/* <div><b>Vendor address:</b> {address}</div> */}
                                 </Card.Text>
-                                <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, price, carBrand, address)}> Buy</Button>
+                                <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, price, carBrand , address, ipfsHash)}> View item</Button>
                             </Card.Body>
                         </Card>
                     </ListGroup.Item>
                 )
             }
+
+            skins.reverse();
         }
 
         return (

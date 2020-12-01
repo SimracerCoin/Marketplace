@@ -1,6 +1,9 @@
 pragma solidity ^0.5.1;
 pragma experimental ABIEncoderV2;
 
+/// @title Simthunder Sim Racing Marketplace - first iteration
+/// @notice Non-Cartesi blockchain code for registering sellers and sim racing assets
+
 contract STMarketplace {    
     
     struct carSetup {
@@ -29,14 +32,14 @@ contract STMarketplace {
         address buyer;
     }
     
-    // Maps the 2 type of files
+    /// @notice Maps the 2 type of files
     mapping (address => carSetup[]) setupsBySeller;
     mapping (address => skin[]) skinsBySeller;
     
-    // To track if seller address already exists
+    /// @notice To track if seller address already exists
     mapping (address => bool) userExists;
     
-    // Keep track of all seller addresses and existing files
+    /// @notice Keep track of all seller addresses and existing files
     address[] private userAddresses;
     string[] private ipfsList;
 
@@ -45,6 +48,7 @@ contract STMarketplace {
     uint256 public purchaseCounter;
     uint256 public itemCounter;
 
+    /// @notice Keep track of all seller sales
     mapping (address => purchase[]) purchasesBySeller;
 
     /// @notice Events
@@ -59,7 +63,7 @@ contract STMarketplace {
         skinsCounter = 0;
     }    
     
-    /// @notice registers a new car setup for sale
+    /// @notice Registers a new car setup for sale
     function newCarSetup(string memory _ipfsHash, string memory _carBrand, string memory _track, string memory _simulator, string memory _season, uint256 _price) public {
         string memory string_address = addressToString(msg.sender);
         carSetup memory car = carSetup(itemCounter, _ipfsHash, _carBrand, _track, _simulator, _season, _price, string_address);
@@ -74,7 +78,7 @@ contract STMarketplace {
         }
     }
     
-    /// @notice registers a new car skin for sale
+    /// @notice Registers a new car skin for sale
     function newSkin(string memory _ipfsHash, string memory _carBrand, string memory _simulator, uint256 _price) public {
         string memory string_address = addressToString(msg.sender);
         skin memory carSkin = skin(itemCounter, _ipfsHash, _carBrand,  _simulator, _price, string_address);
@@ -89,7 +93,7 @@ contract STMarketplace {
         }
     }
 
-    /// @notice registers a new purchase request
+    /// @notice Registers a new purchase request
     function purchaseRequest(uint256 itemId) public returns(uint256) {
         uint256 purchaseId = purchaseCounter;
         purchaseCounter++;
@@ -102,7 +106,7 @@ contract STMarketplace {
         return purchaseId;
     }
 
-    /// @notice saves seller
+    /// @notice Registers seller address
     function saveSeller(address _address) public returns(bool){
         if(userExists[_address] == false) {
             userExists[_address] = true;
@@ -112,7 +116,7 @@ contract STMarketplace {
         return false;
     }
     
-    /// @notice get the list of all car setup files
+    /// @notice Gets the list of all car setup files
     function getCarSetups() public view returns(carSetup[] memory allCars){
         carSetup[] memory cars = new carSetup[](carSetupCounter);
         uint256 i = 0;
@@ -128,7 +132,7 @@ contract STMarketplace {
         return cars;
     }
     
-    /// @notice get the list of all skin files
+    /// @notice Gets the list of all skin files
     function getSkins() public view returns(skin[] memory allSkins){
         skin[] memory skins = new skin[](skinsCounter);
         uint256 i = 0;
@@ -144,22 +148,27 @@ contract STMarketplace {
         return skins;
     }
 
+    /// @notice Tests if sellers exists
     function isSeller(address _address) public view returns(bool) {
         return userExists[_address];
     }
     
+    /// @notice Gets number of sellers
     function getNumberSellers() public view returns(uint256) {
         return userAddresses.length;
     }
     
+    /// @notice Gets number of car setup files
     function getNumberCars() public view returns(uint256) {
         return carSetupCounter;
     }
     
+    /// @notice Gets number of skin files
     function getNumberSkins() public view returns(uint256) {
         return skinsCounter;
     }
     
+    /// @notice Utility method to return string from an address
     function addressToString(address _addr) public pure returns(string memory) 
     {
         bytes32 value = bytes32(uint256(_addr));

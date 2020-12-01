@@ -102,13 +102,13 @@ class NavbarPage extends React.Component {
                         <NavDropdown title="Sell" className="nav-item dropdown dropdown-hover" id="basic-nav-dropdown">
                             <Link to="/uploadcar">
                                 <NavDropdown.Item as="div">
-                                    Car Setup
+                                    Sell Car Setup
                             </NavDropdown.Item>
                             </Link>
 
                             <Link to="/uploadskin">
                                 <NavDropdown.Item as="div">
-                                    Skin
+                                    Sell Skin
                             </NavDropdown.Item>
                             </Link>
                         </NavDropdown>
