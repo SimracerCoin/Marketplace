@@ -1,0 +1,17 @@
+#joinGame {
+    pointer-events: all;
+    opacity: 1;
+    background-image: url('/assets/images/JOIN BATTLE_BUTTON1.png');
+    background-repeat: no-repeat;
+    height: 40px;
+    width: 80%;
+    background-size: cover;
+    background-color: transparent;
+    border: 0;
+} 
+
+@media (max-width: 991.98px) {
+    #beta-img {
+        display: none;
+    }
+}

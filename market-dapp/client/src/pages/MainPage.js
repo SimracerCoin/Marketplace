@@ -118,7 +118,7 @@ class MainPage extends Component {
                                     <div><b>Price:</b> {price}</div>
                                     {/* <div><b>Vendor address:</b> {address}</div> */}
                                 </Card.Text>
-                                <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, price, carBrand , address)}> Buy</Button>
+                                <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, price, carBrand, address)}> Buy</Button>
                             </Card.Body>
                         </Card>
                     </ListGroup.Item>
@@ -127,33 +127,35 @@ class MainPage extends Component {
         }
 
         return (
-            <div>
-                <div className="center-text">
-                    <h1 >Welcome to Simthunder!</h1>
-                    <h2 >The largest marketplace for sim racing assets</h2>
-                    <h5> Buy, sell, discover, and trade sim racing goods</h5>
-                </div>
-                <div>
-                    <h4>Latest Car Setups</h4>
-                </div>
-                <div>
-                    <ListGroup className="list-group list-group-horizontal scrolling-wrapper">
-                        {cars}
-                    </ListGroup>
+            <header className="header">
+                <section className="content-section text-light br-n bs-c bp-c pb-8" style={{backgroundImage: 'url(\'/assets/img/bg/bg-5.jpg\')'}}>
+                    <div className="container">
+                        <div className="center-text">
+                            <h1>Welcome to Simthunder!</h1>
+                            <h2>The largest marketplace for sim racing assets</h2>
+                            <h5> Buy, sell, discover, and trade sim racing goods</h5>
+                        </div>
+                        <div>
+                            <h4>Latest Car Setups</h4>
+                        </div>
+                        <div>
+                            <ListGroup className="list-group list-group-horizontal scrolling-wrapper">
+                                {cars}
+                            </ListGroup>
 
-                </div>
-                <br></br>
-                <div>
-                    <h4>Latest Car Skins</h4>
-                </div>
-                <div>
-                    <ListGroup className="list-group list-group-horizontal scrolling-wrapper">
-                        {skins}
-                    </ListGroup>
-                </div>
-                <br>
-                </br>
-            </div>
+                        </div>
+                        <br></br>
+                        <div>
+                            <h4>Latest Car Skins</h4>
+                        </div>
+                        <div>
+                            <ListGroup className="list-group list-group-horizontal scrolling-wrapper">
+                                {skins}
+                            </ListGroup>
+                        </div>
+                    </div>
+                </section>
+            </header>
         );
     }
 }
