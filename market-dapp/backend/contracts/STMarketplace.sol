@@ -48,6 +48,7 @@ contract STMarketplace {
     uint256 public purchaseCounter;
     uint256 public itemCounter;
 
+    /// @notice Keep track of all seller sales
     mapping (address => purchase[]) purchasesBySeller;
 
     /// @notice Events
