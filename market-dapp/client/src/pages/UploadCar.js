@@ -45,8 +45,12 @@ class UploadCar extends Component {
     }
 
     handleFilePrice = (event) => {
-        console.log("File price: " + event.target.value);
-        this.setState({ currentFilePrice: event.target.value });
+        const re = /^[0-9\b]+$/;
+        if (event.target.value === '' || re.test(event.target.value)) {
+            this.setState({priceValue: event.target.value});
+            console.log("File price: " + event.target.value);
+            this.setState({ currentFilePrice: event.target.value });
+        }
     }
 
     handleSeason = (event) => {
@@ -105,21 +109,25 @@ class UploadCar extends Component {
     saveCar = async (event) => {
         event.preventDefault();
 
-        const price = this.state.drizzle.web3.utils.toBN(this.state.currentFilePrice);
+        if (this.state.currentFilePrice === null) {
+            alert('Item price must be an integer');
+        } else {
+            const price = this.state.drizzle.web3.utils.toBN(this.state.currentFilePrice);
+            
+            console.log("Current account: " + this.state.currentAccount);
+            console.log("Current hash: " + this.state.ipfsHash);
+            console.log("Current car: " + this.state.currentCar);
+            console.log("Current track: " + this.state.currentTrack);
+            console.log("Current simulator: " + this.state.currentSimulator);
+            console.log("Current season: " + this.state.currentSeason);
+            console.log("Current price: " + this.state.currentFilePrice);
 
-        console.log("Current account: " + this.state.currentAccount);
-        console.log("Current hash: " + this.state.ipfsHash);
-        console.log("Current car: " + this.state.currentCar);
-        console.log("Current track: " + this.state.currentTrack);
-        console.log("Current simulator: " + this.state.currentSimulator);
-        console.log("Current season: " + this.state.currentSeason);
-        console.log("Current price: " + this.state.currentFilePrice);
+            const response = await this.state.contract.methods.newCarSetup(this.state.ipfsHash, this.state.currentCar, this.state.currentTrack,
+                this.state.currentSimulator, this.state.currentSeason, price).send({ from: this.state.currentAccount });
+            console.log(response);
 
-        const response = await this.state.contract.methods.newCarSetup(this.state.ipfsHash, this.state.currentCar, this.state.currentTrack,
-            this.state.currentSimulator, this.state.currentSeason, price).send({ from: this.state.currentAccount });
-        console.log(response);
-
-        alert("The new car setup is available for sale!");
+            alert("The new car setup is available for sale!");
+        }
     }
 
     render() {
@@ -166,7 +174,7 @@ class UploadCar extends Component {
                             <Form.Label>Car Setup data</Form.Label>
                             <Form.Control type="text" placeholder="Generate IPFS Hash" value={this.state.ipfsHash} onChange={this.handleChangeHash} readOnly/>
                             <br></br>
-                            <Form.Control type="text" placeholder="Enter File Price" onChange={this.handleFilePrice} />
+                            <Form.Control type="text" pattern="[0-9]*" placeholder="Enter File Price" value={this.state.priceValue} onChange={this.handleFilePrice} />
                             <br></br>
                             <Form.Control type="text" placeholder="Enter Season" onChange={this.handleSeason} />
                             <br></br>
