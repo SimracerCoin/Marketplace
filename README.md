@@ -1,13 +1,14 @@
 # Simthunder Marketplace
-Sim racing assets marketplace DApp powered by Simracer Coin
+Sim racing assets marketplace DApp powered by Simracer Coin. This is a work in progress, preliminary front-end focused on providing a view of how users will interact with the marketplace (i.e., list assets, buy an asset, download purchased asset, challenge/complain about a purchase).
 
 ## Introduction
 The marketplace DApp and contracts are in the market-dapp folder. 
 
 This project has 2 folders, **backend** and **frontend**:
     
-    **backend**: Has all files related to smart contracts and IPFS
-    **frontend**: Has all **react** files
+**backend**: Has all files related to smart contracts and IPFS
+
+**frontend**: Has all **react** files
     
 ##### How to run project
 1) Install truffle 
