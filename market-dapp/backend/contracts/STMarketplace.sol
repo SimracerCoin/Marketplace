@@ -12,6 +12,7 @@ contract STMarketplace is ContentMarketplace {
     bytes32 validateCarSetupTemplateHash = "0x123";
     bytes32 validateCarSkinTemplateHash = "0x456";
     
+    // holds information specific to a car setup file
     struct carSetupInfo {
         string carBrand;
         string track;
@@ -19,21 +20,24 @@ contract STMarketplace is ContentMarketplace {
         string season;
     }
        
+    // holds information specific to a car skin file
     struct carSkinInfo {
         string carBrand;
         string simulator;
     }
        
+    // full representation of an advertised car setup
     struct carSetup {
-        uint256 id;
-        Advertisement ad;
-        carSetupInfo info;
+        uint256 id;         // id of the advertisement
+        Advertisement ad;   // generic ad information, including seller and content
+        carSetupInfo info;  // specific car setup information
     }
        
+    // full representation of an advertised car skin
     struct carSkin {
-        uint256 id;
-        Advertisement ad;
-        carSkinInfo info;
+        uint256 id;         // id of the advertisement
+        Advertisement ad;   // generic ad information, including seller and content
+        carSkinInfo info;   // specific car skin information
     }
 
 
