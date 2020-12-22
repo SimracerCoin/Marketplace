@@ -1,109 +1,129 @@
 pragma solidity ^0.5.1;
 pragma experimental ABIEncoderV2;
 
+import "./ContentMarketplace.sol";
+
 /// @title Simthunder Sim Racing Marketplace - first iteration
 /// @notice Non-Cartesi blockchain code for registering sellers and sim racing assets
 
-contract STMarketplace {    
+contract STMarketplace is ContentMarketplace {    
+
+    // cartesi machine template used to validate each asset category
+    bytes32 validateCarSetupTemplateHash = "0x123";
+    bytes32 validateCarSkinTemplateHash = "0x456";
     
-    struct carSetup {
-        uint256 itemId;
-        string ipfsHash;
+    // holds information specific to a car setup file
+    struct carSetupInfo {
         string carBrand;
         string track;
         string simulator;
         string season;
-        uint256 price;
-        string _address;
     }
-    
-    struct skin {
-        uint256 itemId;
-        string ipfsHash;
+       
+    // holds information specific to a car skin file
+    struct carSkinInfo {
         string carBrand;
         string simulator;
-        uint256 price;
-        string _address;
+    }
+       
+    // full representation of an advertised car setup
+    struct carSetup {
+        uint256 id;         // id of the advertisement
+        Advertisement ad;   // generic ad information, including seller and content
+        carSetupInfo info;  // specific car setup information
+    }
+       
+    // full representation of an advertised car skin
+    struct carSkin {
+        uint256 id;         // id of the advertisement
+        Advertisement ad;   // generic ad information, including seller and content
+        carSkinInfo info;   // specific car skin information
     }
 
-    struct purchase {
-        uint256 purchaseId;
-        uint256 itemId;
-        address buyer;
-    }
-    
+
     /// @notice Maps the 2 type of files
-    mapping (address => carSetup[]) setupsBySeller;
-    mapping (address => skin[]) skinsBySeller;
+    mapping(uint256 => carSetupInfo) carSetupInfos;
+    mapping(uint256 => carSkinInfo) carSkinInfos;
+    uint256[] carSetupIds;
+    uint256[] carSkinIds;
     
     /// @notice To track if seller address already exists
     mapping (address => bool) userExists;
     
-    /// @notice Keep track of all seller addresses and existing files
+    // /// @notice Keep track of all seller addresses and existing files
     address[] private userAddresses;
-    string[] private ipfsList;
-
-    uint256 public carSetupCounter;
-    uint256 public skinsCounter;
-    uint256 public purchaseCounter;
-    uint256 public itemCounter;
-
-    /// @notice Keep track of all seller sales
-    mapping (address => purchase[]) purchasesBySeller;
 
     /// @notice Events
-    event ipfsSaved(string _ipfsHash, address _address);
-    event carSetupSaved(address _address, string _ipfsHash, string _carBrand, string _track, string _simulator, string _season, uint256 _price);
-    event skinSaved(address _address, string _ipfsHash, string _carBrand, string _simulator, uint256 _price);
-    event newPurchaseRequest(address _address, uint256 itemId);
+    event carSetupSaved(address _address, bytes _ipfsPath, string _carBrand, string _track, string _simulator, string _season, uint256 _price);
+    event skinSaved(address _address, bytes _ipfsPath, string _carBrand, string _simulator, uint256 _price);
     
-    /// @notice An empty constructor that creates an instance of the contract
-    constructor() public{
-        carSetupCounter = 0;
-        skinsCounter = 0;
+    /// @notice Creates an instance of the contract
+    /// @param descartesAddress address of the Descartes contract
+    constructor(address descartesAddress) public ContentMarketplace(descartesAddress) {
     }    
     
     /// @notice Registers a new car setup for sale
-    function newCarSetup(string memory _ipfsHash, string memory _carBrand, string memory _track, string memory _simulator, string memory _season, uint256 _price) public {
-        string memory string_address = addressToString(msg.sender);
-        carSetup memory car = carSetup(itemCounter, _ipfsHash, _carBrand, _track, _simulator, _season, _price, string_address);
-        itemCounter++;
-        setupsBySeller[msg.sender].push(car);
-        carSetupCounter++;
-        ipfsList.push(_ipfsHash);
-        emit carSetupSaved(msg.sender,_ipfsHash, _carBrand, _track, _simulator, _season, _price);
-        if(userExists[msg.sender] == false) {
-            userExists[msg.sender] = true;
-            userAddresses.push(msg.sender);    
-        }
+    function newCarSetup(
+        bytes memory _ipfsPath,        // ipfs path of encrypted data
+        string memory _carBrand,
+        string memory _track,
+        string memory _simulator,
+        string memory _season,
+        uint256 _price,                // trade price
+        bytes32 _dataHash,             // merkle hash of unencrypted data
+        bytes32 _encryptedDataHash     // merkle hash of encrypted data
+    ) public
+        returns (uint256 id)           // returns ad identifier
+    {
+        id = createAd(
+            _price,
+            _dataHash,
+            _encryptedDataHash,
+            _ipfsPath,
+            validateCarSetupTemplateHash
+        );
+
+        carSetupInfo storage info = carSetupInfos[id];
+        info.carBrand = _carBrand;
+        info.track = _track;
+        info.simulator = _simulator;
+        info.season = _season;
+
+        carSetupIds.push(id);
+        saveSeller(msg.sender);
+        emit carSetupSaved(msg.sender, _ipfsPath, _carBrand, _track, _simulator, _season, _price);
+
+        return id;
     }
-    
+
     /// @notice Registers a new car skin for sale
-    function newSkin(string memory _ipfsHash, string memory _carBrand, string memory _simulator, uint256 _price) public {
-        string memory string_address = addressToString(msg.sender);
-        skin memory carSkin = skin(itemCounter, _ipfsHash, _carBrand,  _simulator, _price, string_address);
-        itemCounter++;
-        skinsBySeller[msg.sender].push(carSkin);
-        skinsCounter++;
-        ipfsList.push(_ipfsHash);
-        emit skinSaved (msg.sender,_ipfsHash, _carBrand, _simulator, _price);
-        if(userExists[msg.sender] == false) {
-            userExists[msg.sender] = true;
-            userAddresses.push(msg.sender);    
-        }
-    }
+    function newSkin(
+        bytes memory _ipfsPath,        // ipfs path of encrypted data
+        string memory _carBrand,
+        string memory _simulator,
+        uint256 _price,                // trade price
+        bytes32 _dataHash,             // merkle hash of unencrypted data
+        bytes32 _encryptedDataHash     // merkle hash of encrypted data
+    ) public
+        returns (uint256 id)           // returns ad identifier
+    {
+        id = createAd(
+            _price,
+            _dataHash,
+            _encryptedDataHash,
+            _ipfsPath,
+            validateCarSkinTemplateHash
+        );
 
-    /// @notice Registers a new purchase request
-    function purchaseRequest(uint256 itemId) public returns(uint256) {
-        uint256 purchaseId = purchaseCounter;
-        purchaseCounter++;
-        purchase memory newPurchase = purchase(purchaseCounter, itemId, msg.sender);
-        
-        purchasesBySeller[msg.sender].push(newPurchase);
+        carSkinInfo storage info = carSkinInfos[id];
+        info.carBrand = _carBrand;
+        info.simulator = _simulator;
 
-        emit newPurchaseRequest(msg.sender,itemId);
+        carSkinIds.push(id);
+        saveSeller(msg.sender);
+        emit skinSaved (msg.sender,_ipfsPath, _carBrand, _simulator, _price);
 
-        return purchaseId;
+        return id;
     }
 
     /// @notice Registers seller address
@@ -117,33 +137,25 @@ contract STMarketplace {
     }
     
     /// @notice Gets the list of all car setup files
-    function getCarSetups() public view returns(carSetup[] memory allCars){
-        carSetup[] memory cars = new carSetup[](carSetupCounter);
-        uint256 i = 0;
-        for(uint256 j = 0; j < userAddresses.length; j++) {
-            address _address =  userAddresses[j];
-            
-            for(uint256 k = 0; k < setupsBySeller[_address].length; k++) {
-                carSetup storage car = setupsBySeller[_address][k];
-                cars[i] = car;
-                i++;
-            }
+    function getCarSetups() public view returns(carSetup[] memory setups){
+        setups = new carSetup[](carSetupIds.length);
+        for (uint256 i = 0; i < carSetupIds.length; i++) {
+            uint256 id = carSetupIds[i];
+            setups[i].id = id;
+            setups[i].ad = ads[id];
+            setups[i].info = carSetupInfos[id];
         }
-        return cars;
+        return setups;
     }
     
     /// @notice Gets the list of all skin files
-    function getSkins() public view returns(skin[] memory allSkins){
-        skin[] memory skins = new skin[](skinsCounter);
-        uint256 i = 0;
-        for(uint256 j = 0; j < userAddresses.length; j++) {
-            address _address =  userAddresses[j];
-            
-            for(uint256 k = 0; k < skinsBySeller[_address].length; k++) {
-                skin storage skin2 = skinsBySeller[_address][k];
-                skins[i] = skin2;
-                i++;
-            }
+    function getSkins() public view returns(carSkin[] memory skins){
+        skins = new carSkin[](carSkinIds.length);
+        for(uint256 i = 0; i < carSkinIds.length; i++) {
+            uint256 id = carSkinIds[i];
+            skins[i].id = id;
+            skins[i].ad = ads[id];
+            skins[i].info = carSkinInfos[id];
         }
         return skins;
     }
@@ -160,12 +172,12 @@ contract STMarketplace {
     
     /// @notice Gets number of car setup files
     function getNumberCars() public view returns(uint256) {
-        return carSetupCounter;
+        return carSetupIds.length;
     }
     
     /// @notice Gets number of skin files
     function getNumberSkins() public view returns(uint256) {
-        return skinsCounter;
+        return carSkinIds.length;
     }
     
     /// @notice Utility method to return string from an address

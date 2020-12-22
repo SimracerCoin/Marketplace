@@ -108,8 +108,14 @@ class UploadSkin extends Component {
             console.log("Current simulator: " + this.state.currentSimulator);
             console.log("Current price: " + this.state.currentFilePrice);
 
-            const response = await this.state.contract.methods.newSkin(this.state.ipfsHash, this.state.currentCar,
-                this.state.currentSimulator, price).send({ from: this.state.currentAccount });
+            const ipfsHashBytes = this.state.drizzle.web3.utils.fromAscii(this.state.ipfsHash);
+            
+            // TO DO: change placeholders for correct values
+            const placeholder = this.state.drizzle.web3.utils.fromAscii('some hash');
+            console.log(placeholder);
+
+            const response = await this.state.contract.methods.newSkin(ipfsHashBytes, this.state.currentCar,
+                this.state.currentSimulator, price, placeholder, placeholder).send({ from: this.state.currentAccount });
             console.log(response);
 
             alert("The new skin is available for sale!");
