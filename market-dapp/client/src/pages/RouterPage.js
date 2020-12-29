@@ -11,6 +11,7 @@ import UploadSkin from "./UploadSkin";
 import NavbarPage from "./NavbarPage";
 import RegisterVendor from "./RegisterVendor";
 import ItemPage from "./ItemPage";
+import NotificationsPage from "./NotificationsPage"
 import { Navbar, Nav, NavDropdown, Form, FormControl } from 'react-bootstrap'; // Check out drizzle's react components at @drizzle/react-components
 
 
@@ -49,6 +50,9 @@ class RouterPage extends Component {
                         </Route>
                         <Route path="/item">
                             <ItemPage drizzle={this.state.drizzle} drizzleState={this.state.drizzleState} />
+                        </Route>
+                        <Route path="/notifications">
+                            <NotificationsPage drizzle={this.state.drizzle} drizzleState={this.state.drizzleState} />
                         </Route>
                         <Route exact
                             path="/"

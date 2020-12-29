@@ -18,7 +18,7 @@ class NavbarPage extends React.Component {
             selectedSimulator: "",
             selectedSeason: "",
             selectedPrice: "",
-            selectedCarBrand: "",
+            selectedCarBrand: ""
         }
 
     }
@@ -88,6 +88,14 @@ class NavbarPage extends React.Component {
                                     <i className="fas fa-shopping-cart"></i>
                                 </span>
                                 </a>
+                            </li>
+                            <li className="nav-item">
+                                <Link to="/notifications" className="nav-link small" data-toggle="offcanvas" data-target="#offcanvas-notification">
+                                    <span className="p-relative d-inline-flex">
+                                        <span className="badge-cart badge badge-counter badge-warning position-absolute l-1">2</span>
+                                        <i className="fas fa-bell"></i>
+                                    </span>
+                                </Link>
                             </li>
                         </ul>
                     </div>

@@ -33,6 +33,13 @@ class ItemPage extends Component {
         this.setState({ currentAccount: currentAccount, contract: contract });
     }
 
+    rejectItem = async () => {
+        const response = await this.state.contract.methods.newNotification(this.state.itemId, this.state.vendorAddress).send({ from: this.state.currentAccount });
+        console.log(response);
+
+        alert('Seller will be notified.');
+    }
+
     buyItem = async (event) => {
         event.preventDefault();
 
@@ -43,7 +50,7 @@ class ItemPage extends Component {
         // for await (const file of ipfs.get(this.state.ipfsHash)) {
         //     console.log(file.path)
         //     console.log(file);
-          
+
         //     const content = new BufferList()
         //     for await (const chunk of file.content) {
         //       content.append(chunk)
@@ -62,7 +69,7 @@ class ItemPage extends Component {
                 },
                 {
                     label: 'Reject/Challenge',
-                    onClick: () => alert('Seller will be notified.')
+                    onClick: () => this.rejectItem()
                 }
             ]
         });
