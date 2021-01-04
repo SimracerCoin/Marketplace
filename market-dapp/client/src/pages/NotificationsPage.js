@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { Link } from 'react-router-dom';
 import { withRouter } from "react-router";
 
 class NotificationsPage extends Component {
@@ -10,19 +11,19 @@ class NotificationsPage extends Component {
             drizzleState: props.drizzleState,
             listNotifications: [],
         }
-
     }
 
     componentDidMount = async () => {
         const contract = await this.state.drizzle.contracts.STMarketplace
-        const response_notifications = await contract.methods.getNotifications().call();
-        this.setState({ listNotifications: response_notifications });
+        const notificationsIds = await contract.methods.listNotificationsPerSeller(this.state.drizzleState.accounts[0]).call();
+        const notifications = await contract.methods.getNotifications(notificationsIds).call();
+        this.setState({ listNotifications: notifications, listNotificationsIds: notificationsIds, contract: contract });
     }
 
-    removeNotification = async (event) => {
+    archiveNotification = async (event,notificationId) => {
         event.preventDefault();
 
-
+        await this.state.contract.methods.archiveNotification(notificationId).send();
     }
 
     render() {
@@ -30,15 +31,17 @@ class NotificationsPage extends Component {
 
         if (this.state.listNotifications != null) {
             for (const [index, value] of this.state.listNotifications.entries()) {
-                let address = value._address
-                let date = value.date
-                let itemId = value.itemId
+                let purchaseId = value.purchaseId
+                let notificationId = this.state.listNotificationsIds[index];
+
+                const purchase = this.state.contract.methods.getPurchase(purchaseId).call();
 
                 notifications.push(<tr>
-                    <td>{date}</td>
-                    <td>{itemId}</td>
-                    <td>{address}</td>
-                    <td><Link onClick={(e) => this.removeNotification(e)}><i class="fas fa-times"></i></Link></td>
+                    <td>#{notificationId}</td>
+                    <td>{purchase.date}</td>
+                    <td>{purchase.adId}</td>
+                    <td>{purchase.message}</td>
+                    <td><Link onClick={(e) => this.archiveNotification(e,notificationId)}><i class="fas fa-archive"></i></Link></td>
                 </tr>)
             }
         }
@@ -53,9 +56,10 @@ class NotificationsPage extends Component {
                         <table>
                             <thead>
                                 <tr>
+                                    <th>Notification</th>
                                     <th>Date</th>
                                     <th>Item</th>
-                                    <th>Address</th>
+                                    <th>Message</th>
                                     <th></th>
                                 </tr>
                             </thead>

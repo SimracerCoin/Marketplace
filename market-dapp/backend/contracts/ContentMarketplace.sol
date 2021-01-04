@@ -19,6 +19,7 @@ contract ContentMarketplace {
         address buyer;
         bytes buyerKey;
         bytes encryptedDataKey;
+        uint256 date;
     }
 
     // storage of advertisements
@@ -28,7 +29,7 @@ contract ContentMarketplace {
 
     // storage of purchases
     uint256 numPurchases = 0;
-    mapping(uint256 => Purchase) purchases;
+    mapping(uint256 => Purchase) internal purchases;
     mapping(uint256 => uint256[]) internal purchasesPerAd;
 
     // purchase events
@@ -110,6 +111,7 @@ contract ContentMarketplace {
         purchase.adId = _adId;
         purchase.buyer = msg.sender;
         purchase.buyerKey = _buyerKey;
+        purchase.date = now;
 
         purchaseId = numPurchases++;
         purchasesPerAd[purchase.adId].push(purchaseId); 

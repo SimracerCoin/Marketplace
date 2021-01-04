@@ -33,18 +33,26 @@ class ItemPage extends Component {
         this.setState({ currentAccount: currentAccount, contract: contract });
     }
 
-    rejectItem = async () => {
-        const response = await this.state.contract.methods.newNotification(this.state.itemId, this.state.vendorAddress).send({ from: this.state.currentAccount });
-        console.log(response);
+    acceptItem = async (purchaseId) => {
+        await this.state.contract.methods.newNotification(purchaseId, "Purchase was accepted", 1).send();
+        
+        alert('Thank you for your purchase!');
+    }
 
+    rejectItem = async (purchaseId) => {
+        await this.state.contract.methods.newNotification(purchaseId, "Purchase was challenged", 2).send();
+        
         alert('Seller will be notified.');
     }
 
     buyItem = async (event) => {
         event.preventDefault();
 
-        const response = await this.state.contract.methods.purchaseRequest(this.state.itemId).send({ from: this.state.currentAccount });
+        const response = await this.state.contract.methods.requestPurchase(this.state.itemId).send({ from: this.state.currentAccount });
         console.log(response);
+
+        await this.state.contract.methods.newNotification(response, "Purchase was requested", 0).send();
+        
 
         // const responseFile = await ipfs.get(this.state.ipfsHash);
         // for await (const file of ipfs.get(this.state.ipfsHash)) {
@@ -65,11 +73,11 @@ class ItemPage extends Component {
             buttons: [
                 {
                     label: 'Accept',
-                    onClick: () => alert('Thank you for your purchase!')
+                    onClick: () => this.acceptItem(response)
                 },
                 {
                     label: 'Reject/Challenge',
-                    onClick: () => this.rejectItem()
+                    onClick: () =>  this.rejectItem(response)
                 }
             ]
         });

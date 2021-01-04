@@ -40,6 +40,19 @@ contract STMarketplace is ContentMarketplace {
         carSkinInfo info;   // specific car skin information
     }
 
+    enum NotificationType { Request, Accept, Challenge }
+    // @notice full representation of a notification
+    struct Notification {
+        uint256 purchaseId;       // purchase information
+        string message;           // generic message
+        NotificationType nType;   // type of notification
+        bool archive;             // archived notification
+    }
+
+    // storage of notifications
+    uint256 numNotifications = 0;
+    mapping(uint256 => Notification) notifications;
+    mapping(address => uint256[]) notificationsPerSeller;
 
     /// @notice Maps the 2 type of files
     mapping(uint256 => carSetupInfo) carSetupInfos;
@@ -194,5 +207,57 @@ contract STMarketplace is ContentMarketplace {
             str[3+i*2] = alphabet[uint8(value[i + 12] & 0x0f)];
         }
         return string(str);
+    }
+
+    // TODO: refactoring...
+
+    // @notice create notification
+    function newNotification(
+        uint256 _purchaseId,           // purchase request identifier
+        string memory _message,        // generic message
+        NotificationType _type         // type of notification
+    ) public
+        returns (uint256 notificationId)           // returns notification identifier
+    {
+        Notification storage notification = notifications[numNotifications];
+        notification.purchaseId = _purchaseId;
+        notification.message = _message;
+        notification.nType = _type;
+        notification.archive = false;
+
+        notificationId = numNotifications++;
+        notificationsPerSeller[ads[purchases[_purchaseId].adId].seller].push(notificationId);
+        
+        return notificationId;
+    }
+
+    /// @notice retrieves an advertisement given its identifier
+    function getPurchase(uint256 _purchaseId) public view
+        returns (Purchase memory)
+    {
+        return purchases[_purchaseId];
+    }
+
+    /// @notice retrieves an array of notifications given their identifiers
+    function getNotifications(uint256[] memory _notificationIds) public view
+        returns (Notification[] memory)
+    {
+        Notification[] memory ret = new Notification[](_notificationIds.length);
+        for(uint256 i = 0; i < _notificationIds.length; i++) {
+            uint256 id = _notificationIds[i];
+            ret[i] = notifications[id];
+        }
+        return ret;
+    }
+
+    /// @notice returns identifiers for a seller's notifications
+    function listNotificationsPerSeller(address _seller) public view
+        returns (uint256[] memory)
+    {
+        return notificationsPerSeller[_seller];
+    }
+
+    function archiveNotification(uint256 _notificationId) public {
+        notifications[_notificationId].archive = true;
     }
 }
