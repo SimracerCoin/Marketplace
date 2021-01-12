@@ -79,12 +79,14 @@ class MainPage extends Component {
         if (this.state.listCars != null || this.state.listSkins != null) {
 
             for (const [index, value] of this.state.listCars.entries()) {
-                let carBrand = value.carBrand
-                let track = value.track
-                let simulator = value.simulator
-                let season = value.season
-                let price = value.price
-                let address = value._address
+                console.log('list cars value:');
+                console.log(value);
+                let carBrand = value.info.carBrand
+                let track = value.info.track
+                let simulator = value.info.simulator
+                let season = value.info.season
+                let price = value.ad.price
+                let address = value.ad.seller
                 let itemId = value.itemId
                 let ipfsHash = value.ipfsHash
                 cars.push(
@@ -109,10 +111,10 @@ class MainPage extends Component {
             cars.reverse();
 
             for (const [index, value] of this.state.listSkins.entries()) {
-                let carBrand = value.carBrand
-                let simulator = value.simulator
-                let price = value.price
-                let address = value._address
+                let carBrand = value.info.carBrand
+                let simulator = value.info.simulator
+                let price = value.ad.price
+                let address = value.ad.seller
                 let itemId = value.itemId
                 let ipfsHash = value.ipfsHash
                 skins.push(
