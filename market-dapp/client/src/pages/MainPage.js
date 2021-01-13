@@ -87,7 +87,7 @@ class MainPage extends Component {
                 let season = value.info.season
                 let price = value.ad.price
                 let address = value.ad.seller
-                let itemId = value.itemId
+                let itemId = value.id
                 let ipfsHash = value.ipfsHash
                 cars.push(
                     <ListGroup.Item key={index}>
@@ -115,7 +115,7 @@ class MainPage extends Component {
                 let simulator = value.info.simulator
                 let price = value.ad.price
                 let address = value.ad.seller
-                let itemId = value.itemId
+                let itemId = value.id
                 let ipfsHash = value.ipfsHash
                 skins.push(
                     <ListGroup.Item key={index}>

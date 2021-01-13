@@ -17,6 +17,16 @@ class NotificationsPage extends Component {
         const contract = await this.state.drizzle.contracts.STMarketplace
         const notificationsIds = await contract.methods.listNotificationsPerSeller(this.state.drizzleState.accounts[0]).call();
         const notifications = await contract.methods.getNotifications(notificationsIds).call();
+
+        if (this.state.listNotifications != null) {
+            for (const [index, value] of this.state.listNotifications.entries()) {
+                let purchaseId = value.purchaseId
+                let notificationId = this.state.listNotificationsIds[index];
+
+                const purchase = await this.state.contract.methods.getPurchase(purchaseId).call();
+            }
+        }
+
         this.setState({ listNotifications: notifications, listNotificationsIds: notificationsIds, contract: contract });
     }
 
@@ -35,6 +45,7 @@ class NotificationsPage extends Component {
                 let notificationId = this.state.listNotificationsIds[index];
 
                 const purchase = this.state.contract.methods.getPurchase(purchaseId).call();
+                console.log(purchase);
 
                 notifications.push(<tr>
                     <td>#{notificationId}</td>

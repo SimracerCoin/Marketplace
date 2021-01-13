@@ -238,6 +238,18 @@ contract STMarketplace is ContentMarketplace {
         return purchases[_purchaseId];
     }
 
+        /// @notice retrieves an advertisement given its identifier
+    function getPurchases(uint256[] memory _purchaseIds) public view
+        returns (Purchase[] memory)
+    {
+        Purchase[] memory ret = new Purchase[](_purchaseIds.length);
+        for(uint256 i = 0; i < _purchaseIds.length; i++) {
+            uint256 id = _purchaseIds[i];
+            ret[i] = purchases[id];
+        }
+        return ret;
+    }
+
     /// @notice retrieves an array of notifications given their identifiers
     function getNotifications(uint256[] memory _notificationIds) public view
         returns (Notification[] memory)

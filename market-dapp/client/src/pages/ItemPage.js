@@ -48,10 +48,13 @@ class ItemPage extends Component {
     buyItem = async (event) => {
         event.preventDefault();
 
-        const response = await this.state.contract.methods.requestPurchase(this.state.itemId).send({ from: this.state.currentAccount });
+        // TODO: buyer public key
+        const buyerPK = this.state.drizzle.web3.utils.hexToBytes(this.state.drizzle.web3.utils.randomHex(16));
+
+        const response = await this.state.contract.methods.requestPurchase(this.state.itemId, buyerPK).send({ from: this.state.currentAccount });
         console.log(response);
 
-        await this.state.contract.methods.newNotification(response, "Purchase was requested", 0).send();
+        await this.state.contract.methods.newNotification(response.events.PurchaseRequested.returnValues.purchaseId, "Purchase was requested", 0).send();
         
 
         // const responseFile = await ipfs.get(this.state.ipfsHash);
@@ -73,11 +76,11 @@ class ItemPage extends Component {
             buttons: [
                 {
                     label: 'Accept',
-                    onClick: () => this.acceptItem(response)
+                    onClick: () => this.acceptItem(response.events.PurchaseRequested.returnValues.purchaseId)
                 },
                 {
                     label: 'Reject/Challenge',
-                    onClick: () =>  this.rejectItem(response)
+                    onClick: () =>  this.rejectItem(response.events.PurchaseRequested.returnValues.purchaseId)
                 }
             ]
         });
