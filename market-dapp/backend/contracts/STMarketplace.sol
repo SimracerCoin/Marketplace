@@ -40,13 +40,15 @@ contract STMarketplace is ContentMarketplace {
         carSkinInfo info;   // specific car skin information
     }
 
-    enum NotificationType { Request, Accept, Challenge }
+    enum NotificationType { Request, Accept_A, Challenge, Accept_B }
     // @notice full representation of a notification
     struct Notification {
         uint256 purchaseId;       // purchase information
         string message;           // generic message
         NotificationType nType;   // type of notification
         bool archive;             // archived notification
+        uint256 date;             // notification date
+        address sender;           // notification sender address
     }
 
     // storage of notifications
@@ -224,6 +226,8 @@ contract STMarketplace is ContentMarketplace {
         notification.message = _message;
         notification.nType = _type;
         notification.archive = false;
+        notification.date = now;
+        notification.sender = msg.sender;
 
         notificationId = numNotifications++;
         notificationsPerSeller[ads[purchases[_purchaseId].adId].seller].push(notificationId);

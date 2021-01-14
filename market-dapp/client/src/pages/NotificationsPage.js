@@ -15,19 +15,17 @@ class NotificationsPage extends Component {
 
     componentDidMount = async () => {
         const contract = await this.state.drizzle.contracts.STMarketplace
+        const currentAccount = this.state.drizzleState.accounts[0];
         const notificationsIds = await contract.methods.listNotificationsPerSeller(this.state.drizzleState.accounts[0]).call();
         const notifications = await contract.methods.getNotifications(notificationsIds).call();
+        const purchases = [];
 
-        if (this.state.listNotifications != null) {
-            for (const [index, value] of this.state.listNotifications.entries()) {
-                let purchaseId = value.purchaseId
-                let notificationId = this.state.listNotificationsIds[index];
-
-                const purchase = await this.state.contract.methods.getPurchase(purchaseId).call();
-            }
+        for (const [index, value] of notifications.entries()) {
+            let purchase = await contract.methods.getPurchase(value.purchaseId).call();
+            purchases.push(purchase);
         }
 
-        this.setState({ listNotifications: notifications, listNotificationsIds: notificationsIds, contract: contract });
+        this.setState({ listNotifications: notifications, listNotificationsIds: notificationsIds, listPurchases: purchases, currentAccount: currentAccount, contract: contract });
     }
 
     archiveNotification = async (event,notificationId) => {
@@ -36,23 +34,46 @@ class NotificationsPage extends Component {
         await this.state.contract.methods.archiveNotification(notificationId).send();
     }
 
+    acceptPurchase = async (event,purchaseId) => {
+        event.preventDefault();
+
+        await this.state.contract.methods.newNotification(purchaseId, "Thank you for your purchase.", 1).send({ from: this.state.currentAccount });
+
+        alert("Buyer will be notified");
+    }
+
+    resolvePurchase = async (event,purchaseId) => {
+        event.preventDefault();
+
+        alert("Solve challenge");
+    }
+
+    viewItem = async (event, itemId) => {
+        event.preventDefault();
+
+        this.setState({
+            redirectBuyItem: true,
+            selectedItemId: itemId
+        });
+    }
+
     render() {
         let notifications = [];
 
         if (this.state.listNotifications != null) {
             for (const [index, value] of this.state.listNotifications.entries()) {
-                let purchaseId = value.purchaseId
                 let notificationId = this.state.listNotificationsIds[index];
-
-                const purchase = this.state.contract.methods.getPurchase(purchaseId).call();
-                console.log(purchase);
+                let purchase = this.state.listPurchases[index];
 
                 notifications.push(<tr>
-                    <td>#{notificationId}</td>
-                    <td>{purchase.date}</td>
-                    <td>{purchase.adId}</td>
-                    <td>{purchase.message}</td>
-                    <td><Link onClick={(e) => this.archiveNotification(e,notificationId)}><i class="fas fa-archive"></i></Link></td>
+                    <th scope="row">#{notificationId}</th>
+                    <td>{new Intl.DateTimeFormat('en-US', {year: 'numeric', month: '2-digit',day: '2-digit'}).format(value.date)}</td>
+                    <td><Link onClick={(e) => this.setState(e, purchase.adId)}>{purchase.adId}</Link></td>
+                    <td>{value.message}</td>
+                    <td>
+                    {value.sender == this.state.currentAccount || value.nType == 1 || value.nType == 3 ? '' :
+                        <Link onClick={(e) => (value.nType == 0 ? this.acceptPurchase(e,value.purchaseId) : this.resolvePurchase(e,value.purchaseId))}><i class="fas fa-reply"></i></Link>}
+                    </td>
                 </tr>)
             }
         }
@@ -64,14 +85,14 @@ class NotificationsPage extends Component {
                         <h1>Notifications</h1>
                     </div>
                     <div>
-                        <table>
+                        <table class="table table-striped">
                             <thead>
                                 <tr>
-                                    <th>Notification</th>
-                                    <th>Date</th>
-                                    <th>Item</th>
-                                    <th>Message</th>
-                                    <th></th>
+                                    <th scope="col">#</th>
+                                    <th scope="col">Date</th>
+                                    <th scope="col">Item</th>
+                                    <th scope="col">Message</th>
+                                    <th scope="col"></th>
                                 </tr>
                             </thead>
                             <tbody>

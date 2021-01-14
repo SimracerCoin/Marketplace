@@ -34,13 +34,13 @@ class ItemPage extends Component {
     }
 
     acceptItem = async (purchaseId) => {
-        await this.state.contract.methods.newNotification(purchaseId, "Purchase was accepted", 1).send();
+        await this.state.contract.methods.newNotification(purchaseId, "Purchase was accepted", 3).send({ from: this.state.currentAccount });
         
         alert('Thank you for your purchase!');
     }
 
     rejectItem = async (purchaseId) => {
-        await this.state.contract.methods.newNotification(purchaseId, "Purchase was challenged", 2).send();
+        await this.state.contract.methods.newNotification(purchaseId, "Purchase was challenged", 2).send({ from: this.state.currentAccount });
         
         alert('Seller will be notified.');
     }
