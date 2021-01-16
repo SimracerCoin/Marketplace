@@ -33,17 +33,19 @@ class ItemPage extends Component {
         this.setState({ currentAccount: currentAccount, contract: contract });
     }
 
+    /*
     acceptItem = async (purchaseId) => {
-        await this.state.contract.methods.newNotification(purchaseId, "Purchase was accepted", 3).send({ from: this.state.currentAccount });
+        await this.state.contract.methods.newNotification(purchaseId, "Purchase was accepted", this.state.vendorAddress, 3).send({ from: this.state.currentAccount });
         
         alert('Thank you for your purchase!');
     }
 
     rejectItem = async (purchaseId) => {
-        await this.state.contract.methods.newNotification(purchaseId, "Purchase was challenged", 2).send({ from: this.state.currentAccount });
+        await this.state.contract.methods.newNotification(purchaseId, "Purchase was challenged", this.state.vendorAddress, 2).send({ from: this.state.currentAccount });
         
         alert('Seller will be notified.');
     }
+    */
 
     buyItem = async (event) => {
         event.preventDefault();
@@ -52,10 +54,14 @@ class ItemPage extends Component {
         const buyerPK = this.state.drizzle.web3.utils.hexToBytes(this.state.drizzle.web3.utils.randomHex(16));
 
         const response = await this.state.contract.methods.requestPurchase(this.state.itemId, buyerPK).send({ from: this.state.currentAccount });
-        console.log(response);
-
-        await this.state.contract.methods.newNotification(response.events.PurchaseRequested.returnValues.purchaseId, "Purchase was requested", 0).send();
         
+        console.log(response);
+        console.log(this.state.vendorAddress);
+        
+        const notification = await this.state.contract.methods.newNotification(response.events.PurchaseRequested.returnValues.purchaseId, "Purchase was requested", this.state.currentAccount, this.state.vendorAddress, 0).send();
+        
+        console.log(notification);
+        alert("Thank you for wanting to purchase. Seller contact you sooner.");
 
         // const responseFile = await ipfs.get(this.state.ipfsHash);
         // for await (const file of ipfs.get(this.state.ipfsHash)) {
@@ -68,6 +74,7 @@ class ItemPage extends Component {
         //     }
         //     console.log(content.toString())
         //   }
+        /*
         alert('Download you file at https://ipfs.io/ipfs/' + this.state.ipfsHash);
 
         confirmAlert({
@@ -83,7 +90,7 @@ class ItemPage extends Component {
                     onClick: () =>  this.rejectItem(response.events.PurchaseRequested.returnValues.purchaseId)
                 }
             ]
-        });
+        });*/
     }
 
     render() {

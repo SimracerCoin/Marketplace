@@ -48,13 +48,14 @@ contract STMarketplace is ContentMarketplace {
         NotificationType nType;   // type of notification
         bool archive;             // archived notification
         uint256 date;             // notification date
-        address sender;           // notification sender address
+        address sender;           // notification from address
+        address receiver;         // notification to address
     }
 
     // storage of notifications
     uint256 numNotifications = 0;
     mapping(uint256 => Notification) notifications;
-    mapping(address => uint256[]) notificationsPerSeller;
+    mapping(address => uint256[]) notificationsPerUser;
 
     /// @notice Maps the 2 type of files
     mapping(uint256 => carSetupInfo) carSetupInfos;
@@ -217,6 +218,8 @@ contract STMarketplace is ContentMarketplace {
     function newNotification(
         uint256 _purchaseId,           // purchase request identifier
         string memory _message,        // generic message
+        address _sender,               // who sends the message
+        address _receiver,             // who receives the message
         NotificationType _type         // type of notification
     ) public
         returns (uint256 notificationId)           // returns notification identifier
@@ -227,11 +230,13 @@ contract STMarketplace is ContentMarketplace {
         notification.nType = _type;
         notification.archive = false;
         notification.date = now;
-        notification.sender = msg.sender;
+        notification.sender = _sender;
+        notification.receiver = _receiver;
 
         notificationId = numNotifications++;
-        notificationsPerSeller[ads[purchases[_purchaseId].adId].seller].push(notificationId);
-        
+        //notificationsPerSeller[ads[purchases[_purchaseId].adId].seller].push(notificationId);
+        notificationsPerUser[_receiver].push(notificationId);
+
         return notificationId;
     }
 
@@ -267,10 +272,10 @@ contract STMarketplace is ContentMarketplace {
     }
 
     /// @notice returns identifiers for a seller's notifications
-    function listNotificationsPerSeller(address _seller) public view
+    function listNotificationsPerUser(address _user) public view
         returns (uint256[] memory)
     {
-        return notificationsPerSeller[_seller];
+        return notificationsPerUser[_user];
     }
 
     function archiveNotification(uint256 _notificationId) public {
