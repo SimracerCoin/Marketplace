@@ -6,6 +6,8 @@ import 'react-confirm-alert/src/react-confirm-alert.css';
 import ipfs from "../ipfs";
 const BufferList = require('bl/BufferList');
 
+const priceConversion = 10**18;
+
 class ItemPage extends Component {
 
     constructor(props) {
@@ -52,8 +54,8 @@ class ItemPage extends Component {
 
         // TODO: buyer public key
         const buyerPK = this.state.drizzle.web3.utils.hexToBytes(this.state.drizzle.web3.utils.randomHex(16));
-
-        const response = await this.state.contract.methods.requestPurchase(this.state.itemId, buyerPK).send({ from: this.state.currentAccount });
+        console.log('Item price:' + this.state.price);
+        const response = await this.state.contract.methods.requestPurchase(this.state.itemId, buyerPK).send({value:this.state.price, from: this.state.currentAccount });
         
         console.log(response);
         console.log(this.state.vendorAddress);
@@ -105,7 +107,7 @@ class ItemPage extends Component {
                     <div><b>Seller:</b> {this.state.vendorAddress}</div>
                     <div><b>Car Brand:</b> {this.state.car}</div>
                     <div><b>Simulator:</b> {this.state.simulator}</div>
-                    <div><b>Price:</b> {this.state.price}</div>
+                    <div><b>Price:</b> {this.state.price / priceConversion}</div>
                 </div>
             )
         } else {
@@ -117,7 +119,7 @@ class ItemPage extends Component {
                     <div><b>Track:</b> {this.state.track}</div>
                     <div><b>Simulator:</b> {this.state.simulator}</div>
                     <div><b>Season:</b> {this.state.season}</div>
-                    <div><b>Price:</b> {this.state.price}</div>
+                    <div><b>Price:</b> {this.state.price / priceConversion}</div>
                 </div>
             )
         }

@@ -2,6 +2,8 @@ import React, { Component } from 'react';
 import { Dropdown, Form, DropdownButton, Button } from 'react-bootstrap';
 import ipfs from "../ipfs";
 
+const priceConversion = 10**18;
+
 class UploadCar extends Component {
 
     constructor(props) {
@@ -49,7 +51,7 @@ class UploadCar extends Component {
         if (event.target.value === '' || re.test(event.target.value)) {
             this.setState({priceValue: event.target.value});
             console.log("File price: " + event.target.value);
-            this.setState({ currentFilePrice: event.target.value });
+            this.setState({ currentFilePrice: event.target.value * priceConversion});
         }
     }
 
@@ -182,7 +184,7 @@ class UploadCar extends Component {
                                     <Form.Label>Car Setup data</Form.Label>
                                     <Form.Control type="text" placeholder="Generate IPFS Hash" value={this.state.ipfsHash} onChange={this.handleChangeHash} readOnly />
                                     <br></br>
-                                    <Form.Control type="text" pattern="[0-9]*" placeholder="Enter File Price" value={this.state.priceValue} onChange={this.handleFilePrice} />
+                                    <Form.Control type="text" pattern="[0-9]*" placeholder="Enter File Price (ETH)" value={this.state.priceValue} onChange={this.handleFilePrice} />
                                     <br></br>
                                     <Form.Control type="text" placeholder="Enter Season" onChange={this.handleSeason} />
                                     <br></br>

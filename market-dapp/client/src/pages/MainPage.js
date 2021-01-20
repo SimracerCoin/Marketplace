@@ -5,6 +5,8 @@ import { Redirect } from "react-router-dom";
 
 import "../css/mainpage.css";
 
+const priceConversion = 10**18;
+
 class MainPage extends Component {
 
     constructor(props) {
@@ -98,7 +100,7 @@ class MainPage extends Component {
                                     <div><b>Track:</b> {track}</div>
                                     <div><b>Simulator:</b> {simulator}</div>
                                     <div><b>Season:</b> {season}</div>
-                                    <div><b>Price:</b> {price}</div>
+                                    <div><b>Price:</b> {price / priceConversion} ETH</div>
                                     {/* <div><b>Vendor address:</b> {address}</div> */}
                                 </Card.Text>
                                 <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, track, simulator, season, price, carBrand, address, ipfsHash)}> View item</Button>
@@ -124,7 +126,7 @@ class MainPage extends Component {
                                 <Card.Title>{carBrand}</Card.Title>
                                 <Card.Text>
                                     <div><b>Simulator:</b> {simulator}</div>
-                                    <div><b>Price:</b> {price}</div>
+                                    <div><b>Price:</b> {price / priceConversion} ETH</div>
                                     {/* <div><b>Vendor address:</b> {address}</div> */}
                                 </Card.Text>
                                 <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, price, carBrand , address, ipfsHash)}> View item</Button>

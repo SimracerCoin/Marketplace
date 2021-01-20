@@ -2,6 +2,8 @@ import React, { Component } from 'react';
 import { Dropdown, Form, DropdownButton, Button } from 'react-bootstrap';
 import ipfs from "../ipfs";
 
+const priceConversion = 10**18;
+
 class UploadSkin extends Component {
 
     constructor(props) {
@@ -45,7 +47,7 @@ class UploadSkin extends Component {
         if (event.target.value === '' || re.test(event.target.value)) {
             this.setState({priceValue: event.target.value});
             console.log("File price: " + event.target.value);
-            this.setState({ currentFilePrice: event.target.value });
+            this.setState({ currentFilePrice: event.target.value * priceConversion});
         }
     }
 

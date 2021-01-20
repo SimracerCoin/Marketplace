@@ -105,6 +105,8 @@ contract ContentMarketplace {
     {
         // TODO: ensure ad exists
         // TODO: ensure funds are adequade
+        Advertisement memory ad = getAd(_adId);
+        require(msg.value == (ad.price),"Amount should be equal to the item price");
 
         // stores purchase info
         Purchase storage purchase = purchases[numPurchases];
