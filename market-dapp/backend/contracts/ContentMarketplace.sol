@@ -22,6 +22,18 @@ contract ContentMarketplace {
         uint256 date;
     }
 
+    enum NotificationType { Request, Accept_A, Challenge, Accept_B }
+    // @notice full representation of a notification
+    struct Notification {
+        uint256 purchaseId;       // purchase information
+        string message;           // generic message
+        NotificationType nType;   // type of notification
+        bool archive;             // archived notification
+        uint256 date;             // notification date
+        address sender;           // notification from address
+        address receiver;         // notification to address
+    }
+
     // storage of advertisements
     uint256 numAds = 0;
     mapping(uint256 => Advertisement) internal ads;
@@ -31,6 +43,11 @@ contract ContentMarketplace {
     uint256 numPurchases = 0;
     mapping(uint256 => Purchase) internal purchases;
     mapping(uint256 => uint256[]) internal purchasesPerAd;
+
+    // storage of notifications
+    uint256 numNotifications = 0;
+    mapping(uint256 => Notification) notifications;
+    mapping(address => uint256[]) notificationsPerUser;
 
     // purchase events
     event PurchaseRequested(uint256 adId, uint256 purchaseId, address buyer, bytes buyerKey);
@@ -101,6 +118,17 @@ contract ContentMarketplace {
         return purchases[_purchaseId];
     }
 
+    /// @notice retrieves an advertisement given its identifier
+    function getPurchases(uint256[] memory _purchaseIds) public view
+        returns (Purchase[] memory)
+    {
+        Purchase[] memory ret = new Purchase[](_purchaseIds.length);
+        for(uint256 i = 0; i < _purchaseIds.length; i++) {
+            uint256 id = _purchaseIds[i];
+            ret[i] = purchases[id];
+        }
+        return ret;
+    }
 
     /// @notice requests purchase of a registered advertisement
     function requestPurchase(
@@ -123,12 +151,13 @@ contract ContentMarketplace {
         purchase.date = now;
 
         purchaseId = numPurchases++;
-        purchasesPerAd[purchase.adId].push(purchaseId); 
+        purchasesPerAd[purchase.adId].push(purchaseId);
+
+        newNotification(purchaseId, "Purchase was requested", msg.sender, ad.seller, NotificationType.Request);
 
         emit PurchaseRequested(purchase.adId, purchaseId, purchase.buyer, purchase.buyerKey);
         return purchaseId;
     }
-
 
     /// @notice called by seller to accept a purchase request for a registered advertisement
     function acceptPurchase(
@@ -138,6 +167,12 @@ contract ContentMarketplace {
         payable                        // deposit sent by the seller that will be locked until purchase is finalized
     {
         // TODO...
+
+        Purchase memory purchase = getPurchase(_purchaseId);
+
+        newNotification(_purchaseId, "Thank you for your purchase. Please check item.", msg.sender, purchase.buyer, NotificationType.Accept_A);
+    
+        emit PurchaseAccepted(purchase.adId, _purchaseId, _encryptedDataKey);
     }
 
 
@@ -149,8 +184,15 @@ contract ContentMarketplace {
         returns (uint256 descartesIndex)  // returns index of the descartes computation that will verify the challenge
     {
         // TODO...
-    }
 
+        Purchase memory purchase = getPurchase(_purchaseId);
+        Advertisement memory ad = getAd(purchase.adId);
+
+        newNotification(_purchaseId, "Purchase was challenged", msg.sender, ad.seller, NotificationType.Challenge);
+
+        emit PurchaseChallenged(purchase.adId, _purchaseId, descartesIndex);
+        return descartesIndex;
+    }
 
     /// @notice finalizes purchase, unlocking buyer's funds and seller's deposit as appropriate
     function finalizePurchase(
@@ -162,7 +204,59 @@ contract ContentMarketplace {
 
         address payable accountAddress = ad.seller;
         accountAddress.transfer(ad.price);
+
+        newNotification(_purchaseId, "Purchase was accepted", msg.sender, ad.seller, NotificationType.Accept_B);
+
         emit PurchaseFinalized(purchase.adId, _purchaseId, true); 
+    }
+
+    // @notice create notification
+    function newNotification(
+        uint256 _purchaseId,           // purchase request identifier
+        string memory _message,        // generic message
+        address _sender,               // who sends the message
+        address _receiver,             // who receives the message
+        NotificationType _type         // type of notification
+    ) public
+        returns (uint256 notificationId)           // returns notification identifier
+    {
+        Notification storage notification = notifications[numNotifications];
+        notification.purchaseId = _purchaseId;
+        notification.message = _message;
+        notification.nType = _type;
+        notification.archive = false;
+        notification.date = now;
+        notification.sender = _sender;
+        notification.receiver = _receiver;
+
+        notificationId = numNotifications++;
+        //notificationsPerSeller[ads[purchases[_purchaseId].adId].seller].push(notificationId);
+        notificationsPerUser[_receiver].push(notificationId);
+
+        return notificationId;
+    }
+
+    /// @notice retrieves an array of notifications given their identifiers
+    function getNotifications(uint256[] memory _notificationIds) public view
+        returns (Notification[] memory)
+    {
+        Notification[] memory ret = new Notification[](_notificationIds.length);
+        for(uint256 i = 0; i < _notificationIds.length; i++) {
+            uint256 id = _notificationIds[i];
+            ret[i] = notifications[id];
+        }
+        return ret;
+    }
+
+    /// @notice returns identifiers for a seller's notifications
+    function listNotificationsPerUser(address _user) public view
+        returns (uint256[] memory)
+    {
+        return notificationsPerUser[_user];
+    }
+
+    function archiveNotification(uint256 _notificationId) public {
+        notifications[_notificationId].archive = true;
     }
 
 }
