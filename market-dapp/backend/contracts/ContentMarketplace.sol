@@ -5,7 +5,7 @@ contract ContentMarketplace {
 
     /// @notice records necessary information for an advertisement
     struct Advertisement {
-        address seller;               // seller address
+        address payable seller;               // seller address
         uint256 price;                // trade price
         bytes32 dataHash;             // merkle hash of unencrypted data
         bytes32 encryptedDataHash;    // merkle hash of encrypted data
@@ -94,6 +94,13 @@ contract ContentMarketplace {
         return adsPerSeller[_seller];
     }
 
+    /// @notice retrieves a purchase given its identifier
+    function getPurchase(uint256 _purchaseId) public view
+        returns (Purchase memory)
+    {
+        return purchases[_purchaseId];
+    }
+
 
     /// @notice requests purchase of a registered advertisement
     function requestPurchase(
@@ -150,6 +157,12 @@ contract ContentMarketplace {
         uint256 _purchaseId            // purchase request identifier
     ) public {
         // TODO...
+        Purchase memory purchase = getPurchase(_purchaseId);
+        Advertisement memory ad = getAd(purchase.adId);
+
+        address payable accountAddress = ad.seller;
+        accountAddress.transfer(ad.price);
+        emit PurchaseFinalized(purchase.adId, _purchaseId, true); 
     }
 
 }
