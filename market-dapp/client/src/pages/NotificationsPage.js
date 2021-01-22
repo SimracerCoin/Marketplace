@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import { Link } from 'react-router-dom';
 import { withRouter } from "react-router";
 import { confirmAlert } from 'react-confirm-alert';
-import ipfs from "../ipfs";
 import 'react-confirm-alert/src/react-confirm-alert.css';
 
 class NotificationsPage extends Component {

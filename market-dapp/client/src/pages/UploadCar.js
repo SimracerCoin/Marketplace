@@ -1,6 +1,9 @@
 import React, { Component } from 'react';
 import { Dropdown, Form, DropdownButton, Button } from 'react-bootstrap';
+import { Prompt } from 'react-st-modal';
 import ipfs from "../ipfs";
+
+const openpgp = require('openpgp');
 
 const priceConversion = 10**18;
 
@@ -97,15 +100,21 @@ class UploadCar extends Component {
 
     onIPFSSubmit = async (event) => {
         event.preventDefault();
-        const response = await ipfs.add(this.state.buffer, (err, ipfsHash) => {
+        const password = await Prompt('Password to encrypt');
+
+        const { message } = await openpgp.encrypt({
+            message: openpgp.message.fromBinary(this.state.buffer), // input as Message object
+            passwords: [password],                                  // multiple passwords possible
+            armor: false                                            // don't ASCII armor (for Uint8Array output)
+        });
+        const encryptedBuffer = message.packets.write(); // get raw encrypted packets as Uint8Array
+
+        const response = await ipfs.add(encryptedBuffer, (err, ipfsHash) => {
             console.log(err, ipfsHash);
             //setState by setting ipfsHash to ipfsHash[0].hash 
             this.setState({ ipfsHash: ipfsHash[0].hash });
         })
-
-        console.log(response)
-        console.log(response.path)
-        this.setState({ ipfsHash: response.path })
+        this.setState({ ipfsHash: response.path });
     };
 
     saveCar = async (event) => {
