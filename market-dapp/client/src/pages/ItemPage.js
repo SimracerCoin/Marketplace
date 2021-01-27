@@ -58,7 +58,7 @@ class ItemPage extends Component {
         //const buyerPK = this.state.drizzle.web3.utils.hexToBytes(this.state.drizzle.web3.utils.randomHex(16));
         //console.log('Item price:' + this.state.price);
 
-        const buyerKey = localStorage.getItem('pk');
+        let buyerKey = localStorage.getItem('pk');
         if (!buyerKey) {
             const { privateKeyArmored, publicKeyArmored, revocationCertificate } = await openpgp.generateKey({
                 userIds: [{ name: this.state.currentAccount }],             // you can pass multiple user IDs
