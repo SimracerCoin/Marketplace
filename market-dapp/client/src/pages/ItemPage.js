@@ -6,7 +6,9 @@ import 'react-confirm-alert/src/react-confirm-alert.css';
 import ipfs from "../ipfs";
 const BufferList = require('bl/BufferList');
 
-const priceConversion = 10**18;
+const openpgp = require('openpgp');
+
+const priceConversion = 10 ** 18;
 
 class ItemPage extends Component {
 
@@ -53,10 +55,23 @@ class ItemPage extends Component {
         event.preventDefault();
 
         // TODO: buyer public key
-        const buyerPK = this.state.drizzle.web3.utils.hexToBytes(this.state.drizzle.web3.utils.randomHex(16));
-        console.log('Item price:' + this.state.price);
-        await this.state.contract.methods.requestPurchase(this.state.itemId, buyerPK).send({value:this.state.price, from: this.state.currentAccount });
-        
+        //const buyerPK = this.state.drizzle.web3.utils.hexToBytes(this.state.drizzle.web3.utils.randomHex(16));
+        //console.log('Item price:' + this.state.price);
+
+        const buyerKey = localStorage.getItem('pk');
+        if (!buyerKey) {
+            const { privateKeyArmored, publicKeyArmored, revocationCertificate } = await openpgp.generateKey({
+                userIds: [{ name: this.state.currentAccount }],             // you can pass multiple user IDs
+                curve: 'p256',                                              // ECC curve name
+                passphrase: 'garlic stress stumble dislodge copier shortwave cucumber extrude rebuff spearman smile reward'           // protects the private key
+            });
+
+            buyerKey = this.state.drizzle.web3.utils.asciiToHex(privateKeyArmored);
+            localStorage.setItem('pk', buyerKey);
+        }
+
+        await this.state.contract.methods.requestPurchase(this.state.itemId, buyerKey).send({ value: this.state.price, from: this.state.currentAccount });
+
         /*
         console.log(response);
         console.log(this.state.vendorAddress);

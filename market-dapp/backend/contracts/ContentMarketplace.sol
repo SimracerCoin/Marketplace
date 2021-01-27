@@ -5,7 +5,7 @@ contract ContentMarketplace {
 
     /// @notice records necessary information for an advertisement
     struct Advertisement {
-        address payable seller;               // seller address
+        address payable seller;       // seller address
         uint256 price;                // trade price
         bytes32 dataHash;             // merkle hash of unencrypted data
         bytes32 encryptedDataHash;    // merkle hash of encrypted data
@@ -69,7 +69,7 @@ contract ContentMarketplace {
         bytes memory _ipfsPath,        // ipfs path of encrypted data
         bytes32 _testTemplateHash      // hash of the machine representing the test procedure for decrypted data
     ) internal
-        returns (uint256 adId)       // returns ad identifier
+        returns (uint256 adId)          // returns ad identifier
     {
         Advertisement storage ad = ads[numAds];
         ad.seller = msg.sender;
@@ -168,7 +168,8 @@ contract ContentMarketplace {
     {
         // TODO...
 
-        Purchase memory purchase = getPurchase(_purchaseId);
+        Purchase storage purchase = purchases[_purchaseId];
+        purchase.encryptedDataKey = _encryptedDataKey;
 
         newNotification(_purchaseId, "Thank you for your purchase. Please check item.", msg.sender, purchase.buyer, NotificationType.Accept_A);
     
