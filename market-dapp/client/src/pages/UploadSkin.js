@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { Dropdown, Form, DropdownButton, Button } from 'react-bootstrap';
 import ipfs from "../ipfs";
+import computeMerkleRootHash from "../merkle"
 
 const priceConversion = 10**18;
 
@@ -84,6 +85,10 @@ class UploadSkin extends Component {
 
     onIPFSSubmit = async (event) => {
         event.preventDefault();
+
+        const loggerRootHash = computeMerkleRootHash(this.state.buffer);
+        console.log(`Logger Root Hash: ${loggerRootHash}`);
+
         const response = await ipfs.add(this.state.buffer, (err, ipfsHash) => {
             console.log(err, ipfsHash);
             //setState by setting ipfsHash to ipfsHash[0].hash 
