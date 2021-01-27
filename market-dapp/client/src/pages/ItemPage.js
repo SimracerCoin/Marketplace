@@ -6,7 +6,9 @@ import 'react-confirm-alert/src/react-confirm-alert.css';
 import ipfs from "../ipfs";
 const BufferList = require('bl/BufferList');
 
-const priceConversion = 10**18;
+const openpgp = require('openpgp');
+
+const priceConversion = 10 ** 18;
 
 class ItemPage extends Component {
 
@@ -53,16 +55,30 @@ class ItemPage extends Component {
         event.preventDefault();
 
         // TODO: buyer public key
-        const buyerPK = this.state.drizzle.web3.utils.hexToBytes(this.state.drizzle.web3.utils.randomHex(16));
-        console.log('Item price:' + this.state.price);
-        const response = await this.state.contract.methods.requestPurchase(this.state.itemId, buyerPK).send({value:this.state.price, from: this.state.currentAccount });
-        
+        //const buyerPK = this.state.drizzle.web3.utils.hexToBytes(this.state.drizzle.web3.utils.randomHex(16));
+        //console.log('Item price:' + this.state.price);
+
+        let buyerKey = localStorage.getItem('pk');
+        if (!buyerKey) {
+            const { privateKeyArmored, publicKeyArmored, revocationCertificate } = await openpgp.generateKey({
+                userIds: [{ name: this.state.currentAccount }],             // you can pass multiple user IDs
+                curve: 'p256',                                              // ECC curve name
+                passphrase: 'garlic stress stumble dislodge copier shortwave cucumber extrude rebuff spearman smile reward'           // protects the private key
+            });
+
+            buyerKey = this.state.drizzle.web3.utils.asciiToHex(privateKeyArmored);
+            localStorage.setItem('pk', buyerKey);
+        }
+
+        await this.state.contract.methods.requestPurchase(this.state.itemId, buyerKey).send({ value: this.state.price, from: this.state.currentAccount });
+
+        /*
         console.log(response);
         console.log(this.state.vendorAddress);
         
         const notification = await this.state.contract.methods.newNotification(response.events.PurchaseRequested.returnValues.purchaseId, "Purchase was requested", this.state.currentAccount, this.state.vendorAddress, 0).send();
         
-        console.log(notification);
+        console.log(notification);*/
         alert("Thank you for wanting to purchase. Seller contact you sooner.");
 
         // const responseFile = await ipfs.get(this.state.ipfsHash);

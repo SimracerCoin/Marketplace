@@ -1,7 +1,10 @@
 import React, { Component } from 'react';
 import { Dropdown, Form, DropdownButton, Button } from 'react-bootstrap';
+import { Prompt } from 'react-st-modal';
 import ipfs from "../ipfs";
 import computeMerkleRootHash from "../merkle"
+
+const openpgp = require('openpgp');
 
 const priceConversion = 10**18;
 
@@ -27,7 +30,6 @@ class UploadSkin extends Component {
 
         this.handleChangeHash = this.handleChangeHash.bind(this);
         this.handleFilePrice = this.handleFilePrice.bind(this);
-
     };
 
 
@@ -86,18 +88,24 @@ class UploadSkin extends Component {
     onIPFSSubmit = async (event) => {
         event.preventDefault();
 
-        const loggerRootHash = computeMerkleRootHash(this.state.buffer);
+        const password = await Prompt('Password to encrypt');
+
+        const { message } = await openpgp.encrypt({
+            message: openpgp.message.fromBinary(this.state.buffer), // input as Message object
+            passwords: [password],                                  // multiple passwords possible
+            armor: false                                            // don't ASCII armor (for Uint8Array output)
+        });
+        const encryptedBuffer = message.packets.write(); // get raw encrypted packets as Uint8Array
+
+        const loggerRootHash = computeMerkleRootHash(encryptedBuffer);
         console.log(`Logger Root Hash: ${loggerRootHash}`);
 
-        const response = await ipfs.add(this.state.buffer, (err, ipfsHash) => {
+        const response = await ipfs.add(encryptedBuffer, (err, ipfsHash) => {
             console.log(err, ipfsHash);
             //setState by setting ipfsHash to ipfsHash[0].hash 
             this.setState({ ipfsHash: ipfsHash[0].hash });
         })
-
-        console.log(response)
-        console.log(response.path)
-        this.setState({ ipfsHash: response.path })
+        this.setState({ ipfsHash: response.path });
     };
 
     saveSkin = async (event) => {

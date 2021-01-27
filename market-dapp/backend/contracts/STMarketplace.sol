@@ -40,23 +40,6 @@ contract STMarketplace is ContentMarketplace {
         carSkinInfo info;   // specific car skin information
     }
 
-    enum NotificationType { Request, Accept_A, Challenge, Accept_B }
-    // @notice full representation of a notification
-    struct Notification {
-        uint256 purchaseId;       // purchase information
-        string message;           // generic message
-        NotificationType nType;   // type of notification
-        bool archive;             // archived notification
-        uint256 date;             // notification date
-        address sender;           // notification from address
-        address receiver;         // notification to address
-    }
-
-    // storage of notifications
-    uint256 numNotifications = 0;
-    mapping(uint256 => Notification) notifications;
-    mapping(address => uint256[]) notificationsPerUser;
-
     /// @notice Maps the 2 type of files
     mapping(uint256 => carSetupInfo) carSetupInfos;
     mapping(uint256 => carSkinInfo) carSkinInfos;
@@ -210,75 +193,5 @@ contract STMarketplace is ContentMarketplace {
             str[3+i*2] = alphabet[uint8(value[i + 12] & 0x0f)];
         }
         return string(str);
-    }
-
-    // TODO: refactoring...
-
-    // @notice create notification
-    function newNotification(
-        uint256 _purchaseId,           // purchase request identifier
-        string memory _message,        // generic message
-        address _sender,               // who sends the message
-        address _receiver,             // who receives the message
-        NotificationType _type         // type of notification
-    ) public
-        returns (uint256 notificationId)           // returns notification identifier
-    {
-        Notification storage notification = notifications[numNotifications];
-        notification.purchaseId = _purchaseId;
-        notification.message = _message;
-        notification.nType = _type;
-        notification.archive = false;
-        notification.date = now;
-        notification.sender = _sender;
-        notification.receiver = _receiver;
-
-        notificationId = numNotifications++;
-        //notificationsPerSeller[ads[purchases[_purchaseId].adId].seller].push(notificationId);
-        notificationsPerUser[_receiver].push(notificationId);
-
-        return notificationId;
-    }
-
-    /// @notice retrieves an advertisement given its identifier
-    function getPurchase(uint256 _purchaseId) public view
-        returns (Purchase memory)
-    {
-        return purchases[_purchaseId];
-    }
-
-        /// @notice retrieves an advertisement given its identifier
-    function getPurchases(uint256[] memory _purchaseIds) public view
-        returns (Purchase[] memory)
-    {
-        Purchase[] memory ret = new Purchase[](_purchaseIds.length);
-        for(uint256 i = 0; i < _purchaseIds.length; i++) {
-            uint256 id = _purchaseIds[i];
-            ret[i] = purchases[id];
-        }
-        return ret;
-    }
-
-    /// @notice retrieves an array of notifications given their identifiers
-    function getNotifications(uint256[] memory _notificationIds) public view
-        returns (Notification[] memory)
-    {
-        Notification[] memory ret = new Notification[](_notificationIds.length);
-        for(uint256 i = 0; i < _notificationIds.length; i++) {
-            uint256 id = _notificationIds[i];
-            ret[i] = notifications[id];
-        }
-        return ret;
-    }
-
-    /// @notice returns identifiers for a seller's notifications
-    function listNotificationsPerUser(address _user) public view
-        returns (uint256[] memory)
-    {
-        return notificationsPerUser[_user];
-    }
-
-    function archiveNotification(uint256 _notificationId) public {
-        notifications[_notificationId].archive = true;
     }
 }
