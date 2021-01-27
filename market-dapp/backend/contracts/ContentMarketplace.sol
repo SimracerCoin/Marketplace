@@ -1,4 +1,4 @@
-pragma solidity ^0.5.1;
+pragma solidity ^0.7.0;
 pragma experimental ABIEncoderV2;
 
 contract ContentMarketplace {
@@ -57,7 +57,7 @@ contract ContentMarketplace {
 
 
     /// @param descartesAddress address of the Descartes contract
-    constructor(address descartesAddress) public {
+    constructor(address descartesAddress) {
         // TODO retrieve Descartes interface from the address
     }
 
@@ -112,7 +112,7 @@ contract ContentMarketplace {
     }
 
     /// @notice retrieves a purchase given its identifier
-    function getPurchase(uint256 _purchaseId) public view
+    function getPurchase(uint256 _purchaseId) public view virtual
         returns (Purchase memory)
     {
         return purchases[_purchaseId];
@@ -148,7 +148,7 @@ contract ContentMarketplace {
         purchase.adId = _adId;
         purchase.buyer = msg.sender;
         purchase.buyerKey = _buyerKey;
-        purchase.date = now;
+        purchase.date = block.timestamp;
 
         purchaseId = numPurchases++;
         purchasesPerAd[purchase.adId].push(purchaseId);
@@ -226,7 +226,7 @@ contract ContentMarketplace {
         notification.message = _message;
         notification.nType = _type;
         notification.archive = false;
-        notification.date = now;
+        notification.date = block.timestamp;
         notification.sender = _sender;
         notification.receiver = _receiver;
 
