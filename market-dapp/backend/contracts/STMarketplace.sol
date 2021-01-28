@@ -1,4 +1,4 @@
-pragma solidity ^0.5.1;
+pragma solidity ^0.7.0;
 pragma experimental ABIEncoderV2;
 
 import "./ContentMarketplace.sol";
@@ -40,13 +40,13 @@ contract STMarketplace is ContentMarketplace {
         carSkinInfo info;   // specific car skin information
     }
 
-    /// @notice Maps the 2 type of files
+    // /// @notice Maps the 2 type of files
     mapping(uint256 => carSetupInfo) carSetupInfos;
     mapping(uint256 => carSkinInfo) carSkinInfos;
     uint256[] carSetupIds;
     uint256[] carSkinIds;
     
-    /// @notice To track if seller address already exists
+    // /// @notice To track if seller address already exists
     mapping (address => bool) userExists;
     
     // /// @notice Keep track of all seller addresses and existing files
@@ -58,7 +58,7 @@ contract STMarketplace is ContentMarketplace {
     
     /// @notice Creates an instance of the contract
     /// @param descartesAddress address of the Descartes contract
-    constructor(address descartesAddress) public ContentMarketplace(descartesAddress) {
+    constructor(address descartesAddress) ContentMarketplace(descartesAddress) {
     }    
     
     /// @notice Registers a new car setup for sale

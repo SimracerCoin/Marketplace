@@ -1,1 +1,7 @@
-build/
+node_modules/
+cache/
+artifacts/
+deployments/localhost
+src/types
+machines/
+!machines/.gitkeep

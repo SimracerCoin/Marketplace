@@ -1,0 +1,26 @@
+FROM node:14-alpine
+
+RUN apk add --no-cache git
+
+ENV BASE /opt/cartesi
+
+WORKDIR $BASE/deployer
+COPY yarn.lock .
+COPY package.json .
+COPY hardhat.config.ts .
+COPY contracts .
+COPY deploy .
+
+RUN yarn 
+
+ENV ETHEREUM_HOST "hardhatnet"
+ENV ETHEREUM_PORT "8545"
+ENV ETHEREUM_TIMEOUT "10s"
+ENV ETHEREUM_NETWORK "development"
+ENV DOCKER true
+
+EXPOSE 8545  
+
+WORKDIR $BASE/share/blockchain
+
+CMD ["npx", "hardhat",  "node" ]

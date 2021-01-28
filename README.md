@@ -11,36 +11,30 @@ This project has 2 folders, **backend** and **frontend**:
 **frontend**: Has all **react** files
     
 ##### How to run project
-1) Install truffle 
+1) Go to **backend** and install project
 
-    **npm install -g truffle**
+    **yarn**
 
-2) Go to **backend** folder and run
+2) Start development environment containing hardhat node with compiled and deployed projects and dependencies, along with two Descartes nodes for `alice` and `bob`
     
-    **truffle development**
+    **docker-compose up**
     
-3) Inside truffle development, run these commands and don't exit **truffle development**:
+3) Inside **deployments/localhost** folder copy **STMarketplace.json**
 
-    **compile**
+    **paste STMarketplace.json to folder --> client/src/**
+
+4) Go to folder **client** and run command
+
+    **yarn**
+
+5) Run this command to build the Dapp
+
+    **yarn build**
     
-    **migrate**
-    
-4) Inside **build/contracts** folder copy **STMarketplace.json**
+6) Run this command to start it:
 
-    **past STMarketplace.json to folder --> client/src/**
+    **yarn start**
 
-5) Go to folder **client** and run command
+7) Use metamask plugin to interact with the Dapp. Add a custom network with the RPC for your local blockchain, running at `localhost:8545`.
 
-    **npm install**
-
-6) Run this command to build the Dapp
-
-    **npm run build**
-    
-7) Run this command to start it:
-
-    **npm run start**
-
-8) Use metamask plugin to interact with the Dapp. Add a custom network with the RPC for your local blokchain, running in truffle.
-
-9) Add one of the accounts shown in truffle console to your metamask plugin.
+8) Add one of the accounts for the blockchain, which by default are the ones listed [here](https://hardhat.org/hardhat-network/#hardhat-network-initial-state) (e.g., `0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266`); or simply log into Metamask using the default mnemonic `test test test test test test test test test test test junk`.
