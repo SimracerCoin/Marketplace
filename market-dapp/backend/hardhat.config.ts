@@ -153,10 +153,13 @@ const config: HardhatUserConfig = {
     deployer: {
       default: 0,
     },
+    proxy: {
+      default: 1,
+    },
     alice: {
       default: 0,
     },
-    proxy: {
+    bob: {
       default: 1,
     },
   },

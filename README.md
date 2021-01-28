@@ -15,9 +15,9 @@ This project has 2 folders, **backend** and **frontend**:
 
     **yarn**
 
-2) Start hardhat node with compiled and deployed projects and dependencies
+2) Start development environment containing hardhat node with compiled and deployed projects and dependencies, along with two Descartes nodes for `alice` and `bob`
     
-    **npx hardhat node**
+    **docker-compose up**
     
 3) Inside **deployments/localhost** folder copy **STMarketplace.json**
 
@@ -25,15 +25,15 @@ This project has 2 folders, **backend** and **frontend**:
 
 4) Go to folder **client** and run command
 
-    **npm install**
+    **yarn**
 
 5) Run this command to build the Dapp
 
-    **npm run build**
+    **yarn build**
     
 6) Run this command to start it:
 
-    **npm run start**
+    **yarn start**
 
 7) Use metamask plugin to interact with the Dapp. Add a custom network with the RPC for your local blockchain, running at `localhost:8545`.
 
