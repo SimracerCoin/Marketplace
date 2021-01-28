@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { Dropdown, Form, DropdownButton, Button } from 'react-bootstrap';
 import { Prompt } from 'react-st-modal';
 import ipfs from "../ipfs";
+import computeMerkleRootHash from "../merkle"
 
 const openpgp = require('openpgp');
 
@@ -95,6 +96,9 @@ class UploadSkin extends Component {
             armor: false                                            // don't ASCII armor (for Uint8Array output)
         });
         const encryptedBuffer = message.packets.write(); // get raw encrypted packets as Uint8Array
+
+        const loggerRootHash = computeMerkleRootHash(encryptedBuffer);
+        console.log(`Logger Root Hash: ${loggerRootHash}`);
 
         const response = await ipfs.add(encryptedBuffer, (err, ipfsHash) => {
             console.log(err, ipfsHash);
