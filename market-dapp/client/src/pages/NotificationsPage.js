@@ -7,6 +7,7 @@ import ipfs from "../ipfs";
 import 'react-confirm-alert/src/react-confirm-alert.css';
 
 const openpgp = require('openpgp');
+const BufferList = require('bl/BufferList');
 
 class NotificationsPage extends Component {
     constructor(props) {
@@ -24,7 +25,7 @@ class NotificationsPage extends Component {
         const currentAccount = this.state.drizzleState.accounts[0];
         const notificationsIds = await contract.methods.listNotificationsPerUser(currentAccount).call()
         const notifications = await contract.methods.getNotifications(notificationsIds).call();
-        
+
         const purchasesIds = [];
         for (const [index, value] of notifications.entries()) {
             purchasesIds.push(value.purchaseId);
@@ -42,7 +43,7 @@ class NotificationsPage extends Component {
         this.setState({ listNotifications: notifications, listNotificationsIds: notificationsIds, listPurchases: purchases, listAds: ads, currentAccount: currentAccount, contract: contract });
     }
 
-    archiveNotification = async (event,notificationId) => {
+    archiveNotification = async (event, notificationId) => {
         event.preventDefault();
 
         await this.state.contract.methods.archiveNotification(notificationId).send({ from: this.state.currentAccount });
@@ -55,6 +56,8 @@ class NotificationsPage extends Component {
         event.preventDefault();
 
         const password = await Prompt('Password to decrypt');
+
+        if (!password) return;
 
         const encrypted = await openpgp.encrypt({
             message: openpgp.message.fromText(password),                      // input as Message object
@@ -87,7 +90,7 @@ class NotificationsPage extends Component {
     rejectItem = async (purchaseId) => {
 
         // TODO:
-        const privateKey = this.state.drizzle.web3.utils.hexToAscii(localStorage.getItem('pk'))
+        const privateKey = this.state.drizzle.web3.utils.hexToAscii(localStorage.getItem('bk'))
 
         await this.state.contract.methods.challengePurchase(purchaseId, privateKey).send({ from: this.state.currentAccount });
 
@@ -97,33 +100,38 @@ class NotificationsPage extends Component {
     endPurchase = async (event, purchaseId, ipfsHash, buyerKey, encryptedDataKey) => {
         event.preventDefault();
 
-        console.log(encryptedDataKey);
+        const ipfsPath = this.state.drizzle.web3.utils.hexToAscii(ipfsHash);
+  
+        const content = new BufferList()
+        for await (const file of ipfs.get(ipfsPath)) {
+            for await (const chunk of file.content) {
+                content.append(chunk)
+            }
+        }
 
-        const ipfsPath = this.state.drizzle.web3.utils.toAscii(ipfsHash);
+        const privateKeyArmored = this.state.drizzle.web3.utils.hexToAscii(localStorage.getItem('bk'));
 
-        const file = await ipfs.get(ipfsPath);
-
-        const privateKey = this.state.drizzle.web3.utils.hexToAscii(localStorage.getItem('pk'));
+        const privateKey = (await openpgp.key.readArmored([privateKeyArmored])).keys[0];
+        await privateKey.decrypt('garlic stress stumble dislodge copier shortwave cucumber extrude rebuff spearman smile reward');
 
         const decrypted = await openpgp.decrypt({
             message: await openpgp.message.readArmored(this.state.drizzle.web3.utils.hexToAscii(encryptedDataKey)),       // parse armored message
             publicKeys: (await openpgp.key.readArmored(this.state.drizzle.web3.utils.hexToAscii(buyerKey))).keys,         // for verification (optional)
-            privateKeys: [privateKey]                                           // for decryption
+            privateKeys: [privateKey]                                             // for decryption
         });
         const password = await openpgp.stream.readToEnd(decrypted.data);
 
-        
         const { data: decryptedFile } = await openpgp.decrypt({
-            message: await openpgp.message.read(file),      // parse encrypted bytes
-            passwords: [password],                          // decrypt with password
-            format: 'binary'                                // output as Uint8Array
+            message: await openpgp.message.read(content),      // parse encrypted bytes
+            passwords: [password],                                                   // decrypt with password
+            format: 'binary'                                                         // output as Uint8Array
         });
 
         var data = new Blob([decryptedFile]);
         var csvURL = window.URL.createObjectURL(data);
         var tempLink = document.createElement('a');
         tempLink.href = csvURL;
-        tempLink.setAttribute('download', 'setup');
+        tempLink.setAttribute('download', 'ipfs_blob');
         tempLink.click();
 
         // TODO: download file url
@@ -139,7 +147,7 @@ class NotificationsPage extends Component {
                 },
                 {
                     label: 'Reject/Challenge',
-                    onClick: () =>  this.rejectItem(purchaseId)
+                    onClick: () => this.rejectItem(purchaseId)
                 }
             ]
         });
@@ -166,14 +174,14 @@ class NotificationsPage extends Component {
 
                 notifications.push(<tr>
                     <th scope="row">#{notificationId}</th>
-                    <td>{new Intl.DateTimeFormat('en-US', {year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'}).format(value.date*1000)}</td>
+                    <td>{new Intl.DateTimeFormat('en-US', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).format(value.date * 1000)}</td>
                     <td><Link onClick={(e) => this.viewItem(e, purchase.adId)}>{purchase.adId}</Link></td>
                     <td>{value.message}</td>
                     <td>
-                    {value.nType == 1 ?
-                        <Link onClick={(e) => this.endPurchase(e,value.purchaseId,ad.ipfsPath,purchase.buyerKey,purchase.encryptedDataKey)}><i class="fas fa-reply"></i></Link> :
-                     value.nType == 3 ? '' :
-                        <Link onClick={(e) => (value.nType == 0 ? this.acceptPurchase(e,value.purchaseId,purchase.buyerKey) : this.resolvePurchase(e,value.purchaseId))}><i class="fas fa-reply"></i></Link>}
+                        {value.nType == 1 ?
+                            <Link onClick={(e) => this.endPurchase(e, value.purchaseId, ad.ipfsPath, purchase.buyerKey, purchase.encryptedDataKey)}><i class="fas fa-reply"></i></Link> :
+                            value.nType == 3 ? '' :
+                                <Link onClick={(e) => (value.nType == 0 ? this.acceptPurchase(e, value.purchaseId, purchase.buyerKey) : this.resolvePurchase(e, value.purchaseId))}><i class="fas fa-reply"></i></Link>}
                     </td>
                 </tr>)
             }
@@ -199,7 +207,7 @@ class NotificationsPage extends Component {
                             <tbody>
                                 {notifications}
                             </tbody>
-                        </table>                    
+                        </table>
                     </div>
                 </div>
             </section>

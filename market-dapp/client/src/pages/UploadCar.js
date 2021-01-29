@@ -102,6 +102,8 @@ class UploadCar extends Component {
         event.preventDefault();
         const password = await Prompt('Password to encrypt');
 
+        if(!password) return;
+
         const { message } = await openpgp.encrypt({
             message: openpgp.message.fromBinary(this.state.buffer), // input as Message object
             passwords: [password],                                  // multiple passwords possible
