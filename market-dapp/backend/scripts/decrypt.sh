@@ -16,6 +16,12 @@ tmpfile_in=$(mktemp decrypt-script.XXXXXX.gpg)          #create temp file to sto
 tmpfile_out=${tmpfile_in/".gpg"/""}
 echo "$FILE" >> "$tmpfile_in"
 gpg --batch --passphrase "$PASSWORD" -o "$tmpfile_out" -d "$tmpfile_in" 2>/dev/null #decrypt file
+# check if decrypt went well
+if [[ ! -f "$tmpfile_out" ]]; then
+    rm "$tmpfile_in" 
+    echo "decryption error"
+    exit 1
+fi
 cat "$tmpfile_out"  #script output decrypted file
 #remove tmp file
 rm "$tmpfile_in" 
