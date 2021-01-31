@@ -58,7 +58,8 @@ class ItemPage extends Component {
         //const buyerPK = this.state.drizzle.web3.utils.hexToBytes(this.state.drizzle.web3.utils.randomHex(16));
         //console.log('Item price:' + this.state.price);
 
-        let buyerKey = localStorage.getItem('pk');
+        let buyerKey = localStorage.getItem('ak');
+        console.log(buyerKey);
         if (!buyerKey) {
             const { privateKeyArmored, publicKeyArmored, revocationCertificate } = await openpgp.generateKey({
                 userIds: [{ name: this.state.currentAccount }],             // you can pass multiple user IDs
@@ -66,8 +67,10 @@ class ItemPage extends Component {
                 passphrase: 'garlic stress stumble dislodge copier shortwave cucumber extrude rebuff spearman smile reward'           // protects the private key
             });
 
-            buyerKey = this.state.drizzle.web3.utils.asciiToHex(privateKeyArmored);
-            localStorage.setItem('pk', buyerKey);
+            buyerKey = this.state.drizzle.web3.utils.asciiToHex(publicKeyArmored);
+
+            localStorage.setItem('ak', buyerKey);
+            localStorage.setItem('bk', this.state.drizzle.web3.utils.asciiToHex(privateKeyArmored));
         }
 
         await this.state.contract.methods.requestPurchase(this.state.itemId, buyerKey).send({ value: this.state.price, from: this.state.currentAccount });
