@@ -1,7 +1,11 @@
 pragma solidity ^0.7.0;
 pragma experimental ABIEncoderV2;
 
+import "@cartesi/descartes-sdk/contracts/DescartesInterface.sol";
+
 contract ContentMarketplace {
+
+    DescartesInterface descartes;
 
     /// @notice records necessary information for an advertisement
     struct Advertisement {
@@ -59,6 +63,7 @@ contract ContentMarketplace {
     /// @param descartesAddress address of the Descartes contract
     constructor(address descartesAddress) {
         // TODO retrieve Descartes interface from the address
+        descartes = DescartesInterface(descartesAddress);
     }
 
     /// @notice creates a new advertisement for published and encrypted content

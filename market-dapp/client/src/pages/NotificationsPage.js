@@ -8,6 +8,10 @@ import 'react-confirm-alert/src/react-confirm-alert.css';
 
 const openpgp = require('openpgp');
 
+// TODO: use addresses from config file of the Cartesi nodes that will participating
+const claimer = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266';
+const challenger = '0x70997970C51812dc3A010C7d01b50e0d17dc79C8';
+
 class NotificationsPage extends Component {
     constructor(props) {
         super(props);
@@ -88,6 +92,9 @@ class NotificationsPage extends Component {
 
         // TODO:
         const privateKey = this.state.drizzle.web3.utils.hexToAscii(localStorage.getItem('pk'))
+
+        let verificationTx = await this.state.contract.methods.instantiateCartesiVerification(claimer,challenger);
+        alert(verificationTx);
 
         await this.state.contract.methods.challengePurchase(purchaseId, privateKey).send({ from: this.state.currentAccount });
 

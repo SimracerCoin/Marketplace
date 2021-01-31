@@ -6,7 +6,14 @@ import "./ContentMarketplace.sol";
 /// @title Simthunder Sim Racing Marketplace - first iteration
 /// @notice Non-Cartesi blockchain code for registering sellers and sim racing assets
 
-contract STMarketplace is ContentMarketplace {    
+contract STMarketplace is ContentMarketplace {   
+
+    bytes32 templateHash = 0xc675d0eb9110a446b8873cce9f6551b9ab3e506eea71729c8ebe561278da0ead;
+    uint64 outputPosition = 0x9000000000000000;
+    uint8 outputLog2Size = 5;
+    uint256 finalTime = 1e13;
+    uint256 roundDuration = 45;
+    DescartesInterface.Drive[] drives; 
 
     // cartesi machine template used to validate each asset category
     bytes32 validateCarSetupTemplateHash = "0x123";
@@ -193,5 +200,26 @@ contract STMarketplace is ContentMarketplace {
             str[3+i*2] = alphabet[uint8(value[i + 12] & 0x0f)];
         }
         return string(str);
+    }
+
+    function instantiateCartesiVerification(address claimer, address challenger) public returns (uint256) {
+
+        address[] memory actors = new address[](2);
+        actors[0] = claimer;
+        actors[1] = challenger;
+
+        return descartes.instantiate(
+            finalTime,
+            templateHash,
+            outputPosition,
+            outputLog2Size,
+            roundDuration,
+            actors,
+            drives
+        );
+    }
+
+    function getResult(uint256 index) public view returns (bool, bool, address, bytes memory) {
+        return descartes.getResult(index);
     }
 }
