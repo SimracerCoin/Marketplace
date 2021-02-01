@@ -8,7 +8,6 @@
  * - "index": controls which Descartes computation to query (default is 0)
  */
 import hre from "hardhat";
-import DescartesJson from "@cartesi/descartes-sdk/export/artifacts/Descartes.json";
 
 async function main() {
   const { ethers } = hre;
@@ -18,7 +17,7 @@ async function main() {
   let [signer] = await ethers.getSigners();
   const descartes = new ethers.Contract(
     Descartes.address,
-    DescartesJson.abi,
+    Descartes.abi,
     signer
   );
 

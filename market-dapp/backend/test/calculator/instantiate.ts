@@ -8,7 +8,6 @@
  * - "data": defines mathematical expression to evaluate (default is "2^71 + 36^12")
  */
 import hre from "hardhat";
-import DescartesJson from "@cartesi/descartes-sdk/export/artifacts/Descartes.json";
 
 async function main() {
   const { ethers, getNamedAccounts } = hre;
@@ -20,7 +19,7 @@ async function main() {
   let [signer] = await ethers.getSigners();
   const descartes = new ethers.Contract(
     Descartes.address,
-    DescartesJson.abi,
+    Descartes.abi,
     signer
   );
 
