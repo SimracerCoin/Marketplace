@@ -27,6 +27,7 @@ class MainPage extends Component {
             vendorAddress: "",
             vendorNickname: "",
             ipfsHash:"",
+            contract: null
         }
 
     }
@@ -35,7 +36,7 @@ class MainPage extends Component {
         const contract = await this.state.drizzle.contracts.STMarketplace
         const response_cars = await contract.methods.getCarSetups().call();
         const response_skins = await contract.methods.getSkins().call();
-        this.setState({ listCars: response_cars, listSkins: response_skins });
+        this.setState({ listCars: response_cars, listSkins: response_skins, contract: contract });
     }
 
 
@@ -51,11 +52,10 @@ class MainPage extends Component {
             selectedPrice: price,
             selectedCarBrand: carBrand,
             vendorAddress: address,
-            vendorNickname: this.state.contract.methods.getNickname(address).call(),
+            vendorNickname: await this.state.contract.methods.getNickname(address).call(),
             ipfsHash: ipfsHash,
         });
     }
-
 
     render() {
 

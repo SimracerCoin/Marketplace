@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { Button } from 'react-bootstrap';
 import { withRouter } from "react-router";
+import { Link } from 'react-router-dom';
 import { confirmAlert } from 'react-confirm-alert';
 import 'react-confirm-alert/src/react-confirm-alert.css';
 import ipfs from "../ipfs";
@@ -123,7 +124,7 @@ class ItemPage extends Component {
             item = "Skin"
             toRender = (
                 <div>
-                    <div><b>Seller:</b>{this.state.vendorNickname} ({this.state.vendorAddress})</div>
+                    <div><b>Seller:</b> <Link to={{pathname: "/seller", state: {vendorAddress: this.state.vendorAddress, vendorNickname: this.state.vendorNickname}}}>{this.state.vendorNickname} ({this.state.vendorAddress})</Link></div>
                     <div><b>Car Brand:</b> {this.state.car}</div>
                     <div><b>Simulator:</b> {this.state.simulator}</div>
                     <div><b>Price:</b> {this.state.price / priceConversion}</div>
@@ -133,7 +134,7 @@ class ItemPage extends Component {
             item = "Car Setup"
             toRender = (
                 <div>
-                    <div><b>Seller:</b> {this.state.vendorAddress}</div>
+                    <div><b>Seller:</b> <Link to={{pathname: "/seller", state: {vendorAddress: this.state.vendorAddress, vendorNickname: this.state.vendorNickname}}}>{this.state.vendorNickname} ({this.state.vendorAddress})</Link></div>
                     <div><b>Car Brand:</b> {this.state.car}</div>
                     <div><b>Track:</b> {this.state.track}</div>
                     <div><b>Simulator:</b> {this.state.simulator}</div>

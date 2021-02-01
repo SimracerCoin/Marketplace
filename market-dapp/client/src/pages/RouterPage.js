@@ -12,6 +12,7 @@ import NavbarPage from "./NavbarPage";
 import RegisterVendor from "./RegisterVendor";
 import ItemPage from "./ItemPage";
 import NotificationsPage from "./NotificationsPage"
+import SellerPage from "./SellerPage"
 import { Navbar, Nav, NavDropdown, Form, FormControl } from 'react-bootstrap'; // Check out drizzle's react components at @drizzle/react-components
 
 
@@ -29,7 +30,7 @@ class RouterPage extends Component {
 
     componentDidMount = async () => {
         const contract = this.state.drizzle.contract;
-        console.log(this.state.drizzle)
+        console.log(this.state.drizzle);
     }
 
 
@@ -53,6 +54,9 @@ class RouterPage extends Component {
                         </Route>
                         <Route path="/notifications">
                             <NotificationsPage drizzle={this.state.drizzle} drizzleState={this.state.drizzleState} />
+                        </Route>
+                        <Route path="/seller">
+                            <SellerPage drizzle={this.state.drizzle} drizzleState={this.state.drizzleState} />
                         </Route>
                         <Route exact
                             path="/"

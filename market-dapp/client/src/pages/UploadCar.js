@@ -41,7 +41,7 @@ class UploadCar extends Component {
     componentDidMount = async () => {
         const currentAccount = this.state.drizzleState.accounts[0];
         const contract = this.state.drizzle.contracts.STMarketplace;
-        const isSeller = this.state.contract.methods.isSeller(currentAccount).call();
+        const isSeller = await contract.methods.isSeller(currentAccount).call();
         this.setState({ currentAccount: currentAccount, contract: contract, isSeller: isSeller });
     };
 
@@ -127,7 +127,7 @@ class UploadCar extends Component {
         if (this.state.currentFilePrice === null) {
             alert('Item price must be an integer');
         } else {
-            let nickname;
+            let nickname = "";
             if(!this.state.isSeller) {
                 nickname = await Prompt('Enter a nickname');
                 if(!nickname) return;
