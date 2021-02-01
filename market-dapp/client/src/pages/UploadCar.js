@@ -26,7 +26,8 @@ class UploadCar extends Component {
             ipfsHash: "",
             formIPFS: "",
             formAddress: "",
-            receivedIPFS: ""
+            receivedIPFS: "",
+            isSeller: false
         }
 
 
@@ -40,7 +41,8 @@ class UploadCar extends Component {
     componentDidMount = async () => {
         const currentAccount = this.state.drizzleState.accounts[0];
         const contract = this.state.drizzle.contracts.STMarketplace;
-        this.setState({ currentAccount: currentAccount, contract: contract });
+        const isSeller = this.state.contract.methods.isSeller(currentAccount).call();
+        this.setState({ currentAccount: currentAccount, contract: contract, isSeller: isSeller });
     };
 
 
@@ -100,8 +102,8 @@ class UploadCar extends Component {
 
     onIPFSSubmit = async (event) => {
         event.preventDefault();
-        const password = await Prompt('Password to encrypt');
 
+        const password = await Prompt('Password to encrypt');
         if(!password) return;
 
         const { message } = await openpgp.encrypt({
@@ -125,6 +127,12 @@ class UploadCar extends Component {
         if (this.state.currentFilePrice === null) {
             alert('Item price must be an integer');
         } else {
+            let nickname;
+            if(!this.state.isSeller) {
+                nickname = await Prompt('Enter a nickname');
+                if(!nickname) return;
+            }
+
             const price = this.state.drizzle.web3.utils.toBN(this.state.currentFilePrice);
             
             console.log("Current account: " + this.state.currentAccount);
@@ -142,7 +150,7 @@ class UploadCar extends Component {
             console.log(placeholder);
 
             const response = await this.state.contract.methods.newCarSetup(ipfsHashBytes, this.state.currentCar, this.state.currentTrack,
-                this.state.currentSimulator, this.state.currentSeason, price, placeholder, placeholder).send({ from: this.state.currentAccount });
+                this.state.currentSimulator, this.state.currentSeason, price, placeholder, placeholder, nickname).send({ from: this.state.currentAccount });
             console.log(response);
 
             alert("The new car setup is available for sale!");

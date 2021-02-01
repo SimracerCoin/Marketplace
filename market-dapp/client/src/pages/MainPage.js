@@ -25,6 +25,7 @@ class MainPage extends Component {
             selectedPrice: "",
             selectedCarBrand: "",
             vendorAddress: "",
+            vendorNickname: "",
             ipfsHash:"",
         }
 
@@ -50,6 +51,7 @@ class MainPage extends Component {
             selectedPrice: price,
             selectedCarBrand: carBrand,
             vendorAddress: address,
+            vendorNickname: this.state.contract.methods.getNickname(address).call(),
             ipfsHash: ipfsHash,
         });
     }
@@ -72,6 +74,7 @@ class MainPage extends Component {
                         selectedPrice: this.state.selectedPrice,
                         selectedCarBrand: this.state.selectedCarBrand,
                         vendorAddress: this.state.vendorAddress,
+                        vendorNickname: this.state.vendorNickname,
                         ipfsHash: this.state.ipfsHash,
                     }
                 }}

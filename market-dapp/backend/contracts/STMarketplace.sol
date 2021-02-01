@@ -48,6 +48,9 @@ contract STMarketplace is ContentMarketplace {
     
     /// @notice To track if seller address already exists
     mapping (address => bool) userExists;
+
+    /// @notice To mapping user and his nickname
+    mapping (address => string) userNickname;
     
     // /// @notice Keep track of all seller addresses and existing files
     address[] private userAddresses;
@@ -70,7 +73,8 @@ contract STMarketplace is ContentMarketplace {
         string memory _season,
         uint256 _price,                // trade price
         bytes32 _dataHash,             // merkle hash of unencrypted data
-        bytes32 _encryptedDataHash     // merkle hash of encrypted data
+        bytes32 _encryptedDataHash,    // merkle hash of encrypted data
+        string memory _nickname
     ) public
         returns (uint256 id)           // returns ad identifier
     {
@@ -89,7 +93,8 @@ contract STMarketplace is ContentMarketplace {
         info.season = _season;
 
         carSetupIds.push(id);
-        saveSeller(msg.sender);
+        saveSeller(msg.sender, _nickname);
+
         emit carSetupSaved(msg.sender, _ipfsPath, _carBrand, _track, _simulator, _season, _price);
 
         return id;
@@ -102,7 +107,8 @@ contract STMarketplace is ContentMarketplace {
         string memory _simulator,
         uint256 _price,                // trade price
         bytes32 _dataHash,             // merkle hash of unencrypted data
-        bytes32 _encryptedDataHash     // merkle hash of encrypted data
+        bytes32 _encryptedDataHash,    // merkle hash of encrypted data
+        string memory _nickname
     ) public
         returns (uint256 id)           // returns ad identifier
     {
@@ -119,20 +125,26 @@ contract STMarketplace is ContentMarketplace {
         info.simulator = _simulator;
 
         carSkinIds.push(id);
-        saveSeller(msg.sender);
+        saveSeller(msg.sender, _nickname);
         emit skinSaved (msg.sender,_ipfsPath, _carBrand, _simulator, _price);
 
         return id;
     }
 
     /// @notice Registers seller address
-    function saveSeller(address _address) public returns(bool){
+    function saveSeller(address _address, string memory _nickname) public returns(bool){
         if(userExists[_address] == false) {
             userExists[_address] = true;
             userAddresses.push(_address);
+            userNickname[_address] = _nickname;
             return true;    
         }
         return false;
+    }
+
+    /// @notice Registers seller address
+    function getNickname(address _address) public returns(string memory) {
+        return userNickname[_address];
     }
     
     /// @notice Gets the list of all car setup files

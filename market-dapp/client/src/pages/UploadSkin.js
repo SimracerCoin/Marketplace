@@ -23,7 +23,8 @@ class UploadSkin extends Component {
             ipfsHash: null,
             formIPFS: "",
             formAddress: "",
-            receivedIPFS: ""
+            receivedIPFS: "",
+            isSeller: false
         }
 
 
@@ -35,7 +36,8 @@ class UploadSkin extends Component {
     componentDidMount = async () => {
         const currentAccount = this.state.drizzleState.accounts[0];
         const contract = this.state.drizzle.contracts.STMarketplace;
-        this.setState({ currentAccount, contract });
+        const isSeller = this.state.contract.methods.isSeller(currentAccount).call();
+        this.setState({ currentAccount: currentAccount, contract: contract, isSeller: isSeller });
     };
 
 
@@ -112,6 +114,12 @@ class UploadSkin extends Component {
         if (this.state.currentFilePrice === null) {
             alert('Item price must be an integer');
         } else {
+            let nickname;
+            if(!this.state.isSeller) {
+                nickname = await Prompt('Enter a nickname');
+                if(!nickname) return;
+            }
+
             const price = this.state.drizzle.web3.utils.toBN(this.state.currentFilePrice);
 
             //document.getElementById('formInsertCar').reset()
@@ -128,7 +136,7 @@ class UploadSkin extends Component {
             console.log(placeholder);
 
             const response = await this.state.contract.methods.newSkin(ipfsHashBytes, this.state.currentCar,
-                this.state.currentSimulator, price, placeholder, placeholder).send({ from: this.state.currentAccount });
+                this.state.currentSimulator, price, placeholder, placeholder, nickname).send({ from: this.state.currentAccount });
             console.log(response);
 
             alert("The new skin is available for sale!");

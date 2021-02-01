@@ -17,6 +17,10 @@ class NotificationsPage extends Component {
             drizzle: props.drizzle,
             drizzleState: props.drizzleState,
             listNotifications: [],
+            listNotificationsIds: [],
+            listPurchases: [],
+            listAds: [],
+            currentAccount: null
         }
     }
 
