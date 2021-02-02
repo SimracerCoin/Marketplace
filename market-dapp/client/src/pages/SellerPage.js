@@ -1,14 +1,11 @@
 import React, { Component } from 'react';
 import { Button, Card, ListGroup } from 'react-bootstrap';
-import { Link } from 'react-router-dom';
 import { Redirect } from "react-router-dom";
-
-import "../css/mainpage.css";
+import { withRouter } from "react-router";
 
 const priceConversion = 10**18;
 
-class MainPage extends Component {
-
+class SellerPage extends Component {
     constructor(props) {
         super(props);
 
@@ -17,30 +14,22 @@ class MainPage extends Component {
             drizzleState: props.drizzleState,
             listCars: [],
             listSkins: [],
-            redirectBuyItem: false,
-            selectedItemId: "",
-            selectedTrack: "",
-            selectedSimulator: "",
-            selectedSeason: "",
-            selectedPrice: "",
-            selectedCarBrand: "",
-            vendorAddress: "",
-            vendorNickname: "",
-            ipfsHash:"",
-            contract: null
+            vendorAddress: props.location.state.vendorAddress,
+            vendorNickname: props.location.state.vendorNickname,
+            contract: null,
+            currentAccount: null
         }
-
     }
 
     componentDidMount = async () => {
         const contract = await this.state.drizzle.contracts.STMarketplace
+        const currentAccount = this.state.drizzleState.accounts[0];
         const response_cars = await contract.methods.getCarSetups().call();
         const response_skins = await contract.methods.getSkins().call();
-        this.setState({ listCars: response_cars, listSkins: response_skins, contract: contract });
+        this.setState({ listCars: response_cars, listSkins: response_skins, contract: contract, currentAccount: currentAccount });
     }
 
-
-    buyItem = async (event, itemId, track, simulator, season, price, carBrand, address, ipfsHash) => {
+    buyItem = async (event, itemId, track, simulator, season, price, carBrand, address, nickname, ipfsHash) => {
         event.preventDefault();
 
         this.setState({
@@ -52,13 +41,12 @@ class MainPage extends Component {
             selectedPrice: price,
             selectedCarBrand: carBrand,
             vendorAddress: address,
-            vendorNickname: await this.state.contract.methods.getNickname(address).call(),
+            vendorNickname: nickname,
             ipfsHash: ipfsHash,
         });
     }
 
     render() {
-
         const cars = [];
         const skins = [];
 
@@ -83,9 +71,12 @@ class MainPage extends Component {
 
         if (this.state.listCars != null || this.state.listSkins != null) {
 
+            let nickname = this.state.vendorNickname;
+
             for (const [index, value] of this.state.listCars.entries()) {
-                console.log('list cars value:');
-                console.log(value);
+
+                if(value.ad.seller != this.state.vendorAddress) continue;
+
                 let carBrand = value.info.carBrand
                 let track = value.info.track
                 let simulator = value.info.simulator
@@ -106,7 +97,7 @@ class MainPage extends Component {
                                     <div><b>Price:</b> {price / priceConversion} ETH</div>
                                     {/* <div><b>Vendor address:</b> {address}</div> */}
                                 </Card.Text>
-                                <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, track, simulator, season, price, carBrand, address, ipfsHash)}> View item</Button>
+                                <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, track, simulator, season, price, carBrand, address, nickname, ipfsHash)}> View item</Button>
                             </Card.Body>
                         </Card>
                     </ListGroup.Item>
@@ -116,6 +107,9 @@ class MainPage extends Component {
             cars.reverse();
 
             for (const [index, value] of this.state.listSkins.entries()) {
+
+                if(value.ad.seller != this.state.vendorAddress) continue;
+
                 let carBrand = value.info.carBrand
                 let simulator = value.info.simulator
                 let price = value.ad.price
@@ -132,7 +126,7 @@ class MainPage extends Component {
                                     <div><b>Price:</b> {price / priceConversion} ETH</div>
                                     {/* <div><b>Vendor address:</b> {address}</div> */}
                                 </Card.Text>
-                                <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, price, carBrand , address, ipfsHash)}> View item</Button>
+                                <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, price, carBrand , address, nickname, ipfsHash)}> View item</Button>
                             </Card.Body>
                         </Card>
                     </ListGroup.Item>
@@ -146,13 +140,11 @@ class MainPage extends Component {
             <header className="header">
                 <section className="content-section text-light br-n bs-c bp-c pb-8" style={{backgroundImage: 'url(\'/assets/img/bg/bg_shape.png\')'}}>
                     <div id="latest-container" className="container">
-                        <div className="center-text">
-                            <h1>Welcome to Simthunder!</h1>
-                            <h2>The largest marketplace for sim racing assets</h2>
-                            <h5>Buy, sell, discover, and trade sim racing goods</h5>
+                        <div>
+                            <div><b>Seller: </b>{this.state.vendorNickname} ({this.state.vendorAddress})</div>
                         </div>
                         <div>
-                            <h4>Latest Car Setups</h4>
+                            <h4>Seller Car Setups</h4>
                         </div>
                         <div>
                             <ListGroup className="list-group list-group-horizontal scrolling-wrapper">
@@ -162,7 +154,7 @@ class MainPage extends Component {
                         </div>
                         <br></br>
                         <div>
-                            <h4>Latest Car Skins</h4>
+                            <h4>Seller Car Skins</h4>
                         </div>
                         <div>
                             <ListGroup className="list-group list-group-horizontal scrolling-wrapper">
@@ -176,4 +168,4 @@ class MainPage extends Component {
     }
 }
 
-export default MainPage;
+export default withRouter(SellerPage);
