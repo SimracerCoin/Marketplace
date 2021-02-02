@@ -8,11 +8,11 @@ import "./ContentMarketplace.sol";
 
 contract STMarketplace is ContentMarketplace {   
 
-    bytes32 templateHash = 0xc675d0eb9110a446b8873cce9f6551b9ab3e506eea71729c8ebe561278da0ead;
+    bytes32 templateHash = 0x3f5762be44332cb56188fc77b8ac02472399dabe610cebc9d75aae3f77a755a7;
     uint64 outputPosition = 0x9000000000000000;
     uint8 outputLog2Size = 5;
-    uint256 finalTime = 1e13;
-    uint256 roundDuration = 45;
+    uint256 finalTime = 1e11;
+    uint256 roundDuration = 51;
     DescartesInterface.Drive[] drives; 
 
     // cartesi machine template used to validate each asset category

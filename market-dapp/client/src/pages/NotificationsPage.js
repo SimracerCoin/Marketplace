@@ -5,6 +5,7 @@ import { confirmAlert } from 'react-confirm-alert';
 import { Prompt } from 'react-st-modal';
 import ipfs from "../ipfs";
 import 'react-confirm-alert/src/react-confirm-alert.css';
+import { generateStore, EventActions } from '@drizzle/store'
 
 const openpgp = require('openpgp');
 const BufferList = require('bl/BufferList');
@@ -25,7 +26,8 @@ class NotificationsPage extends Component {
     }
 
     componentDidMount = async () => {
-        const contract = await this.state.drizzle.contracts.STMarketplace
+        const contract = await this.state.drizzle.contracts.STMarketplace;
+        const descartesContract = await this.state.drizzle.contracts.Descartes;
         const currentAccount = this.state.drizzleState.accounts[0];
         const notificationsIds = await contract.methods.listNotificationsPerUser(currentAccount).call()
         const notifications = await contract.methods.getNotifications(notificationsIds).call();
@@ -44,7 +46,7 @@ class NotificationsPage extends Component {
 
         const ads = await contract.methods.getAds(purchasesIds).call();
 
-        this.setState({ listNotifications: notifications, listNotificationsIds: notificationsIds, listPurchases: purchases, listAds: ads, currentAccount: currentAccount, contract: contract });
+        this.setState({ listNotifications: notifications, listNotificationsIds: notificationsIds, listPurchases: purchases, listAds: ads, currentAccount: currentAccount, contract: contract, descartesContract: descartesContract });
     }
 
     archiveNotification = async (event, notificationId) => {
@@ -94,12 +96,75 @@ class NotificationsPage extends Component {
     rejectItem = async (purchaseId) => {
 
         // TODO:
-        const privateKey = this.state.drizzle.web3.utils.hexToAscii(localStorage.getItem('bk'))
+        const privateKey = this.state.drizzle.web3.utils.hexToAscii(localStorage.getItem('bk'));
+
+        let st = this.state.contract;
+        let stateBack = this.state;
+        this.state.descartesContract.events.DescartesCreated({fromBlock: 0}, (error, event) => {
+            console.log('error event');
+            console.log(error, event);
+        }).on('data', async function(event){
+            console.log('data event');
+            console.log(event); // same results as the optional callback above
+            console.log(event.returnValues);
+            console.log(event.raw);
+
+            console.log('returnValue[0]: '+event.returnValues[0]);
+            let result = await st.methods.getResult(event.returnValues[0]);
+
+            console.log('Result:');
+            console.log(result);
+            alert('Got result, queres esperar 1?');
+
+            let cenas = await st.methods.getResult(0);
+
+            console.log(cenas);
+            alert('Got result, queres esperar 2?');
+
+            result = await st.methods.getResult(0);
+
+            console.log('ResultadoOutput:');
+            console.log(result._method.outputs['3']);
+            
+            alert('Got result, queres esperar 3?');
+
+            result = await st.methods.getResult(0);
+
+            console.log(stateBack.drizzle.web3.utils.hexToAscii(result._method.outputs['3']));  
+        })
+        .on('changed', function(event){
+            console.log('changed event');
+            console.log(event);
+            // remove event from local database
+        })
+        .on('error', console.error);
 
         let verificationTx = await this.state.contract.methods.instantiateCartesiVerification(claimer,challenger);
-        alert(verificationTx);
+        console.log(verificationTx.data);
 
-        await this.state.contract.methods.challengePurchase(purchaseId, privateKey).send({ from: this.state.currentAccount });
+        // let result = await this.state.contract.methods.getResult(0);
+
+        // console.log('Result:');
+        // console.log(result['3']);
+        // alert('Got result, queres esperar 1?');
+
+        // result = await this.state.contract.methods.getResult(0);
+
+        // console.log(result['3']);
+        // alert('Got result, queres esperar 2?');
+
+        // result = await this.state.contract.methods.getResult(0);
+
+        // console.log(result['3']);
+        // alert('Got result, queres esperar 3?');
+
+        // result = await this.state.contract.methods.getResult(0);
+
+        // console.log(this.state.drizzle.web3.utils.hexToAscii(result['3']));        
+        
+        //alert(verificationTx.data);
+
+        ////await this.state.contract.methods.challengePurchase(purchaseId, privateKey).send({ from: this.state.currentAccount });
 
         alert('Seller will be notified.');
     }
