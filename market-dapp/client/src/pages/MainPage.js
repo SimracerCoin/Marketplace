@@ -22,6 +22,8 @@ class MainPage extends Component {
             selectedTrack: "",
             selectedSimulator: "",
             selectedSeason: "",
+            selectedSeries: "",
+            selectedDescription: "",
             selectedPrice: "",
             selectedCarBrand: "",
             vendorAddress: "",
@@ -40,7 +42,7 @@ class MainPage extends Component {
     }
 
 
-    buyItem = async (event, itemId, track, simulator, season, price, carBrand, address, ipfsHash) => {
+    buyItem = async (event, itemId, track, simulator, season, series, description, price, carBrand, address, ipfsHash) => {
         event.preventDefault();
 
         this.setState({
@@ -49,6 +51,8 @@ class MainPage extends Component {
             selectedTrack: track,
             selectedSimulator: simulator,
             selectedSeason: season,
+            selectedSeries: series,
+            selectedDescription: description,
             selectedPrice: price,
             selectedCarBrand: carBrand,
             vendorAddress: address,
@@ -71,6 +75,8 @@ class MainPage extends Component {
                         selectedTrack: this.state.selectedTrack,
                         selectedSimulator: this.state.selectedSimulator,
                         selectedSeason: this.state.selectedSeason,
+                        selectedSeries: this.state.selectedSeries,
+                        selectedDescription: this.state.selectedDescription,
                         selectedPrice: this.state.selectedPrice,
                         selectedCarBrand: this.state.selectedCarBrand,
                         vendorAddress: this.state.vendorAddress,
@@ -90,6 +96,8 @@ class MainPage extends Component {
                 let track = value.info.track
                 let simulator = value.info.simulator
                 let season = value.info.season
+                let series = value.info.series
+                let description = value.info.description
                 let price = value.ad.price
                 let address = value.ad.seller
                 let itemId = value.id
@@ -106,7 +114,7 @@ class MainPage extends Component {
                                     <div><b>Price:</b> {price / priceConversion} ETH</div>
                                     {/* <div><b>Vendor address:</b> {address}</div> */}
                                 </Card.Text>
-                                <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, track, simulator, season, price, carBrand, address, ipfsHash)}> View item</Button>
+                                <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, track, simulator, season, series, description, price, carBrand, address, ipfsHash)}> View item</Button>
                             </Card.Body>
                         </Card>
                     </ListGroup.Item>
@@ -132,7 +140,7 @@ class MainPage extends Component {
                                     <div><b>Price:</b> {price / priceConversion} ETH</div>
                                     {/* <div><b>Vendor address:</b> {address}</div> */}
                                 </Card.Text>
-                                <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, price, carBrand , address, ipfsHash)}> View item</Button>
+                                <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, null, null, price, carBrand , address, ipfsHash)}> View item</Button>
                             </Card.Body>
                         </Card>
                     </ListGroup.Item>

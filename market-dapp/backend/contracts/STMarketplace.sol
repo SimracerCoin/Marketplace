@@ -18,6 +18,8 @@ contract STMarketplace is ContentMarketplace {
         string track;
         string simulator;
         string season;
+        string description;
+        string series;
     }
        
     // holds information specific to a car skin file
@@ -71,6 +73,8 @@ contract STMarketplace is ContentMarketplace {
         string memory _track,
         string memory _simulator,
         string memory _season,
+        string memory _series,
+        string memory _description,
         uint256 _price,                // trade price
         bytes32 _dataHash,             // merkle hash of unencrypted data
         bytes32 _encryptedDataHash,    // merkle hash of encrypted data
@@ -91,7 +95,9 @@ contract STMarketplace is ContentMarketplace {
         info.track = _track;
         info.simulator = _simulator;
         info.season = _season;
-
+        info.series = _series;
+        info.description = _description;
+        
         carSetupIds.push(id);
         saveSeller(msg.sender, _nickname);
 
