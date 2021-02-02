@@ -94,7 +94,7 @@ class NotificationsPage extends Component {
     rejectItem = async (purchaseId) => {
 
         // TODO:
-        const privateKey = this.state.drizzle.web3.utils.hexToAscii(localStorage.getItem('bk'))
+        const privateKey = localStorage.getItem('bk');
 
         await this.state.contract.methods.challengePurchase(purchaseId, privateKey).send({ from: this.state.currentAccount });
 
