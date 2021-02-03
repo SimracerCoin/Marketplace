@@ -22,6 +22,8 @@ class ItemPage extends Component {
             track: props.location.state.selectedTrack,
             simulator: props.location.state.selectedSimulator,
             season: props.location.state.selectedSeason,
+            series: props.location.state.selectedSeries,
+            description: props.location.state.selectedDescription,
             price: props.location.state.selectedPrice,
             car: props.location.state.selectedCarBrand,
             vendorAddress: props.location.state.vendorAddress,
@@ -139,6 +141,8 @@ class ItemPage extends Component {
                     <div><b>Track:</b> {this.state.track}</div>
                     <div><b>Simulator:</b> {this.state.simulator}</div>
                     <div><b>Season:</b> {this.state.season}</div>
+                    <div><b>Series:</b> {this.state.series}</div>
+                    <div><b>Description:</b> {this.state.description}</div>
                     <div><b>Price:</b> {this.state.price / priceConversion}</div>
                 </div>
             )

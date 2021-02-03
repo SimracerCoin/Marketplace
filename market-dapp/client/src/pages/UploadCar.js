@@ -21,6 +21,8 @@ class UploadCar extends Component {
             currentSimulator: "Choose your simulator",
             currentTrack: "Choose your track",
             currentSeason: null,
+            currentSeries: null,
+            currentDescription: null,
             currentFilePrice: null,
             contract: null,
             ipfsHash: "",
@@ -34,6 +36,8 @@ class UploadCar extends Component {
         this.handleChangeHash = this.handleChangeHash.bind(this);
         this.handleFilePrice = this.handleFilePrice.bind(this);
         this.handleSeason = this.handleSeason.bind(this);
+        this.handleSeries = this.handleSeries.bind(this);
+        this.handleDescription = this.handleDescription.bind(this);
 
     };
 
@@ -63,6 +67,16 @@ class UploadCar extends Component {
     handleSeason = (event) => {
         console.log("Season: " + event.target.value);
         this.setState({ currentSeason: event.target.value });
+    }
+
+    handleDescription = (event) => {
+        console.log("Description: " + event.target.value);
+        this.setState({ currentDescription: event.target.value });
+    }
+
+    handleSeries = (event) => {
+        console.log("Series: " + event.target.value);
+        this.setState({ currentSeries: event.target.value });
     }
 
     onSelectCar = async (event) => {
@@ -150,7 +164,7 @@ class UploadCar extends Component {
             console.log(placeholder);
 
             const response = await this.state.contract.methods.newCarSetup(ipfsHashBytes, this.state.currentCar, this.state.currentTrack,
-                this.state.currentSimulator, this.state.currentSeason, price, placeholder, placeholder, nickname).send({ from: this.state.currentAccount });
+                this.state.currentSimulator, this.state.currentSeason, this.state.currentSeries, this.state.currentDescription, price, placeholder, placeholder, nickname).send({ from: this.state.currentAccount });
             console.log(response);
 
             alert("The new car setup is available for sale!");
@@ -206,6 +220,10 @@ class UploadCar extends Component {
                                     <Form.Control type="text" pattern="[0-9]*" placeholder="Enter File Price (ETH)" value={this.state.priceValue} onChange={this.handleFilePrice} />
                                     <br></br>
                                     <Form.Control type="text" placeholder="Enter Season" onChange={this.handleSeason} />
+                                    <br></br>
+                                    <Form.Control type="text" placeholder="Enter Series" onChange={this.handleSeries} />
+                                    <br></br>
+                                    <Form.Control as="textarea" placeholder="Enter Description" onChange={this.handleDescription} />
                                     <br></br>
                                     <DropdownButton id="dropdown-cars-button" title={this.state.currentCar} onSelect={this.onSelectCar}>
                                         {cars}
