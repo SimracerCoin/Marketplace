@@ -49,7 +49,7 @@ contract STMarketplace is ContentMarketplace {
     // /// @notice To track if seller address already exists
     mapping (address => bool) userExists;
 
-    /// @notice To mapping user and his nickname
+    // /// @notice To mapping user and his nickname
     mapping (address => string) userNickname;
     
     // /// @notice Keep track of all seller addresses and existing files
