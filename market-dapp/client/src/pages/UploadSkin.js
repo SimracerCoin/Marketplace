@@ -101,7 +101,7 @@ class UploadSkin extends Component {
         });
         const encryptedBuffer = message.packets.write(); // get raw encrypted packets as Uint8Array
 
-        const loggerRootHash = computeMerkleRootHash(encryptedBuffer);
+        const loggerRootHash = computeMerkleRootHash(Buffer.from(encryptedBuffer));
         console.log(`Logger Root Hash: ${loggerRootHash}`);
 
         const response = await ipfs.add(encryptedBuffer, (err, ipfsHash) => {
