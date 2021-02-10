@@ -177,6 +177,24 @@ contract STMarketplace is ContentMarketplace {
         return skins;
     }
 
+    /// @notice Tests if car setup exists
+    function isCarSetup(uint256 _address) public view returns(bool) {
+        for(uint256 i = 0; i < carSetupIds.length; i++) {
+            uint256 id = carSetupIds[i];
+            if(id == _address) { return true; }
+        }
+        return false;
+    }
+
+    /// @notice Tests if skin exists
+    function isSkin(uint256 _address) public view returns(bool) {
+        for(uint256 i = 0; i < carSkinIds.length; i++) {
+            uint256 id = carSkinIds[i];
+            if(id == _address) { return true; }
+        }
+        return false;
+    }
+
     /// @notice Tests if sellers exists
     function isSeller(address _address) public view returns(bool) {
         return userExists[_address];

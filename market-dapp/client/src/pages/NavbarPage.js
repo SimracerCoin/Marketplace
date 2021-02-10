@@ -12,6 +12,7 @@ class NavbarPage extends React.Component {
             drizzleState: props.drizzleState,
             listCars: [],
             listSkins: [],
+            haveNotifications: false,
             redirectBuyItem: false,
             selectedItemId: "",
             selectedTrack: "",
@@ -24,8 +25,11 @@ class NavbarPage extends React.Component {
     }
 
     componentDidMount = async (event) => {
+        const contract = await this.state.drizzle.contracts.STMarketplace;
         const currentAccount = this.state.drizzleState.accounts[0];
-        this.setState({ currentAccount: currentAccount});
+        const haveNotifications = (await contract.methods.listNotificationsPerUser(currentAccount).call()).length != 0;
+
+        this.setState({ currentAccount: currentAccount, haveNotifications: haveNotifications});
     }
 
     render() {
@@ -81,18 +85,18 @@ class NavbarPage extends React.Component {
                                 <a className="dropdown-item" href="main.html">English</a>
                                 </div>
                             </li>
-                            <li className="nav-item">
+                            {/*<li className="nav-item">
                                 <a className="nav-link small" href="" data-toggle="offcanvas" data-target="#offcanvas-cart">
                                 <span className="p-relative d-inline-flex">
                                     <span className="badge-cart badge badge-counter badge-warning position-absolute l-1">2</span>
                                     <i className="fas fa-shopping-cart"></i>
                                 </span>
                                 </a>
-                            </li>
+                            </li>*/}
                             <li className="nav-item">
                                 <Link to="/notifications" className="nav-link small" data-toggle="offcanvas" data-target="#offcanvas-notification">
                                     <span className="p-relative d-inline-flex">
-                                        <span className="badge-cart badge badge-counter badge-warning position-absolute l-1">2</span>
+                                        {this.state.haveNotifications ? <span className="badge-cart badge badge-counter badge-warning position-absolute l-1">!</span> : <span></span>}
                                         <i className="fas fa-bell"></i>
                                     </span>
                                 </Link>
