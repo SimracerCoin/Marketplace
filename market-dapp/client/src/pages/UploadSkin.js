@@ -174,7 +174,7 @@ class UploadSkin extends Component {
                             <h2> Add new Car Skin for sale </h2>
                             <Form onSubmit={this.onIPFSSubmit}>
                                 <input
-                                    type="file"
+                                    type="file" accept=".tga"
                                     onChange={this.captureFile}
                                 />
                                 <br></br>

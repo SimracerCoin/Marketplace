@@ -204,7 +204,7 @@ class UploadCar extends Component {
                             <h2> Add new Car Setup for sale </h2>
                             <Form onSubmit={this.onIPFSSubmit}>
                                 <input
-                                    type="file"
+                                    type="file" accept=".sto"
                                     onChange={this.captureFile}
                                 />
                                 <br></br>
