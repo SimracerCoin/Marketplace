@@ -21,18 +21,23 @@ class UploadCar extends Component {
             currentSimulator: "Choose your simulator",
             currentTrack: "Choose your track",
             currentSeason: null,
+            currentSeries: null,
+            currentDescription: null,
             currentFilePrice: null,
             contract: null,
             ipfsHash: "",
             formIPFS: "",
             formAddress: "",
-            receivedIPFS: ""
+            receivedIPFS: "",
+            isSeller: false
         }
 
 
         this.handleChangeHash = this.handleChangeHash.bind(this);
         this.handleFilePrice = this.handleFilePrice.bind(this);
         this.handleSeason = this.handleSeason.bind(this);
+        this.handleSeries = this.handleSeries.bind(this);
+        this.handleDescription = this.handleDescription.bind(this);
 
     };
 
@@ -40,7 +45,8 @@ class UploadCar extends Component {
     componentDidMount = async () => {
         const currentAccount = this.state.drizzleState.accounts[0];
         const contract = this.state.drizzle.contracts.STMarketplace;
-        this.setState({ currentAccount: currentAccount, contract: contract });
+        const isSeller = await contract.methods.isSeller(currentAccount).call();
+        this.setState({ currentAccount: currentAccount, contract: contract, isSeller: isSeller });
     };
 
 
@@ -61,6 +67,16 @@ class UploadCar extends Component {
     handleSeason = (event) => {
         console.log("Season: " + event.target.value);
         this.setState({ currentSeason: event.target.value });
+    }
+
+    handleDescription = (event) => {
+        console.log("Description: " + event.target.value);
+        this.setState({ currentDescription: event.target.value });
+    }
+
+    handleSeries = (event) => {
+        console.log("Series: " + event.target.value);
+        this.setState({ currentSeries: event.target.value });
     }
 
     onSelectCar = async (event) => {
@@ -100,8 +116,8 @@ class UploadCar extends Component {
 
     onIPFSSubmit = async (event) => {
         event.preventDefault();
-        const password = await Prompt('Password to encrypt');
 
+        const password = await Prompt('Password to encrypt');
         if(!password) return;
 
         const { message } = await openpgp.encrypt({
@@ -125,6 +141,12 @@ class UploadCar extends Component {
         if (this.state.currentFilePrice === null) {
             alert('Item price must be an integer');
         } else {
+            let nickname = "";
+            if(!this.state.isSeller) {
+                nickname = await Prompt('Enter a nickname');
+                if(!nickname) return;
+            }
+
             const price = this.state.drizzle.web3.utils.toBN(this.state.currentFilePrice);
             
             console.log("Current account: " + this.state.currentAccount);
@@ -142,7 +164,7 @@ class UploadCar extends Component {
             console.log(placeholder);
 
             const response = await this.state.contract.methods.newCarSetup(ipfsHashBytes, this.state.currentCar, this.state.currentTrack,
-                this.state.currentSimulator, this.state.currentSeason, price, placeholder, placeholder).send({ from: this.state.currentAccount });
+                this.state.currentSimulator, this.state.currentSeason, this.state.currentSeries, this.state.currentDescription, price, placeholder, placeholder, nickname).send({ from: this.state.currentAccount });
             console.log(response);
 
             alert("The new car setup is available for sale!");
@@ -182,7 +204,7 @@ class UploadCar extends Component {
                             <h2> Add new Car Setup for sale </h2>
                             <Form onSubmit={this.onIPFSSubmit}>
                                 <input
-                                    type="file"
+                                    type="file" accept=".sto"
                                     onChange={this.captureFile}
                                 />
                                 <br></br>
@@ -198,6 +220,10 @@ class UploadCar extends Component {
                                     <Form.Control type="text" pattern="[0-9]*" placeholder="Enter File Price (ETH)" value={this.state.priceValue} onChange={this.handleFilePrice} />
                                     <br></br>
                                     <Form.Control type="text" placeholder="Enter Season" onChange={this.handleSeason} />
+                                    <br></br>
+                                    <Form.Control type="text" placeholder="Enter Series" onChange={this.handleSeries} />
+                                    <br></br>
+                                    <Form.Control as="textarea" placeholder="Enter Description" onChange={this.handleDescription} />
                                     <br></br>
                                     <DropdownButton id="dropdown-cars-button" title={this.state.currentCar} onSelect={this.onSelectCar}>
                                         {cars}

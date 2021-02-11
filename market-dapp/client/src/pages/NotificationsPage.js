@@ -22,12 +22,19 @@ class NotificationsPage extends Component {
             drizzle: props.drizzle,
             drizzleState: props.drizzleState,
             listNotifications: [],
+            listNotificationsIds: [],
+            listPurchases: [],
+            listAds: [],
+            currentAccount: null
         }
     }
 
     componentDidMount = async () => {
         const contract = await this.state.drizzle.contracts.STMarketplace;
+<<<<<<< HEAD
         const descartesContract = await this.state.drizzle.contracts.Descartes;
+=======
+>>>>>>> develop
         const currentAccount = this.state.drizzleState.accounts[0];
         const notificationsIds = await contract.methods.listNotificationsPerUser(currentAccount).call()
         const notifications = await contract.methods.getNotifications(notificationsIds).call();
@@ -96,7 +103,7 @@ class NotificationsPage extends Component {
     rejectItem = async (purchaseId) => {
 
         // TODO:
-        const privateKey = this.state.drizzle.web3.utils.hexToAscii(localStorage.getItem('bk'));
+        const privateKey = localStorage.getItem('bk');
 
         let st = this.state.contract;
         let stateBack = this.state;
@@ -169,7 +176,7 @@ class NotificationsPage extends Component {
         alert('Seller will be notified.');
     }
 
-    endPurchase = async (event, purchaseId, ipfsHash, buyerKey, encryptedDataKey) => {
+    endPurchase = async (event, purchaseId, adId, ipfsHash, buyerKey, encryptedDataKey) => {
         event.preventDefault();
 
         const ipfsPath = this.state.drizzle.web3.utils.hexToAscii(ipfsHash);
@@ -195,19 +202,19 @@ class NotificationsPage extends Component {
 
         const { data: decryptedFile } = await openpgp.decrypt({
             message: await openpgp.message.read(content),      // parse encrypted bytes
-            passwords: [password],                                                   // decrypt with password
-            format: 'binary'                                                         // output as Uint8Array
+            passwords: [password],                             // decrypt with password
+            format: 'binary'                                   // output as Uint8Array
         });
+
+        console.log(adId);
+        const isCarSetup = await this.state.contract.methods.isCarSetup(adId).call();
 
         var data = new Blob([decryptedFile]);
         var csvURL = window.URL.createObjectURL(data);
         var tempLink = document.createElement('a');
         tempLink.href = csvURL;
-        tempLink.setAttribute('download', 'ipfs_blob');
+        tempLink.setAttribute('download', isCarSetup ? 'setup.sto' : 'skin.tga'); // has it isn't a car setup, it is a skin
         tempLink.click();
-
-        // TODO: download file url
-        //alert('Download you file at https://ipfs.io/ipfs/' + ipfsPath);
 
         confirmAlert({
             title: 'Review purchased item',
@@ -251,7 +258,7 @@ class NotificationsPage extends Component {
                     <td>{value.message}</td>
                     <td>
                         {value.nType == 1 ?
-                            <Link onClick={(e) => this.endPurchase(e, value.purchaseId, ad.ipfsPath, purchase.buyerKey, purchase.encryptedDataKey)}><i class="fas fa-reply"></i></Link> :
+                            <Link onClick={(e) => this.endPurchase(e, value.purchaseId, purchase.adId, ad.ipfsPath, purchase.buyerKey, purchase.encryptedDataKey)}><i class="fas fa-reply"></i></Link> :
                             value.nType == 3 ? '' :
                                 <Link onClick={(e) => (value.nType == 0 ? this.acceptPurchase(e, value.purchaseId, purchase.buyerKey) : this.resolvePurchase(e, value.purchaseId))}><i class="fas fa-reply"></i></Link>}
                     </td>

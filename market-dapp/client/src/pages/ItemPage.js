@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { Button } from 'react-bootstrap';
 import { withRouter } from "react-router";
+import { Link } from 'react-router-dom';
 import { confirmAlert } from 'react-confirm-alert';
 import 'react-confirm-alert/src/react-confirm-alert.css';
 import ipfs from "../ipfs";
@@ -21,9 +22,12 @@ class ItemPage extends Component {
             track: props.location.state.selectedTrack,
             simulator: props.location.state.selectedSimulator,
             season: props.location.state.selectedSeason,
+            series: props.location.state.selectedSeries,
+            description: props.location.state.selectedDescription,
             price: props.location.state.selectedPrice,
             car: props.location.state.selectedCarBrand,
             vendorAddress: props.location.state.vendorAddress,
+            vendorNickname: props.location.state.vendorNickname,
             ipfsHash: props.location.state.ipfsHash,
             contract: null,
             currentAccount: "",
@@ -59,7 +63,6 @@ class ItemPage extends Component {
         //console.log('Item price:' + this.state.price);
 
         let buyerKey = localStorage.getItem('ak');
-        console.log(buyerKey);
         if (!buyerKey) {
             const { privateKeyArmored, publicKeyArmored, revocationCertificate } = await openpgp.generateKey({
                 userIds: [{ name: this.state.currentAccount }],             // you can pass multiple user IDs
@@ -123,7 +126,7 @@ class ItemPage extends Component {
             item = "Skin"
             toRender = (
                 <div>
-                    <div><b>Seller:</b> {this.state.vendorAddress}</div>
+                    <div><b>Seller:</b> <Link to={{pathname: "/seller", state: {vendorAddress: this.state.vendorAddress, vendorNickname: this.state.vendorNickname}}}>{this.state.vendorNickname} ({this.state.vendorAddress})</Link></div>
                     <div><b>Car Brand:</b> {this.state.car}</div>
                     <div><b>Simulator:</b> {this.state.simulator}</div>
                     <div><b>Price:</b> {this.state.price / priceConversion}</div>
@@ -133,11 +136,13 @@ class ItemPage extends Component {
             item = "Car Setup"
             toRender = (
                 <div>
-                    <div><b>Seller:</b> {this.state.vendorAddress}</div>
+                    <div><b>Seller:</b> <Link to={{pathname: "/seller", state: {vendorAddress: this.state.vendorAddress, vendorNickname: this.state.vendorNickname}}}>{this.state.vendorNickname} ({this.state.vendorAddress})</Link></div>
                     <div><b>Car Brand:</b> {this.state.car}</div>
                     <div><b>Track:</b> {this.state.track}</div>
                     <div><b>Simulator:</b> {this.state.simulator}</div>
                     <div><b>Season:</b> {this.state.season}</div>
+                    <div><b>Series:</b> {this.state.series}</div>
+                    <div><b>Description:</b> {this.state.description}</div>
                     <div><b>Price:</b> {this.state.price / priceConversion}</div>
                 </div>
             )
