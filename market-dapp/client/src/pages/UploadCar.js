@@ -25,7 +25,7 @@ class UploadCar extends Component {
             currentDescription: null,
             currentFilePrice: null,
             contract: null,
-            ipfsHash: "",
+            ipfsPath: "",
             formIPFS: "",
             formAddress: "",
             receivedIPFS: "",
@@ -52,7 +52,7 @@ class UploadCar extends Component {
 
     handleChangeHash = (event) => {
         console.log("IPFS Hash: " + event.target.value);
-        this.setState({ ipfsHash: event.target.value });
+        this.setState({ ipfsPath: event.target.value });
     }
 
     handleFilePrice = (event) => {
@@ -117,6 +117,12 @@ class UploadCar extends Component {
     onIPFSSubmit = async (event) => {
         event.preventDefault();
 
+        var fileName = document.getElementById('car-file').value.toLowerCase();
+        if(!fileName.endsWith('.sto')) {
+            alert('You can upload tga files only.');
+            return false;
+        }
+
         const password = await Prompt('Password to encrypt');
         if(!password) return;
 
@@ -127,12 +133,12 @@ class UploadCar extends Component {
         });
         const encryptedBuffer = message.packets.write(); // get raw encrypted packets as Uint8Array
 
-        const response = await ipfs.add(encryptedBuffer, (err, ipfsHash) => {
-            console.log(err, ipfsHash);
-            //setState by setting ipfsHash to ipfsHash[0].hash 
-            this.setState({ ipfsHash: ipfsHash[0].hash });
+        const response = await ipfs.add(encryptedBuffer, (err, ipfsPath) => {
+            //console.log(err, ipfsPath);
+            //setState by setting ipfsPath to ipfsPath[0].hash 
+            this.setState({ ipfsPath: ipfsPath[0].hash });
         })
-        this.setState({ ipfsHash: response.path });
+        this.setState({ ipfsPath: response.path });
     };
 
     saveCar = async (event) => {
@@ -150,20 +156,20 @@ class UploadCar extends Component {
             const price = this.state.drizzle.web3.utils.toBN(this.state.currentFilePrice);
             
             console.log("Current account: " + this.state.currentAccount);
-            console.log("Current hash: " + this.state.ipfsHash);
+            console.log("Current hash: " + this.state.ipfsPath);
             console.log("Current car: " + this.state.currentCar);
             console.log("Current track: " + this.state.currentTrack);
             console.log("Current simulator: " + this.state.currentSimulator);
             console.log("Current season: " + this.state.currentSeason);
             console.log("Current price: " + this.state.currentFilePrice);
 
-            const ipfsHashBytes = this.state.drizzle.web3.utils.fromAscii(this.state.ipfsHash);
+            const ipfsPathBytes = this.state.drizzle.web3.utils.fromAscii(this.state.ipfsPath);
             
             // TO DO: change placeholders for correct values
             const placeholder = this.state.drizzle.web3.utils.fromAscii('some hash');
             console.log(placeholder);
 
-            const response = await this.state.contract.methods.newCarSetup(ipfsHashBytes, this.state.currentCar, this.state.currentTrack,
+            const response = await this.state.contract.methods.newCarSetup(ipfsPathBytes, this.state.currentCar, this.state.currentTrack,
                 this.state.currentSimulator, this.state.currentSeason, this.state.currentSeries, this.state.currentDescription, price, placeholder, placeholder, nickname).send({ from: this.state.currentAccount });
             console.log(response);
 
@@ -203,7 +209,7 @@ class UploadCar extends Component {
                         <div>
                             <h2> Add new Car Setup for sale </h2>
                             <Form onSubmit={this.onIPFSSubmit}>
-                                <input
+                                <input id="car-file"
                                     type="file" accept=".sto"
                                     onChange={this.captureFile}
                                 />
@@ -215,7 +221,7 @@ class UploadCar extends Component {
                             <Form>
                                 <Form.Group controlId="formInsertCar">
                                     <Form.Label>Car Setup data</Form.Label>
-                                    <Form.Control type="text" placeholder="Generate IPFS Hash" value={this.state.ipfsHash} onChange={this.handleChangeHash} readOnly />
+                                    <Form.Control type="text" placeholder="Generate IPFS Hash" value={this.state.ipfsPath} onChange={this.handleChangeHash} readOnly />
                                     <br></br>
                                     <Form.Control type="text" pattern="[0-9]*" placeholder="Enter File Price (ETH)" value={this.state.priceValue} onChange={this.handleFilePrice} />
                                     <br></br>
