@@ -22,38 +22,46 @@ class NotificationsPage extends Component {
             drizzle: props.drizzle,
             drizzleState: props.drizzleState,
             listNotifications: [],
-            listNotificationsIds: [],
-            listPurchases: [],
-            listAds: [],
+            //listNotificationsIds: [],
+            //listPurchases: [],
+            //listAds: [],
             currentAccount: null
         }
     }
 
     componentDidMount = async () => {
         const contract = await this.state.drizzle.contracts.STMarketplace;
-<<<<<<< HEAD
         const descartesContract = await this.state.drizzle.contracts.Descartes;
-=======
->>>>>>> develop
         const currentAccount = this.state.drizzleState.accounts[0];
         const notificationsIds = await contract.methods.listNotificationsPerUser(currentAccount).call()
-        const notifications = await contract.methods.getNotifications(notificationsIds).call();
+        const notifications_r = await contract.methods.getNotifications(notificationsIds).call();
 
-        const purchasesIds = [];
-        for (const [index, value] of notifications.entries()) {
-            purchasesIds.push(value.purchaseId);
+        let notifications = [];
+        for (const [index, value] of notificationsIds.entries()) {
+            notifications[index] = Object.assign({ "id": value }, notifications_r[index]);
+
+            notifications[index].purchase = await contract.methods.getPurchase(notifications[index].purchaseId).call();
+            notifications[index].ad = await contract.methods.getAd(notifications[index].purchase.adId).call();
+
+            //purchasesIds.push(value.purchaseId);
         }
 
-        const purchases = await contract.methods.getPurchases(purchasesIds).call();
+        // reverse sort by id
+        notifications.sort((a, b)=> a.id < b.id);
 
-        const adsIds = [];
-        for (const [index, value] of purchases.entries()) {
-            adsIds.push(value.adId);
-        }
+        //const purchases = await contract.methods.getPurchases(purchasesIds).call();
 
-        const ads = await contract.methods.getAds(purchasesIds).call();
+        ////Descartes test:
+        ////this.setState({ listNotifications: notifications, listNotificationsIds: notificationsIds, listPurchases: purchases, listAds: ads, currentAccount: currentAccount, contract: contract, descartesContract: descartesContract });
+        
+        //const adsIds = [];
+        //for (const [index, value] of purchases.entries()) {
+        //    adsIds.push(value.adId);
+        // }
 
-        this.setState({ listNotifications: notifications, listNotificationsIds: notificationsIds, listPurchases: purchases, listAds: ads, currentAccount: currentAccount, contract: contract, descartesContract: descartesContract });
+        //const ads = await contract.methods.getAds(purchasesIds).call();
+
+        this.setState({ listNotifications: notifications, currentAccount: currentAccount, contract: contract });
     }
 
     archiveNotification = async (event, notificationId) => {
@@ -176,13 +184,13 @@ class NotificationsPage extends Component {
         alert('Seller will be notified.');
     }
 
-    endPurchase = async (event, purchaseId, adId, ipfsHash, buyerKey, encryptedDataKey) => {
+    endPurchase = async (event, purchaseId, adId, ipfsPath, buyerKey, encryptedDataKey) => {
         event.preventDefault();
 
-        const ipfsPath = this.state.drizzle.web3.utils.hexToAscii(ipfsHash);
-  
+        const ipfsP = this.state.drizzle.web3.utils.hexToAscii(ipfsPath);
+
         const content = new BufferList()
-        for await (const file of ipfs.get(ipfsPath)) {
+        for await (const file of ipfs.get(ipfsP)) {
             for await (const chunk of file.content) {
                 content.append(chunk)
             }
@@ -247,12 +255,11 @@ class NotificationsPage extends Component {
 
         if (this.state.listNotifications != null) {
             for (const [index, value] of this.state.listNotifications.entries()) {
-                let notificationId = this.state.listNotificationsIds[index];
-                let purchase = this.state.listPurchases[index];
-                let ad = this.state.listAds[index];
+                let purchase = value.purchase;
+                let ad = value.ad;
 
                 notifications.push(<tr>
-                    <th scope="row">#{notificationId}</th>
+                    <th scope="row">#{value.id}</th>
                     <td>{new Intl.DateTimeFormat('en-US', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).format(value.date * 1000)}</td>
                     <td><Link onClick={(e) => this.viewItem(e, purchase.adId)}>{purchase.adId}</Link></td>
                     <td>{value.message}</td>

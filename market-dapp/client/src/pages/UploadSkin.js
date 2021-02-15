@@ -6,7 +6,7 @@ import computeMerkleRootHash from "../merkle"
 
 const openpgp = require('openpgp');
 
-const priceConversion = 10**18;
+const priceConversion = 10 ** 18;
 
 class UploadSkin extends Component {
 
@@ -21,7 +21,7 @@ class UploadSkin extends Component {
             currentSimulator: "Choose your simulator",
             currentFilePrice: null,
             contract: null,
-            ipfsHash: null,
+            ipfsPath: null,
             formIPFS: "",
             formAddress: "",
             receivedIPFS: "",
@@ -44,15 +44,15 @@ class UploadSkin extends Component {
 
     handleChangeHash = (event) => {
         console.log("IPFS Hash: " + event.target.value);
-        this.setState({ ipfsHash: event.target.value });
+        this.setState({ ipfsPath: event.target.value });
     }
 
     handleFilePrice = (event) => {
         const re = /^[0-9\b]+$/;
         if (event.target.value === '' || re.test(event.target.value)) {
-            this.setState({priceValue: event.target.value});
+            this.setState({ priceValue: event.target.value });
             console.log("File price: " + event.target.value);
-            this.setState({ currentFilePrice: event.target.value * priceConversion});
+            this.setState({ currentFilePrice: event.target.value * priceConversion });
         }
     }
 
@@ -90,9 +90,15 @@ class UploadSkin extends Component {
     onIPFSSubmit = async (event) => {
         event.preventDefault();
 
-        const password = await Prompt('Password to encrypt');
+        var fileName = document.getElementById('skin-file').value.toLowerCase();
+        if(!fileName.endsWith('.tga')) {
+            alert('You can upload .tga files only.');
+            return false;
+        }
 
-        if(!password) return;
+        const password = await Prompt('Type the password to encrypt the file. Use different password for each item.');
+
+        if (!password) return;
 
         const { message } = await openpgp.encrypt({
             message: openpgp.message.fromBinary(this.state.buffer), // input as Message object
@@ -104,12 +110,12 @@ class UploadSkin extends Component {
         const loggerRootHash = computeMerkleRootHash(Buffer.from(encryptedBuffer));
         console.log(`Logger Root Hash: ${loggerRootHash}`);
 
-        const response = await ipfs.add(encryptedBuffer, (err, ipfsHash) => {
-            console.log(err, ipfsHash);
-            //setState by setting ipfsHash to ipfsHash[0].hash 
-            this.setState({ ipfsHash: ipfsHash[0].hash });
+        const response = await ipfs.add(encryptedBuffer, (err, ipfsPath) => {
+            console.log(err, ipfsPath);
+            //setState by setting ipfsPath to ipfsPath[0].hash 
+            this.setState({ ipfsPath: ipfsPath[0].hash });
         })
-        this.setState({ ipfsHash: response.path });
+        this.setState({ ipfsPath: response.path });
     };
 
     saveSkin = async (event) => {
@@ -119,27 +125,27 @@ class UploadSkin extends Component {
             alert('Item price must be an integer');
         } else {
             let nickname = "";
-            if(!this.state.isSeller) {
-                nickname = await Prompt('Enter a nickname');
-                if(!nickname) return;
+            if (!this.state.isSeller) {
+                nickname = await Prompt('You are adding your first item for sale, please choose your seller nickname.');
+                if (!nickname) return;
             }
 
             const price = this.state.drizzle.web3.utils.toBN(this.state.currentFilePrice);
 
             //document.getElementById('formInsertCar').reset()
             console.log("Current account: " + this.state.currentAccount);
-            console.log("Current hash: " + this.state.ipfsHash);
+            console.log("Current hash: " + this.state.ipfsPath);
             console.log("Current car: " + this.state.currentCar);
             console.log("Current simulator: " + this.state.currentSimulator);
             console.log("Current price: " + this.state.currentFilePrice);
 
-            const ipfsHashBytes = this.state.drizzle.web3.utils.fromAscii(this.state.ipfsHash);
-            
+            const ipfsPathBytes = this.state.drizzle.web3.utils.fromAscii(this.state.ipfsPath);
+
             // TO DO: change placeholders for correct values
             const placeholder = this.state.drizzle.web3.utils.fromAscii('some hash');
             console.log(placeholder);
 
-            const response = await this.state.contract.methods.newSkin(ipfsHashBytes, this.state.currentCar,
+            const response = await this.state.contract.methods.newSkin(ipfsPathBytes, this.state.currentCar,
                 this.state.currentSimulator, price, placeholder, placeholder, nickname).send({ from: this.state.currentAccount });
             console.log(response);
 
@@ -173,7 +179,7 @@ class UploadSkin extends Component {
                         <div>
                             <h2> Add new Car Skin for sale </h2>
                             <Form onSubmit={this.onIPFSSubmit}>
-                                <input
+                                <input id="skin-file"
                                     type="file" accept=".tga"
                                     onChange={this.captureFile}
                                 />
@@ -186,7 +192,7 @@ class UploadSkin extends Component {
                             <Form>
                                 <Form.Group controlId="formInsertCar">
                                     <Form.Label>Insert Car</Form.Label>
-                                    <Form.Control type="text" placeholder="Generate IPFS Hash" value={this.state.ipfsHash} onChange={this.handleChangeHash} readOnly />
+                                    <Form.Control type="text" placeholder="Generate IPFS Hash" value={this.state.ipfsPath} onChange={this.handleChangeHash} readOnly />
                                     <br></br>
                                     <Form.Control type="text" pattern="[0-9]*" placeholder="Enter File Price" value={this.state.priceValue} onChange={this.handleFilePrice} />
                                     <br></br>

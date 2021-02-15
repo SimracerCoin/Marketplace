@@ -29,7 +29,7 @@ class SellerPage extends Component {
         this.setState({ listCars: response_cars, listSkins: response_skins, contract: contract, currentAccount: currentAccount });
     }
 
-    buyItem = async (event, itemId, track, simulator, season, price, carBrand, address, nickname, ipfsHash) => {
+    buyItem = async (event, itemId, track, simulator, season, series, description, price, carBrand, address, nickname, ipfsPath) => {
         event.preventDefault();
 
         this.setState({
@@ -38,11 +38,13 @@ class SellerPage extends Component {
             selectedTrack: track,
             selectedSimulator: simulator,
             selectedSeason: season,
+            selectedSeries: series,
+            selectedDescription: description,
             selectedPrice: price,
             selectedCarBrand: carBrand,
             vendorAddress: address,
             vendorNickname: nickname,
-            ipfsHash: ipfsHash,
+            ipfsPath: ipfsPath,
         });
     }
 
@@ -59,11 +61,13 @@ class SellerPage extends Component {
                         selectedTrack: this.state.selectedTrack,
                         selectedSimulator: this.state.selectedSimulator,
                         selectedSeason: this.state.selectedSeason,
+                        selectedSeries: this.state.selectedSeries,
+                        selectedDescription: this.state.selectedDescription,
                         selectedPrice: this.state.selectedPrice,
                         selectedCarBrand: this.state.selectedCarBrand,
                         vendorAddress: this.state.vendorAddress,
                         vendorNickname: this.state.vendorNickname,
-                        ipfsHash: this.state.ipfsHash,
+                        ipfsPath: this.state.ipfsPath,
                     }
                 }}
             />)
@@ -81,10 +85,12 @@ class SellerPage extends Component {
                 let track = value.info.track
                 let simulator = value.info.simulator
                 let season = value.info.season
+                let series = value.info.series
+                let description = value.info.description
                 let price = value.ad.price
                 let address = value.ad.seller
                 let itemId = value.id
-                let ipfsHash = value.ipfsHash
+                let ipfsPath = value.ad.ipfsPath
                 cars.push(
                     <ListGroup.Item key={index}>
                         <Card className="card-block" key={index}>
@@ -97,7 +103,7 @@ class SellerPage extends Component {
                                     <div><b>Price:</b> {price / priceConversion} ETH</div>
                                     {/* <div><b>Vendor address:</b> {address}</div> */}
                                 </Card.Text>
-                                <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, track, simulator, season, price, carBrand, address, nickname, ipfsHash)}> View item</Button>
+                                <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, track, simulator, season, series, description, price, carBrand, address, nickname, ipfsPath)}> View item</Button>
                             </Card.Body>
                         </Card>
                     </ListGroup.Item>
@@ -115,7 +121,7 @@ class SellerPage extends Component {
                 let price = value.ad.price
                 let address = value.ad.seller
                 let itemId = value.id
-                let ipfsHash = value.ipfsHash
+                let ipfsPath = value.ad.ipfsPath
                 skins.push(
                     <ListGroup.Item key={index}>
                         <Card className="card-block">
@@ -126,7 +132,7 @@ class SellerPage extends Component {
                                     <div><b>Price:</b> {price / priceConversion} ETH</div>
                                     {/* <div><b>Vendor address:</b> {address}</div> */}
                                 </Card.Text>
-                                <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, price, carBrand , address, nickname, ipfsHash)}> View item</Button>
+                                <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, price, carBrand , address, nickname, ipfsPath)}> View item</Button>
                             </Card.Body>
                         </Card>
                     </ListGroup.Item>

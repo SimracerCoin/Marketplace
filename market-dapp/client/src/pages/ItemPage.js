@@ -28,11 +28,11 @@ class ItemPage extends Component {
             car: props.location.state.selectedCarBrand,
             vendorAddress: props.location.state.vendorAddress,
             vendorNickname: props.location.state.vendorNickname,
-            ipfsHash: props.location.state.ipfsHash,
+            ipfsPath: props.location.state.ipfsPath,
             contract: null,
             currentAccount: "",
         }
-        console.log(props)
+        console.log(this.state)
     }
 
     componentDidMount = async (event) => {
@@ -126,7 +126,7 @@ class ItemPage extends Component {
             item = "Skin"
             toRender = (
                 <div>
-                    <div><b>Seller:</b> <Link to={{pathname: "/seller", state: {vendorAddress: this.state.vendorAddress, vendorNickname: this.state.vendorNickname}}}>{this.state.vendorNickname} ({this.state.vendorAddress})</Link></div>
+                    <div><b>Seller:</b> <Link to={{pathname: "/seller", state: {vendorAddress: this.state.vendorAddress, vendorNickname: this.state.vendorNickname}}}><u>{this.state.vendorNickname} ({this.state.vendorAddress})</u></Link></div>
                     <div><b>Car Brand:</b> {this.state.car}</div>
                     <div><b>Simulator:</b> {this.state.simulator}</div>
                     <div><b>Price:</b> {this.state.price / priceConversion}</div>
@@ -136,7 +136,7 @@ class ItemPage extends Component {
             item = "Car Setup"
             toRender = (
                 <div>
-                    <div><b>Seller:</b> <Link to={{pathname: "/seller", state: {vendorAddress: this.state.vendorAddress, vendorNickname: this.state.vendorNickname}}}>{this.state.vendorNickname} ({this.state.vendorAddress})</Link></div>
+                    <div><b>Seller:</b> <Link to={{pathname: "/seller", state: {vendorAddress: this.state.vendorAddress, vendorNickname: this.state.vendorNickname}}}><u>{this.state.vendorNickname} ({this.state.vendorAddress})</u></Link></div>
                     <div><b>Car Brand:</b> {this.state.car}</div>
                     <div><b>Track:</b> {this.state.track}</div>
                     <div><b>Simulator:</b> {this.state.simulator}</div>
