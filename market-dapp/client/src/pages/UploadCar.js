@@ -119,11 +119,11 @@ class UploadCar extends Component {
 
         var fileName = document.getElementById('car-file').value.toLowerCase();
         if(!fileName.endsWith('.sto')) {
-            alert('You can upload tga files only.');
+            alert('You can upload .sto files only.');
             return false;
         }
 
-        const password = await Prompt('Password to encrypt');
+        const password = await Prompt('Type the password to encrypt the file. Use different password for each item.');
         if(!password) return;
 
         const { message } = await openpgp.encrypt({
@@ -149,7 +149,7 @@ class UploadCar extends Component {
         } else {
             let nickname = "";
             if(!this.state.isSeller) {
-                nickname = await Prompt('Enter a nickname');
+                nickname = await Prompt('You are adding your first item for sale, please choose your seller nickname.');
                 if(!nickname) return;
             }
 

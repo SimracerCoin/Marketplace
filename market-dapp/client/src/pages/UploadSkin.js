@@ -92,11 +92,11 @@ class UploadSkin extends Component {
 
         var fileName = document.getElementById('skin-file').value.toLowerCase();
         if(!fileName.endsWith('.tga')) {
-            alert('You can upload tga files only.');
+            alert('You can upload .tga files only.');
             return false;
         }
 
-        const password = await Prompt('Password to encrypt');
+        const password = await Prompt('Type the password to encrypt the file. Use different password for each item.');
 
         if (!password) return;
 
@@ -126,7 +126,7 @@ class UploadSkin extends Component {
         } else {
             let nickname = "";
             if (!this.state.isSeller) {
-                nickname = await Prompt('Enter a nickname');
+                nickname = await Prompt('You are adding your first item for sale, please choose your seller nickname.');
                 if (!nickname) return;
             }
 
