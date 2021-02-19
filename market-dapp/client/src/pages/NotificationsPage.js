@@ -51,8 +51,6 @@ class NotificationsPage extends Component {
 
         //const purchases = await contract.methods.getPurchases(purchasesIds).call();
 
-        ////Descartes test:
-        ////this.setState({ listNotifications: notifications, listNotificationsIds: notificationsIds, listPurchases: purchases, listAds: ads, currentAccount: currentAccount, contract: contract, descartesContract: descartesContract });
         
         //const adsIds = [];
         //for (const [index, value] of purchases.entries()) {
@@ -61,7 +59,10 @@ class NotificationsPage extends Component {
 
         //const ads = await contract.methods.getAds(purchasesIds).call();
 
-        this.setState({ listNotifications: notifications, currentAccount: currentAccount, contract: contract });
+        ////Descartes test:
+        this.setState({ listNotifications: notifications, currentAccount: currentAccount, contract: contract, descartesContract: descartesContract });
+        
+        //this.setState({ listNotifications: notifications, currentAccount: currentAccount, contract: contract });
     }
 
     archiveNotification = async (event, notificationId) => {
@@ -110,6 +111,7 @@ class NotificationsPage extends Component {
 
     rejectItem = async (purchaseId) => {
 
+        alert('bora');
         // TODO:
         const privateKey = localStorage.getItem('bk');
 
@@ -125,27 +127,19 @@ class NotificationsPage extends Component {
             console.log(event.raw);
 
             console.log('returnValue[0]: '+event.returnValues[0]);
-            let result = await st.methods.getResult(event.returnValues[0]);
+            let result = await st.methods.getResult(event.returnValues[0]).call();
 
             console.log('Result:');
             console.log(result);
-            alert('Got result, queres esperar 1?');
+            alert('Got result, queres esperar?');
 
-            let cenas = await st.methods.getResult(0);
-
+            let cenas = await st.methods.getResult(0).call();
+            console.log('Result depois de esperar:');
             console.log(cenas);
-            alert('Got result, queres esperar 2?');
-
-            result = await st.methods.getResult(0);
-
-            console.log('ResultadoOutput:');
-            console.log(result._method.outputs['3']);
-            
-            alert('Got result, queres esperar 3?');
-
-            result = await st.methods.getResult(0);
-
-            console.log(stateBack.drizzle.web3.utils.hexToAscii(result._method.outputs['3']));  
+            let verificationResult = cenas['3'];
+            let verificationResultStr = stateBack.drizzle.web3.utils.hexToAscii(verificationResult);
+            console.log(verificationResultStr);
+            alert(verificationResultStr); 
         })
         .on('changed', function(event){
             console.log('changed event');
@@ -154,7 +148,7 @@ class NotificationsPage extends Component {
         })
         .on('error', console.error);
 
-        let verificationTx = await this.state.contract.methods.instantiateCartesiVerification(claimer,challenger);
+        let verificationTx = await this.state.contract.methods.instantiateCartesiVerification(claimer,challenger).send({ from: this.state.currentAccount });
         console.log(verificationTx.data);
 
         // let result = await this.state.contract.methods.getResult(0);
