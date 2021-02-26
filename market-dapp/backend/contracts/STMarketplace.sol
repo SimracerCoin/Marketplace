@@ -257,8 +257,8 @@ contract STMarketplace is ContentMarketplace {
             drives
         );
 
-        newNotification(index, "Purchase was rejected.", address(0), ad.seller, NotificationType.Challenge);
-        newNotification(index, "Challenged purchase.", address(0), msg.sender, NotificationType.Challenge);
+        newNotification(index, "Purchase was rejected. Check status.", address(0), ad.seller, NotificationType.Challenge);
+        newNotification(index, "Challenged purchase. Check status.", address(0), msg.sender, NotificationType.Challenge);
 
         return index;
     }

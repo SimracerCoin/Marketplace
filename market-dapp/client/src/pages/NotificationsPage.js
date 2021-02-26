@@ -13,6 +13,7 @@ const BufferList = require('bl/BufferList');
 // TODO: use addresses from config file of the Cartesi nodes that will participating
 const claimer = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266';
 const challenger = '0x70997970C51812dc3A010C7d01b50e0d17dc79C8';
+const passphrase = 'garlic stress stumble dislodge copier shortwave cucumber extrude rebuff spearman smile reward';
 
 class NotificationsPage extends Component {
     constructor(props) {
@@ -95,7 +96,7 @@ class NotificationsPage extends Component {
     resolvePurchase = async (event, descartesId) => {
         event.preventDefault();
 
-        let st = this.state.contract;
+        /* let st = this.state.contract;
         let stateBack = this.state;
 
         let cenas = await st.methods.getResult(descartesId).call();
@@ -104,7 +105,7 @@ class NotificationsPage extends Component {
         let verificationResult = cenas['3'];
         let verificationResultStr = stateBack.drizzle.web3.utils.hexToAscii(verificationResult);
         console.log(verificationResultStr);
-        alert(verificationResultStr);
+        alert(verificationResultStr); */
     }
     // =========================
 
@@ -118,14 +119,12 @@ class NotificationsPage extends Component {
         alert('Thank you for your purchase!');
     }
 
-    rejectItem = async (purchaseId) => {
+    rejectItem = async (purchaseId, password) => {
 
         alert('bora');
         // TODO:
-        const privateKey = localStorage.getItem('bk');
-
-        const password = await Prompt('Password to challenge');
-        if (!password) return;
+        
+        alert(password);
 
        /*  let st = this.state.contract;
         let stateBack = this.state;
@@ -205,7 +204,7 @@ class NotificationsPage extends Component {
         const privateKeyArmored = this.state.drizzle.web3.utils.hexToAscii(localStorage.getItem('bk'));
 
         const privateKey = (await openpgp.key.readArmored([privateKeyArmored])).keys[0];
-        await privateKey.decrypt('garlic stress stumble dislodge copier shortwave cucumber extrude rebuff spearman smile reward');
+        await privateKey.decrypt(passphrase);
 
         const decrypted = await openpgp.decrypt({
             message: await openpgp.message.readArmored(this.state.drizzle.web3.utils.hexToAscii(encryptedDataKey)),       // parse armored message
@@ -240,7 +239,7 @@ class NotificationsPage extends Component {
                 },
                 {
                     label: 'Reject/Challenge',
-                    onClick: () => this.rejectItem(purchaseId)
+                    onClick: () => this.rejectItem(purchaseId, password)
                 }
             ]
         });
