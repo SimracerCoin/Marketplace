@@ -92,10 +92,19 @@ class NotificationsPage extends Component {
         alert("Buyer will be notified");
     }
 
-    resolvePurchase = async (event, purchaseId) => {
+    resolvePurchase = async (event, descartesId) => {
         event.preventDefault();
 
-        alert("Solve challenge");
+        let st = this.state.contract;
+        let stateBack = this.state;
+
+        let cenas = await st.methods.getResult(descartesId).call();
+        console.log('Result depois de esperar:');
+        console.log(cenas);
+        let verificationResult = cenas['3'];
+        let verificationResultStr = stateBack.drizzle.web3.utils.hexToAscii(verificationResult);
+        console.log(verificationResultStr);
+        alert(verificationResultStr);
     }
     // =========================
 
@@ -115,7 +124,10 @@ class NotificationsPage extends Component {
         // TODO:
         const privateKey = localStorage.getItem('bk');
 
-        let st = this.state.contract;
+        const password = await Prompt('Password to challenge');
+        if (!password) return;
+
+       /*  let st = this.state.contract;
         let stateBack = this.state;
         this.state.descartesContract.events.DescartesCreated({fromBlock: 0}, (error, event) => {
             console.log('error event');
@@ -146,9 +158,9 @@ class NotificationsPage extends Component {
             console.log(event);
             // remove event from local database
         })
-        .on('error', console.error);
+        .on('error', console.error); */
 
-        let verificationTx = await this.state.contract.methods.instantiateCartesiVerification(claimer,challenger).send({ from: this.state.currentAccount });
+        let verificationTx = await this.state.contract.methods.instantiateCartesiVerification(claimer,challenger,purchaseId).send({ from: this.state.currentAccount });
         console.log(verificationTx.data);
 
         // let result = await this.state.contract.methods.getResult(0);

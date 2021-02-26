@@ -238,13 +238,16 @@ contract STMarketplace is ContentMarketplace {
         return string(str);
     }
 
-    function instantiateCartesiVerification(address claimer, address challenger) public returns (uint256) {
+    function instantiateCartesiVerification(address claimer, address challenger,uint256 _purchaseId) public returns (uint256 index) {
 
         address[] memory actors = new address[](2);
         actors[0] = claimer;
         actors[1] = challenger;
 
-        return descartes.instantiate(
+        Purchase memory purchase = getPurchase(_purchaseId);
+        Advertisement memory ad = getAd(purchase.adId);
+
+        index = descartes.instantiate(
             finalTime,
             templateHash,
             outputPosition,
@@ -253,6 +256,11 @@ contract STMarketplace is ContentMarketplace {
             actors,
             drives
         );
+
+        newNotification(index, "Purchase was rejected.", address(0), ad.seller, NotificationType.Challenge);
+        newNotification(index, "Challenged purchase.", address(0), msg.sender, NotificationType.Challenge);
+
+        return index;
     }
 
     function getResult(uint256 index) public view returns (bool, bool, address, bytes memory) {
