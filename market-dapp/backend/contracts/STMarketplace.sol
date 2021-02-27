@@ -8,12 +8,15 @@ import "./ContentMarketplace.sol";
 
 contract STMarketplace is ContentMarketplace {   
 
-    bytes32 templateHash = 0x3f5762be44332cb56188fc77b8ac02472399dabe610cebc9d75aae3f77a755a7;
-    uint64 outputPosition = 0x9000000000000000;
+    bytes32 templateHash = 0x62282173bb0cadf4404f96385f05d48bf9124f63937886ec68ce42ce75f71649;
+    uint64 outputPosition = 0xb000000000000000;
     uint8 outputLog2Size = 5;
     uint256 finalTime = 1e11;
     uint256 roundDuration = 51;
-    DescartesInterface.Drive[] drives; 
+    //DescartesInterface.Drive[] drives;
+
+    // defines password size as 1024 bytes
+    // uint64 passwordLog2Size = 10;
 
     // cartesi machine template used to validate each asset category
     bytes32 validateCarSetupTemplateHash = "0x123";
@@ -238,7 +241,7 @@ contract STMarketplace is ContentMarketplace {
         return string(str);
     }
 
-    function instantiateCartesiVerification(address claimer, address challenger) public returns (uint256) {
+    function instantiateCartesiVerification(address claimer, address challenger, DescartesInterface.Drive[] memory drives) public returns (uint256) {
 
         address[] memory actors = new address[](2);
         actors[0] = claimer;

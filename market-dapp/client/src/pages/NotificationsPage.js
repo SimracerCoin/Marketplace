@@ -6,6 +6,7 @@ import { Prompt } from 'react-st-modal';
 import ipfs from "../ipfs";
 import 'react-confirm-alert/src/react-confirm-alert.css';
 import { generateStore, EventActions } from '@drizzle/store'
+import { ethers } from "ethers";
 
 const openpgp = require('openpgp');
 const BufferList = require('bl/BufferList');
@@ -110,8 +111,6 @@ class NotificationsPage extends Component {
     }
 
     rejectItem = async (purchaseId) => {
-
-        alert('bora');
         // TODO:
         const privateKey = localStorage.getItem('bk');
 
@@ -122,21 +121,13 @@ class NotificationsPage extends Component {
             console.log(error, event);
         }).on('data', async function(event){
             console.log('data event');
-            console.log(event); // same results as the optional callback above
-            console.log(event.returnValues);
-            console.log(event.raw);
+            console.log(event);
 
             console.log('returnValue[0]: '+event.returnValues[0]);
             let result = await st.methods.getResult(event.returnValues[0]).call();
 
-            console.log('Result:');
-            console.log(result);
-            alert('Got result, queres esperar?');
-
-            let cenas = await st.methods.getResult(0).call();
-            console.log('Result depois de esperar:');
-            console.log(cenas);
-            let verificationResult = cenas['3'];
+            let verification = await st.methods.getResult(0).call();
+            let verificationResult = verification['3'];
             let verificationResultStr = stateBack.drizzle.web3.utils.hexToAscii(verificationResult);
             console.log(verificationResultStr);
             alert(verificationResultStr); 
@@ -144,34 +135,38 @@ class NotificationsPage extends Component {
         .on('changed', function(event){
             console.log('changed event');
             console.log(event);
-            // remove event from local database
         })
         .on('error', console.error);
 
-        let verificationTx = await this.state.contract.methods.instantiateCartesiVerification(claimer,challenger).send({ from: this.state.currentAccount });
+        const ipfsPath = '/ipfs/QmfM8ipwA8Ja2PmJwzLSdGdYRYtZmRMQB8TDZrgM1wYWBk';
+        const loggerRootHash = '0x878c868df0c867cff5ad4fc7750600bb59981dcc6c3cf77c1e0447cb507b7812';
+
+        const aDrive = {
+            position: '0x9000000000000000',
+            driveLog2Size: 12,
+            directValue: ethers.utils.formatBytes32String(""),
+            loggerIpfsPath: ethers.utils.hexlify(
+                ethers.utils.toUtf8Bytes(ipfsPath.replace(/\s+/g, ""))
+            ),
+            loggerRootHash: loggerRootHash,
+            waitsProvider: false,
+            needsLogger: true,
+            provider: claimer,
+        };
+
+        const pDrive = {
+            position: '0xa000000000000000',
+            driveLog2Size: 12,
+            directValue: ethers.utils.formatBytes32String('12345Ab'),
+            loggerIpfsPath: ethers.utils.formatBytes32String(''),
+            loggerRootHash: '0x0000000000000000000000000000000000000000000000000000000000000000',
+            waitsProvider: false,
+            needsLogger: false,
+            provider: claimer,
+        }
+
+        let verificationTx = await this.state.contract.methods.instantiateCartesiVerification(claimer,challenger,[aDrive,pDrive]).send({ from: this.state.currentAccount });
         console.log(verificationTx.data);
-
-        // let result = await this.state.contract.methods.getResult(0);
-
-        // console.log('Result:');
-        // console.log(result['3']);
-        // alert('Got result, queres esperar 1?');
-
-        // result = await this.state.contract.methods.getResult(0);
-
-        // console.log(result['3']);
-        // alert('Got result, queres esperar 2?');
-
-        // result = await this.state.contract.methods.getResult(0);
-
-        // console.log(result['3']);
-        // alert('Got result, queres esperar 3?');
-
-        // result = await this.state.contract.methods.getResult(0);
-
-        // console.log(this.state.drizzle.web3.utils.hexToAscii(result['3']));        
-        
-        //alert(verificationTx.data);
 
         ////await this.state.contract.methods.challengePurchase(purchaseId, privateKey).send({ from: this.state.currentAccount });
 
