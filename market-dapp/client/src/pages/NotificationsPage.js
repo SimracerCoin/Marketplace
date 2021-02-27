@@ -125,9 +125,11 @@ class NotificationsPage extends Component {
 
             console.log('returnValue[0]: '+event.returnValues[0]);
             let result = await st.methods.getResult(event.returnValues[0]).call();
+            console.log(result);
 
-            let verification = await st.methods.getResult(0).call();
-            let verificationResult = verification['3'];
+            //let verification = await st.methods.getResult(0).call();
+            //console.log(verification);
+            let verificationResult = result['3'];
             let verificationResultStr = stateBack.drizzle.web3.utils.hexToAscii(verificationResult);
             console.log(verificationResultStr);
             alert(verificationResultStr); 
@@ -143,7 +145,7 @@ class NotificationsPage extends Component {
 
         const aDrive = {
             position: '0x9000000000000000',
-            driveLog2Size: 12,
+            driveLog2Size: 10,
             directValue: ethers.utils.formatBytes32String(""),
             loggerIpfsPath: ethers.utils.hexlify(
                 ethers.utils.toUtf8Bytes(ipfsPath.replace(/\s+/g, ""))
@@ -156,7 +158,7 @@ class NotificationsPage extends Component {
 
         const pDrive = {
             position: '0xa000000000000000',
-            driveLog2Size: 12,
+            driveLog2Size: 10,
             directValue: ethers.utils.formatBytes32String('12345Ab'),
             loggerIpfsPath: ethers.utils.formatBytes32String(''),
             loggerRootHash: '0x0000000000000000000000000000000000000000000000000000000000000000',
