@@ -119,12 +119,14 @@ class NotificationsPage extends Component {
         alert('Thank you for your purchase!');
     }
 
-    rejectItem = async (purchaseId, password) => {
+    rejectItem = async (purchaseId, password, encryptedDataHash) => {
 
         alert('bora');
         // TODO:
         
         alert(password);
+
+        alert(encryptedDataHash);
 
        /*  let st = this.state.contract;
         let stateBack = this.state;
@@ -189,7 +191,7 @@ class NotificationsPage extends Component {
         alert('Seller will be notified.');
     }
 
-    endPurchase = async (event, purchaseId, adId, ipfsPath, buyerKey, encryptedDataKey) => {
+    endPurchase = async (event, purchaseId, adId, ipfsPath, buyerKey, encryptedDataKey, encryptedDataHash) => {
         event.preventDefault();
 
         const ipfsP = this.state.drizzle.web3.utils.hexToAscii(ipfsPath);
@@ -239,7 +241,7 @@ class NotificationsPage extends Component {
                 },
                 {
                     label: 'Reject/Challenge',
-                    onClick: () => this.rejectItem(purchaseId, password)
+                    onClick: () => this.rejectItem(purchaseId, password, encryptedDataHash)
                 }
             ]
         });
@@ -270,7 +272,7 @@ class NotificationsPage extends Component {
                     <td>{value.message}</td>
                     <td>
                         {value.nType == 1 ?
-                            <Link onClick={(e) => this.endPurchase(e, value.purchaseId, purchase.adId, ad.ipfsPath, purchase.buyerKey, purchase.encryptedDataKey)}><i class="fas fa-reply"></i></Link> :
+                            <Link onClick={(e) => this.endPurchase(e, value.purchaseId, purchase.adId, ad.ipfsPath, purchase.buyerKey, purchase.encryptedDataKey, ad.encryptedDataHash)}><i class="fas fa-reply"></i></Link> :
                             value.nType == 3 ? '' :
                                 <Link onClick={(e) => (value.nType == 0 ? this.acceptPurchase(e, value.purchaseId, purchase.buyerKey) : this.resolvePurchase(e, value.purchaseId))}><i class="fas fa-reply"></i></Link>}
                     </td>
