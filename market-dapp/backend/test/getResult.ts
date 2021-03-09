@@ -21,18 +21,18 @@ async function main() {
     signer
   );
 
-  let index = "0";
+  let index = 0;
   if (process.env.index) {
-    index = process.env.index;
+    index = parseInt(process.env.index);
   }
   console.log("");
   console.log("Getting result using index '" + index + "'\n");
 
   const ret = await descartes.getResult(index);
   console.log("Full result: " + JSON.stringify(ret));
-  if (ret["3"]) {
+  if (ret[3]) {
     console.log(
-      `Result value as string: ${ethers.utils.toUtf8String(ret["3"])}`
+      `Result value as string: ${ethers.utils.toUtf8String(ret[3])}`
     );
   }
   console.log("");
