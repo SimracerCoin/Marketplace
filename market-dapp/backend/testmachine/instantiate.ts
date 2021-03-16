@@ -7,9 +7,25 @@
  * Parametrization (setting env variables)
  * - "data": defines mathematical expression to evaluate (default is "2^71 + 36^12")
  */
+
+const config = {
+  ipfsPath: process.env.IPFS_PATH || "",
+  loggerRootHash: process.env.LOGGER_ROOT_HASH || "",
+  machineTemplateHash: process.env.MACHINE_TEMPLATE_HASH || "",
+};
+
+Object.entries(config).forEach(([key, value]) => {
+  if (value.length === 0) {
+      console.error(`${key} could not be found in environment vars`, config);
+      process.exit(-1);
+  }
+});
+
 import hre from "hardhat";
 
 async function main() {
+  console.log("Loaded Configs: ", JSON.stringify(config, null, 2));
+
   const { ethers } = hre;
   const { Descartes } = await hre.deployments.all();
 
@@ -33,25 +49,22 @@ async function main() {
   console.log("");
   console.log(`Instantiating "Conflitator" for data "${data}"...\n`);
 
-  const ipfsPath = '/ipfs/QmP1snrmSnwmZSMVGwusbuK5nDq3Wew6t2VZz5AwkGEbns';
-  const loggerRootHash = '0x55237aebebb43983a762037a92be834b5e5693a72f37c3656f17702ebf4f68cf';
-
   const aDrive = {
-      position: '0x9000000000000000',
-      driveLog2Size: 5,
-      directValue: ethers.utils.formatBytes32String(data),
+      position: '0xa000000000000000',
+      driveLog2Size: 12,
+      directValue: ethers.utils.formatBytes32String(""),
       loggerIpfsPath: ethers.utils.hexlify(
-          ethers.utils.toUtf8Bytes(ipfsPath.replace(/\s+/g, ""))
+        ethers.utils.toUtf8Bytes(config.ipfsPath.replace(/\s+/g, ""))
       ),
-      loggerRootHash: loggerRootHash,
+      loggerRootHash: `0x${config.loggerRootHash}`,
       waitsProvider: false,
       needsLogger: true,
       provider: claimer,
   };
 
   const pDrive = {
-      position: '0xa000000000000000',
-      driveLog2Size: 5,
+      position: '0xb000000000000000',
+      driveLog2Size: 10,
       directValue: ethers.utils.formatBytes32String('1q'),
       loggerIpfsPath: ethers.utils.formatBytes32String(''),
       loggerRootHash: ethers.utils.formatBytes32String(""),
@@ -59,27 +72,15 @@ async function main() {
       needsLogger: false,
       provider: claimer,
   }
-
-   // defines input drive
-/*   const input = {
-    position: "0x9000000000000000",
-    driveLog2Size: 5,
-    directValue: ethers.utils.toUtf8Bytes(data),
-    loggerIpfsPath: ethers.utils.formatBytes32String(""),
-    loggerRootHash: ethers.utils.formatBytes32String(""),
-    waitsProvider: false,
-    needsLogger: false,
-    provider: claimer,
-  }; */
  
   // instantiates descartes computation
   const tx = await descartes.instantiate(
     // final time: 1e11 gives us ~50 seconds for completing the computation itself
     1e11,
     // template hash
-    "0x62282173bb0cadf4404f96385f05d48bf9124f63937886ec68ce42ce75f71649",
+    `0x${config.machineTemplateHash}`,
     // output position
-    "0xb000000000000000",
+    "0xc000000000000000",
     // output log2 size
     10,
     // round duration
