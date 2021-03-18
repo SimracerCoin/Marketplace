@@ -47,5 +47,10 @@ MACHINE_TEMPLATE_HASH=$(docker run \
 
 export MACHINE_TEMPLATE_HASH
 
+# removes target machine directory if it exists
+if [ -d "$MACHINES_DIR/$MACHINE_TEMPLATE_HASH" ]; then
+  rm -r $MACHINES_DIR/$MACHINE_TEMPLATE_HASH
+fi
+
 # moves stored machine to a folder within $MACHINES_DIR named after the machine's hash
 mv $MACHINE_TEMP_DIR $MACHINES_DIR/$MACHINE_TEMPLATE_HASH

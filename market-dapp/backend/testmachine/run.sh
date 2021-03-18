@@ -2,17 +2,17 @@
 
 # general definitions
 FULL_PATH=$(dirname $(realpath $0))
-DESCARTES_DIR=$(dirname $(dirname $FULL_PATH))
-IPFS_PATH='/ipfs/QmZR234xmH6DiS11WXeQ9nC1nSXd7Z1D578imGTpXqzYDf'
-LOGGER_ROOT_HASH='f4f5eab8a077eae4529042060551991139d5cfdcddece7c0235235d2af94b390'
+BASE_DIR=$(dirname $FULL_PATH)
+IPFS_PATH='/ipfs/QmfM8ipwA8Ja2PmJwzLSdGdYRYtZmRMQB8TDZrgM1wYWBk'
+LOGGER_ROOT_HASH='878c868df0c867cff5ad4fc7750600bb59981dcc6c3cf77c1e0447cb507b7812'
 
 # set base descartes directory to specified path if provided
 if [ $1 ]; then
-  DESCARTES_DIR=$1
+  BASE_DIR=$1
 fi
 
 # Build the cartesi machine 
-. $FULL_PATH/src/build-cartesi-machine.sh $DESCARTES_DIR/machines
+. $FULL_PATH/src/build-cartesi-machine.sh $BASE_DIR/machines
 
 export IPFS_PATH
 export LOGGER_ROOT_HASH

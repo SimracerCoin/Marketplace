@@ -16,8 +16,8 @@ const config = {
 
 Object.entries(config).forEach(([key, value]) => {
   if (value.length === 0) {
-      console.error(`${key} could not be found in environment vars`, config);
-      process.exit(-1);
+    console.error(`${key} could not be found in environment vars`, config);
+    process.exit(-1);
   }
 });
 
@@ -31,8 +31,8 @@ async function main() {
 
   //const { alice, bob } = await getNamedAccounts();
 
-  const claimer = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266';
-  const challenger = '0x70997970C51812dc3A010C7d01b50e0d17dc79C8';
+  const claimer = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
+  const challenger = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8";
 
   // retrieves deployed Descartes instance based on its address and ABI
   let [signer] = await ethers.getSigners();
@@ -50,29 +50,29 @@ async function main() {
   console.log(`Instantiating "Conflitator" for data "${data}"...\n`);
 
   const aDrive = {
-      position: '0xa000000000000000',
-      driveLog2Size: 12,
-      directValue: ethers.utils.formatBytes32String(""),
-      loggerIpfsPath: ethers.utils.hexlify(
-        ethers.utils.toUtf8Bytes(config.ipfsPath.replace(/\s+/g, ""))
-      ),
-      loggerRootHash: `0x${config.loggerRootHash}`,
-      waitsProvider: false,
-      needsLogger: true,
-      provider: claimer,
+    position: "0xa000000000000000",
+    driveLog2Size: 7,
+    directValue: ethers.utils.formatBytes32String(""),
+    loggerIpfsPath: ethers.utils.hexlify(
+      ethers.utils.toUtf8Bytes(config.ipfsPath.replace(/\s+/g, ""))
+    ),
+    loggerRootHash: `0x${config.loggerRootHash}`,
+    waitsProvider: false,
+    needsLogger: true,
+    provider: claimer,
   };
 
   const pDrive = {
-      position: '0xb000000000000000',
-      driveLog2Size: 10,
-      directValue: ethers.utils.formatBytes32String('1q'),
-      loggerIpfsPath: ethers.utils.formatBytes32String(''),
-      loggerRootHash: ethers.utils.formatBytes32String(""),
-      waitsProvider: false,
-      needsLogger: false,
-      provider: claimer,
-  }
- 
+    position: "0xb000000000000000",
+    driveLog2Size: 10,
+    directValue: ethers.utils.formatBytes32String("1q"),
+    loggerIpfsPath: ethers.utils.formatBytes32String(""),
+    loggerRootHash: ethers.utils.formatBytes32String(""),
+    waitsProvider: false,
+    needsLogger: false,
+    provider: claimer,
+  };
+
   // instantiates descartes computation
   const tx = await descartes.instantiate(
     // final time: 1e11 gives us ~50 seconds for completing the computation itself
