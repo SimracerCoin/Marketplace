@@ -17,7 +17,8 @@ class SellerPage extends Component {
             vendorAddress: props.location.state.vendorAddress,
             vendorNickname: props.location.state.vendorNickname,
             contract: null,
-            currentAccount: null
+            currentAccount: null,
+            listComments: []
         }
     }
 
@@ -26,7 +27,8 @@ class SellerPage extends Component {
         const currentAccount = this.state.drizzleState.accounts[0];
         const response_cars = await contract.methods.getCarSetups().call();
         const response_skins = await contract.methods.getSkins().call();
-        this.setState({ listCars: response_cars, listSkins: response_skins, contract: contract, currentAccount: currentAccount });
+        const response_comments = await contract.methods.getSellerComments(this.state.vendorNickname).call();
+        this.setState({ listCars: response_cars, listSkins: response_skins, contract: contract, currentAccount: currentAccount, listComments: response_comments });
     }
 
     buyItem = async (event, itemId, track, simulator, season, series, description, price, carBrand, address, nickname, ipfsPath) => {
@@ -51,6 +53,7 @@ class SellerPage extends Component {
     render() {
         const cars = [];
         const skins = [];
+        let commentsRender = [];
 
         if (this.state.redirectBuyItem == true) {
             return (<Redirect
@@ -142,6 +145,32 @@ class SellerPage extends Component {
             skins.reverse();
         }
 
+        if(this.state.listComments.length != 0) {
+            for (const [index, value] of this.state.listComments.entries()) {
+                let commentator = value.commentator;
+                let description = value.description;
+                let review = value.review;
+                let date = new Date(value.date)
+                let date_time = date.toLocaleDateString() + " " +date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        
+                commentsRender.push(
+                    <ListGroup.Item key={index} className="mb-5">
+                        <Card className="card-block">
+                            <Card.Body>
+                                <Card.Text>
+                                    <div><b>Commentator:</b> {commentator}</div>
+                                    <div><b>Description:</b> {description} </div>
+                                    <div><b>Review:</b> {review}</div>
+                                    <div><b>Date:</b> {date_time}</div>
+                                </Card.Text>
+                            </Card.Body>
+                        </Card>
+                    </ListGroup.Item>
+                )
+            }
+            commentsRender.reverse();
+        }
+
         return (
             <header className="header">
                 <section className="content-section text-light br-n bs-c bp-c pb-8" style={{backgroundImage: 'url(\'/assets/img/bg/bg_shape.png\')'}}>
@@ -169,6 +198,12 @@ class SellerPage extends Component {
                         </div>
                     </div>
                 </section>
+                <div className="container">
+                    <h3 className="text-white">Comments</h3>
+                    <ListGroup>
+                        {commentsRender}
+                    </ListGroup>
+                </div>
             </header>
         );
     }

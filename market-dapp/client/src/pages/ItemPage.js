@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Button } from 'react-bootstrap';
+import { Button, Form, Card, ListGroup, Dropdown, DropdownButton } from 'react-bootstrap';
 import { withRouter } from "react-router";
 import { Link } from 'react-router-dom';
 import { confirmAlert } from 'react-confirm-alert';
@@ -10,6 +10,10 @@ const BufferList = require('bl/BufferList');
 const openpgp = require('openpgp');
 
 const priceConversion = 10 ** 18;
+
+const commentStyle = {
+    padding: "20px"
+}
 
 class ItemPage extends Component {
 
@@ -29,8 +33,12 @@ class ItemPage extends Component {
             vendorAddress: props.location.state.vendorAddress,
             vendorNickname: props.location.state.vendorNickname,
             ipfsPath: props.location.state.ipfsPath,
+            imagePath: props.location.state.imagePath,
             contract: null,
             currentAccount: "",
+            comment: "",
+            listComments: [],
+            review: "Review"
         }
         console.log(this.state)
     }
@@ -38,7 +46,8 @@ class ItemPage extends Component {
     componentDidMount = async (event) => {
         const contract = await this.state.drizzle.contracts.STMarketplace;
         const currentAccount = this.state.drizzleState.accounts[0];
-        this.setState({ currentAccount: currentAccount, contract: contract });
+        const comments = await contract.methods.getItemComments(this.state.itemId).call();
+        this.setState({ currentAccount: currentAccount, contract: contract , listComments: comments});
     }
 
     /*
@@ -117,15 +126,36 @@ class ItemPage extends Component {
         });*/
     }
 
+    submitComment = async (event) => {
+        event.stopPropagation();
+        event.preventDefault();
+        const description = document.getElementById('comment').value;
+        if(this.state.review == "") {
+            alert("Please review this item")
+        } else {
+            const date = new Date(Date.now());
+            await this.state.contract.methods.newComment(this.state.itemId, description, this.state.review, date.toString(), this.state.vendorNickname).send({from: this.state.currentAccount });
+            const listComments = await this.state.contract.methods.getItemComments(this.state.itemId).call();
+            document.getElementById("comment").value = "";
+            this.setState({listComments: listComments, review: "Review"});
+        }
+    }
+
+    handleReview = async (event) => {
+        this.setState({review: event});
+    }
+
     render() {
 
         let item = ""
         let toRender;
+        let commentsRender = [];
 
         if (this.state.track == null || this.state.season == null) {
             item = "Skin"
             toRender = (
                 <div>
+                    <div><img src={this.state.imagePath}/></div>
                     <div><b>Seller:</b> <Link to={{pathname: "/seller", state: {vendorAddress: this.state.vendorAddress, vendorNickname: this.state.vendorNickname}}}><u>{this.state.vendorNickname} ({this.state.vendorAddress})</u></Link></div>
                     <div><b>Car Brand:</b> {this.state.car}</div>
                     <div><b>Simulator:</b> {this.state.simulator}</div>
@@ -148,6 +178,32 @@ class ItemPage extends Component {
             )
         }
 
+        if(this.state.listComments.length != 0) {
+            for (const [index, value] of this.state.listComments.entries()) {
+                let commentator = value.commentator;
+                let description = value.description;
+                let review = value.review;
+                let date = new Date(value.date)
+                let date_time = date.toLocaleDateString() + " " +date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        
+                commentsRender.push(
+                    <ListGroup.Item key={index} className="mb-5">
+                        <Card className="card-block">
+                            <Card.Body>
+                                <Card.Text>
+                                    <div><b>Commentator:</b> {commentator}</div>
+                                    <div><b>Description:</b> {description} </div>
+                                    <div><b>Review:</b> {review}</div>
+                                    <div><b>Date:</b> {date_time}</div>
+                                </Card.Text>
+                            </Card.Body>
+                        </Card>
+                    </ListGroup.Item>
+                )
+            }
+            commentsRender.reverse();
+        }
+
         return (
             <header className="header">
                 <section className="content-section text-light br-n bs-c bp-c pb-8" style={{ backgroundImage: 'url(\'/assets/img/bg/bg_shape.png\')' }}>
@@ -159,6 +215,28 @@ class ItemPage extends Component {
                         <Button onClick={this.buyItem}>Buy Item</Button>
                     </div>
                 </section>
+                <div className="container">
+                    <h3 className="text-white">Review</h3>
+                    <Form onSubmit={this.submitComment}>
+                        <Form.Control as="textarea" rows={3} placeholder="Say something here..." id="comment"/> <br></br>
+                        <DropdownButton id="dropdown-basic-button" title={this.state.review} onSelect={this.handleReview}>
+                            <Dropdown.Item eventKey="1">1</Dropdown.Item>
+                            <Dropdown.Item eventKey="2">2</Dropdown.Item>
+                            <Dropdown.Item eventKey="3">3</Dropdown.Item>
+                            <Dropdown.Item eventKey="4">4</Dropdown.Item>
+                            <Dropdown.Item eventKey="5">5</Dropdown.Item>
+                        </DropdownButton>
+                        <br></br>
+                        <Button onClick={this.submitComment}>Comment</Button>
+                    </Form>
+                </div>
+                <br></br>
+                <div className="container">
+                    <h3 className="text-white">Comments</h3>
+                    <ListGroup>
+                        {commentsRender}
+                    </ListGroup>
+                </div>
             </header>
 
         )

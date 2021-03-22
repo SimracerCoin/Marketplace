@@ -22,15 +22,19 @@ class UploadSkin extends Component {
             currentFilePrice: null,
             contract: null,
             ipfsPath: null,
+            image_ipfsPath: "",
             formIPFS: "",
             formAddress: "",
             receivedIPFS: "",
-            isSeller: false
+            isSeller: false,
+            imageBuffer: null,
         }
 
 
         this.handleChangeHash = this.handleChangeHash.bind(this);
         this.handleFilePrice = this.handleFilePrice.bind(this);
+        this.uploadImageIPFS = this.uploadImageIPFS.bind(this);
+        this.saveImage_toIPFS = this.saveImage_toIPFS.bind(this);
     };
 
 
@@ -86,6 +90,57 @@ class UploadSkin extends Component {
         reader.readAsArrayBuffer(file)
         reader.onloadend = () => this.convertToBuffer(reader)
     };
+    
+    //Guarda a imagem no ipfs 
+    saveImage_toIPFS = async () => {
+        var fileName = document.getElementById('skin-image').value.toLowerCase();
+        console.log("Filename: " + fileName)
+        if(!fileName.endsWith('.jpg')) {
+            alert('You can upload .tga files only.');
+            return false;
+        }
+
+       /*  const password = await Prompt('Type the password to encrypt the image. Use different password for each item.');
+
+        if (!password) return;
+
+        const { message } = await openpgp.encrypt({
+            message: openpgp.message.fromBinary(this.state.buffer), // input as Message object
+            passwords: [password],                                  // multiple passwords possible
+            armor: false                                            // don't ASCII armor (for Uint8Array output)
+        });
+        const encryptedBuffer = message.packets.write(); // get raw encrypted packets as Uint8Array
+
+        const loggerRootHash = computeMerkleRootHash(Buffer.from(encryptedBuffer));
+        console.log(`Image Logger Root Hash: ${loggerRootHash}`); */
+
+        const response = await ipfs.add(this.state.imageBuffer, (err, ipfsPath) => {
+            console.log(err, ipfsPath);
+            console.log("Response image: ", ipfsPath[0].hash)
+            //setState by setting ipfsPath to ipfsPath[0].hash 
+            this.setState({ image_ipfsPath: ipfsPath[0].hash });
+        })
+
+        console.log("Image response ipfs: ", response.path)
+        
+        this.setState({ image_ipfsPath: response.path });
+
+    }
+
+    //Transforma a imagem num buffer e guarda como estado
+    uploadImageIPFS = (event) => {
+        event.stopPropagation()
+        event.preventDefault()
+        const file = event.target.files[0]
+        const reader = new window.FileReader()
+        reader.readAsArrayBuffer(file)
+        reader.onloadend = () => {
+          this.setState({ imageBuffer: Buffer(reader.result) })
+          console.log('buffer', this.state.imageBuffer)
+        }
+    }
+
+
 
     onIPFSSubmit = async (event) => {
         event.preventDefault();
@@ -145,9 +200,12 @@ class UploadSkin extends Component {
             const placeholder = this.state.drizzle.web3.utils.fromAscii('some hash');
             console.log(placeholder);
 
+            await this.saveImage_toIPFS();
+
             const response = await this.state.contract.methods.newSkin(ipfsPathBytes, this.state.currentCar,
-                this.state.currentSimulator, price, placeholder, placeholder, nickname).send({ from: this.state.currentAccount });
+                this.state.currentSimulator, price, placeholder, placeholder, nickname, this.state.image_ipfsPath).send({ from: this.state.currentAccount });
             console.log(response);
+
 
             alert("The new skin is available for sale!");
         }
@@ -206,6 +264,17 @@ class UploadSkin extends Component {
                                 </Form.Group>
                             </Form>
                         </div>
+                         <div>
+                            <div> Add Image for new Car Skin </div>
+                            <Form onSubmit={this.saveImage_toIPFS}>
+                                <input id="skin-image"
+                                    type="file"
+                                    onChange={this.uploadImageIPFS}
+                                />
+                                <br></br>
+                               
+                            </Form>
+                        </div><br></br>
                         <div>
                             <Button onClick={this.saveSkin}>Save Skin</Button>
                         </div>

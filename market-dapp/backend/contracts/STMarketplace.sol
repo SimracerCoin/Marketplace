@@ -26,6 +26,7 @@ contract STMarketplace is ContentMarketplace {
     struct carSkinInfo {
         string carBrand;
         string simulator;
+        string skinPic;
     }
        
     // full representation of an advertised car setup
@@ -41,6 +42,19 @@ contract STMarketplace is ContentMarketplace {
         Advertisement ad;   // generic ad information, including seller and content
         carSkinInfo info;   // specific car skin information
     }
+
+    // full representation of comment
+    struct comment {
+        uint256 itemId;
+        address commentator;
+        string description;
+        uint256 review;
+        string date;   
+    }
+
+    // /// @notice To track comments from item
+    mapping(uint256 => comment[]) itemComments;
+    mapping(string => comment[]) sellerComments;
 
     // /// @notice Maps the 2 type of files
     mapping(uint256 => carSetupInfo) carSetupInfos;
@@ -114,7 +128,8 @@ contract STMarketplace is ContentMarketplace {
         uint256 _price,                // trade price
         bytes32 _dataHash,             // merkle hash of unencrypted data
         bytes32 _encryptedDataHash,    // merkle hash of encrypted data
-        string memory _nickname
+        string memory _nickname,
+        string memory _imagePath       // ipfs path for image skin
     ) public
         returns (uint256 id)           // returns ad identifier
     {
@@ -129,12 +144,29 @@ contract STMarketplace is ContentMarketplace {
         carSkinInfo storage info = carSkinInfos[id];
         info.carBrand = _carBrand;
         info.simulator = _simulator;
+        info.skinPic = _imagePath;
 
         carSkinIds.push(id);
         saveSeller(msg.sender, _nickname);
         emit skinSaved (msg.sender,_ipfsPath, _carBrand, _simulator, _price);
 
         return id;
+    }
+
+     /// @notice Registers a new comment for item
+    function newComment(
+        uint256 _itemId,
+        string memory _description,
+        uint256 _review,
+        string memory _date,
+        string memory _sellerNickname
+    ) public
+        returns (comment memory comment_to_return)
+    {
+        comment memory _comment = comment(_itemId, msg.sender, _description, _review, _date);
+        itemComments[_itemId].push(_comment);
+        sellerComments[_sellerNickname].push(_comment);
+        return _comment;
     }
 
     /// @notice Registers seller address
@@ -175,6 +207,16 @@ contract STMarketplace is ContentMarketplace {
             skins[i].info = carSkinInfos[id];
         }
         return skins;
+    }
+
+    /// @notice Gets the list of comments from item
+     function getItemComments(uint256 _itemId) public view returns(comment[] memory comments_to_return) {
+        return itemComments[_itemId];
+    }
+
+    /// @notice Gets the list of comments from item
+     function getSellerComments(string memory _sellerNickname) public view returns(comment[] memory comments_to_return) {
+        return sellerComments[_sellerNickname];
     }
 
     /// @notice Tests if car setup exists

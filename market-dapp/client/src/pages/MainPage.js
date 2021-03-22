@@ -2,6 +2,8 @@ import React, { Component } from 'react';
 import { Button, Card, ListGroup } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { Redirect } from "react-router-dom";
+import ipfs from "../ipfs";
+ 
 
 import "../css/mainpage.css";
 
@@ -26,6 +28,7 @@ class MainPage extends Component {
             selectedDescription: "",
             selectedPrice: "",
             selectedCarBrand: "",
+            selectedImagePath: "",
             vendorAddress: "",
             vendorNickname: "",
             ipfsPath:"",
@@ -37,12 +40,32 @@ class MainPage extends Component {
     componentDidMount = async () => {
         const contract = await this.state.drizzle.contracts.STMarketplace
         const response_cars = await contract.methods.getCarSetups().call();
-        const response_skins = await contract.methods.getSkins().call();
+        const response_skins = await contract.methods.getSkins().call(); 
+        console.log(ipfs)
+        /**Skins buscar a imagemHash e concatenar
+        * --> https://ipfs.io/ipfs/
+        */
+        /* try {
+            const ipfs_results = []
+            for await (const resultPart of ipfs.ls('ipfs/')) {
+                ipfs_results.push(resultPart)
+            }
+            if(ipfs_results.empty) {
+                console.log("IPFS_results: " + ipfs_results)
+            } else {
+                console.log("IPFS is empty")
+            }
+            console.log("IPFS: ", ipfs)
+        } catch (e) {
+            console.error(e)
+        } */
+        
+        
         this.setState({ listCars: response_cars, listSkins: response_skins, contract: contract });
     }
 
 
-    buyItem = async (event, itemId, track, simulator, season, series, description, price, carBrand, address, ipfsPath) => {
+    buyItem = async (event, itemId, track, simulator, season, series, description, price, carBrand, address, ipfsPath, imagePath) => {
         event.preventDefault();
 
         this.setState({
@@ -55,6 +78,7 @@ class MainPage extends Component {
             selectedDescription: description,
             selectedPrice: price,
             selectedCarBrand: carBrand,
+            selectedImagePath: imagePath,
             vendorAddress: address,
             vendorNickname: await this.state.contract.methods.getNickname(address).call(),
             ipfsPath: ipfsPath,
@@ -79,6 +103,7 @@ class MainPage extends Component {
                         selectedDescription: this.state.selectedDescription,
                         selectedPrice: this.state.selectedPrice,
                         selectedCarBrand: this.state.selectedCarBrand,
+                        imagePath: this.state.selectedImagePath,
                         vendorAddress: this.state.vendorAddress,
                         vendorNickname: this.state.vendorNickname,
                         ipfsPath: this.state.ipfsPath,
@@ -114,7 +139,7 @@ class MainPage extends Component {
                                     <div><b>Price:</b> {price / priceConversion} ETH</div>
                                     {/* <div><b>Vendor address:</b> {address}</div> */}
                                 </Card.Text>
-                                <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, track, simulator, season, series, description, price, carBrand, address, ipfsPath)}> View item</Button>
+                                <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, track, simulator, season, series, description, price, carBrand, address, ipfsPath, "")}> View item</Button>
                             </Card.Body>
                         </Card>
                     </ListGroup.Item>
@@ -130,17 +155,20 @@ class MainPage extends Component {
                 let address = value.ad.seller
                 let itemId = value.id
                 let ipfsPath = value.ad.ipfsPath
+                let imagePath = "https://ipfs.io/ipfs/" + value.info.skinPic
+                console.log("Image path: " + imagePath)
                 skins.push(
                     <ListGroup.Item key={index}>
                         <Card className="card-block">
                             <Card.Body>
+                                <Card.Img variant="top" src={imagePath} />
                                 <Card.Title>{carBrand}</Card.Title>
                                 <Card.Text>
                                     <div><b>Simulator:</b> {simulator}</div>
                                     <div><b>Price:</b> {price / priceConversion} ETH</div>
                                     {/* <div><b>Vendor address:</b> {address}</div> */}
                                 </Card.Text>
-                                <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, null, null, price, carBrand , address, ipfsPath)}> View item</Button>
+                                <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, null, null, price, carBrand , address, ipfsPath, imagePath)}> View item</Button>
                             </Card.Body>
                         </Card>
                     </ListGroup.Item>
