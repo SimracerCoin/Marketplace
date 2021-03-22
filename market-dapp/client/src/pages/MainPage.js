@@ -41,7 +41,6 @@ class MainPage extends Component {
         const contract = await this.state.drizzle.contracts.STMarketplace
         const response_cars = await contract.methods.getCarSetups().call();
         const response_skins = await contract.methods.getSkins().call(); 
-        console.log(ipfs)
         /**Skins buscar a imagemHash e concatenar
         * --> https://ipfs.io/ipfs/
         */
@@ -156,7 +155,6 @@ class MainPage extends Component {
                 let itemId = value.id
                 let ipfsPath = value.ad.ipfsPath
                 let imagePath = "https://ipfs.io/ipfs/" + value.info.skinPic
-                console.log("Image path: " + imagePath)
                 skins.push(
                     <ListGroup.Item key={index}>
                         <Card className="card-block">

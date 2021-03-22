@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { Button, Card, ListGroup } from 'react-bootstrap';
 import { Redirect } from "react-router-dom";
 import { withRouter } from "react-router";
+import StarRatings from 'react-star-ratings';
 
 const priceConversion = 10**18;
 
@@ -18,7 +19,17 @@ class SellerPage extends Component {
             vendorNickname: props.location.state.vendorNickname,
             contract: null,
             currentAccount: null,
-            listComments: []
+            listComments: [],
+            selectedItemId: "",
+            selectedTrack: "",
+            selectedSimulator: "",
+            selectedSeason: "",
+            selectedSeries: "",
+            selectedDescription: "",
+            selectedPrice: "",
+            selectedCarBrand: "",
+            selectedImagePath: "",
+            ipfsPath:""
         }
     }
 
@@ -31,9 +42,9 @@ class SellerPage extends Component {
         this.setState({ listCars: response_cars, listSkins: response_skins, contract: contract, currentAccount: currentAccount, listComments: response_comments });
     }
 
-    buyItem = async (event, itemId, track, simulator, season, series, description, price, carBrand, address, nickname, ipfsPath) => {
+    buyItem = async (event, itemId, track, simulator, season, series, description, price, carBrand, address, ipfsPath, imagePath) => {
         event.preventDefault();
-
+        
         this.setState({
             redirectBuyItem: true,
             selectedItemId: itemId,
@@ -44,8 +55,8 @@ class SellerPage extends Component {
             selectedDescription: description,
             selectedPrice: price,
             selectedCarBrand: carBrand,
+            selectedImagePath: imagePath,
             vendorAddress: address,
-            vendorNickname: nickname,
             ipfsPath: ipfsPath,
         });
     }
@@ -68,6 +79,7 @@ class SellerPage extends Component {
                         selectedDescription: this.state.selectedDescription,
                         selectedPrice: this.state.selectedPrice,
                         selectedCarBrand: this.state.selectedCarBrand,
+                        imagePath: this.state.selectedImagePath,
                         vendorAddress: this.state.vendorAddress,
                         vendorNickname: this.state.vendorNickname,
                         ipfsPath: this.state.ipfsPath,
@@ -125,17 +137,19 @@ class SellerPage extends Component {
                 let address = value.ad.seller
                 let itemId = value.id
                 let ipfsPath = value.ad.ipfsPath
+                let imagePath = "https://ipfs.io/ipfs/" + value.info.skinPic
                 skins.push(
                     <ListGroup.Item key={index}>
                         <Card className="card-block">
                             <Card.Body>
+                                <Card.Img variant="top" src={imagePath} />
                                 <Card.Title>{carBrand}</Card.Title>
                                 <Card.Text>
                                     <div><b>Simulator:</b> {simulator}</div>
                                     <div><b>Price:</b> {price / priceConversion} ETH</div>
                                     {/* <div><b>Vendor address:</b> {address}</div> */}
                                 </Card.Text>
-                                <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, price, carBrand , address, nickname, ipfsPath)}> View item</Button>
+                                <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, null, null, price, carBrand , address, ipfsPath, imagePath)}> View item</Button>
                             </Card.Body>
                         </Card>
                     </ListGroup.Item>
@@ -149,7 +163,7 @@ class SellerPage extends Component {
             for (const [index, value] of this.state.listComments.entries()) {
                 let commentator = value.commentator;
                 let description = value.description;
-                let review = value.review;
+                let review = parseInt(value.review);
                 let date = new Date(value.date)
                 let date_time = date.toLocaleDateString() + " " +date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         
@@ -158,6 +172,15 @@ class SellerPage extends Component {
                         <Card className="card-block">
                             <Card.Body>
                                 <Card.Text>
+                                    <div>
+                                        <StarRatings 
+                                            rating={review}
+                                            starRatedColor="rgb(230, 67, 47)"
+                                            starDimension="20px"
+                                            numberOfStars={5}
+                                            name='rating'
+                                        />
+                                    </div>
                                     <div><b>Commentator:</b> {commentator}</div>
                                     <div><b>Description:</b> {description} </div>
                                     <div><b>Review:</b> {review}</div>

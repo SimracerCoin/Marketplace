@@ -1,10 +1,13 @@
 import React, { Component } from 'react';
-import { Button, Form, Card, ListGroup, Dropdown, DropdownButton } from 'react-bootstrap';
+import { Button, Form, Card, ListGroup, Dropdown, DropdownButton, Row } from 'react-bootstrap';
 import { withRouter } from "react-router";
 import { Link } from 'react-router-dom';
 import { confirmAlert } from 'react-confirm-alert';
 import 'react-confirm-alert/src/react-confirm-alert.css';
 import ipfs from "../ipfs";
+import StarRatings from 'react-star-ratings';
+ 
+
 const BufferList = require('bl/BufferList');
 
 const openpgp = require('openpgp');
@@ -38,7 +41,8 @@ class ItemPage extends Component {
             currentAccount: "",
             comment: "",
             listComments: [],
-            review: "Review"
+            review_rating: 0,
+            average_review: 0
         }
         console.log(this.state)
     }
@@ -47,8 +51,32 @@ class ItemPage extends Component {
         const contract = await this.state.drizzle.contracts.STMarketplace;
         const currentAccount = this.state.drizzleState.accounts[0];
         const comments = await contract.methods.getItemComments(this.state.itemId).call();
-        this.setState({ currentAccount: currentAccount, contract: contract , listComments: comments});
+        const average_review = await this.average_rating(comments);
+    
+        this.setState({ currentAccount: currentAccount, contract: contract , listComments: comments, average_review: average_review});
     }
+
+    average_rating = async (comments) => {
+        const total = comments.length;
+        let counter_rating = 0;
+        if(total == 0) {
+            return counter_rating;
+        } else {
+            for (const [index, value] of comments.entries()) {
+                let rating = parseInt(value.review);
+                counter_rating = counter_rating + rating;
+            }
+
+            return (counter_rating/total);
+        }
+        
+    }
+
+    changeRating = async( newRating, name ) => {
+        this.setState({
+            review_rating: newRating
+        });
+      }
 
     /*
     acceptItem = async (purchaseId) => {
@@ -134,10 +162,11 @@ class ItemPage extends Component {
             alert("Please review this item")
         } else {
             const date = new Date(Date.now());
-            await this.state.contract.methods.newComment(this.state.itemId, description, this.state.review, date.toString(), this.state.vendorNickname).send({from: this.state.currentAccount });
+            await this.state.contract.methods.newComment(this.state.itemId, description, this.state.review_rating, date.toString(), this.state.vendorNickname).send({from: this.state.currentAccount });
             const listComments = await this.state.contract.methods.getItemComments(this.state.itemId).call();
+            const average_review = await this.average_rating(listComments);
             document.getElementById("comment").value = "";
-            this.setState({listComments: listComments, review: "Review"});
+            this.setState({listComments: listComments, review_rating: 0, average_review: average_review});
         }
     }
 
@@ -182,7 +211,7 @@ class ItemPage extends Component {
             for (const [index, value] of this.state.listComments.entries()) {
                 let commentator = value.commentator;
                 let description = value.description;
-                let review = value.review;
+                let review = parseInt(value.review);
                 let date = new Date(value.date)
                 let date_time = date.toLocaleDateString() + " " +date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         
@@ -191,9 +220,18 @@ class ItemPage extends Component {
                         <Card className="card-block">
                             <Card.Body>
                                 <Card.Text>
+                                    <div>
+                                        <StarRatings 
+                                            rating={review}
+                                            starRatedColor="rgb(230, 67, 47)"
+                                            starDimension="20px"
+                                            numberOfStars={5}
+                                            name='rating'
+                                        />
+                                    </div>
                                     <div><b>Commentator:</b> {commentator}</div>
                                     <div><b>Description:</b> {description} </div>
-                                    <div><b>Review:</b> {review}</div>
+                                    {/* <div><b>Review:</b> {review}</div> */}
                                     <div><b>Date:</b> {date_time}</div>
                                 </Card.Text>
                             </Card.Body>
@@ -219,20 +257,31 @@ class ItemPage extends Component {
                     <h3 className="text-white">Review</h3>
                     <Form onSubmit={this.submitComment}>
                         <Form.Control as="textarea" rows={3} placeholder="Say something here..." id="comment"/> <br></br>
-                        <DropdownButton id="dropdown-basic-button" title={this.state.review} onSelect={this.handleReview}>
-                            <Dropdown.Item eventKey="1">1</Dropdown.Item>
-                            <Dropdown.Item eventKey="2">2</Dropdown.Item>
-                            <Dropdown.Item eventKey="3">3</Dropdown.Item>
-                            <Dropdown.Item eventKey="4">4</Dropdown.Item>
-                            <Dropdown.Item eventKey="5">5</Dropdown.Item>
-                        </DropdownButton>
+                        <StarRatings 
+                            rating={this.state.review_rating}
+                            starRatedColor="yellow"
+                            changeRating={this.changeRating}
+                            numberOfStars={5}
+                            name='rating'
+                        />
                         <br></br>
-                        <Button onClick={this.submitComment}>Comment</Button>
+                        <Button className="mt-5" onClick={this.submitComment}>Comment</Button>
                     </Form>
                 </div>
                 <br></br>
                 <div className="container">
-                    <h3 className="text-white">Comments</h3>
+                    <h3 className="text-white">Reviews</h3>
+                    <div className="container">
+                        <Row>
+                            <StarRatings 
+                                    rating={this.state.average_review}
+                                    starRatedColor="yellow"
+                                    numberOfStars={5}
+                                    name='rating'
+                            />
+                            <h2 className="text-white ml-5">{this.state.average_review}</h2>
+                        </Row>
+                    </div>
                     <ListGroup>
                         {commentsRender}
                     </ListGroup>
