@@ -33,8 +33,8 @@ docker run \
     --flash-drive="label:input,length:1<<12" \
     --flash-drive="label:password,length:1<<12" \
     --flash-drive="label:output,length:1<<12" \
-    -- $'cd /mnt/decrypt ; dd if=$(flashdrive input) of=input.raw ; dd if=$(flashdrive password) of=password.raw ; ./decrypt.sh input.raw password.raw > $(flashdrive output)'
-
+    -- $'date -s \'2100-01-01\' && /mnt/decrypt/decrypt.sh'
+    
 MACHINE_TEMPLATE_HASH=$(docker run \
   -e USER=$(id -u -n) \
   -e GROUP=$(id -g -n) \

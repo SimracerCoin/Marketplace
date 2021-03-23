@@ -65,7 +65,7 @@ async function main() {
   const pDrive = {
     position: "0xb000000000000000",
     driveLog2Size: 10,
-    directValue: ethers.utils.formatBytes32String("1q"),
+    directValue: ethers.utils.formatBytes32String("12345Ab"),
     loggerIpfsPath: ethers.utils.formatBytes32String(""),
     loggerRootHash: ethers.utils.formatBytes32String(""),
     waitsProvider: false,
@@ -82,7 +82,7 @@ async function main() {
     // output position
     "0xc000000000000000",
     // output log2 size
-    10,
+    5,
     // round duration
     51,
     [claimer, challenger],

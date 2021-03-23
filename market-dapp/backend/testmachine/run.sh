@@ -12,7 +12,7 @@ if [ $1 ]; then
 fi
 
 # Build the cartesi machine 
-. $FULL_PATH/src/build-cartesi-machine.sh $BASE_DIR/machines
+. $FULL_PATH/build-cartesi-machine.sh $BASE_DIR/machines
 
 export IPFS_PATH
 export LOGGER_ROOT_HASH

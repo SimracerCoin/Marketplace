@@ -1,14 +1,10 @@
 #!/bin/sh
 
-dd status=none if=$(flashdrive input) | lua -e 'io.write((string.unpack("z",  io.read("a"))))' > document
-dd status=none if=$(flashdrive password) | lua -e 'print((string.unpack("z",  io.read("a"))))' > password
+dd status=none if=$(flashdrive input) of=document                                                                 #read encrypted document
 
-pass=$(cat password)             #read string for binary file
-tmpfile_out=$(mktemp -u)         #create temp file to store decrypted file
+passphrase=$(dd status=none if=$(flashdrive password) | lua -e 'io.write((string.unpack("z",  io.read("a"))))')   #read password
 
-gpg -d --batch --passphrase "$password" -o $tmpfile_out document  #try to decrypt document
+# check if decrypt went well and return
+result=$([ ! -z "`gpg -d --batch --passphrase "$passphrase" document 2>/dev/null`" ] && echo 1 || echo 0)
 
-# check if decrypt went well
-[ ! -s $tmpfile_out ] && { echo "decryption error"; exit 99; }
-
-cat $tmpfile_out  #script output decrypted file
+echo $result > $(flashdrive output)

@@ -40,4 +40,4 @@ cartesi-machine \
   --flash-drive="label:input,length:1<<12,filename:input" \
   --flash-drive="label:password,length:1<<12,filename:password" \
   --flash-drive="label:output,length:1<<12,filename:output.raw,shared" \
-  -- $'cd /mnt/decrypt ; dd if=$(flashdrive input) of=input.raw ; dd if=$(flashdrive password) of=password.raw ; ./decrypt.sh input.raw password.raw > $(flashdrive output)'
+  -- $'/mnt/decrypt/decrypt.sh'
