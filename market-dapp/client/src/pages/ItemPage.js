@@ -66,7 +66,6 @@ class ItemPage extends Component {
                 let rating = parseInt(value.review);
                 counter_rating = counter_rating + rating;
             }
-
             return (counter_rating/total);
         }
         
@@ -279,7 +278,7 @@ class ItemPage extends Component {
                                     numberOfStars={5}
                                     name='rating'
                             />
-                            <h2 className="text-white ml-5">{this.state.average_review}</h2>
+                            <h2 className="text-white ml-5">{this.state.average_review.toFixed(1)}</h2>
                         </Row>
                     </div>
                     <ListGroup>

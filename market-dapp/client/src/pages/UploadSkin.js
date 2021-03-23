@@ -94,25 +94,15 @@ class UploadSkin extends Component {
     //Guarda a imagem no ipfs 
     saveImage_toIPFS = async () => {
         var fileName = document.getElementById('skin-image').value.toLowerCase();
+
         console.log("Filename: " + fileName)
-        if(!fileName.endsWith('.jpg')) {
-            alert('You can upload .tga files only.');
+
+        const valid_fileName = fileName.endsWith('.jpg') || fileName.endsWith('.png') || fileName.endsWith('.jpeg')
+        console.log("Valid filename: " + valid_fileName)
+        if(!valid_fileName) {
+            alert('You can upload .jpg, .png or .jpeg files only. Invalid file!');
             return false;
         }
-
-       /*  const password = await Prompt('Type the password to encrypt the image. Use different password for each item.');
-
-        if (!password) return;
-
-        const { message } = await openpgp.encrypt({
-            message: openpgp.message.fromBinary(this.state.buffer), // input as Message object
-            passwords: [password],                                  // multiple passwords possible
-            armor: false                                            // don't ASCII armor (for Uint8Array output)
-        });
-        const encryptedBuffer = message.packets.write(); // get raw encrypted packets as Uint8Array
-
-        const loggerRootHash = computeMerkleRootHash(Buffer.from(encryptedBuffer));
-        console.log(`Image Logger Root Hash: ${loggerRootHash}`); */
 
         const response = await ipfs.add(this.state.imageBuffer, (err, ipfsPath) => {
             console.log(err, ipfsPath);
@@ -120,10 +110,9 @@ class UploadSkin extends Component {
             //setState by setting ipfsPath to ipfsPath[0].hash 
             this.setState({ image_ipfsPath: ipfsPath[0].hash });
         })
-
-        console.log("Image response ipfs: ", response.path)
         
         this.setState({ image_ipfsPath: response.path });
+        return true;
 
     }
 
@@ -200,14 +189,16 @@ class UploadSkin extends Component {
             const placeholder = this.state.drizzle.web3.utils.fromAscii('some hash');
             console.log(placeholder);
 
-            await this.saveImage_toIPFS();
+            const response_saveImage = await this.saveImage_toIPFS();
 
-            const response = await this.state.contract.methods.newSkin(ipfsPathBytes, this.state.currentCar,
-                this.state.currentSimulator, price, placeholder, placeholder, nickname, this.state.image_ipfsPath).send({ from: this.state.currentAccount });
-            console.log(response);
-
-
-            alert("The new skin is available for sale!");
+            if(response_saveImage == true) {
+                const response = await this.state.contract.methods.newSkin(ipfsPathBytes, this.state.currentCar,
+                    this.state.currentSimulator, price, placeholder, placeholder, nickname, this.state.image_ipfsPath).send({ from: this.state.currentAccount });
+                console.log(response);
+    
+    
+                alert("The new skin is available for sale!");
+            }  
         }
     }
 
