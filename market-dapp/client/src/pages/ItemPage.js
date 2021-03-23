@@ -157,7 +157,7 @@ class ItemPage extends Component {
         event.stopPropagation();
         event.preventDefault();
         const description = document.getElementById('comment').value;
-        if(this.state.review == "") {
+        if(this.state.review_rating == 0) {
             alert("Please review this item")
         } else {
             const date = new Date(Date.now());
