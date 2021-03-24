@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Button, Form, Card, ListGroup, Dropdown, DropdownButton, Row } from 'react-bootstrap';
+import { Button, Form, Card, ListGroup, Row, Col } from 'react-bootstrap';
 import { withRouter } from "react-router";
 import { Link } from 'react-router-dom';
 import { confirmAlert } from 'react-confirm-alert';
@@ -261,6 +261,7 @@ class ItemPage extends Component {
                             starRatedColor="yellow"
                             changeRating={this.changeRating}
                             numberOfStars={5}
+                            starDimension="25px"
                             name='rating'
                         />
                         <br></br>
@@ -272,13 +273,25 @@ class ItemPage extends Component {
                     <h3 className="text-white">Reviews</h3>
                     <div className="container">
                         <Row>
-                            <StarRatings 
-                                    rating={this.state.average_review}
-                                    starRatedColor="yellow"
-                                    numberOfStars={5}
-                                    name='rating'
-                            />
-                            <h2 className="text-white ml-5">{this.state.average_review.toFixed(1)}</h2>
+                            <div className="review d-flex">
+                                <div className="review_score">
+                                    <div className="review_score-btn">
+                                        {this.state.average_review.toFixed(1)}
+                                    </div>
+                                </div>
+                                <div className="star_rating-se text-warning mr-7">
+                                    <div className="mb-1">
+                                        <StarRatings
+                                                rating={this.state.average_review}
+                                                starRatedColor="yellow"
+                                                numberOfStars={5}
+                                                starDimension="25px"
+                                                name='rating'
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                            <h4 className="text-white">({this.state.listComments.length})</h4>
                         </Row>
                     </div>
                     <ListGroup>
