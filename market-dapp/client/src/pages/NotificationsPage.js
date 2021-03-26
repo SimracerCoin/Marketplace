@@ -110,10 +110,11 @@ class NotificationsPage extends Component {
         alert('Thank you for your purchase!');
     }
 
-    rejectItem = async (purchaseId) => {
+    rejectItem = async (purchaseId, passphrase, ipfsPath, log2Size, loggerRootHash) => {
         // TODO:
-        const privateKey = localStorage.getItem('bk');
+        //const privateKey = localStorage.getItem('bk');
 
+        /*
         let st = this.state.contract;
         let stateBack = this.state;
         this.state.descartesContract.events.DescartesCreated({fromBlock: 0}, (error, event) => {
@@ -138,14 +139,14 @@ class NotificationsPage extends Component {
             console.log('changed event');
             console.log(event);
         })
-        .on('error', console.error);
+        .on('error', console.error);*/
 
-        const ipfsPath = '/ipfs/QmfM8ipwA8Ja2PmJwzLSdGdYRYtZmRMQB8TDZrgM1wYWBk';
-        const loggerRootHash = '0x878c868df0c867cff5ad4fc7750600bb59981dcc6c3cf77c1e0447cb507b7812';
+        //const ipfsPath = '/ipfs/QmfM8ipwA8Ja2PmJwzLSdGdYRYtZmRMQB8TDZrgM1wYWBk';
+        //const loggerRootHash = '0x878c868df0c867cff5ad4fc7750600bb59981dcc6c3cf77c1e0447cb507b7812';
 
         const aDrive = {
-            position: '0x9000000000000000',
-            driveLog2Size: 10,
+            position: '0xa000000000000000',
+            driveLog2Size: log2Size,
             directValue: ethers.utils.formatBytes32String(""),
             loggerIpfsPath: ethers.utils.hexlify(
                 ethers.utils.toUtf8Bytes(ipfsPath.replace(/\s+/g, ""))
@@ -157,11 +158,11 @@ class NotificationsPage extends Component {
         };
 
         const pDrive = {
-            position: '0xa000000000000000',
+            position: '0xb000000000000000',
             driveLog2Size: 10,
-            directValue: ethers.utils.formatBytes32String('12345Ab'),
+            directValue: ethers.utils.formatBytes32String(passphrase),
             loggerIpfsPath: ethers.utils.formatBytes32String(''),
-            loggerRootHash: '0x0000000000000000000000000000000000000000000000000000000000000000',
+            loggerRootHash: ethers.utils.formatBytes32String(""),
             waitsProvider: false,
             needsLogger: false,
             provider: claimer,
@@ -175,7 +176,7 @@ class NotificationsPage extends Component {
         alert('Seller will be notified.');
     }
 
-    endPurchase = async (event, purchaseId, adId, ipfsPath, buyerKey, encryptedDataKey) => {
+    endPurchase = async (event, purchaseId, adId, ipfsPath, buyerKey, encryptedDataKey, loggerRootHash) => {
         event.preventDefault();
 
         const ipfsP = this.state.drizzle.web3.utils.hexToAscii(ipfsPath);
@@ -225,7 +226,7 @@ class NotificationsPage extends Component {
                 },
                 {
                     label: 'Reject/Challenge',
-                    onClick: () => this.rejectItem(purchaseId)
+                    onClick: () => this.rejectItem(purchaseId, password, ipfsP, Math.ceil(Math.log2(data.size)), loggerRootHash)
                 }
             ]
         });
