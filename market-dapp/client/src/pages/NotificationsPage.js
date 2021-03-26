@@ -14,6 +14,7 @@ const BufferList = require('bl/BufferList');
 // TODO: use addresses from config file of the Cartesi nodes that will participating
 const claimer = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266';
 const challenger = '0x70997970C51812dc3A010C7d01b50e0d17dc79C8';
+const passphrase = 'garlic stress stumble dislodge copier shortwave cucumber extrude rebuff spearman smile reward';
 
 class NotificationsPage extends Component {
     constructor(props) {
@@ -93,10 +94,19 @@ class NotificationsPage extends Component {
         alert("Buyer will be notified");
     }
 
-    resolvePurchase = async (event, purchaseId) => {
+    resolvePurchase = async (event, descartesId) => {
         event.preventDefault();
 
-        alert("Solve challenge");
+        /* let st = this.state.contract;
+        let stateBack = this.state;
+
+        let cenas = await st.methods.getResult(descartesId).call();
+        console.log('Result depois de esperar:');
+        console.log(cenas);
+        let verificationResult = cenas['3'];
+        let verificationResultStr = stateBack.drizzle.web3.utils.hexToAscii(verificationResult);
+        console.log(verificationResultStr);
+        alert(verificationResultStr); */
     }
     // =========================
 
@@ -110,7 +120,7 @@ class NotificationsPage extends Component {
         alert('Thank you for your purchase!');
     }
 
-    rejectItem = async (purchaseId, passphrase, ipfsPath, log2Size, loggerRootHash) => {
+    rejectItem = async (purchaseId, password, ipfsPath, log2Size, loggerRootHash) => {
         // TODO:
         //const privateKey = localStorage.getItem('bk');
 
@@ -159,16 +169,16 @@ class NotificationsPage extends Component {
 
         const pDrive = {
             position: '0xb000000000000000',
-            driveLog2Size: 10,
-            directValue: ethers.utils.formatBytes32String(passphrase),
-            loggerIpfsPath: ethers.utils.formatBytes32String(''),
+            driveLog2Size: Math.ceil(Math.log2((new Blob([password]).size))),
+            directValue: ethers.utils.formatBytes32String(password),
+            loggerIpfsPath: ethers.utils.formatBytes32String(""),
             loggerRootHash: ethers.utils.formatBytes32String(""),
             waitsProvider: false,
             needsLogger: false,
             provider: claimer,
         }
 
-        let verificationTx = await this.state.contract.methods.instantiateCartesiVerification(claimer,challenger,[aDrive,pDrive]).send({ from: this.state.currentAccount });
+        let verificationTx = await this.state.contract.methods.instantiateCartesiVerification(claimer,challenger,purchaseId,[aDrive,pDrive]).send({ from: this.state.currentAccount });
         console.log(verificationTx.data);
 
         ////await this.state.contract.methods.challengePurchase(purchaseId, privateKey).send({ from: this.state.currentAccount });
@@ -184,14 +194,14 @@ class NotificationsPage extends Component {
         const content = new BufferList()
         for await (const file of ipfs.get(ipfsP)) {
             for await (const chunk of file.content) {
-                content.append(chunk)
+                content.append(chunk);
             }
         }
 
         const privateKeyArmored = this.state.drizzle.web3.utils.hexToAscii(localStorage.getItem('bk'));
 
         const privateKey = (await openpgp.key.readArmored([privateKeyArmored])).keys[0];
-        await privateKey.decrypt('garlic stress stumble dislodge copier shortwave cucumber extrude rebuff spearman smile reward');
+        await privateKey.decrypt(passphrase);
 
         const decrypted = await openpgp.decrypt({
             message: await openpgp.message.readArmored(this.state.drizzle.web3.utils.hexToAscii(encryptedDataKey)),       // parse armored message
@@ -226,7 +236,7 @@ class NotificationsPage extends Component {
                 },
                 {
                     label: 'Reject/Challenge',
-                    onClick: () => this.rejectItem(purchaseId, password, ipfsP, Math.ceil(Math.log2(data.size)), loggerRootHash)
+                    onClick: () => this.rejectItem(purchaseId, password, ipfsP, Math.ceil(Math.log2(content.size)), loggerRootHash)
                 }
             ]
         });
@@ -257,7 +267,7 @@ class NotificationsPage extends Component {
                     <td>{value.message}</td>
                     <td>
                         {value.nType == 1 ?
-                            <Link onClick={(e) => this.endPurchase(e, value.purchaseId, purchase.adId, ad.ipfsPath, purchase.buyerKey, purchase.encryptedDataKey)}><i class="fas fa-reply"></i></Link> :
+                            <Link onClick={(e) => this.endPurchase(e, value.purchaseId, purchase.adId, ad.ipfsPath, purchase.buyerKey, purchase.encryptedDataKey, ad.encryptedDataHash)}><i class="fas fa-reply"></i></Link> :
                             value.nType == 3 ? '' :
                                 <Link onClick={(e) => (value.nType == 0 ? this.acceptPurchase(e, value.purchaseId, purchase.buyerKey) : this.resolvePurchase(e, value.purchaseId))}><i class="fas fa-reply"></i></Link>}
                     </td>

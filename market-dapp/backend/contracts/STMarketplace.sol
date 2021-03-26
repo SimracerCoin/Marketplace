@@ -9,7 +9,7 @@ import "./ContentMarketplace.sol";
 contract STMarketplace is ContentMarketplace {   
 
     bytes32 templateHash = 0x62282173bb0cadf4404f96385f05d48bf9124f63937886ec68ce42ce75f71649;
-    uint64 outputPosition = 0xb000000000000000;
+    uint64 outputPosition = 0xc000000000000000;
     uint8 outputLog2Size = 5;
     uint256 finalTime = 1e11;
     uint256 roundDuration = 51;
@@ -241,13 +241,16 @@ contract STMarketplace is ContentMarketplace {
         return string(str);
     }
 
-    function instantiateCartesiVerification(address claimer, address challenger, DescartesInterface.Drive[] memory drives) public returns (uint256) {
-
+    function instantiateCartesiVerification(address claimer, address challenger, uint256 _purchaseId, DescartesInterface.Drive[] memory drives) public returns (uint256 index) 
+    {
         address[] memory actors = new address[](2);
         actors[0] = claimer;
         actors[1] = challenger;
 
-        return descartes.instantiate(
+        Purchase memory purchase = getPurchase(_purchaseId);
+        Advertisement memory ad = getAd(purchase.adId);
+
+        index = descartes.instantiate(
             finalTime,
             templateHash,
             outputPosition,
@@ -256,6 +259,11 @@ contract STMarketplace is ContentMarketplace {
             actors,
             drives
         );
+
+        newNotification(index, "Purchase was rejected. Check status.", address(0), ad.seller, NotificationType.Challenge);
+        newNotification(index, "Challenged purchase. Check status.", address(0), msg.sender, NotificationType.Challenge);
+
+        return index;
     }
 
     function getResult(uint256 index) public view returns (bool, bool, address, bytes memory) {
