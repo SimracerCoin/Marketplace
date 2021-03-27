@@ -49,11 +49,11 @@ class NotificationsPage extends Component {
         }
 
         // reverse sort by id
-        notifications.sort((a, b)=> a.id < b.id);
+        notifications.sort((a, b) => a.id < b.id);
 
         //const purchases = await contract.methods.getPurchases(purchasesIds).call();
 
-        
+
         //const adsIds = [];
         //for (const [index, value] of purchases.entries()) {
         //    adsIds.push(value.adId);
@@ -63,7 +63,7 @@ class NotificationsPage extends Component {
 
         ////Descartes test:
         this.setState({ listNotifications: notifications, currentAccount: currentAccount, contract: contract, descartesContract: descartesContract });
-        
+
         //this.setState({ listNotifications: notifications, currentAccount: currentAccount, contract: contract });
     }
 
@@ -97,16 +97,25 @@ class NotificationsPage extends Component {
     resolvePurchase = async (event, descartesId) => {
         event.preventDefault();
 
-        /* let st = this.state.contract;
+        let st = this.state.contract;
         let stateBack = this.state;
 
-        let cenas = await st.methods.getResult(descartesId).call();
-        console.log('Result depois de esperar:');
-        console.log(cenas);
-        let verificationResult = cenas['3'];
-        let verificationResultStr = stateBack.drizzle.web3.utils.hexToAscii(verificationResult);
-        console.log(verificationResultStr);
-        alert(verificationResultStr); */
+        let res = await st.methods.getResult(descartesId).call();
+
+        if (res["1"]) {
+            alert("Still waiting...");
+        } else {
+            if (!res["0"]) {
+                alert("Occurs an unexpected error.");
+            } else {
+                res = stateBack.drizzle.web3.utils.hexToAscii(res["3"]).slice(0, 1);
+
+                if ("1" == res)
+                    alert("Succeeded");
+                else
+                    alert("Failed");
+            }
+        }
     }
     // =========================
 
@@ -120,7 +129,7 @@ class NotificationsPage extends Component {
         alert('Thank you for your purchase!');
     }
 
-    rejectItem = async (purchaseId, password, ipfsPath, log2Size, loggerRootHash) => {
+    rejectItem = async (purchaseId, password, ipfsPath, ipfsSize, loggerRootHash) => {
         // TODO:
         //const privateKey = localStorage.getItem('bk');
 
@@ -156,7 +165,7 @@ class NotificationsPage extends Component {
 
         const aDrive = {
             position: '0xa000000000000000',
-            driveLog2Size: log2Size,
+            driveLog2Size: Math.ceil(Math.log2(ipfsSize)),
             directValue: ethers.utils.formatBytes32String(""),
             loggerIpfsPath: ethers.utils.hexlify(
                 ethers.utils.toUtf8Bytes(ipfsPath.replace(/\s+/g, ""))
@@ -169,7 +178,7 @@ class NotificationsPage extends Component {
 
         const pDrive = {
             position: '0xb000000000000000',
-            driveLog2Size: Math.ceil(Math.log2((new Blob([password]).size))),
+            driveLog2Size: 10,
             directValue: ethers.utils.formatBytes32String(password),
             loggerIpfsPath: ethers.utils.formatBytes32String(""),
             loggerRootHash: ethers.utils.formatBytes32String(""),
@@ -178,7 +187,8 @@ class NotificationsPage extends Component {
             provider: claimer,
         }
 
-        let verificationTx = await this.state.contract.methods.instantiateCartesiVerification(claimer,challenger,purchaseId,[aDrive,pDrive]).send({ from: this.state.currentAccount });
+        console.log(claimer, challenger, purchaseId, [aDrive, pDrive]);
+        let verificationTx = await this.state.contract.methods.instantiateCartesiVerification(claimer, challenger, purchaseId, [aDrive, pDrive]).send({ from: this.state.currentAccount });
         console.log(verificationTx.data);
 
         ////await this.state.contract.methods.challengePurchase(purchaseId, privateKey).send({ from: this.state.currentAccount });
@@ -189,57 +199,74 @@ class NotificationsPage extends Component {
     endPurchase = async (event, purchaseId, adId, ipfsPath, buyerKey, encryptedDataKey, loggerRootHash) => {
         event.preventDefault();
 
+        const content = new BufferList();
         const ipfsP = this.state.drizzle.web3.utils.hexToAscii(ipfsPath);
 
-        const content = new BufferList()
-        for await (const file of ipfs.get(ipfsP)) {
-            for await (const chunk of file.content) {
-                content.append(chunk);
+        let password;
+
+        try {
+            
+            for await (const file of ipfs.get(ipfsP)) {
+                for await (const chunk of file.content) {
+                    content.append(chunk);
+                }
             }
+
+            const privateKeyArmored = this.state.drizzle.web3.utils.hexToAscii(localStorage.getItem('bk'));
+
+            const privateKey = (await openpgp.key.readArmored([privateKeyArmored])).keys[0];
+            await privateKey.decrypt(passphrase);
+
+            const decrypted = await openpgp.decrypt({
+                message: await openpgp.message.readArmored(this.state.drizzle.web3.utils.hexToAscii(encryptedDataKey)),       // parse armored message
+                publicKeys: (await openpgp.key.readArmored(this.state.drizzle.web3.utils.hexToAscii(buyerKey))).keys,         // for verification (optional)
+                privateKeys: [privateKey]                                             // for decryption
+            });
+            password = await openpgp.stream.readToEnd(decrypted.data);
+
+            const { data: decryptedFile } = await openpgp.decrypt({
+                message: await openpgp.message.read(content),      // parse encrypted bytes
+                passwords: [password],                             // decrypt with password
+                format: 'binary'                                   // output as Uint8Array
+            });
+
+            const isCarSetup = await this.state.contract.methods.isCarSetup(adId).call();
+
+            var data = new Blob([decryptedFile]);
+            var csvURL = window.URL.createObjectURL(data);
+            var tempLink = document.createElement('a');
+            tempLink.href = csvURL;
+            tempLink.setAttribute('download', isCarSetup ? 'setup.sto' : 'skin.tga'); // has it isn't a car setup, it is a skin
+            tempLink.click();
+
+            confirmAlert({
+                title: 'Review purchased item',
+                message: 'Review the purchased item and accept it or challenge the purchase if you found any issue. Purchase will be automatically accepted if not challenged within 10 minutes.',
+                buttons: [
+                    {
+                        label: 'Accept',
+                        onClick: () => this.acceptItem(purchaseId)
+                    },
+                    {
+                        label: 'Reject/Challenge',
+                        onClick: () => this.rejectItem(purchaseId, password, ipfsP, content.length, loggerRootHash)
+                    }
+                ]
+            });
+        } catch {
+            
+            confirmAlert({
+                title: 'Error',
+                message: 'Something wrong when try to get the file',
+                buttons: [
+                    {
+                        label: 'Reject/Challenge',
+                        onClick: () => this.rejectItem(purchaseId, password, ipfsP, content.length, loggerRootHash)
+                    }
+                ]
+            });
         }
 
-        const privateKeyArmored = this.state.drizzle.web3.utils.hexToAscii(localStorage.getItem('bk'));
-
-        const privateKey = (await openpgp.key.readArmored([privateKeyArmored])).keys[0];
-        await privateKey.decrypt(passphrase);
-
-        const decrypted = await openpgp.decrypt({
-            message: await openpgp.message.readArmored(this.state.drizzle.web3.utils.hexToAscii(encryptedDataKey)),       // parse armored message
-            publicKeys: (await openpgp.key.readArmored(this.state.drizzle.web3.utils.hexToAscii(buyerKey))).keys,         // for verification (optional)
-            privateKeys: [privateKey]                                             // for decryption
-        });
-        const password = await openpgp.stream.readToEnd(decrypted.data);
-
-        const { data: decryptedFile } = await openpgp.decrypt({
-            message: await openpgp.message.read(content),      // parse encrypted bytes
-            passwords: [password],                             // decrypt with password
-            format: 'binary'                                   // output as Uint8Array
-        });
-
-        console.log(adId);
-        const isCarSetup = await this.state.contract.methods.isCarSetup(adId).call();
-
-        var data = new Blob([decryptedFile]);
-        var csvURL = window.URL.createObjectURL(data);
-        var tempLink = document.createElement('a');
-        tempLink.href = csvURL;
-        tempLink.setAttribute('download', isCarSetup ? 'setup.sto' : 'skin.tga'); // has it isn't a car setup, it is a skin
-        tempLink.click();
-
-        confirmAlert({
-            title: 'Review purchased item',
-            message: 'Review the purchased item and accept it or challenge the purchase if you found any issue. Purchase will be automatically accepted if not challenged within 10 minutes.',
-            buttons: [
-                {
-                    label: 'Accept',
-                    onClick: () => this.acceptItem(purchaseId)
-                },
-                {
-                    label: 'Reject/Challenge',
-                    onClick: () => this.rejectItem(purchaseId, password, ipfsP, Math.ceil(Math.log2(content.size)), loggerRootHash)
-                }
-            ]
-        });
     }
     // =========================
 
