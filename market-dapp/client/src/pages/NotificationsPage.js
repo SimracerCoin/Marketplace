@@ -94,7 +94,7 @@ class NotificationsPage extends Component {
         alert("Buyer will be notified");
     }
 
-    resolvePurchase = async (event, descartesId) => {
+    resolvePurchase = async (event, purchaseId, descartesId, buyer) => {
         event.preventDefault();
 
         let st = this.state.contract;
@@ -103,18 +103,24 @@ class NotificationsPage extends Component {
         let res = await st.methods.getResult(descartesId).call();
 
         if (res["1"]) {
-            alert("Still waiting...");
-        } else {
-            if (!res["0"]) {
-                alert("Occurs an unexpected error.");
-            } else {
-                res = stateBack.drizzle.web3.utils.hexToAscii(res["3"]).slice(0, 1);
+            alert("Validation still running. Please wait.");
+            return;
+        }
 
-                if ("1" == res)
-                    alert("Succeeded");
-                else
-                    alert("Failed");
+        if (!res["0"]) {
+            alert("Occurs an unexpected error. A Reject/Challenge should be done again later.");
+        } else {
+            res = stateBack.drizzle.web3.utils.hexToAscii(res["3"]).slice(0, 1);
+
+            if ("1" == res) {
+                alert("The purchase was successfully validated. No refund will be issued.");
+            } else {
+                alert("A refund will be issued.");
             }
+
+            // if buyer, finalize purchase
+            if(buyer == this.state.currentAccount)
+                await this.state.contract.methods.finalizePurchase(purchaseId, "1" == res).send({ from: this.state.currentAccount });
         }
     }
     // =========================
@@ -124,7 +130,7 @@ class NotificationsPage extends Component {
     //
     acceptItem = async (purchaseId) => {
 
-        await this.state.contract.methods.finalizePurchase(purchaseId).send({ from: this.state.currentAccount });
+        await this.state.contract.methods.finalizePurchase(purchaseId, true).send({ from: this.state.currentAccount });
 
         alert('Thank you for your purchase!');
     }
@@ -193,7 +199,7 @@ class NotificationsPage extends Component {
 
         ////await this.state.contract.methods.challengePurchase(purchaseId, privateKey).send({ from: this.state.currentAccount });
 
-        alert('Seller will be notified.');
+        alert('The challenge will be done in minutes. Please, check status shortly.');
     }
 
     endPurchase = async (event, purchaseId, adId, ipfsPath, buyerKey, encryptedDataKey, loggerRootHash) => {
@@ -295,8 +301,9 @@ class NotificationsPage extends Component {
                     <td>
                         {value.nType == 1 ?
                             <Link onClick={(e) => this.endPurchase(e, value.purchaseId, purchase.adId, ad.ipfsPath, purchase.buyerKey, purchase.encryptedDataKey, ad.encryptedDataHash)}><i class="fas fa-reply"></i></Link> :
-                            value.nType == 3 ? '' :
-                                <Link onClick={(e) => (value.nType == 0 ? this.acceptPurchase(e, value.purchaseId, purchase.buyerKey) : this.resolvePurchase(e, value.purchaseId))}><i class="fas fa-reply"></i></Link>}
+                            value.nType == 3 || value.nType == 4 ? '' :
+                                value.nType == 0 ?
+                                <Link onClick={(e) => this.acceptPurchase(e, value.purchaseId, purchase.buyerKey)}><i class="fas fa-reply"></i></Link> : <Link onClick={(e) => this.resolvePurchase(e, value.purchaseId, purchase.descartesIndex, purchase.buyer)}><i class="fas fa-info"></i></Link>}
                     </td>
                 </tr>)
             }

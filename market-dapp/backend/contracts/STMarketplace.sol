@@ -8,7 +8,7 @@ import "./ContentMarketplace.sol";
 
 contract STMarketplace is ContentMarketplace {   
 
-    bytes32 templateHash = 0x62282173bb0cadf4404f96385f05d48bf9124f63937886ec68ce42ce75f71649;
+    bytes32 templateHash = 0x565ed3f9210522787f757fd3a4d2cb1714cd46523bcef460d3d630cd5a29c3aa;
     uint64 outputPosition = 0xc000000000000000;
     uint8 outputLog2Size = 5;
     uint256 finalTime = 1e11;
@@ -247,7 +247,7 @@ contract STMarketplace is ContentMarketplace {
         actors[0] = claimer;
         actors[1] = challenger;
 
-        Purchase memory purchase = getPurchase(_purchaseId);
+        Purchase storage purchase = purchases[_purchaseId];
         Advertisement memory ad = getAd(purchase.adId);
 
         index = descartes.instantiate(
@@ -260,8 +260,10 @@ contract STMarketplace is ContentMarketplace {
             drives
         );
 
-        newNotification(index, "Purchase was rejected. Check status.", address(0), ad.seller, NotificationType.Challenge);
-        newNotification(index, "Challenged purchase. Check status.", address(0), msg.sender, NotificationType.Challenge);
+        purchase.descartesIndex = index;
+
+        newNotification(_purchaseId, "Purchase was challenged. Check status.", address(0), ad.seller, NotificationType.Challenge);
+        newNotification(_purchaseId, "Challenged purchase. Check status.", address(0), msg.sender, NotificationType.Challenge);
 
         return index;
     }
