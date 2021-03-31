@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { Dropdown, Form, DropdownButton, Button } from 'react-bootstrap';
 import { Prompt } from 'react-st-modal';
 import ipfs from "../ipfs";
+import computeMerkleRootHash from "../merkle"
 
 const openpgp = require('openpgp');
 
@@ -25,6 +26,7 @@ class UploadCar extends Component {
             currentDescription: null,
             currentFilePrice: null,
             contract: null,
+            encryptedDataHash: null,
             ipfsPath: "",
             formIPFS: "",
             formAddress: "",
@@ -133,12 +135,15 @@ class UploadCar extends Component {
         });
         const encryptedBuffer = message.packets.write(); // get raw encrypted packets as Uint8Array
 
+        const encryptedDataHash = computeMerkleRootHash(Buffer.from(encryptedBuffer));
+        console.log(`Logger Root Hash: ${encryptedDataHash}`);
+
         const response = await ipfs.add(encryptedBuffer, (err, ipfsPath) => {
             //console.log(err, ipfsPath);
             //setState by setting ipfsPath to ipfsPath[0].hash 
             this.setState({ ipfsPath: ipfsPath[0].hash });
         })
-        this.setState({ ipfsPath: response.path });
+        this.setState({ ipfsPath: response.path, encryptedDataHash: encryptedDataHash });
     };
 
     saveCar = async (event) => {
@@ -170,7 +175,7 @@ class UploadCar extends Component {
             console.log(placeholder);
 
             const response = await this.state.contract.methods.newCarSetup(ipfsPathBytes, this.state.currentCar, this.state.currentTrack,
-                this.state.currentSimulator, this.state.currentSeason, this.state.currentSeries, this.state.currentDescription, price, placeholder, placeholder, nickname).send({ from: this.state.currentAccount });
+                this.state.currentSimulator, this.state.currentSeason, this.state.currentSeries, this.state.currentDescription, price, placeholder, this.state.encryptedDataHash, nickname).send({ from: this.state.currentAccount });
             console.log(response);
 
             alert("The new car setup is available for sale!");
