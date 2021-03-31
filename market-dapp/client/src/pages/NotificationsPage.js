@@ -103,12 +103,12 @@ class NotificationsPage extends Component {
         let res = await st.methods.getResult(descartesId).call();
 
         if (res["1"]) {
-            alert("Validation still running. Please wait.");
+            alert("Still validating. Please wait.");
             return;
         }
 
         if (!res["0"]) {
-            alert("Occurs an unexpected error. A Reject/Challenge should be done again later.");
+            alert("An unexpected error occurred. The Reject/Challenge needs to be done again.");
         } else {
             res = stateBack.drizzle.web3.utils.hexToAscii(res["3"]).slice(0, 1);
 
@@ -199,7 +199,7 @@ class NotificationsPage extends Component {
 
         ////await this.state.contract.methods.challengePurchase(purchaseId, privateKey).send({ from: this.state.currentAccount });
 
-        alert('The challenge will be done in minutes. Please, check status shortly.');
+        alert('The challenge will be completed in minutes. Please, check the status shortly.');
     }
 
     endPurchase = async (event, purchaseId, adId, ipfsPath, buyerKey, encryptedDataKey, loggerRootHash) => {
@@ -263,7 +263,7 @@ class NotificationsPage extends Component {
             
             confirmAlert({
                 title: 'Error',
-                message: 'Something wrong when try to get the file',
+                message: 'Something went wrong while we were trying to obtain the file',
                 buttons: [
                     {
                         label: 'Reject/Challenge',

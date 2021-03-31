@@ -191,13 +191,10 @@ class UploadSkin extends Component {
             console.log(placeholder);
 
             const response_saveImage = await this.saveImage_toIPFS();
-            const response = await this.state.contract.methods.newSkin(ipfsPathBytes, this.state.currentCar,
-                this.state.currentSimulator, price, placeholder, this.state.encryptedDataHash, nickname).send({ from: this.state.currentAccount });
-            console.log(response);
 
             if(response_saveImage == true) {
                 const response = await this.state.contract.methods.newSkin(ipfsPathBytes, this.state.currentCar,
-                    this.state.currentSimulator, price, placeholder, placeholder, nickname, this.state.image_ipfsPath).send({ from: this.state.currentAccount });
+                    this.state.currentSimulator, price, placeholder, this.state.encryptedDataHash, nickname, this.state.image_ipfsPath).send({ from: this.state.currentAccount });
                 console.log(response);
     
     
