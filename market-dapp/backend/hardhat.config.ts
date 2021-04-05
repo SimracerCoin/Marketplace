@@ -35,7 +35,7 @@ const infuraNetwork = (
 };
 
 const config: HardhatUserConfig = {
-  defaultNetwork: process.env.NETWORK,
+  defaultNetwork: process.env.ETHEREUM_NETWORK,
   networks: {
     hardhat: mnemonic
       ? { accounts: { mnemonic }, chainId: 1337 }
