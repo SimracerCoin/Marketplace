@@ -26,16 +26,19 @@ import hre from "hardhat";
 async function main() {
   console.log("Loaded Configs: ", JSON.stringify(config, null, 2));
 
-  const { ethers } = hre;
+  const { ethers, getNamedAccounts } = hre;
   const { Descartes } = await hre.deployments.all();
 
-  //const { alice, bob } = await getNamedAccounts();
+  const { alice, bob } = await getNamedAccounts();
 
-  const claimer = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
-  const challenger = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8";
+  //const alice = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
+  //const bob = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8";
 
   // retrieves deployed Descartes instance based on its address and ABI
   let [signer] = await ethers.getSigners();
+
+  console.log("Signer: ", signer);
+
   const descartes = new ethers.Contract(
     Descartes.address,
     Descartes.abi,
@@ -59,7 +62,7 @@ async function main() {
     loggerRootHash: `0x${config.loggerRootHash}`,
     waitsProvider: false,
     needsLogger: true,
-    provider: claimer,
+    provider: alice,
   };
 
   const pDrive = {
@@ -70,7 +73,7 @@ async function main() {
     loggerRootHash: ethers.utils.formatBytes32String(""),
     waitsProvider: false,
     needsLogger: false,
-    provider: claimer,
+    provider: alice,
   };
 
   // instantiates descartes computation
@@ -85,7 +88,7 @@ async function main() {
     5,
     // round duration
     51,
-    [claimer, challenger],
+    [alice, bob],
     [aDrive, pDrive]
   );
 
