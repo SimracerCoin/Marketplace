@@ -1,13 +1,8 @@
 import { HardhatUserConfig, task } from "hardhat/config";
 import { HttpNetworkUserConfig } from "hardhat/types";
 
-import "@nomiclabs/hardhat-ethers";
-import "@nomiclabs/hardhat-waffle";
-import "hardhat-typechain";
 import "hardhat-deploy";
-
-import "@nomiclabs/hardhat-solpp";
-// import "solidity-coverage"; @dev WIP this plugin is not updated to hardhat yet
+import "hardhat-deploy-ethers";
 
 // This is a sample hardhat task. To learn how to create your own go to
 // https://hardhat.dev/guides/create-task.html
@@ -80,25 +75,8 @@ const config: HardhatUserConfig = {
   external: {
     contracts: [
       {
-        artifacts: "node_modules/@cartesi/util/export/artifacts",
-        deploy: "node_modules/@cartesi/util/dist/deploy",
-      },
-      {
-        artifacts: "node_modules/@cartesi/arbitration/export/artifacts",
-        deploy: "node_modules/@cartesi/arbitration/dist/deploy",
-      },
-      {
-        artifacts: "node_modules/@cartesi/logger/export/artifacts",
-        deploy: "node_modules/@cartesi/logger/dist/deploy",
-      },
-      {
-        deploy: "node_modules/@cartesi/machine-solidity-step/dist/deploy",
-        artifacts:
-          "node_modules/@cartesi/machine-solidity-step/export/artifacts",
-      },
-      {
-        deploy: "node_modules/@cartesi/descartes-sdk/dist/deploy",
         artifacts: "node_modules/@cartesi/descartes-sdk/export/artifacts",
+        deploy: "node_modules/@cartesi/descartes-sdk/dist/deploy",
       },
     ],
     deployments: {
@@ -138,16 +116,6 @@ const config: HardhatUserConfig = {
         "node_modules/@cartesi/descartes-sdk/deployments/bsc_testnet",
       ],
     },
-  },
-  solpp: {
-    defs: {
-      BUILD_TEST:
-        process.argv.includes("test") || process.argv.includes("coverage"),
-    },
-  },
-  typechain: {
-    outDir: "src/types",
-    target: "ethers-v5",
   },
   namedAccounts: {
     deployer: {

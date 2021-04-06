@@ -6,13 +6,13 @@ services:
     image: cartesi/descartes:1.1.1
     restart: always
     environment:
-      ETHEREUM_HOST: ${ETHEREUM_HOST}
-      ETHEREUM_PORT: ${ETHEREUM_PORT}
+      ETHEREUM_HOST: ${ETHEREUM_NETWORK}.infura.io
+      ETHEREUM_PORT: ${ETHEREUM_PORT:-443}
       ETHEREUM_NETWORK: ${ETHEREUM_NETWORK}
       MNEMONIC: ${MNEMONIC}
       ACCOUNT_INDEX: 0
       RUST_LOG: dispatcher=info,transaction=info,configuration=trace,utils=trace,state=info,descartes=trace
-      WEB3_PROVIDER_URI: https://${ETHEREUM_HOST}/v3/${PROJECT_ID}
+      WEB3_PROVIDER_URI: https://${ETHEREUM_NETWORK}.infura.io/v3/${PROJECT_ID}
       QUERY_PORT: 3001
       MACHINE_MANAGER_HOST: machine-manager
       MACHINE_MANAGER_PORT: 50051
@@ -34,13 +34,13 @@ services:
 
   alice_logger:
     image: cartesi/logger-server:0.7.0
-    command: [ "-c", "/opt/cartesi/share/blockchain/node_modules/@cartesi/logger/deployments/rinkeby/Logger.json", "-d", "/opt/cartesi/srv/descartes/flashdrive"]
+    command: [ "-c", "/opt/cartesi/share/blockchain/node_modules/@cartesi/logger/deployments/${ETHEREUM_NETWORK}/Logger.json", "-d", "/opt/cartesi/srv/descartes/flashdrive"]
     volumes:
       - alice_data:/opt/cartesi/srv/descartes/flashdrive
     environment:
       MNEMONIC: ${MNEMONIC}
       ACCOUNT_INDEX: 0
-      WEB3_PROVIDER_URI: https://${ETHEREUM_HOST}/v3/${PROJECT_ID}
+      WEB3_PROVIDER_URI: https://${ETHEREUM_NETWORK}.infura.io/v3/${PROJECT_ID}
     networks:
       ethereum: {}
       alice:
@@ -74,13 +74,13 @@ services:
     image: cartesi/descartes:1.1.1
     restart: always
     environment:
-      ETHEREUM_HOST: ${ETHEREUM_HOST}
-      ETHEREUM_PORT: ${ETHEREUM_PORT}
+      ETHEREUM_HOST: ${ETHEREUM_NETWORK}.infura.io
+      ETHEREUM_PORT: ${ETHEREUM_PORT:-443}
       ETHEREUM_NETWORK: ${ETHEREUM_NETWORK}
       MNEMONIC: ${MNEMONIC}
       ACCOUNT_INDEX: 1
       RUST_LOG: dispatcher=info,transaction=info,configuration=trace,utils=trace,state=info,descartes=trace
-      WEB3_PROVIDER_URI: https://${ETHEREUM_HOST}/v3/${PROJECT_ID}
+      WEB3_PROVIDER_URI: https://${ETHEREUM_NETWORK}.infura.io/v3/${PROJECT_ID}
       QUERY_PORT: 3001
       MACHINE_MANAGER_HOST: machine-manager
       MACHINE_MANAGER_PORT: 50051
@@ -108,7 +108,7 @@ services:
     environment:
       MNEMONIC: ${MNEMONIC}
       ACCOUNT_INDEX: 1
-      WEB3_PROVIDER_URI: https://${ETHEREUM_HOST}/v3/${PROJECT_ID}
+      WEB3_PROVIDER_URI: https://${ETHEREUM_NETWORK}.infura.io/v3/${PROJECT_ID}
     networks:
       ethereum: {}
       bob:
