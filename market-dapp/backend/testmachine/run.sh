@@ -18,8 +18,9 @@ fi
 
 export IPFS_PATH
 export LOGGER_ROOT_HASH
-export ETHEREUM_NETWORK
 export PROJECT_ID
+
+cd $BASE_DIR
 
 npx hardhat deploy --network $ETHEREUM_NETWORK
 
