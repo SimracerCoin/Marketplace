@@ -12,9 +12,9 @@ const openpgp = require('openpgp');
 const BufferList = require('bl/BufferList');
 
 // TODO: use addresses from config file of the Cartesi nodes that will participating
-const claimer = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266';
-const challenger = '0x70997970C51812dc3A010C7d01b50e0d17dc79C8';
-const passphrase = 'garlic stress stumble dislodge copier shortwave cucumber extrude rebuff spearman smile reward';
+const claimer = '0xF393a9865cb4f1b68813359D5D282878d5d0BdE1';
+const challenger = '0x3Ac21b20E16eF666Db34Ba208d7f67Aa8c5f6B0D';
+const passphrase = process.env.PASSPHRASE;
 
 class NotificationsPage extends Component {
     constructor(props) {

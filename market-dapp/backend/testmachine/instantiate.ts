@@ -37,8 +37,6 @@ async function main() {
   // retrieves deployed Descartes instance based on its address and ABI
   let [signer] = await ethers.getSigners();
 
-  console.log("Signer: ", signer);
-
   const descartes = new ethers.Contract(
     Descartes.address,
     Descartes.abi,
@@ -68,7 +66,7 @@ async function main() {
   const pDrive = {
     position: "0xb000000000000000",
     driveLog2Size: 10,
-    directValue: ethers.utils.formatBytes32String("12345Ab"),
+    directValue: ethers.utils.formatBytes32String("12345Abc"),
     loggerIpfsPath: ethers.utils.formatBytes32String(""),
     loggerRootHash: ethers.utils.formatBytes32String(""),
     waitsProvider: false,

@@ -13,11 +13,11 @@ const drizzleOptions = {
   contracts: [
     {
       contractName: "STMarketplace",
-      web3Contract: new web3.eth.Contract(STMarketplace.abi, STMarketplace.address, {data: STMarketplace.deployedBytecode })
+      web3Contract: new web3.eth.Contract(STMarketplace.abi, STMarketplace.address, { data: STMarketplace.deployedBytecode })
     },
     {
       contractName: "Descartes",
-      web3Contract: new web3.eth.Contract(Descartes.abi, Descartes.address, {data: Descartes.deployedBytecode })
+      web3Contract: new web3.eth.Contract(Descartes.abi, Descartes.address, { data: Descartes.deployedBytecode })
     }
   ]
 };
@@ -37,19 +37,19 @@ class App extends React.Component {
     var allow_wallets = [];
 
     await fetch('/allow.json', {
-      headers : { 
+      headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       }
-    }).then(function(response) {
+    }).then(function (response) {
       return response.json();
     })
-    .then(function(myJson) {
-      allow_wallets = myJson;
-    });
+      .then(function (myJson) {
+        allow_wallets = myJson;
+      });
 
     this.setState({ allow_wallets: allow_wallets });
-}
+  }
 
   render() {
     var state = this.state;
@@ -63,15 +63,15 @@ class App extends React.Component {
               return "Loading..."
             }
 
-            if(state.allow_wallets.includes(drizzleState.accounts[0])) {
+            if (state.allow_wallets.includes(drizzleState.accounts[0])) {
               return (
                 <RouterPage drizzle={drizzle} drizzleState={drizzleState} />
               )
             } else {
               return (
-                <Underconstruction drizzle={drizzle} drizzleState={drizzleState} />
+                <Underconstruction />
               )
-            }            
+            }
           }}
         </DrizzleContext.Consumer>
       </DrizzleContext.Provider>

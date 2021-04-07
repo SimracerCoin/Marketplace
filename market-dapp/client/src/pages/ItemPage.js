@@ -2,21 +2,13 @@ import React, { Component } from 'react';
 import { Button, Form, Card, ListGroup, Row, Col } from 'react-bootstrap';
 import { withRouter } from "react-router";
 import { Link } from 'react-router-dom';
-import { confirmAlert } from 'react-confirm-alert';
-import 'react-confirm-alert/src/react-confirm-alert.css';
-import ipfs from "../ipfs";
 import StarRatings from 'react-star-ratings';
  
-
-const BufferList = require('bl/BufferList');
-
 const openpgp = require('openpgp');
 
 const priceConversion = 10 ** 18;
 
-const commentStyle = {
-    padding: "20px"
-}
+const passphrase = process.env.REACT_APP_PASSPHRASE;
 
 class ItemPage extends Component {
 
@@ -44,7 +36,6 @@ class ItemPage extends Component {
             review_rating: 0,
             average_review: 0
         }
-        console.log(this.state)
     }
 
     componentDidMount = async (event) => {
@@ -103,7 +94,7 @@ class ItemPage extends Component {
             const { privateKeyArmored, publicKeyArmored, revocationCertificate } = await openpgp.generateKey({
                 userIds: [{ name: this.state.currentAccount }],             // you can pass multiple user IDs
                 curve: 'p256',                                              // ECC curve name
-                passphrase: 'garlic stress stumble dislodge copier shortwave cucumber extrude rebuff spearman smile reward'           // protects the private key
+                passphrase: passphrase                                      // protects the private key
             });
 
             buyerKey = this.state.drizzle.web3.utils.asciiToHex(publicKeyArmored);

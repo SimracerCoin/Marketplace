@@ -21,7 +21,7 @@ async function main() {
     signer
   );
 
-  let index = "3";
+  let index = "0";
   if (process.env.index) {
     index = process.env.index;
   }
