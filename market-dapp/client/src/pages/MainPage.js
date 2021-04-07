@@ -3,11 +3,11 @@ import { Button, Card, ListGroup } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { Redirect } from "react-router-dom";
 import ipfs from "../ipfs";
- 
+
 
 import "../css/mainpage.css";
 
-const priceConversion = 10**18;
+const priceConversion = 10 ** 18;
 
 class MainPage extends Component {
 
@@ -31,7 +31,7 @@ class MainPage extends Component {
             selectedImagePath: "",
             vendorAddress: "",
             vendorNickname: "",
-            ipfsPath:"",
+            ipfsPath: "",
             contract: null
         }
 
@@ -40,7 +40,7 @@ class MainPage extends Component {
     componentDidMount = async () => {
         const contract = await this.state.drizzle.contracts.STMarketplace
         const response_cars = await contract.methods.getCarSetups().call();
-        const response_skins = await contract.methods.getSkins().call(); 
+        const response_skins = await contract.methods.getSkins().call();
         /**Skins buscar a imagemHash e concatenar
         * --> https://ipfs.io/ipfs/
         */
@@ -58,8 +58,7 @@ class MainPage extends Component {
         } catch (e) {
             console.error(e)
         } */
-        
-        
+
         this.setState({ listCars: response_cars, listSkins: response_skins, contract: contract });
     }
 
@@ -166,7 +165,7 @@ class MainPage extends Component {
                                     <div><b>Price:</b> {price / priceConversion} ETH</div>
                                     {/* <div><b>Vendor address:</b> {address}</div> */}
                                 </Card.Text>
-                                <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, null, null, price, carBrand , address, ipfsPath, imagePath)}> View item</Button>
+                                <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, null, null, price, carBrand, address, ipfsPath, imagePath)}> View item</Button>
                             </Card.Body>
                         </Card>
                     </ListGroup.Item>
@@ -178,7 +177,7 @@ class MainPage extends Component {
 
         return (
             <header className="header">
-                <section className="content-section text-light br-n bs-c bp-c pb-8" style={{backgroundImage: 'url(\'/assets/img/bg/bg_shape.png\')'}}>
+                <section className="content-section text-light br-n bs-c bp-c pb-8" style={{ backgroundImage: 'url(\'/assets/img/bg/bg_shape.png\')' }}>
                     <div id="latest-container" className="container">
                         <div className="center-text">
                             <h1>Welcome to Simthunder!</h1>

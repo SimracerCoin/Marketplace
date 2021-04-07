@@ -174,6 +174,8 @@ class UploadCar extends Component {
             console.log(response);
 
             alert("The new car setup is available for sale!");
+
+            window.location.href = "/";
         }
     }
 

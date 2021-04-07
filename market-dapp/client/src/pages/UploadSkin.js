@@ -198,6 +198,8 @@ class UploadSkin extends Component {
     
     
                 alert("The new skin is available for sale!");
+
+                window.location.href = "/";
             }  
         }
     }

@@ -2,8 +2,7 @@ import React, { Component } from 'react';
 import {
     BrowserRouter as Router,
     Switch,
-    Route,
-    Link
+    Route
 } from "react-router-dom";
 import MainPage from "./MainPage";
 import UploadCar from "./UploadCar";
@@ -13,8 +12,8 @@ import RegisterVendor from "./RegisterVendor";
 import ItemPage from "./ItemPage";
 import NotificationsPage from "./NotificationsPage"
 import SellerPage from "./SellerPage"
-import { Navbar, Nav, NavDropdown, Form, FormControl } from 'react-bootstrap'; // Check out drizzle's react components at @drizzle/react-components
-
+import AboutPage from "./AboutPage"
+import FaqsPage from "./FaqsPage"
 
 class RouterPage extends Component {
 
@@ -57,6 +56,12 @@ class RouterPage extends Component {
                         </Route>
                         <Route path="/seller">
                             <SellerPage drizzle={this.state.drizzle} drizzleState={this.state.drizzleState} />
+                        </Route>
+                        <Route path="/about">
+                            <AboutPage />
+                        </Route>
+                        <Route path="/faqs">
+                            <FaqsPage />
                         </Route>
                         <Route exact
                             path="/"

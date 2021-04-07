@@ -105,13 +105,14 @@ class NavbarPage extends React.Component {
                     </div>
                     </div>
                 </div>
+                <img id="beta-img" src="assets/beta-png-5.png" alt="beta" style={{float: 'right', maxHeight: '5rem', marginRight: "-20px"}}/>
             </Navbar>,
             <Navbar className="navbar navbar-expand-lg navbar-dark bg-dark">
                 <div className="container">
                 <Navbar.Toggle aria-controls="collapsingNavbar" aria-label="Toggle navigation" aria-expanded="false" className="navbar-toggler navbar-toggler-fixed" />
                 <Navbar.Collapse id="collapsingNavbar" className="collapse navbar-collapse">
                     <Nav className="navbar-nav">
-                        <NavDropdown title="Sell" className="nav-item dropdown dropdown-hover" id="basic-nav-dropdown">
+                        <NavDropdown title="Sell" className="nav-link mr-2 dropdown dropdown-hover" id="basic-nav-dropdown">
                             <Link to="/uploadcar">
                                 <NavDropdown.Item as="div">
                                     Sell Car Setup
@@ -124,7 +125,8 @@ class NavbarPage extends React.Component {
                             </NavDropdown.Item>
                             </Link>
                         </NavDropdown>
-                        
+                        <NavLink className="nav-link mr-2" to="/about">About</NavLink>
+                        <NavLink className="nav-link mr-2" to="/faqs">FAQs</NavLink>
                     </Nav>
                 </Navbar.Collapse>
                 </div>
