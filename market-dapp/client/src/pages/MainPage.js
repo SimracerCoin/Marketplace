@@ -19,6 +19,7 @@ class MainPage extends Component {
             drizzleState: props.drizzleState,
             listCars: [],
             listSkins: [],
+            latestNFTs: [],
             redirectBuyItem: false,
             selectedItemId: "",
             selectedTrack: "",
@@ -39,8 +40,50 @@ class MainPage extends Component {
 
     componentDidMount = async () => {
         const contract = await this.state.drizzle.contracts.STMarketplace
+        const contractNFTs = await this.state.drizzle.contracts.SimthunderOwner
         const response_cars = await contract.methods.getCarSetups().call();
-        const response_skins = await contract.methods.getSkins().call(); 
+        const response_skins = await contract.methods.getSkins().call();
+        const currentAccount = this.state.drizzleState.accounts[0];
+        const nftlist = [];
+        
+        console.log('componentDidMount');
+
+        // get info from marketplace NFT contract
+        let numNfts = await contractNFTs.methods.balanceOf(contractNFTs.address).call();
+        console.log('nft count:' + numNfts);
+        
+        let currentPage = this;
+        for (let i = 1; i < 100; i++) {
+            try {
+                //TODO: change for different ids
+                let ownerAddress = await contractNFTs.methods.ownerOf(i).call();
+                console.log('ID:'+i+'ownerAddress: '+ownerAddress.toString()+'nfts addr: '+contractNFTs.address);
+                if(ownerAddress === contractNFTs.address) {
+                    console.log('GOT MATCH');
+                    let uri = await contractNFTs.methods.tokenURI(i).call();
+                    console.log('uri: ', uri);
+                    var xmlhttp = new XMLHttpRequest();
+                    xmlhttp.onreadystatechange = function() {
+                    if (this.readyState == 4 && this.status == 200) {
+                        var data = JSON.parse(this.responseText);
+                        console.log('nftData:' + data.image);
+                        console.log('nftData:' + data.description);
+                        data.id=i;
+                        nftlist.push(data);
+                        currentPage.setState({ listCars: response_cars, listSkins: response_skins, contract: contract, contractNFTs: contractNFTs, latestNFTs: nftlist });
+                    }
+                    };
+                    xmlhttp.open("GET", uri, true);
+                    xmlhttp.send();
+                }
+            } catch (e) {
+                console.log(e);
+            }
+        }
+        
+        // $.getJSON(uri, async function (data) {
+        //     console.log('nftData:' + data);
+        // });
         /**Skins buscar a imagemHash e concatenar
         * --> https://ipfs.io/ipfs/
         */
@@ -59,12 +102,11 @@ class MainPage extends Component {
             console.error(e)
         } */
         
-        
-        this.setState({ listCars: response_cars, listSkins: response_skins, contract: contract });
+        this.setState({ listCars: response_cars, listSkins: response_skins, contract: contract, contractNFTs: contractNFTs, latestNFTs: nftlist });
     }
 
 
-    buyItem = async (event, itemId, track, simulator, season, series, description, price, carBrand, address, ipfsPath, imagePath) => {
+    buyItem = async (event, itemId, track, simulator, season, series, description, price, carBrand, address, ipfsPath, imagePath, isNFT) => {
         event.preventDefault();
 
         this.setState({
@@ -79,8 +121,9 @@ class MainPage extends Component {
             selectedCarBrand: carBrand,
             selectedImagePath: imagePath,
             vendorAddress: address,
-            vendorNickname: await this.state.contract.methods.getNickname(address).call(),
+            vendorNickname: address ? await this.state.contract.methods.getNickname(address).call() : "",
             ipfsPath: ipfsPath,
+            isNFT: isNFT,
         });
     }
 
@@ -88,6 +131,8 @@ class MainPage extends Component {
 
         const cars = [];
         const skins = [];
+        const nfts = [];
+
 
         if (this.state.redirectBuyItem == true) {
             return (<Redirect
@@ -106,6 +151,7 @@ class MainPage extends Component {
                         vendorAddress: this.state.vendorAddress,
                         vendorNickname: this.state.vendorNickname,
                         ipfsPath: this.state.ipfsPath,
+                        isNFT: this.state.isNFT,
                     }
                 }}
             />)
@@ -138,7 +184,7 @@ class MainPage extends Component {
                                     <div><b>Price:</b> {price / priceConversion} ETH</div>
                                     {/* <div><b>Vendor address:</b> {address}</div> */}
                                 </Card.Text>
-                                <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, track, simulator, season, series, description, price, carBrand, address, ipfsPath, "")}> View item</Button>
+                                <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, track, simulator, season, series, description, price, carBrand, address, ipfsPath, "", false)}> View item</Button>
                             </Card.Body>
                         </Card>
                     </ListGroup.Item>
@@ -166,7 +212,7 @@ class MainPage extends Component {
                                     <div><b>Price:</b> {price / priceConversion} ETH</div>
                                     {/* <div><b>Vendor address:</b> {address}</div> */}
                                 </Card.Text>
-                                <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, null, null, price, carBrand , address, ipfsPath, imagePath)}> View item</Button>
+                                <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, null, null, price, carBrand , address, ipfsPath, imagePath, false)}> View item</Button>
                             </Card.Body>
                         </Card>
                     </ListGroup.Item>
@@ -174,6 +220,36 @@ class MainPage extends Component {
             }
 
             skins.reverse();
+            console.log('FOR LATEST NFTs antes, size: ' + this.state.latestNFTs.length);
+            for (const [index, value] of this.state.latestNFTs.entries()) {
+                console.log('FOR LATEST NFTs');
+                // let carBrand = value.info.carBrand
+                // let simulator = value.info.simulator
+                let price = 46*priceConversion;
+                //TODO: change hardcode
+                let address = '0x70997970C51812dc3A010C7d01b50e0d17dc79C8'
+                let itemId = value.id
+                // let ipfsPath = value.ad.ipfsPath
+                console.log(' ID NFT:'+value.id);
+                let imagePath = value.image
+                nfts.push(
+                    <ListGroup.Item key={index}>
+                        <Card className="card-block">
+                            <Card.Body>
+                                <Card.Img variant="top" src={imagePath} />
+                                {/* <Card.Title>{carBrand}</Card.Title> */}
+                                <Card.Text>
+                                    {/* <div><b>Simulator:</b> {simulator}</div>
+                                    <div><b>Price:</b> {price / priceConversion} ETH</div> */}
+                                    {/* <div><b>Vendor address:</b> {address}</div> */}
+                                </Card.Text>
+                                <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, null, null, null, null, price, null , address, null, imagePath, true)}> View item</Button>
+                            </Card.Body>
+                        </Card>
+                    </ListGroup.Item>
+                )
+            }
+
         }
 
         return (
@@ -201,6 +277,15 @@ class MainPage extends Component {
                         <div>
                             <ListGroup className="list-group list-group-horizontal scrolling-wrapper">
                                 {skins}
+                            </ListGroup>
+                        </div>
+                        <br></br>
+                        <div>
+                            <h4>Latest Car Ownership NFTs</h4>
+                        </div>
+                        <div>
+                            <ListGroup className="list-group list-group-horizontal scrolling-wrapper">
+                                {nfts}
                             </ListGroup>
                         </div>
                     </div>

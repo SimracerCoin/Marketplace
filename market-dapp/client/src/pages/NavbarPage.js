@@ -123,6 +123,12 @@ class NavbarPage extends React.Component {
                                     Sell Skin
                             </NavDropdown.Item>
                             </Link>
+
+                            <Link to="/sellownership">
+                                <NavDropdown.Item as="div">
+                                    Sell Car Ownership
+                            </NavDropdown.Item>
+                            </Link>
                         </NavDropdown>
                         
                     </Nav>
