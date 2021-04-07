@@ -1,7 +1,11 @@
 pragma solidity ^0.7.0;
 pragma experimental ABIEncoderV2;
 
+import "@cartesi/descartes-sdk/contracts/DescartesInterface.sol";
+
 contract ContentMarketplace {
+
+    DescartesInterface descartes;
 
     /// @notice records necessary information for an advertisement
     struct Advertisement {
@@ -16,13 +20,14 @@ contract ContentMarketplace {
     /// @notice records information regarding a purchase
     struct Purchase {
         uint256 adId;
-        address buyer;
+        address payable buyer;
         bytes buyerKey;
         bytes encryptedDataKey;
-        uint256 date;
+        uint256 descartesIndex;  // descartes computation that will verify the challenge
+        uint256 date;            // purchase date
     }
 
-    enum NotificationType { Request, Accept_A, Challenge, Accept_B }
+    enum NotificationType { Request, Accept_A, Challenge, Accept_B, Reject }
     // @notice full representation of a notification
     struct Notification {
         uint256 purchaseId;       // purchase information
@@ -59,6 +64,7 @@ contract ContentMarketplace {
     /// @param descartesAddress address of the Descartes contract
     constructor(address descartesAddress) {
         // TODO retrieve Descartes interface from the address
+        descartes = DescartesInterface(descartesAddress);
     }
 
     /// @notice creates a new advertisement for published and encrypted content
@@ -197,18 +203,23 @@ contract ContentMarketplace {
 
     /// @notice finalizes purchase, unlocking buyer's funds and seller's deposit as appropriate
     function finalizePurchase(
-        uint256 _purchaseId            // purchase request identifier
+        uint256 _purchaseId,            // purchase request identifier
+        bool isSuccess
     ) public {
-        // TODO...
         Purchase memory purchase = getPurchase(_purchaseId);
         Advertisement memory ad = getAd(purchase.adId);
 
-        address payable accountAddress = ad.seller;
+        address payable accountAddress = isSuccess ? ad.seller : purchase.buyer;
         accountAddress.transfer(ad.price);
 
-        newNotification(_purchaseId, "Purchase was accepted", msg.sender, ad.seller, NotificationType.Accept_B);
+        if(isSuccess) {
+            newNotification(_purchaseId, "Purchase was accepted.", msg.sender, ad.seller, NotificationType.Accept_B);
+        }
+        else {
+            newNotification(_purchaseId, "Purchase was rejected.", msg.sender, ad.seller, NotificationType.Reject);
+        }
 
-        emit PurchaseFinalized(purchase.adId, _purchaseId, true); 
+        emit PurchaseFinalized(purchase.adId, _purchaseId, isSuccess); 
     }
 
     // @notice create notification

@@ -23,6 +23,7 @@ class UploadSkin extends Component {
             contract: null,
             ipfsPath: null,
             image_ipfsPath: "",
+            encryptedDataHash: null,
             formIPFS: "",
             formAddress: "",
             receivedIPFS: "",
@@ -151,15 +152,15 @@ class UploadSkin extends Component {
         });
         const encryptedBuffer = message.packets.write(); // get raw encrypted packets as Uint8Array
 
-        const loggerRootHash = computeMerkleRootHash(Buffer.from(encryptedBuffer));
-        console.log(`Logger Root Hash: ${loggerRootHash}`);
+        const encryptedDataHash = computeMerkleRootHash(Buffer.from(encryptedBuffer));
+        console.log(`Logger Root Hash: ${encryptedDataHash}`);
 
         const response = await ipfs.add(encryptedBuffer, (err, ipfsPath) => {
             console.log(err, ipfsPath);
             //setState by setting ipfsPath to ipfsPath[0].hash 
             this.setState({ ipfsPath: ipfsPath[0].hash });
         })
-        this.setState({ ipfsPath: response.path });
+        this.setState({ ipfsPath: response.path, encryptedDataHash: encryptedDataHash });
     };
 
     saveSkin = async (event) => {
@@ -193,9 +194,8 @@ class UploadSkin extends Component {
 
             if(response_saveImage == true) {
                 const response = await this.state.contract.methods.newSkin(ipfsPathBytes, this.state.currentCar,
-                    this.state.currentSimulator, price, placeholder, placeholder, nickname, this.state.image_ipfsPath).send({ from: this.state.currentAccount });
+                    this.state.currentSimulator, price, placeholder, this.state.encryptedDataHash, nickname, this.state.image_ipfsPath).send({ from: this.state.currentAccount });
                 console.log(response);
-    
     
                 alert("The new skin is available for sale!");
 

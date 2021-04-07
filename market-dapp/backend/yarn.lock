@@ -9,7 +9,7 @@
   dependencies:
     "@cartesi/util" "^0.6.2"
 
-"@cartesi/descartes-sdk@^1.0.0":
+"@cartesi/descartes-sdk@1.0.0":
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/@cartesi/descartes-sdk/-/descartes-sdk-1.0.0.tgz#34edf00a961ef332cf8ee372f6899185b9c19447"
   integrity sha512-uowS5YpvLrOl7csr0CA8njCACQupS4dPaeUK88ESUGu9vm5ms2Y5gl7QFBhzFa49n1IuJsaSSXJYUAkxWE8IQQ==
