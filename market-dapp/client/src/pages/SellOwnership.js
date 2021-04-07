@@ -117,6 +117,25 @@ class SellOwnership extends Component {
 
     }
 
+    //Save JSON in ipfs 
+    saveJSON_toIPFS = async (image) => {
+        var jsonData = { 'description': 'cenas', 'name': 'car', 'image': 'https://ipfs.io/ipfs/'+image};
+        var jsonStr = JSON.stringify(jsonData);
+
+        const response = await ipfs.add(Buffer.from(jsonStr), (err, ipfsPath) => {
+            console.log(err, ipfsPath);
+            console.log("Response image: ", ipfsPath[0].hash)
+            //setState by setting ipfsPath to ipfsPath[0].hash 
+            this.setState({ jsonData_ipfsPath: ipfsPath[0].hash });
+        })
+        
+        console.log('json ipfs: '+response.path);
+        this.setState({ jsonData_ipfsPath: response.path });
+        return true;
+
+    }
+
+
     //Transforma a imagem num buffer e guarda como estado
     uploadImageIPFS = (event) => {
         event.stopPropagation()
@@ -175,13 +194,16 @@ class SellOwnership extends Component {
                 if (!nickname) return;
             }
 
+            const response_saveImage = await this.saveImage_toIPFS();
+            const response_saveJson = await this.saveJSON_toIPFS(this.state.image_ipfsPath);
+
             const price = this.state.drizzle.web3.utils.toBN(this.state.currentFilePrice);
 
-            console.log('NFT price: '+this.state.currentFilePrice);
-            let tx = await this.state.contractNFTs.methods.awardItem(this.state.contractNFTs.address,price,'https://gateway.pinata.cloud/ipfs/Qmboj3b42aW2nHGuQizdi2Zp35g6TBKmec6g77X9UiWQXg').send({ from: this.state.currentAccount });
+            //'https://gateway.pinata.cloud/ipfs/Qmboj3b42aW2nHGuQizdi2Zp35g6TBKmec6g77X9UiWQXg'
+            let tx = await this.state.contractNFTs.methods.awardItem(this.state.contractNFTs.address,price,'https://ipfs.io/ipfs/'+this.state.jsonData_ipfsPath).send({ from: this.state.currentAccount });
             console.log(tx);
 
-            alert("The new car is available for sale!");
+            alert("The new car ownership NFT is available for sale!");
         }
 
         //     //document.getElementById('formInsertCar').reset()

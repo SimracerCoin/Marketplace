@@ -1815,6 +1815,7 @@ contract SimthunderOwner is ERC721 {
 
     struct CarOwnership {
         uint256 price;
+        address leagueOwner;
         string skinPic;
         string series;
     }
