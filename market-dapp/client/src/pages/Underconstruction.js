@@ -28,7 +28,7 @@ class Underconstruction extends Component {
                         <div class="row">
                             <div class="col-4 col-sm-3 col-md-2 mr-auto">
                                 <a class="navbar-brand logo" href="/">
-                                    <img src="assets/img/logo-2.png" alt="Simthunder" class="logo-light mx-auto" />
+                                    <img src="assets/img/logo-2-sm.png" alt="Simthunder" class="logo-light mx-auto" />
                                 </a>
                             </div>
                         </div>

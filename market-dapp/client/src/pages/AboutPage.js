@@ -5,7 +5,8 @@ class AboutPage extends Component {
     render() {
         return (
             <header className="header">
-                <section className="content-section text-light br-n bs-c bp-c pb-8" style={{ backgroundImage: 'url(\'/assets/img/bg/bg_shape.png\')' }}>
+                <div class="overlay overflow-hidden pe-n"><img src="/assets/img/bg/bg_shape.png" alt="Background shape" /></div>
+                <section className="content-section text-light br-n bs-c bp-c pb-8">
                     <div class="container position-relative">
                         <div class="row">
                             <div class="col-lg-8 mx-auto">
