@@ -32,6 +32,10 @@ class NavbarPage extends React.Component {
         this.setState({ currentAccount: currentAccount, haveNotifications: haveNotifications});
     }
 
+    searchOnFocus = (event) => {
+        alert('Search feature coming soon!');return false;
+    }
+
     render() {
         return ([
             // <Navbar className="navbar navbar-expand-lg navbar-dark bg-dark border-nav zi-3">
@@ -70,9 +74,9 @@ class NavbarPage extends React.Component {
                     </div>
                     <div className="col-4 d-none d-lg-block mx-auto">
                         <form className="input-group border-0 bg-transparent">
-                        <input className="form-control" type="search" placeholder="Search" aria-label="Search" />
+                        <input className="form-control" type="search" placeholder="Search" aria-label="Search" onFocus={this.searchOnFocus} />
                         <div className="input-group-append">
-                            <button className="btn btn-sm btn-warning text-secondary my-0 mx-0" type="submit"><i className="fas fa-search"></i></button>
+                            <button className="btn btn-sm btn-warning text-secondary my-0 mx-0" disabled type="submit"><i className="fas fa-search"></i></button>
                         </div>
                         </form>
                     </div>
