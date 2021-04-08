@@ -23,17 +23,6 @@ class Underconstruction extends Component {
 
     render() {
         return ([
-                <nav class="navbar navbar-expand-lg navbar-dark bg-dark border-nav zi-3" style={{height: '88px'}}>
-                    <div class="container">
-                        <div class="row">
-                            <div class="col-4 col-sm-3 col-md-2 mr-auto">
-                                <a class="navbar-brand logo" href="/">
-                                    <img src="assets/img/logo-2-sm.png" alt="Simthunder" class="logo-light mx-auto" />
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </nav>,
                 <header id="header" class="header h-fullscreen__page text-light">
                     <div class="media-container parallax-window" data-parallax="scroll" data-image-src="assets/img/bg/bg-2.jpg" style={{backgroundImage: 'url(\'/assets/img/bg/bg-8.png\')'}}></div>
                     <div class="overlay bg-dark_A-40"></div>
