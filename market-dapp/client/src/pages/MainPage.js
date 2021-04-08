@@ -179,8 +179,8 @@ class MainPage extends Component {
                     <ListGroup.Item key={index} className="bg-dark_A-20 col-3 mb-4" style={{minWidth: '275px'}}>
                         <Card className="card-block" key={index}>
                             <Card.Body>
-                                <div style={{height: '160px'}} className="d-flex flex-wrap align-items-center">
-                                    <Card.Img variant="top" src={thumb} style={{width: 'auto'}} />
+                                <div style={{height: '160px'}} className="d-flex flex-wrap align-items-center justify-content-center">
+                                    <Card.Img variant="top" src={thumb} style={{width: 'auto', maxHeight: '160px'}} />
                                 </div>
                                 <Card.Title className="mt-5 font-weight-bold">{carBrand}</Card.Title>
                                 <Card.Text>
