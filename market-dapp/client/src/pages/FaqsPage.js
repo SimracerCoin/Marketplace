@@ -14,6 +14,9 @@ class FaqsPage extends Component {
                                     <h2 class="ls-1 text-center">FAQs</h2>
                                     <hr class="w-10 border-warning border-top-2 o-90" />
 
+                                    <h3 class="ls-1 text-center">Coming soon</h3>
+
+{/*
                                     <h5>#1 - Don't do that</h5>
                                     <p class="lead-1">ok</p>
 
@@ -24,7 +27,7 @@ class FaqsPage extends Component {
                                     <p class="lead-1">ok</p>
 
                                     <h5>#4 - Don't do that</h5>
-                                    <p class="lead-1">ok</p>
+<p class="lead-1">ok</p>*/}
 
                                 </div>
                             </div>
