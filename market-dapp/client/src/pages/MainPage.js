@@ -173,7 +173,7 @@ class MainPage extends Component {
                 let address = value.ad.seller
                 let itemId = value.id
                 let ipfsPath = value.ad.ipfsPath
-                let thumb = "/assets/img/sims/"+simulator+".png";
+                let thumb = "assets/img/sims/"+simulator+".png";
 
                 cars.push(
                     <ListGroup.Item key={index} className="bg-dark_A-20 col-3 mb-4" style={{minWidth: '275px'}}>
@@ -205,7 +205,7 @@ class MainPage extends Component {
                 let itemId = value.id
                 let ipfsPath = value.ad.ipfsPath
                 let imagePath = "https://ipfs.io/ipfs/" + value.info.skinPic
-                let thumb = "/assets/img/sims/"+simulator+".png";
+                let thumb = "assets/img/sims/"+simulator+".png";
                 
                 skins.push(
                     <ListGroup.Item key={index} className="bg-dark_A-20 col-3 mb-4" style={{minWidth: '275px'}}>
@@ -238,10 +238,10 @@ class MainPage extends Component {
                 console.log(' ID NFT:'+value.id);
                 let imagePath = value.image
                 nfts.push(
-                    <ListGroup.Item key={index}>
+                    <ListGroup.Item key={index} className="bg-dark_A-20 col-3 mb-4" style={{minWidth: '275px'}}>
                         <Card className="card-block">
                             <Card.Body>
-                                <Card.Img variant="top" src={imagePath} />
+                                <Card.Img variant="top" src={imagePath} style={{maxHeight: '80px', width: 'auto'}} />
                                 {/* <Card.Title>{carBrand}</Card.Title> */}
                                 <Card.Text>
                                     <div><b>Series:</b> {series}</div>

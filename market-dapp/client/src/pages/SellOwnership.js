@@ -216,6 +216,8 @@ class SellOwnership extends Component {
             console.log(tx);
 
             alert("The new car ownership NFT is available for sale!");
+
+            window.location.href = "/";
         }
     }
 

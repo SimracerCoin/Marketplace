@@ -29,11 +29,12 @@ class NavbarPage extends React.Component {
         const currentAccount = this.state.drizzleState.accounts[0];
         const haveNotifications = (await contract.methods.listNotificationsPerUser(currentAccount).call()).length != 0;
 
-        this.setState({ currentAccount: currentAccount, haveNotifications: haveNotifications});
+        this.setState({ currentAccount: currentAccount, haveNotifications: haveNotifications });
     }
 
-    searchOnFocus = (event) => {
-        alert('Search feature coming soon!');return false;
+    searchOnClick = (event) => {
+        event.preventDefault();
+        alert('Search feature coming soon!'); return false;
     }
 
     render() {
@@ -69,27 +70,27 @@ class NavbarPage extends React.Component {
             <Navbar className="navbar navbar-expand-lg navbar-dark bg-dark border-nav zi-3">
                 <div className="container">
                     <div className="row">
-                    <div className="col-4 col-sm-3 col-md-2 mr-auto">
-                        <Navbar.Brand href="/" className="logo"><img src="assets/img/logo-2-sm.png" alt="Simthunder" class="logo-light mx-auto" /></Navbar.Brand>
-                    </div>
-                    <div className="col-4 d-none d-lg-block mx-auto">
-                        <form className="input-group border-0 bg-transparent">
-                        <input className="form-control" type="search" placeholder="Search" aria-label="Search" onFocus={this.searchOnFocus} />
-                        <div className="input-group-append">
-                            <button className="btn btn-sm btn-warning text-secondary my-0 mx-0" disabled type="submit"><i className="fas fa-search"></i></button>
+                        <div className="col-4 col-sm-3 col-md-2 mr-auto ml-4">
+                            <Navbar.Brand href="/" className="logo font-weight-bold" style={{alignItems: "first baseline"}}><img src="assets/img/logo-2-sm.png" alt="Simthunder" class="logo-light mx-auto" /> beta</Navbar.Brand>
                         </div>
-                        </form>
-                    </div>
-                    <div className="col-8 col-sm-8 col-md-8 col-lg-6 col-xl-4 ml-auto text-right">
-                        <Navbar.Text>{this.state.currentAccount}</Navbar.Text>
-                        <ul className="nav navbar-nav d-none d-sm-inline-flex flex-row">
-                            <li className="nav-item dropdown">
-                                <a className="nav-link dropdown-toggle small" href="store.html#" id="dropdownGaming" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i className="mr-2 fas fa-globe"></i>EN </a>
-                                <div className="dropdown-menu position-absolute" aria-labelledby="dropdownGaming">
-                                <a className="dropdown-item" href="main.html">English</a>
+                        <div className="col-4 d-none d-lg-block mx-auto">
+                            <form className="input-group border-0 bg-transparent">
+                                <input className="form-control" type="search" placeholder="Search" aria-label="Search" onClick={this.searchOnClick} />
+                                <div className="input-group-append">
+                                    <button className="btn btn-sm btn-warning text-secondary my-0 mx-0" disabled type="submit"><i className="fas fa-search"></i></button>
                                 </div>
-                            </li>
-                            {/*<li className="nav-item">
+                            </form>
+                        </div>
+                        <div className="col-8 col-sm-8 col-md-8 col-lg-6 col-xl-4 ml-auto text-right">
+                            <Navbar.Text>{this.state.currentAccount}</Navbar.Text>
+                            <ul className="nav navbar-nav d-none d-sm-inline-flex flex-row">
+                                <li className="nav-item dropdown">
+                                    <a className="nav-link dropdown-toggle small" href="store.html#" id="dropdownGaming" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i className="mr-2 fas fa-globe"></i>EN </a>
+                                    <div className="dropdown-menu position-absolute" aria-labelledby="dropdownGaming">
+                                        <a className="dropdown-item" href="main.html">English</a>
+                                    </div>
+                                </li>
+                                {/*<li className="nav-item">
                                 <a className="nav-link small" href="" data-toggle="offcanvas" data-target="#offcanvas-cart">
                                 <span className="p-relative d-inline-flex">
                                     <span className="badge-cart badge badge-counter badge-warning position-absolute l-1">2</span>
@@ -97,53 +98,50 @@ class NavbarPage extends React.Component {
                                 </span>
                                 </a>
                             </li>*/}
-                            <li className="nav-item">
-                                <Link to="/notifications" className="nav-link small" data-toggle="offcanvas" data-target="#offcanvas-notification">
-                                    <span className="p-relative d-inline-flex">
-                                        {this.state.haveNotifications ? <span className="badge-cart badge badge-counter badge-warning position-absolute l-1">!</span> : <span></span>}
-                                        <i className="fas fa-bell"></i>
-                                    </span>
-                                </Link>
-                            </li>
-                        </ul>
-                    </div>
+                                <li className="nav-item">
+                                    <Link to="/notifications" className="nav-link small" data-toggle="offcanvas" data-target="#offcanvas-notification">
+                                        <span className="p-relative d-inline-flex">
+                                            {this.state.haveNotifications ? <span className="badge-cart badge badge-counter badge-warning position-absolute l-1">!</span> : <span></span>}
+                                            <i className="fas fa-bell"></i>
+                                        </span>
+                                    </Link>
+                                </li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
-                <img id="beta-img" src="assets/beta-png-5.png" alt="beta" style={{float: 'right', maxHeight: '5rem', marginRight: "-20px"}}/>
             </Navbar>,
-            <Navbar className="navbar navbar-expand-lg navbar-dark bg-dark">
+            <Navbar className="navbar-expand-lg navbar-dark bg-dark">
                 <div className="container">
-                <Navbar.Toggle aria-controls="collapsingNavbar" aria-label="Toggle navigation" aria-expanded="false" className="navbar-toggler navbar-toggler-fixed" />
-                <Navbar.Collapse id="collapsingNavbar" className="collapse navbar-collapse">
-                    <Nav className="navbar-nav">
-                        <NavDropdown title="Sell" className="nav-link mr-2 dropdown dropdown-hover" id="basic-nav-dropdown">
-                            <Link to="/sellownership">
-                                <NavDropdown.Item as="div">
-                                    Sell Car Ownership NFT
+                    <Navbar.Toggle aria-controls="collapsingNavbar" aria-label="Toggle navigation" aria-expanded="false" className="navbar-toggler navbar-toggler-fixed" />
+                    <Navbar.Collapse id="collapsingNavbar">
+                        <Nav>
+                            <NavDropdown title="Sell" className="dropdown-hover" id="basic-nav-dropdown">
+                                <Link to="/sellownership">
+                                    <NavDropdown.Item as="div">
+                                        Sell Car Ownership NFT
+                                    </NavDropdown.Item>
+                                </Link>
+                                <Link to="/uploadcar">
+                                    <NavDropdown.Item as="div">
+                                        Sell Car Setup
                             </NavDropdown.Item>
-                            </Link>
-                            <Link to="/uploadcar">
-                                <NavDropdown.Item as="div">
-                                    Sell Car Setup
-                            </NavDropdown.Item>
-                            </Link>
+                                </Link>
 
-                            <Link to="/uploadskin">
-                                <NavDropdown.Item as="div">
-                                    Sell Skin
+                                <Link to="/uploadskin">
+                                    <NavDropdown.Item as="div">
+                                        Sell Skin
                             </NavDropdown.Item>
-                            </Link>
-
-                            
-                        </NavDropdown>
-                        <NavLink className="nav-link mr-2" to="/about">About</NavLink>
-                        <NavLink className="nav-link mr-2" to="/faqs">FAQs</NavLink>
-                    </Nav>
-                </Navbar.Collapse>
+                                </Link>
+                            </NavDropdown>
+                            <NavLink className="nav-link mr-2" to="/about">About</NavLink>
+                            <NavLink className="nav-link mr-2" to="/faqs">FAQs</NavLink>
+                        </Nav>
+                    </Navbar.Collapse>
                 </div>
             </Navbar>
 
-                ]);
+        ]);
     }
 }
 
