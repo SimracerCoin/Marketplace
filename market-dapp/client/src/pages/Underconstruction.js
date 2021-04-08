@@ -35,7 +35,7 @@ class Underconstruction extends Component {
                     </div>
                 </nav>,
                 <header id="header" class="header h-fullscreen__page text-light">
-                    <div class="media-container parallax-window" data-parallax="scroll" data-image-src="assets/img/bg/bg-2.jpg" style={{backgroundImage: 'url(\'/assets/img/bg/bg-2.jpg\')'}}></div>
+                    <div class="media-container parallax-window" data-parallax="scroll" data-image-src="assets/img/bg/bg-2.jpg" style={{backgroundImage: 'url(\'/assets/img/bg/bg-8.png\')'}}></div>
                     <div class="overlay bg-dark_A-40"></div>
                     <div class="overlay d-flex align-items-center">
                         <div class="container text-center">
