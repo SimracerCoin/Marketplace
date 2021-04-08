@@ -241,7 +241,7 @@ class MainPage extends Component {
                     <ListGroup.Item key={index} className="bg-dark_A-20 col-3 mb-4" style={{minWidth: '275px'}}>
                         <Card className="card-block">
                             <Card.Body>
-                                <Card.Img variant="top" src={imagePath} style={{maxHeight: '160px', width: 'auto'}} />
+                                <Card.Img variant="top" src={imagePath} style={{maxHeight: '320px', width: 'auto'}} />
                                 {/* <Card.Title>{carBrand}</Card.Title> */}
                                 <Card.Text>
                                     <div><b>Series:</b> {series}</div>
