@@ -14,13 +14,11 @@ class AboutPage extends Component {
                                     <h2 class="ls-1 text-center">About</h2>
                                     <hr class="w-10 border-warning border-top-2 o-90" />
 
-                                    <p class="lead-1">Simthunder is ...</p>
-                                    <p class="lead-1">If you are a Buyer ...</p>
-                                    <p class="lead-1">If you are a Seller</p>
-                                    <p class="lead-1"></p>
+                                    <p class="lead-1">Simthunder is a decentralised sim racing assets marketplace, that will enable sim racers to exchange sim racing items such as car setup files and skins, as well as NFTs that represent ownership of digital cars in private sim racing leagues, among others. This is one of the core features of the Simracer Coin project, one of the first integrations in GG Dapp.</p>
+                                    {/* <p class="lead-1"></p>
 
-                                    <p class="lead-1">To learn more check our quick guide <a href="/faqs" id="faqsLink">here</a>.</p>
-                                    <p class="lead-1">ATTENTION: beta version</p>
+                                    <p class="lead-1">To learn more check our quick guide <a href="/faqs" id="faqsLink">here</a>.</p> */}
+                                    <p class="lead-1">ATTENTION: BETA VERSION</p>
                                 </div>
                             </div>
                         </div>
