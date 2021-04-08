@@ -182,7 +182,7 @@ class UploadCar extends Component {
     }
 
     render() {
-        const simsElements = ["iRacing", "F12020", "rFactor", "Asseto Corsa"];
+        const simsElements = ["iRacing", "F12020", "rFactor", "Assetto Corsa"];
         const sims = [];
 
         for (const [index, value] of simsElements.entries()) {

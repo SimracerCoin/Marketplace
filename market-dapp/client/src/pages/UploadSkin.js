@@ -204,12 +204,12 @@ class UploadSkin extends Component {
     }
 
     render() {
-        const simsElements = ["iRacing", "F12020", "rFactor", "Asseto Corsa"];
+        const simsElements = ["iRacing", "F12020", "rFactor", "Assetto Corsa"];
         const sims = [];
 
         for (const [index, value] of simsElements.entries()) {
             let thumb = "/assets/img/sims/"+value+".png";
-            sims.push(<Dropdown.Item eventKey={value} key={index}><img src={thumb} width="16" /> {value}</Dropdown.Item>)
+            sims.push(<Dropdown.Item eventKey={value} key={index}><img src={thumb} width="24" /> {value}</Dropdown.Item>)
         }
 
         return (
