@@ -112,6 +112,11 @@ class NavbarPage extends React.Component {
                 <Navbar.Collapse id="collapsingNavbar" className="collapse navbar-collapse">
                     <Nav className="navbar-nav">
                         <NavDropdown title="Sell" className="nav-item dropdown dropdown-hover" id="basic-nav-dropdown">
+                            <Link to="/sellownership">
+                                <NavDropdown.Item as="div">
+                                    Sell Car Ownership NFT
+                            </NavDropdown.Item>
+                            </Link>
                             <Link to="/uploadcar">
                                 <NavDropdown.Item as="div">
                                     Sell Car Setup
@@ -124,11 +129,7 @@ class NavbarPage extends React.Component {
                             </NavDropdown.Item>
                             </Link>
 
-                            <Link to="/sellownership">
-                                <NavDropdown.Item as="div">
-                                    Sell Car Ownership
-                            </NavDropdown.Item>
-                            </Link>
+                            
                         </NavDropdown>
                         
                     </Nav>

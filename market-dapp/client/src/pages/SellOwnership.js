@@ -17,8 +17,9 @@ class SellOwnership extends Component {
             drizzle: props.drizzle,
             drizzleState: props.drizzleState,
             currentAccount: null,
-            currentCar: "Choose your car brand",
             currentSimulator: "Choose your simulator",
+            currentSeries: null,
+            currentCarNumber: null,
             currentFilePrice: null,
             contract: null,
             ipfsPath: null,
@@ -61,13 +62,17 @@ class SellOwnership extends Component {
         }
     }
 
-
-    onSelectCar = async (event) => {
-        //event.preventDefault();
-        console.log("Choosing car: " + event);
-        this.setState({ currentCar: event });
+    handleCarNumber = (event) => {
+        const re = /^[0-9\b]+$/;
+        if (event.target.value === '' || re.test(event.target.value)) {
+            this.setState({ currentCarNumber: event.target.value });
+        }
     }
 
+    handleSeries = (event) => {
+        console.log("Series: " + event.target.value);
+        this.setState({ currentSeries: event.target.value });
+    }
 
     onSelectSim = async (event) => {
         //event.preventDefault();
@@ -119,7 +124,14 @@ class SellOwnership extends Component {
 
     //Save JSON in ipfs 
     saveJSON_toIPFS = async (image) => {
-        var jsonData = { 'description': 'cenas', 'name': 'car', 'image': 'https://ipfs.io/ipfs/'+image};
+        var jsonData = { 'description': 'Simthunder Car Ownership', 'name': 'Car', 'image': 'https://ipfs.io/ipfs/'+image};
+        //TODO: Change to standard attributes, remove price
+        jsonData['series'] = this.state.currentSeries;
+        jsonData['seriesOwner'] = this.state.currentAccount;
+        jsonData['carNumber'] = this.state.currentCarNumber;
+        jsonData['simulator'] = this.state.currentSimulator;
+        jsonData['price'] = this.state.currentFilePrice / priceConversion;
+    
         var jsonStr = JSON.stringify(jsonData);
 
         const response = await ipfs.add(Buffer.from(jsonStr), (err, ipfsPath) => {
@@ -188,11 +200,11 @@ class SellOwnership extends Component {
         if (this.state.currentFilePrice === null) {
             alert('Item price must be an integer');
         } else {
-            let nickname = "";
-            if (!this.state.isSeller) {
-                nickname = await Prompt('You are adding your first item for sale, please choose your seller nickname.');
-                if (!nickname) return;
-            }
+            // let nickname = "";
+            // if (!this.state.isSeller) {
+            //     nickname = await Prompt('You are adding your first item for sale, please choose your seller nickname.');
+            //     if (!nickname) return;
+            // }
 
             const response_saveImage = await this.saveImage_toIPFS();
             const response_saveJson = await this.saveJSON_toIPFS(this.state.image_ipfsPath);
@@ -200,51 +212,17 @@ class SellOwnership extends Component {
             const price = this.state.drizzle.web3.utils.toBN(this.state.currentFilePrice);
 
             //'https://gateway.pinata.cloud/ipfs/Qmboj3b42aW2nHGuQizdi2Zp35g6TBKmec6g77X9UiWQXg'
-            let tx = await this.state.contractNFTs.methods.awardItem(this.state.contractNFTs.address,price,'https://ipfs.io/ipfs/'+this.state.jsonData_ipfsPath).send({ from: this.state.currentAccount });
+            let tx = await this.state.contractNFTs.methods.awardItem(this.state.contractNFTs.address,this.state.currentAccount,price,'https://ipfs.io/ipfs/'+this.state.jsonData_ipfsPath).send({ from: this.state.currentAccount });
             console.log(tx);
 
             alert("The new car ownership NFT is available for sale!");
         }
-
-        //     //document.getElementById('formInsertCar').reset()
-        //     console.log("Current account: " + this.state.currentAccount);
-        //     console.log("Current hash: " + this.state.ipfsPath);
-        //     console.log("Current car: " + this.state.currentCar);
-        //     console.log("Current simulator: " + this.state.currentSimulator);
-        //     console.log("Current price: " + this.state.currentFilePrice);
-
-        //     const ipfsPathBytes = this.state.drizzle.web3.utils.fromAscii(this.state.ipfsPath);
-
-        //     // TO DO: change placeholders for correct values
-        //     const placeholder = this.state.drizzle.web3.utils.fromAscii('some hash');
-        //     console.log(placeholder);
-
-        //     const response_saveImage = await this.saveImage_toIPFS();
-
-        //     if(response_saveImage == true) {
-        //         const response = await this.state.contract.methods.newSkin(ipfsPathBytes, this.state.currentCar,
-        //             this.state.currentSimulator, price, placeholder, placeholder, nickname, this.state.image_ipfsPath).send({ from: this.state.currentAccount });
-        //         console.log(response);
-    
-    
-        //         alert("The new skin is available for sale!");
-        //     }  
-        // }
     }
 
     render() {
-        const carsElements = ["Chevrolet Monte Carlo SS", "Legends Ford 34 Coupe", "Legends Ford 34 Coupe - Rookie", "NASCAR Cup Series Chevrolet Camaro ZL1", "NASCAR Cup Series Ford Mustang",
-            "NASCAR Cup Series Toyota Camry", "Super Late Model", "Aston Martin DBR9 GT1", "Audi 90 GTO", "Audi R18", "Audi R8 LMS",
-            "BMW M4 GT4", "BMW M8 GTE", "Cadillac CTS-V Racecar", "Chevrolet Corvette C6R GT1", "Dallara F3", "Dallara IR18", "Ferrari 488 GT3",
-            "Ferrari 488 GTE", "Ford Fiesta RS WRC", "Ford GT", "Ford Mustang FR500S", "McLaren MP4-30"];
         const simsElements = ["iRacing", "F12020", "rFactor", "Asseto Corsa"];
 
-        const cars = [];
         const sims = [];
-
-        for (const [index, value] of carsElements.entries()) {
-            cars.push(<Dropdown.Item eventKey={value} key={index}>{value}</Dropdown.Item>)
-        }
 
         for (const [index, value] of simsElements.entries()) {
             sims.push(<Dropdown.Item eventKey={value} key={index}>{value}</Dropdown.Item>)
@@ -256,28 +234,16 @@ class SellOwnership extends Component {
                 <section className="content-section text-light br-n bs-c bp-c pb-8" style={{ backgroundImage: 'url(\'/assets/img/bg/bg_shape.png\')' }}>
                     <div className="container">
                         <div>
-                            <h2> Add new Car Ownership for sale </h2>
-                            <Form onSubmit={this.onIPFSSubmit}>
-                                <input id="skin-file"
-                                    type="file" accept=".tga"
-                                    onChange={this.captureFile}
-                                />
-                                <br></br>
-                                <Button type="submit">Generate IPFS Hash</Button>
-                            </Form>
-
+                            <h2> Mint new Car Ownership NFT for sale </h2>
                         </div>
                         <div>
                             <Form>
                                 <Form.Group controlId="formInsertCar">
-                                    <Form.Label>Insert Car</Form.Label>
-                                    <Form.Control type="text" placeholder="Generate IPFS Hash" value={this.state.ipfsPath} onChange={this.handleChangeHash} readOnly />
+                                    <Form.Control type="text" placeholder="Enter Series Name" onChange={this.handleSeries} />
+                                    <br></br>
+                                    <Form.Control type="text" pattern="[0-9]*" placeholder="Enter Car Number" value={this.state.currentCarNumber} onChange={this.handleCarNumber} />
                                     <br></br>
                                     <Form.Control type="text" pattern="[0-9]*" placeholder="Enter File Price" value={this.state.priceValue} onChange={this.handleFilePrice} />
-                                    <br></br>
-                                    <DropdownButton id="dropdown-cars-button" title={this.state.currentCar} onSelect={this.onSelectCar}>
-                                        {cars}
-                                    </DropdownButton>
                                     <br></br>
                                     <DropdownButton id="dropdown-skin-button" title={this.state.currentSimulator} onSelect={this.onSelectSim}>
                                         {sims}
@@ -297,7 +263,7 @@ class SellOwnership extends Component {
                             </Form>
                         </div><br></br>
                         <div>
-                            <Button onClick={this.saveSkin}>Save Skin</Button>
+                            <Button onClick={this.saveSkin}>Mint Car Ownership NFT</Button>
                         </div>
                     </div>
                 </section>

@@ -194,7 +194,20 @@ class ItemPage extends Component {
         let toRender;
         let commentsRender = [];
 
-        if (this.state.track == null || this.state.season == null) {
+        if (this.state.isNFT) {
+            item = "Car Ownership NFT"
+            toRender = (
+                <div>
+                    <div><img src={this.state.imagePath}/></div>
+                    <div><b>Seller:</b> <Link to={{pathname: "/seller", state: {vendorAddress: this.state.vendorAddress, vendorNickname: this.state.vendorNickname}}}><u>{this.state.vendorNickname} ({this.state.vendorAddress})</u></Link></div>
+                    <div><b>Series:</b> {this.state.series}</div>
+                    <div><b>Number:</b> {this.state.description}</div>
+                    <div><b>Simulator:</b> {this.state.simulator}</div>
+                    <div><b>Price:</b> {this.state.price / priceConversion}</div>
+                </div>
+            )
+
+        } else if (this.state.track == null || this.state.season == null) {
             item = "Skin"
             toRender = (
                 <div>
@@ -256,6 +269,7 @@ class ItemPage extends Component {
             commentsRender.reverse();
         }
 
+        if(!this.state.isNFT) {
         return (
             <header className="header">
                 <section className="content-section text-light br-n bs-c bp-c pb-8" style={{ backgroundImage: 'url(\'/assets/img/bg/bg_shape.png\')' }}>
@@ -267,6 +281,7 @@ class ItemPage extends Component {
                         <Button onClick={this.buyItem}>Buy Item</Button>
                     </div>
                 </section>
+                
                 <div className="container">
                     <h3 className="text-white">Review</h3>
                     <Form onSubmit={this.submitComment}>
@@ -315,7 +330,22 @@ class ItemPage extends Component {
                 </div>
             </header>
 
-        )
+        )} else {
+            return (
+                <header className="header">
+                    <section className="content-section text-light br-n bs-c bp-c pb-8" style={{ backgroundImage: 'url(\'/assets/img/bg/bg_shape.png\')' }}>
+                        <div className="container">
+                            <h1>Buy {item}</h1>
+                            <br></br>
+                            {toRender}
+                            <br></br>
+                            <Button onClick={this.buyItem}>Buy Item</Button>
+                        </div>
+                    </section> 
+                </header>
+    
+            )
+        }
     }
 }
 

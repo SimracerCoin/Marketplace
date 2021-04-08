@@ -1812,6 +1812,7 @@ contract SimthunderOwner is ERC721 {
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
     mapping(uint256 => uint256) prices;
+    mapping(uint256 => address payable) seriesOwners;
 
     struct CarOwnership {
         uint256 price;
@@ -1823,11 +1824,12 @@ contract SimthunderOwner is ERC721 {
     constructor() public ERC721("Simthunder Owner", "STCAR") {
     }
 
-    function awardItem(address recipient, uint256 itemPrice, string memory metadata) public returns (uint256) {   
+    function awardItem(address recipient, address payable seriesOwner, uint256 itemPrice, string memory metadata) public returns (uint256) {   
         _tokenIds.increment();
         uint256 newItemId = _tokenIds.current();
         _mint(recipient, newItemId);
         prices[newItemId] = itemPrice;
+        seriesOwners[newItemId] = seriesOwner;
         _setTokenURI(newItemId, metadata);
         
         return newItemId;
@@ -1835,6 +1837,12 @@ contract SimthunderOwner is ERC721 {
 
     function buyItem(uint256 itemId) external payable {
         require(msg.value == prices[itemId]);
+        address payable accountAddress = seriesOwners[itemId];
+        accountAddress.transfer(prices[itemId]);
         return _transfer(address(this), msg.sender, itemId);
+    }
+
+    function currentTokenId() public returns (uint256) {
+        return _tokenIds.current();
     }
 }

@@ -49,11 +49,12 @@ class MainPage extends Component {
         console.log('componentDidMount');
 
         // get info from marketplace NFT contract
-        let numNfts = await contractNFTs.methods.balanceOf(contractNFTs.address).call();
+        //let numNfts = await contractNFTs.methods.balanceOf(contractNFTs.address).call();
+        let numNfts = await contractNFTs.methods.currentTokenId().call();
         console.log('nft count:' + numNfts);
         
         let currentPage = this;
-        for (let i = 1; i < 100; i++) {
+        for (let i = 1; i < numNfts + 1; i++) {
             try {
                 //TODO: change for different ids
                 let ownerAddress = await contractNFTs.methods.ownerOf(i).call();
@@ -220,15 +221,14 @@ class MainPage extends Component {
             }
 
             skins.reverse();
-            console.log('FOR LATEST NFTs antes, size: ' + this.state.latestNFTs.length);
             for (const [index, value] of this.state.latestNFTs.entries()) {
-                console.log('FOR LATEST NFTs');
-                // let carBrand = value.info.carBrand
-                // let simulator = value.info.simulator
-                let price = 46*priceConversion;
+                let series = value.series;
+                let simulator = value.simulator;
+                let price = value.price*priceConversion;
                 //TODO: change hardcode
-                let address = '0x70997970C51812dc3A010C7d01b50e0d17dc79C8'
-                let itemId = value.id
+                let address = value.seriesOwner;
+                let itemId = value.id;
+                let carNumber = value.carNumber;
                 // let ipfsPath = value.ad.ipfsPath
                 console.log(' ID NFT:'+value.id);
                 let imagePath = value.image
@@ -239,16 +239,18 @@ class MainPage extends Component {
                                 <Card.Img variant="top" src={imagePath} />
                                 {/* <Card.Title>{carBrand}</Card.Title> */}
                                 <Card.Text>
-                                    {/* <div><b>Simulator:</b> {simulator}</div>
-                                    <div><b>Price:</b> {price / priceConversion} ETH</div> */}
-                                    {/* <div><b>Vendor address:</b> {address}</div> */}
+                                    <div><b>Series:</b> {series}</div>
+                                    <div><b>Simulator:</b> {simulator}</div>
+                                    <div><b>Car Number:</b> {carNumber}</div>
+                                    <div><b>Price:</b> {price / priceConversion} ETH</div>
                                 </Card.Text>
-                                <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, null, null, null, null, price, null , address, null, imagePath, true)}> View item</Button>
+                                <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, carNumber, price, null , address, null, imagePath, true)}> View item</Button>
                             </Card.Body>
                         </Card>
                     </ListGroup.Item>
                 )
             }
+            nfts.reverse();
 
         }
 
@@ -261,6 +263,16 @@ class MainPage extends Component {
                             <h2>The largest marketplace for sim racing assets</h2>
                             <h5>Buy, sell, discover, and trade sim racing goods</h5>
                         </div>
+                        <br></br>
+                        <div>
+                            <h4>Latest Car Ownership NFTs</h4>
+                        </div>
+                        <div>
+                            <ListGroup className="list-group list-group-horizontal scrolling-wrapper">
+                                {nfts}
+                            </ListGroup>
+                        </div>
+                        <br></br>
                         <div>
                             <h4>Latest Car Setups</h4>
                         </div>
@@ -277,15 +289,6 @@ class MainPage extends Component {
                         <div>
                             <ListGroup className="list-group list-group-horizontal scrolling-wrapper">
                                 {skins}
-                            </ListGroup>
-                        </div>
-                        <br></br>
-                        <div>
-                            <h4>Latest Car Ownership NFTs</h4>
-                        </div>
-                        <div>
-                            <ListGroup className="list-group list-group-horizontal scrolling-wrapper">
-                                {nfts}
                             </ListGroup>
                         </div>
                     </div>
