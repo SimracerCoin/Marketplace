@@ -35,7 +35,7 @@ class Underconstruction extends Component {
                         <div class="row align-items-center">
                             <div class="col-lg-6 mx-auto">
                             <div class="fadeIn ad-500ms">
-                                <h1 class="slideInLeft ad-400ms display-lg-2 fw-700 lh-2 mb-4"><span class="text-warning">Sim</span>thunder</h1>
+                                <img src="assets/img/logo-2.png" className="slideInLeft ad-400ms display-lg-2 fw-700 lh-2 mb-4" style={{maxWidth: '500px'}} />
                                 <h2 class="lead-2 ls-3 d-block slideInRight ad-500ms fw-300 text-uppercase mb-7">Beta 1.0</h2>
                                 <a class="btn btn-lg btn-round btn-outline-light" onClick={this.requestBtnClick}>Request Beta Access</a>
                             </div>
