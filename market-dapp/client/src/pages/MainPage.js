@@ -179,7 +179,9 @@ class MainPage extends Component {
                     <ListGroup.Item key={index} className="bg-dark_A-20 col-3 mb-4" style={{minWidth: '275px'}}>
                         <Card className="card-block" key={index}>
                             <Card.Body>
-                            <Card.Img variant="top" src={thumb} style={{maxHeight: '160px', width: 'auto'}} />
+                                <div style={{height: '160px'}} className="d-flex flex-wrap align-items-center">
+                                    <Card.Img variant="top" src={thumb} style={{width: 'auto'}} />
+                                </div>
                                 <Card.Title className="mt-5 font-weight-bold">{carBrand}</Card.Title>
                                 <Card.Text>
                                     <div><b>Track:</b> {track}</div>
@@ -211,7 +213,7 @@ class MainPage extends Component {
                     <ListGroup.Item key={index} className="bg-dark_A-20 col-3 mb-4" style={{minWidth: '275px'}}>
                         <Card className="card-block">
                             <Card.Body>
-                                <Card.Img variant="top" src={imagePath} style={{maxHeight: '160px', width: 'auto'}} />
+                                <Card.Img variant="top" src={imagePath} style={{maxHeight: '320px', width: 'auto'}} />
                                 <Card.Title className="mt-5 font-weight-bold">{carBrand}</Card.Title>
                                 <Card.Text>
                                     <div><b>Simulator:</b>&nbsp;<img src={thumb} width="24" /> {simulator}</div>
