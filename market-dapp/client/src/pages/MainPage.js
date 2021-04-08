@@ -3,11 +3,11 @@ import { Button, Card, ListGroup } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { Redirect } from "react-router-dom";
 import ipfs from "../ipfs";
- 
+
 
 import "../css/mainpage.css";
 
-const priceConversion = 10**18;
+const priceConversion = 10 ** 18;
 
 class MainPage extends Component {
 
@@ -32,7 +32,7 @@ class MainPage extends Component {
             selectedImagePath: "",
             vendorAddress: "",
             vendorNickname: "",
-            ipfsPath:"",
+            ipfsPath: "",
             contract: null
         }
 
@@ -173,11 +173,14 @@ class MainPage extends Component {
                 let address = value.ad.seller
                 let itemId = value.id
                 let ipfsPath = value.ad.ipfsPath
+                let thumb = "/assets/img/sims/"+simulator+".png";
+
                 cars.push(
-                    <ListGroup.Item key={index}>
+                    <ListGroup.Item key={index} className="bg-dark_A-20 col-3 mb-4" style={{minWidth: '275px'}}>
                         <Card className="card-block" key={index}>
                             <Card.Body>
-                                <Card.Title>{carBrand}</Card.Title>
+                            <Card.Img variant="top" src={thumb} style={{maxHeight: '80px', width: 'auto'}} />
+                                <Card.Title className="mt-5 font-weight-bold">{carBrand}</Card.Title>
                                 <Card.Text>
                                     <div><b>Track:</b> {track}</div>
                                     <div><b>Simulator:</b> {simulator}</div>
@@ -202,14 +205,16 @@ class MainPage extends Component {
                 let itemId = value.id
                 let ipfsPath = value.ad.ipfsPath
                 let imagePath = "https://ipfs.io/ipfs/" + value.info.skinPic
+                let thumb = "/assets/img/sims/"+simulator+".png";
+                
                 skins.push(
-                    <ListGroup.Item key={index}>
+                    <ListGroup.Item key={index} className="bg-dark_A-20 col-3 mb-4" style={{minWidth: '275px'}}>
                         <Card className="card-block">
                             <Card.Body>
-                                <Card.Img variant="top" src={imagePath} />
-                                <Card.Title>{carBrand}</Card.Title>
+                                <Card.Img variant="top" src={imagePath} style={{maxHeight: '80px', width: 'auto'}} />
+                                <Card.Title className="mt-5 font-weight-bold">{carBrand}</Card.Title>
                                 <Card.Text>
-                                    <div><b>Simulator:</b> {simulator}</div>
+                                    <div><b>Simulator:</b>&nbsp;<img src={thumb} width="24" /> {simulator}</div>
                                     <div><b>Price:</b> {price / priceConversion} ETH</div>
                                     {/* <div><b>Vendor address:</b> {address}</div> */}
                                 </Card.Text>
@@ -256,7 +261,8 @@ class MainPage extends Component {
 
         return (
             <header className="header">
-                <section className="content-section text-light br-n bs-c bp-c pb-8" style={{backgroundImage: 'url(\'/assets/img/bg/bg_shape.png\')'}}>
+                <div class="overlay overflow-hidden pe-n"><img src="/assets/img/bg/bg_shape.png" alt="Background shape" /></div>
+                <section className="content-section text-light br-n bs-c bp-c pb-8">
                     <div id="latest-container" className="container">
                         <div className="center-text">
                             <h1>Welcome to Simthunder!</h1>
@@ -277,7 +283,7 @@ class MainPage extends Component {
                             <h4>Latest Car Setups</h4>
                         </div>
                         <div>
-                            <ListGroup className="list-group list-group-horizontal scrolling-wrapper">
+                            <ListGroup horizontal className="scrolling-wrapper">
                                 {cars}
                             </ListGroup>
 
@@ -287,7 +293,7 @@ class MainPage extends Component {
                             <h4>Latest Car Skins</h4>
                         </div>
                         <div>
-                            <ListGroup className="list-group list-group-horizontal scrolling-wrapper">
+                            <ListGroup horizontal className="scrolling-wrapper">
                                 {skins}
                             </ListGroup>
                         </div>

@@ -32,6 +32,10 @@ class NavbarPage extends React.Component {
         this.setState({ currentAccount: currentAccount, haveNotifications: haveNotifications});
     }
 
+    searchOnFocus = (event) => {
+        alert('Search feature coming soon!');return false;
+    }
+
     render() {
         return ([
             // <Navbar className="navbar navbar-expand-lg navbar-dark bg-dark border-nav zi-3">
@@ -66,13 +70,13 @@ class NavbarPage extends React.Component {
                 <div className="container">
                     <div className="row">
                     <div className="col-4 col-sm-3 col-md-2 mr-auto">
-                        <Navbar.Brand href="/" className="h5">SIMTHUNDER</Navbar.Brand>
+                        <Navbar.Brand href="/" className="logo"><img src="assets/img/logo-2-sm.png" alt="Simthunder" class="logo-light mx-auto" /></Navbar.Brand>
                     </div>
                     <div className="col-4 d-none d-lg-block mx-auto">
                         <form className="input-group border-0 bg-transparent">
-                        <input className="form-control" type="search" placeholder="Search" aria-label="Search" />
+                        <input className="form-control" type="search" placeholder="Search" aria-label="Search" onFocus={this.searchOnFocus} />
                         <div className="input-group-append">
-                            <button className="btn btn-sm btn-warning text-secondary my-0 mx-0" type="submit"><i className="fas fa-search"></i></button>
+                            <button className="btn btn-sm btn-warning text-secondary my-0 mx-0" disabled type="submit"><i className="fas fa-search"></i></button>
                         </div>
                         </form>
                     </div>
@@ -105,13 +109,14 @@ class NavbarPage extends React.Component {
                     </div>
                     </div>
                 </div>
+                <img id="beta-img" src="assets/beta-png-5.png" alt="beta" style={{float: 'right', maxHeight: '5rem', marginRight: "-20px"}}/>
             </Navbar>,
             <Navbar className="navbar navbar-expand-lg navbar-dark bg-dark">
                 <div className="container">
                 <Navbar.Toggle aria-controls="collapsingNavbar" aria-label="Toggle navigation" aria-expanded="false" className="navbar-toggler navbar-toggler-fixed" />
                 <Navbar.Collapse id="collapsingNavbar" className="collapse navbar-collapse">
                     <Nav className="navbar-nav">
-                        <NavDropdown title="Sell" className="nav-item dropdown dropdown-hover" id="basic-nav-dropdown">
+                        <NavDropdown title="Sell" className="nav-link mr-2 dropdown dropdown-hover" id="basic-nav-dropdown">
                             <Link to="/sellownership">
                                 <NavDropdown.Item as="div">
                                     Sell Car Ownership NFT
@@ -131,7 +136,8 @@ class NavbarPage extends React.Component {
 
                             
                         </NavDropdown>
-                        
+                        <NavLink className="nav-link mr-2" to="/about">About</NavLink>
+                        <NavLink className="nav-link mr-2" to="/faqs">FAQs</NavLink>
                     </Nav>
                 </Navbar.Collapse>
                 </div>

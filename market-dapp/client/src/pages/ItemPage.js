@@ -272,7 +272,8 @@ class ItemPage extends Component {
         if(!this.state.isNFT) {
         return (
             <header className="header">
-                <section className="content-section text-light br-n bs-c bp-c pb-8" style={{ backgroundImage: 'url(\'/assets/img/bg/bg_shape.png\')' }}>
+                <div class="overlay overflow-hidden pe-n"><img src="/assets/img/bg/bg_shape.png" alt="Background shape" /></div>
+                <section className="content-section text-light br-n bs-c bp-c pb-8">
                     <div className="container">
                         <h1>Buy {item}</h1>
                         <br></br>
