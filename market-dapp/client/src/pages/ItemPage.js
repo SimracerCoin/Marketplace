@@ -29,6 +29,7 @@ class ItemPage extends Component {
             vendorNickname: props.location.state.vendorNickname,
             ipfsPath: props.location.state.ipfsPath,
             imagePath: props.location.state.imagePath,
+            isNFT: props.location.state.isNFT,
             contract: null,
             currentAccount: "",
             comment: "",
@@ -40,11 +41,17 @@ class ItemPage extends Component {
 
     componentDidMount = async (event) => {
         const contract = await this.state.drizzle.contracts.STMarketplace;
+        const contractNFTs = this.state.drizzle.contracts.SimthunderOwner;
         const currentAccount = this.state.drizzleState.accounts[0];
-        const comments = await contract.methods.getItemComments(this.state.itemId).call();
-        const average_review = await this.average_rating(comments);
-    
-        this.setState({ currentAccount: currentAccount, contract: contract , listComments: comments, average_review: average_review});
+        console.log('istNFT:'+this.state.isNFT);
+        if (!this.state.isNFT) {
+            const comments = await contract.methods.getItemComments(this.state.itemId).call();
+            const average_review = await this.average_rating(comments);
+        
+            this.setState({ currentAccount: currentAccount, contract: contract , listComments: comments, average_review: average_review});
+        } else {
+            this.setState({ currentAccount: currentAccount, contract: contract, contractNFTs: contractNFTs});
+        }
     }
 
     average_rating = async (comments) => {
@@ -88,6 +95,7 @@ class ItemPage extends Component {
         // TODO: buyer public key
         //const buyerPK = this.state.drizzle.web3.utils.hexToBytes(this.state.drizzle.web3.utils.randomHex(16));
         //console.log('Item price:' + this.state.price);
+        if (!this.state.isNFT) {
 
         let buyerKey = localStorage.getItem('ak');
         if (!buyerKey) {
@@ -97,22 +105,29 @@ class ItemPage extends Component {
                 passphrase: passphrase                                      // protects the private key
             });
 
-            buyerKey = this.state.drizzle.web3.utils.asciiToHex(publicKeyArmored);
+                buyerKey = this.state.drizzle.web3.utils.asciiToHex(publicKeyArmored);
 
-            localStorage.setItem('ak', buyerKey);
-            localStorage.setItem('bk', this.state.drizzle.web3.utils.asciiToHex(privateKeyArmored));
+                localStorage.setItem('ak', buyerKey);
+                localStorage.setItem('bk', this.state.drizzle.web3.utils.asciiToHex(privateKeyArmored));
+            }
+
+            console.log('price ='+this.state.price);
+            await this.state.contract.methods.requestPurchase(this.state.itemId, buyerKey).send({ value: this.state.price, from: this.state.currentAccount });
+
+            /*
+            console.log(response);
+            console.log(this.state.vendorAddress);
+            
+            const notification = await this.state.contract.methods.newNotification(response.events.PurchaseRequested.returnValues.purchaseId, "Purchase was requested", this.state.currentAccount, this.state.vendorAddress, 0).send();
+            
+            console.log(notification);*/
+            alert("Thank you for your purchase request. Seller will contact you soon.");
+        } else {
+            let tx = await this.state.contractNFTs.methods.buyItem(this.state.itemId).send({ value: this.state.price, from: this.state.currentAccount });
+            console.log(tx);
+
+            alert("Thank you for your purchase");
         }
-
-        await this.state.contract.methods.requestPurchase(this.state.itemId, buyerKey).send({ value: this.state.price, from: this.state.currentAccount });
-
-        /*
-        console.log(response);
-        console.log(this.state.vendorAddress);
-        
-        const notification = await this.state.contract.methods.newNotification(response.events.PurchaseRequested.returnValues.purchaseId, "Purchase was requested", this.state.currentAccount, this.state.vendorAddress, 0).send();
-        
-        console.log(notification);*/
-        alert("Thank you for wanting to purchase. Seller contact you sooner.");
 
         // const responseFile = await ipfs.get(this.state.ipfsHash);
         // for await (const file of ipfs.get(this.state.ipfsHash)) {
@@ -170,7 +185,20 @@ class ItemPage extends Component {
         let toRender;
         let commentsRender = [];
 
-        if (this.state.track == null || this.state.season == null) {
+        if (this.state.isNFT) {
+            item = "Car Ownership NFT"
+            toRender = (
+                <div>
+                    <div><img src={this.state.imagePath}/></div>
+                    <div><b>Seller:</b> <Link to={{pathname: "/seller", state: {vendorAddress: this.state.vendorAddress, vendorNickname: this.state.vendorNickname}}}><u>{this.state.vendorNickname} ({this.state.vendorAddress})</u></Link></div>
+                    <div><b>Series:</b> {this.state.series}</div>
+                    <div><b>Number:</b> {this.state.description}</div>
+                    <div><b>Simulator:</b> {this.state.simulator}</div>
+                    <div><b>Price:</b> {this.state.price / priceConversion}</div>
+                </div>
+            )
+
+        } else if (this.state.track == null || this.state.season == null) {
             item = "Skin"
             toRender = (
                 <div>
@@ -232,9 +260,11 @@ class ItemPage extends Component {
             commentsRender.reverse();
         }
 
+        if(!this.state.isNFT) {
         return (
             <header className="header">
-                <section className="content-section text-light br-n bs-c bp-c pb-8" style={{ backgroundImage: 'url(\'/assets/img/bg/bg_shape.png\')' }}>
+                <div class="overlay overflow-hidden pe-n"><img src="/assets/img/bg/bg_shape.png" alt="Background shape" /></div>
+                <section className="content-section text-light br-n bs-c bp-c pb-8">
                     <div className="container">
                         <h1>Buy {item}</h1>
                         <br></br>
@@ -243,6 +273,7 @@ class ItemPage extends Component {
                         <Button onClick={this.buyItem}>Buy Item</Button>
                     </div>
                 </section>
+                
                 <div className="container">
                     <h3 className="text-white">Review</h3>
                     <Form onSubmit={this.submitComment}>
@@ -291,7 +322,22 @@ class ItemPage extends Component {
                 </div>
             </header>
 
-        )
+        )} else {
+            return (
+                <header className="header">
+                    <section className="content-section text-light br-n bs-c bp-c pb-8" style={{ backgroundImage: 'url(\'/assets/img/bg/bg_shape.png\')' }}>
+                        <div className="container">
+                            <h1>Buy {item}</h1>
+                            <br></br>
+                            {toRender}
+                            <br></br>
+                            <Button onClick={this.buyItem}>Buy Item</Button>
+                        </div>
+                    </section> 
+                </header>
+    
+            )
+        }
     }
 }
 

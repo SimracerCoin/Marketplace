@@ -196,7 +196,8 @@ class SellerPage extends Component {
 
         return (
             <header className="header">
-                <section className="content-section text-light br-n bs-c bp-c pb-8" style={{backgroundImage: 'url(\'/assets/img/bg/bg_shape.png\')'}}>
+                <div class="overlay overflow-hidden pe-n"><img src="/assets/img/bg/bg_shape.png" alt="Background shape" /></div>
+                <section className="content-section text-light br-n bs-c bp-c pb-8">
                     <div id="latest-container" className="container">
                         <div>
                             <div><b>Seller: </b>{this.state.vendorNickname} ({this.state.vendorAddress})</div>

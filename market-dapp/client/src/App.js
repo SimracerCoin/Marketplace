@@ -2,12 +2,16 @@ import React from 'react';
 import { DrizzleContext } from "@drizzle/react-plugin";
 import { Drizzle } from "@drizzle/store";
 import STMarketplace from "./STMarketplace.json";
+import SimthunderOwner from "./SimthunderOwner.json"
 import Descartes from "./Descartes.json";
 import Underconstruction from "./pages/Underconstruction";
 import RouterPage from "./pages/RouterPage";
 import Web3 from "web3";
 
 var web3 = new Web3(Web3.givenProvider);
+
+console.log = function() {}
+window.console = console;
 
 const drizzleOptions = {
   contracts: [
@@ -16,6 +20,10 @@ const drizzleOptions = {
       web3Contract: new web3.eth.Contract(STMarketplace.abi, STMarketplace.address, { data: STMarketplace.deployedBytecode })
     },
     {
+      contractName: "SimthunderOwner",
+      web3Contract: new web3.eth.Contract(SimthunderOwner.abi, SimthunderOwner.address, {data: SimthunderOwner.deployedBytecode })
+    },
+    { 
       contractName: "Descartes",
       web3Contract: new web3.eth.Contract(Descartes.abi, Descartes.address, { data: Descartes.deployedBytecode })
     }

@@ -17,6 +17,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     log: true,
     args: [Descartes.address],
   });
+  await deploy("SimthunderOwner", {
+    from: deployer,
+    log: true,
+  });
 };
 
 export default func;
