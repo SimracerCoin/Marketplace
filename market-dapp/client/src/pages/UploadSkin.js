@@ -53,7 +53,7 @@ class UploadSkin extends Component {
     }
 
     handleFilePrice = (event) => {
-        const re = /^[0-9\b]+$/;
+        const re = /([0-9]*[.])?[0-9]+/;
         if (event.target.value === '' || re.test(event.target.value)) {
             this.setState({ priceValue: event.target.value });
             console.log("File price: " + event.target.value);
@@ -244,7 +244,7 @@ class UploadSkin extends Component {
                                     <Form.Label>Insert Car</Form.Label>
                                     <Form.Control type="text" placeholder="Generate IPFS Hash" value={this.state.ipfsPath} onChange={this.handleChangeHash} readOnly />
                                     <br></br>
-                                    <Form.Control type="text" pattern="[0-9]*" placeholder="Enter File Price" value={this.state.priceValue} onChange={this.handleFilePrice} />
+                                    <Form.Control type="text" pattern="([0-9]*[.])?[0-9]+" placeholder="Enter File Price" value={this.state.priceValue} onChange={this.handleFilePrice} />
                                     <br></br>
                                     <DropdownButton id="dropdown-cars-button" title={this.state.currentCar} onSelect={this.onSelectCar}>
                                         {cars}

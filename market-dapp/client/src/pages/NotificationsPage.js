@@ -14,7 +14,7 @@ const BufferList = require('bl/BufferList');
 // TODO: use addresses from config file of the Cartesi nodes that will participating
 const claimer = '0xF393a9865cb4f1b68813359D5D282878d5d0BdE1';
 const challenger = '0x3Ac21b20E16eF666Db34Ba208d7f67Aa8c5f6B0D';
-const passphrase = process.env.PASSPHRASE;
+const passphrase = process.env.REACT_APP_PASSPHRASE;
 
 class NotificationsPage extends Component {
     constructor(props) {
@@ -49,7 +49,7 @@ class NotificationsPage extends Component {
         }
 
         // reverse sort by id
-        notifications.sort((a, b) => a.id < b.id);
+        notifications.sort((a, b) => parseInt(a.id) < parseInt(b.id));
 
         //const purchases = await contract.methods.getPurchases(purchasesIds).call();
 
@@ -117,6 +117,9 @@ class NotificationsPage extends Component {
             } else {
                 alert("A refund will be issued.");
             }
+
+            console.log("Buyer: ", buyer);
+            console.log("currentaccount: ", this.state.currentAccount);
 
             // if buyer, finalize purchase
             if(buyer == this.state.currentAccount)
