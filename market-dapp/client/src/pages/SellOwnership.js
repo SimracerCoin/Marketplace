@@ -54,7 +54,7 @@ class SellOwnership extends Component {
     }
 
     handleFilePrice = (event) => {
-        const re = /^[0-9\b]+$/;
+        const re = /([0-9]*[.])?[0-9]+/;
         if (event.target.value === '' || re.test(event.target.value)) {
             this.setState({ priceValue: event.target.value });
             console.log("File price: " + event.target.value);
@@ -96,7 +96,7 @@ class SellOwnership extends Component {
         reader.readAsArrayBuffer(file)
         reader.onloadend = () => this.convertToBuffer(reader)
     };
-    
+
     //Guarda a imagem no ipfs 
     saveImage_toIPFS = async () => {
         var fileName = document.getElementById('skin-image').value.toLowerCase();
@@ -105,7 +105,7 @@ class SellOwnership extends Component {
 
         const valid_fileName = fileName.endsWith('.jpg') || fileName.endsWith('.png') || fileName.endsWith('.jpeg')
         console.log("Valid filename: " + valid_fileName)
-        if(!valid_fileName) {
+        if (!valid_fileName) {
             alert('You can upload .jpg, .png or .jpeg files only. Invalid file!');
             return false;
         }
@@ -116,7 +116,7 @@ class SellOwnership extends Component {
             //setState by setting ipfsPath to ipfsPath[0].hash 
             this.setState({ image_ipfsPath: ipfsPath[0].hash });
         })
-        
+
         this.setState({ image_ipfsPath: response.path });
         return true;
 
@@ -124,14 +124,14 @@ class SellOwnership extends Component {
 
     //Save JSON in ipfs 
     saveJSON_toIPFS = async (image) => {
-        var jsonData = { 'description': 'Simthunder Car Ownership', 'name': 'Car', 'image': 'https://ipfs.io/ipfs/'+image};
+        var jsonData = { 'description': 'Simthunder Car Ownership', 'name': 'Car', 'image': 'https://ipfs.io/ipfs/' + image };
         //TODO: Change to standard attributes, remove price
         jsonData['series'] = this.state.currentSeries;
         jsonData['seriesOwner'] = this.state.currentAccount;
         jsonData['carNumber'] = this.state.currentCarNumber;
         jsonData['simulator'] = this.state.currentSimulator;
         jsonData['price'] = this.state.currentFilePrice / priceConversion;
-    
+
         var jsonStr = JSON.stringify(jsonData);
 
         const response = await ipfs.add(Buffer.from(jsonStr), (err, ipfsPath) => {
@@ -140,8 +140,8 @@ class SellOwnership extends Component {
             //setState by setting ipfsPath to ipfsPath[0].hash 
             this.setState({ jsonData_ipfsPath: ipfsPath[0].hash });
         })
-        
-        console.log('json ipfs: '+response.path);
+
+        console.log('json ipfs: ' + response.path);
         this.setState({ jsonData_ipfsPath: response.path });
         return true;
 
@@ -156,8 +156,8 @@ class SellOwnership extends Component {
         const reader = new window.FileReader()
         reader.readAsArrayBuffer(file)
         reader.onloadend = () => {
-          this.setState({ imageBuffer: Buffer(reader.result) })
-          console.log('buffer', this.state.imageBuffer)
+            this.setState({ imageBuffer: Buffer(reader.result) })
+            console.log('buffer', this.state.imageBuffer)
         }
     }
 
@@ -167,7 +167,7 @@ class SellOwnership extends Component {
         event.preventDefault();
 
         var fileName = document.getElementById('skin-file').value.toLowerCase();
-        if(!fileName.endsWith('.tga')) {
+        if (!fileName.endsWith('.tga')) {
             alert('You can upload .tga files only.');
             return false;
         }
@@ -212,7 +212,7 @@ class SellOwnership extends Component {
             const price = this.state.drizzle.web3.utils.toBN(this.state.currentFilePrice);
 
             //'https://gateway.pinata.cloud/ipfs/Qmboj3b42aW2nHGuQizdi2Zp35g6TBKmec6g77X9UiWQXg'
-            let tx = await this.state.contractNFTs.methods.awardItem(this.state.contractNFTs.address,this.state.currentAccount,price,'https://ipfs.io/ipfs/'+this.state.jsonData_ipfsPath).send({ from: this.state.currentAccount });
+            let tx = await this.state.contractNFTs.methods.awardItem(this.state.contractNFTs.address, this.state.currentAccount, price, 'https://ipfs.io/ipfs/' + this.state.jsonData_ipfsPath).send({ from: this.state.currentAccount });
             console.log(tx);
 
             alert("The new car ownership NFT is available for sale!");
@@ -222,7 +222,7 @@ class SellOwnership extends Component {
     }
 
     render() {
-        const simsElements = ["iRacing", "F12020", "rFactor", "Asseto Corsa"];
+        const simsElements = ["iRacing", "F12020", "rFactor", "Assetto Corsa"];
 
         const sims = [];
 
@@ -234,38 +234,43 @@ class SellOwnership extends Component {
         return (
             <header className="header">
                 <section className="content-section text-light br-n bs-c bp-c pb-8" style={{ backgroundImage: 'url(\'/assets/img/bg/bg_shape.png\')' }}>
-                    <div className="container">
-                        <div>
-                            <h2> Mint new Car Ownership NFT for sale </h2>
-                        </div>
-                        <div>
-                            <Form>
-                                <Form.Group controlId="formInsertCar">
-                                    <Form.Control type="text" placeholder="Enter Series Name" onChange={this.handleSeries} />
-                                    <br></br>
-                                    <Form.Control type="text" pattern="[0-9]*" placeholder="Enter Car Number" value={this.state.currentCarNumber} onChange={this.handleCarNumber} />
-                                    <br></br>
-                                    <Form.Control type="text" pattern="[0-9]*" placeholder="Enter File Price" value={this.state.priceValue} onChange={this.handleFilePrice} />
-                                    <br></br>
-                                    <DropdownButton id="dropdown-skin-button" title={this.state.currentSimulator} onSelect={this.onSelectSim}>
-                                        {sims}
-                                    </DropdownButton>
-                                </Form.Group>
-                            </Form>
-                        </div>
-                         <div>
-                            <div> Add Image for new Car Ownership </div>
-                            <Form onSubmit={this.saveImage_toIPFS}>
-                                <input id="skin-image"
-                                    type="file"
-                                    onChange={this.uploadImageIPFS}
-                                />
-                                <br></br>
-                               
-                            </Form>
-                        </div><br></br>
-                        <div>
-                            <Button onClick={this.saveSkin}>Mint Car Ownership NFT</Button>
+                    <div class="container position-relative">
+                        <div class="row">
+                            <div class="col-lg-8 mx-auto">
+                                <div>
+                                    <h2 class="ls-1 text-center"> Mint new Car Ownership NFT for sale </h2>
+                                    <hr class="w-10 border-warning border-top-2 o-90" />
+                                    <div>
+                                        <Form>
+                                            <Form.Group controlId="formInsertCar">
+                                                <Form.Control type="text" placeholder="Enter Series name" onChange={this.handleSeries} />
+                                                <br></br>
+                                                <Form.Control type="text" pattern="[0-9]*" placeholder="Enter Car number" value={this.state.currentCarNumber} onChange={this.handleCarNumber} />
+                                                <br></br>
+                                                <Form.Control type="text" pattern="([0-9]*[.])?[0-9]+" placeholder="Enter File price (ETH)" value={this.state.priceValue} onChange={this.handleFilePrice} />
+                                                <br></br>
+                                                <DropdownButton id="dropdown-skin-button" title={this.state.currentSimulator} onSelect={this.onSelectSim}>
+                                                    {sims}
+                                                </DropdownButton>
+                                            </Form.Group>
+                                        </Form>
+                                    </div>
+                                    <div>
+                                        <div> Add Image for new Car Ownership </div>
+                                        <Form onSubmit={this.saveImage_toIPFS}>
+                                            <input id="skin-image"
+                                                type="file"
+                                                onChange={this.uploadImageIPFS}
+                                            />
+                                            <br></br>
+
+                                        </Form>
+                                    </div><br></br>
+                                    <div>
+                                        <Button onClick={this.saveSkin}>Mint Car Ownership NFT</Button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </section>
