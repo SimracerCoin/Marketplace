@@ -28,51 +28,43 @@ class RouterPage extends Component {
 
     }
 
-    componentDidMount = async () => {
-        const contract = this.state.drizzle.contract;
-        console.log(this.state.drizzle);
-    }
-
-
     render() {
         return (
-            <div>
-                <Router>
-                    <NavbarPage drizzle={this.state.drizzle} drizzleState={this.state.drizzleState}/>
-                    <Switch>
-                        <Route exact path="/uploadcar">
-                            <UploadCar drizzle={this.state.drizzle} drizzleState={this.state.drizzleState} />
-                        </Route>
-                        <Route exact path="/uploadskin">
-                            <UploadSkin drizzle={this.state.drizzle} drizzleState={this.state.drizzleState} />
-                        </Route>
-                        <Route exact path="/sellownership">
-                            <SellOwnership drizzle={this.state.drizzle} drizzleState={this.state.drizzleState} />
-                        </Route>
-                        <Route exact path="/registorvendor">
-                            <RegisterVendor drizzle={this.state.drizzle} drizzleState={this.state.drizzleState}/>
-                        </Route>
-                        <Route path="/item">
-                            <ItemPage drizzle={this.state.drizzle} drizzleState={this.state.drizzleState} />
-                        </Route>
-                        <Route path="/notifications">
-                            <NotificationsPage drizzle={this.state.drizzle} drizzleState={this.state.drizzleState} />
-                        </Route>
-                        <Route path="/seller">
-                            <SellerPage drizzle={this.state.drizzle} drizzleState={this.state.drizzleState} />
-                        </Route>
-                        <Route path="/about">
-                            <AboutPage />
-                        </Route>
-                        <Route path="/faqs">
-                            <FaqsPage />
-                        </Route>
-                        <Route exact
-                            path="/"
-                            component={() => <MainPage drizzle={this.state.drizzle} drizzleState={this.state.drizzleState} />} />
-                    </Switch>
-                </Router>
-            </div>
+            <Router>
+                <NavbarPage drizzle={this.state.drizzle} drizzleState={this.state.drizzleState}/>
+                <Switch>
+                    <Route exact path="/uploadcar">
+                        <UploadCar drizzle={this.state.drizzle} drizzleState={this.state.drizzleState} />
+                    </Route>
+                    <Route exact path="/uploadskin">
+                        <UploadSkin drizzle={this.state.drizzle} drizzleState={this.state.drizzleState} />
+                    </Route>
+                    <Route exact path="/sellownership">
+                        <SellOwnership drizzle={this.state.drizzle} drizzleState={this.state.drizzleState} />
+                    </Route>
+                    <Route exact path="/registorvendor">
+                        <RegisterVendor drizzle={this.state.drizzle} drizzleState={this.state.drizzleState} />
+                    </Route>
+                    <Route path="/item">
+                        <ItemPage drizzle={this.state.drizzle} drizzleState={this.state.drizzleState} />
+                    </Route>
+                    <Route exact path="/notifications">
+                        <NotificationsPage drizzle={this.state.drizzle} drizzleState={this.state.drizzleState} />
+                    </Route>
+                    <Route path="/seller">
+                        <SellerPage drizzle={this.state.drizzle} drizzleState={this.state.drizzleState} />
+                    </Route>
+                    <Route exact path="/about">
+                        <AboutPage />
+                    </Route>
+                    <Route exact path="/faqs">
+                        <FaqsPage />
+                    </Route>
+                    <Route exact path="/">
+                        <MainPage drizzle={this.state.drizzle} drizzleState={this.state.drizzleState} />
+                    </Route>
+                </Switch>
+            </Router>
         );
     }
 }

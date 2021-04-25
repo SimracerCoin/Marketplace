@@ -52,6 +52,10 @@ class ItemPage extends Component {
         } else {
             this.setState({ currentAccount: currentAccount, contract: contract, contractNFTs: contractNFTs});
         }
+
+        // scroll to top
+        document.body.scrollTop = 0;            // For Safari
+        document.documentElement.scrollTop = 0; // For Chrome, Firefox, IE and Opera
     }
 
     average_rating = async (comments) => {
@@ -267,9 +271,9 @@ class ItemPage extends Component {
                 <section className="content-section text-light br-n bs-c bp-c pb-8">
                     <div className="container">
                         <h1>Buy {item}</h1>
-                        <br></br>
+                        <br /><br />
                         {toRender}
-                        <br></br>
+                        <br /><br />
                         <Button onClick={this.buyItem}>Buy Item</Button>
                     </div>
                 </section>

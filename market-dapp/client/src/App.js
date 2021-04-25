@@ -8,6 +8,8 @@ import Underconstruction from "./pages/Underconstruction";
 import RouterPage from "./pages/RouterPage";
 import Web3 from "web3";
 
+import "./css/App.css";
+
 var web3 = new Web3(Web3.givenProvider);
 
 console.log = function() {}
@@ -41,7 +43,7 @@ class App extends React.Component {
     }
   }
 
-  componentDidMount = async (event) => {
+  componentDidMount = async () => {
     var allow_wallets = [];
 
     await fetch('/allow.json', {
@@ -60,7 +62,8 @@ class App extends React.Component {
   }
 
   render() {
-    var state = this.state;
+    const { state } = this;
+
     return (
       <DrizzleContext.Provider drizzle={drizzle}>
         <DrizzleContext.Consumer>
@@ -68,7 +71,7 @@ class App extends React.Component {
             const { drizzle, drizzleState, initialized } = drizzleContext;
 
             if (!initialized) {
-              return "Loading..."
+              return (<div className="spinner"></div>)
             }
 
             if (state.allow_wallets.includes(drizzleState.accounts[0])) {

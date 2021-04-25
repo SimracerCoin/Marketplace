@@ -240,12 +240,12 @@ class UploadSkin extends Component {
                                         <Form>
                                             <div class="form-row">
                                                 <div class="form-group col-6">
-                                                    <Form.Control type="text" pattern="([0-9]*[.])?[0-9]+" placeholder="Enter File Price (ETH)" value={this.state.priceValue} onChange={this.handleFilePrice} />
+                                                    <Form.Control type="text" pattern="([0-9]*[.])?[0-9]+" placeholder="Enter File price (ETH)" value={this.state.priceValue} onChange={this.handleFilePrice} />
                                                 </div>
                                             </div>
                                             <div class="form-row">
                                                 <div class="form-group col-6">
-                                                    <Form.Control type="text" placeholder="Car brand" onChange={this.onSelectCar} />
+                                                    <Form.Control type="text" placeholder="Enter Car brand" onChange={this.onSelectCar} />
                                                 </div>
                                             </div>
                                             <div class="form-row">
