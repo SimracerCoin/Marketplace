@@ -2,7 +2,8 @@ import React, { Component } from 'react';
 import { Dropdown, Form, DropdownButton, Button, FormLabel } from 'react-bootstrap';
 import { Prompt } from 'react-st-modal';
 import ipfs from "../ipfs";
-import computeMerkleRootHash from "../merkle"
+import computeMerkleRootHash from "../utils/merkle"
+import UIHelper from "../utils/uihelper"
 
 const openpgp = require('openpgp');
 
@@ -172,12 +173,14 @@ class UploadCar extends Component {
             console.log(placeholder);
 
             const response = await this.state.contract.methods.newCarSetup(ipfsPathBytes, this.state.currentCar, this.state.currentTrack,
-                this.state.currentSimulator, this.state.currentSeason, this.state.currentSeries, this.state.currentDescription, price, placeholder, this.state.encryptedDataHash, nickname).send({ from: this.state.currentAccount });
-            console.log(response);
-
-            alert("The new car setup is available for sale!");
-
-            window.location.href = "/";
+                this.state.currentSimulator, this.state.currentSeason, this.state.currentSeries, this.state.currentDescription, price, placeholder, this.state.encryptedDataHash, nickname)
+                .send({ from: this.state.currentAccount })
+                .on('sent', UIHelper.transactionOnSent)
+                .on('confirmation', function (confNumber, receipt, latestBlockHash) {
+                    UIHelper.transactionOnConfirmation("The new car setup is available for sale!");
+                })
+                .on('error', UIHelper.transactionOnError)
+                .catch(function (e) { });
         }
     }
 
@@ -186,7 +189,7 @@ class UploadCar extends Component {
         const sims = [];
 
         for (const [index, value] of simsElements.entries()) {
-            let thumb = "/assets/img/sims/"+value+".png";
+            let thumb = "/assets/img/sims/" + value + ".png";
             sims.push(<Dropdown.Item eventKey={value} key={index}><img src={thumb} width="16" /> {value}</Dropdown.Item>)
         }
 

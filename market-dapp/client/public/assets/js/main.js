@@ -56,6 +56,12 @@ if ( ( options == undefined ) || ( options == false ) ) {
       slider = { interval : 8500 };
 }
 
+//-------------------- Disable console --------------------
+if (location.hostname !== "localhost") {
+  console.log = function() {}
+  window.console = console;
+}
+
 //----------------------- Init Map ------------------------
 function initMap() {
     var map_item = document.querySelectorAll('[data-map]');

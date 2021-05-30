@@ -2,7 +2,8 @@ import React, { Component } from 'react';
 import { Dropdown, Form, DropdownButton, Button, FormLabel } from 'react-bootstrap';
 import { Prompt } from 'react-st-modal';
 import ipfs from "../ipfs";
-import computeMerkleRootHash from "../merkle"
+import computeMerkleRootHash from "../utils/merkle"
+import UIHelper from "../utils/uihelper"
 
 const openpgp = require('openpgp');
 
@@ -193,12 +194,14 @@ class UploadSkin extends Component {
 
             if (response_saveImage == true) {
                 const response = await this.state.contract.methods.newSkin(ipfsPathBytes, this.state.currentCar,
-                    this.state.currentSimulator, price, placeholder, this.state.encryptedDataHash, nickname, this.state.image_ipfsPath).send({ from: this.state.currentAccount });
-                console.log(response);
-
-                alert("The new skin is available for sale!");
-
-                window.location.href = "/";
+                    this.state.currentSimulator, price, placeholder, this.state.encryptedDataHash, nickname, this.state.image_ipfsPath)
+                    .send({ from: this.state.currentAccount })
+                    .on('sent', UIHelper.transactionOnSent)
+                    .on('confirmation', function (confNumber, receipt, latestBlockHash) {
+                        UIHelper.transactionOnConfirmation("The new skin is available for sale!");
+                    })
+                    .on('error', UIHelper.transactionOnError)
+                    .catch(function (e) { });
             }
         }
     }
@@ -208,7 +211,7 @@ class UploadSkin extends Component {
         const sims = [];
 
         for (const [index, value] of simsElements.entries()) {
-            let thumb = "/assets/img/sims/"+value+".png";
+            let thumb = "/assets/img/sims/" + value + ".png";
             sims.push(<Dropdown.Item eventKey={value} key={index}><img src={thumb} width="24" /> {value}</Dropdown.Item>)
         }
 

@@ -7,6 +7,7 @@ import ipfs from "../ipfs";
 import 'react-confirm-alert/src/react-confirm-alert.css';
 import { generateStore, EventActions } from '@drizzle/store'
 import { ethers } from "ethers";
+import UIHelper from "../utils/uihelper"
 
 const openpgp = require('openpgp');
 const BufferList = require('bl/BufferList');
@@ -89,9 +90,14 @@ class NotificationsPage extends Component {
         });
         const encryptedDataKey = this.state.drizzle.web3.utils.asciiToHex(encrypted.data); // ReadableStream containing '-----BEGIN PGP MESSAGE ... END PGP MESSAGE-----'
 
-        await this.state.contract.methods.acceptPurchase(purchaseId, encryptedDataKey).send({ from: this.state.currentAccount });
-
-        alert("Buyer will be notified");
+        await this.state.contract.methods.acceptPurchase(purchaseId, encryptedDataKey)
+            .send({ from: this.state.currentAccount })
+            .on('sent', UIHelper.transactionOnSent)
+            .on('confirmation', function (confNumber, receipt, latestBlockHash) {
+                UIHelper.transactionOnConfirmation("Buyer will be notified", false);
+            })
+            .on('error', UIHelper.transactionOnError)
+            .catch(function (e) { });
     }
 
     resolvePurchase = async (event, purchaseId, descartesId, buyer) => {
@@ -122,7 +128,7 @@ class NotificationsPage extends Component {
             console.log("currentaccount: ", this.state.currentAccount);
 
             // if buyer, finalize purchase
-            if(buyer == this.state.currentAccount)
+            if (buyer == this.state.currentAccount)
                 await this.state.contract.methods.finalizePurchase(purchaseId, "1" == res).send({ from: this.state.currentAccount });
         }
     }
@@ -133,9 +139,14 @@ class NotificationsPage extends Component {
     //
     acceptItem = async (purchaseId) => {
 
-        await this.state.contract.methods.finalizePurchase(purchaseId, true).send({ from: this.state.currentAccount });
-
-        alert('Thank you for your purchase!');
+        await this.state.contract.methods.finalizePurchase(purchaseId, true)
+            .send({ from: this.state.currentAccount })
+            .on('sent', UIHelper.transactionOnSent)
+            .on('confirmation', function (confNumber, receipt, latestBlockHash) {
+                UIHelper.transactionOnConfirmation("Thank you for your purchase!");
+            })
+            .on('error', UIHelper.transactionOnError)
+            .catch(function (e) { });
     }
 
     rejectItem = async (purchaseId, password, ipfsPath, ipfsSize, loggerRootHash) => {
@@ -197,12 +208,14 @@ class NotificationsPage extends Component {
         }
 
         console.log(claimer, challenger, purchaseId, [aDrive, pDrive]);
-        let verificationTx = await this.state.contract.methods.instantiateCartesiVerification(claimer, challenger, purchaseId, [aDrive, pDrive]).send({ from: this.state.currentAccount });
-        console.log(verificationTx.data);
-
-        ////await this.state.contract.methods.challengePurchase(purchaseId, privateKey).send({ from: this.state.currentAccount });
-
-        alert('The challenge will be completed in minutes. Please, check the status shortly.');
+        let verificationTx = await this.state.contract.methods.instantiateCartesiVerification(claimer, challenger, purchaseId, [aDrive, pDrive])
+            .send({ from: this.state.currentAccount })
+            .on('sent', UIHelper.transactionOnSent)
+            .on('confirmation', function (confNumber, receipt, latestBlockHash) {
+                UIHelper.transactionOnConfirmation("The challenge will be completed in minutes. Please, check the status shortly.", false);
+            })
+            .on('error', UIHelper.transactionOnError)
+            .catch(function (e) { });
     }
 
     endPurchase = async (event, purchaseId, adId, ipfsPath, buyerKey, encryptedDataKey, loggerRootHash) => {
@@ -214,7 +227,7 @@ class NotificationsPage extends Component {
         let password;
 
         try {
-            
+
             for await (const file of ipfs.get(ipfsP)) {
                 for await (const chunk of file.content) {
                     content.append(chunk);
@@ -263,7 +276,7 @@ class NotificationsPage extends Component {
                 ]
             });
         } catch {
-            
+
             confirmAlert({
                 title: 'Error',
                 message: 'Something went wrong while we were trying to obtain the file',
@@ -306,7 +319,7 @@ class NotificationsPage extends Component {
                             <Link onClick={(e) => this.endPurchase(e, value.purchaseId, purchase.adId, ad.ipfsPath, purchase.buyerKey, purchase.encryptedDataKey, ad.encryptedDataHash)}><i class="fas fa-reply"></i></Link> :
                             value.nType == 3 || value.nType == 4 ? '' :
                                 value.nType == 0 ?
-                                <Link onClick={(e) => this.acceptPurchase(e, value.purchaseId, purchase.buyerKey)}><i class="fas fa-reply"></i></Link> : <Link onClick={(e) => this.resolvePurchase(e, value.purchaseId, purchase.descartesIndex, purchase.buyer)}><i class="fas fa-info"></i></Link>}
+                                    <Link onClick={(e) => this.acceptPurchase(e, value.purchaseId, purchase.buyerKey)}><i class="fas fa-reply"></i></Link> : <Link onClick={(e) => this.resolvePurchase(e, value.purchaseId, purchase.descartesIndex, purchase.buyer)}><i class="fas fa-info"></i></Link>}
                     </td>
                 </tr>)
             }

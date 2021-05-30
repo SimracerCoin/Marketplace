@@ -8,31 +8,10 @@ import Underconstruction from "./pages/Underconstruction";
 import RouterPage from "./pages/RouterPage";
 import Web3 from "web3";
 
+
 import "./css/App.css";
 
-var web3 = new Web3(Web3.givenProvider);
-
-console.log = function() {}
-window.console = console;
-
-const drizzleOptions = {
-  contracts: [
-    {
-      contractName: "STMarketplace",
-      web3Contract: new web3.eth.Contract(STMarketplace.abi, STMarketplace.address, { data: STMarketplace.deployedBytecode })
-    },
-    {
-      contractName: "SimthunderOwner",
-      web3Contract: new web3.eth.Contract(SimthunderOwner.abi, SimthunderOwner.address, {data: SimthunderOwner.deployedBytecode })
-    },
-    { 
-      contractName: "Descartes",
-      web3Contract: new web3.eth.Contract(Descartes.abi, Descartes.address, { data: Descartes.deployedBytecode })
-    }
-  ]
-};
-
-const drizzle = new Drizzle(drizzleOptions);
+//var web3 = new Web3(Web3.givenProvider);
 
 class App extends React.Component {
   constructor(props) {
@@ -41,6 +20,8 @@ class App extends React.Component {
     this.state = {
       allow_wallets: []
     }
+
+    this.login = this.login.bind(this);
   }
 
   componentDidMount = async () => {
@@ -53,42 +34,83 @@ class App extends React.Component {
       }
     }).then(function (response) {
       return response.json();
-    })
-      .then(function (myJson) {
-        allow_wallets = myJson;
-      });
+    }).then(function (myJson) {
+      allow_wallets = myJson;
+    });
 
-    this.setState({ allow_wallets: allow_wallets });
+    let isLoggedIn = false;
+    if(typeof web3 !== 'undefined') {
+      window.web3 = new Web3(Web3.givenProvider);
+
+      await window.web3.eth.getAccounts(function(err, accounts) {
+          if (err != null) console.error("An error occurred: "+err);
+          else if (accounts.length != 0) isLoggedIn = true;
+      });
+    }
+
+    this.setState({ allow_wallets: allow_wallets, isLoggedIn: isLoggedIn });
+  }
+
+  login() {
+    this.setState({
+      isLoggedIn: true
+    })
   }
 
   render() {
     const { state } = this;
 
+    if (state.isLoggedIn) {
+      let web3 = window.web3;
+
+      const drizzleOptions = {
+        contracts: [
+          {
+            contractName: "STMarketplace",
+            web3Contract: new web3.eth.Contract(STMarketplace.abi, STMarketplace.address, { data: STMarketplace.deployedBytecode })
+          },
+          {
+            contractName: "SimthunderOwner",
+            web3Contract: new web3.eth.Contract(SimthunderOwner.abi, SimthunderOwner.address, { data: SimthunderOwner.deployedBytecode })
+          },
+          {
+            contractName: "Descartes",
+            web3Contract: new web3.eth.Contract(Descartes.abi, Descartes.address, { data: Descartes.deployedBytecode })
+          }
+        ]
+      };
+
+      const drizzle = new Drizzle(drizzleOptions);
+
+      return (
+        <DrizzleContext.Provider drizzle={drizzle}>
+          <DrizzleContext.Consumer>
+            {drizzleContext => {
+              const { drizzle, drizzleState, initialized } = drizzleContext;
+
+              if (!initialized) {
+                return (<div id="wait-div" className="spinner-outer"><div className="spinner"></div></div>)
+              }
+
+              if (state.allow_wallets.includes(drizzleState.accounts[0])) {
+                return (
+                  <RouterPage drizzle={drizzle} drizzleState={drizzleState} />
+                )
+              } else {
+                return (
+                  <Underconstruction isLoggedIn={state.isLoggedIn} />
+                )
+              }
+            }}
+          </DrizzleContext.Consumer>
+        </DrizzleContext.Provider>
+      );
+    }
+
     return (
-      <DrizzleContext.Provider drizzle={drizzle}>
-        <DrizzleContext.Consumer>
-          {drizzleContext => {
-            const { drizzle, drizzleState, initialized } = drizzleContext;
-
-            if (!initialized) {
-              return (<div className="spinner"></div>)
-            }
-
-            if (state.allow_wallets.includes(drizzleState.accounts[0])) {
-              return (
-                <RouterPage drizzle={drizzle} drizzleState={drizzleState} />
-              )
-            } else {
-              return (
-                <Underconstruction />
-              )
-            }
-          }}
-        </DrizzleContext.Consumer>
-      </DrizzleContext.Provider>
-    );
+      <Underconstruction isLoggedIn={state.isLoggedIn} login={this.login} />
+    )
   }
-
 }
 
 export default App;

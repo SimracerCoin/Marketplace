@@ -2,7 +2,8 @@ import React, { Component } from 'react';
 import { Dropdown, Form, DropdownButton, Button } from 'react-bootstrap';
 import { Prompt } from 'react-st-modal';
 import ipfs from "../ipfs";
-import computeMerkleRootHash from "../merkle"
+import computeMerkleRootHash from "../utils/merkle"
+import UIHelper from "../utils/uihelper"
 
 const openpgp = require('openpgp');
 
@@ -212,12 +213,14 @@ class SellOwnership extends Component {
             const price = this.state.drizzle.web3.utils.toBN(this.state.currentFilePrice);
 
             //'https://gateway.pinata.cloud/ipfs/Qmboj3b42aW2nHGuQizdi2Zp35g6TBKmec6g77X9UiWQXg'
-            let tx = await this.state.contractNFTs.methods.awardItem(this.state.contractNFTs.address, this.state.currentAccount, price, 'https://ipfs.io/ipfs/' + this.state.jsonData_ipfsPath).send({ from: this.state.currentAccount });
-            console.log(tx);
-
-            alert("The new car ownership NFT is available for sale!");
-
-            window.location.href = "/";
+            let tx = await this.state.contractNFTs.methods.awardItem(this.state.contractNFTs.address, this.state.currentAccount, price, 'https://ipfs.io/ipfs/' + this.state.jsonData_ipfsPath)
+                .send({ from: this.state.currentAccount })
+                .on('sent', UIHelper.transactionOnSent)
+                .on('confirmation', function (confNumber, receipt, latestBlockHash) {
+                    UIHelper.transactionOnConfirmation("The new car ownership NFT is available for sale!");
+                })
+                .on('error', UIHelper.transactionOnError)
+                .catch(function (e) { });
         }
     }
 
