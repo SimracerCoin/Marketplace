@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import UIHelper from "../utils/uihelper"
 
 import "../css/mainpage.css";
 
@@ -9,6 +10,12 @@ class Underconstruction extends Component {
 
         this.state = {
             isLoggedIn: props.isLoggedIn
+        }
+    }
+
+    componentDidMount = async () => {
+        if(this.state.isLoggedIn) {
+            alert("Welcome to SimThunder! Please request your beta access first.");
         }
     }
 
