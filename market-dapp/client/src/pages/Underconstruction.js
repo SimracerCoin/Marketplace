@@ -9,12 +9,13 @@ class Underconstruction extends Component {
         super(props);
 
         this.state = {
-            isLoggedIn: props.isLoggedIn
+            isLoggedIn: props.isLoggedIn,
+            wrongNetwork: props.wrongNetwork
         }
     }
 
     componentDidMount = async () => {
-        if(this.state.isLoggedIn) {
+        if(this.state.isLoggedIn && !this.state.wrongNetwork) {
             alert("Welcome to SimThunder! Please request your beta access first.");
         }
     }
@@ -26,7 +27,11 @@ class Underconstruction extends Component {
     render() {
         const { state } = this;
 
-        let hiddenLogin = state.isLoggedIn ? 'd-none' : '';
+        console.log(state);
+
+        let hiddenLoginBtn = state.isLoggedIn ? 'd-none' : '';
+        let hiddenRequestBtn = state.isLoggedIn && state.wrongNetwork ? 'd-none' : '';
+        let hiddenWrongNetwork = !state.wrongNetwork ? 'd-none' : 'd-block';
 
         return ([
             <header id="header" className="header h-fullscreen__page text-light">
@@ -39,8 +44,9 @@ class Underconstruction extends Component {
                                 <div className="fadeIn ad-500ms">
                                     <img src="assets/img/logo-2.png" className="slideInLeft ad-400ms display-lg-2 fw-700 lh-2 mb-4" />
                                     <h2 className="lead-2 ls-3 d-block slideInRight ad-500ms fw-300 text-uppercase mb-7">Beta 1.0</h2>
-                                    <a className={`btn btn-lg btn-round btn-outline-light mr-2 ${hiddenLogin}`} onClick={this.props.login}>Login</a>
-                                    <a className="btn btn-lg btn-round btn-outline-light" onClick={this.requestBtnClick}>Request Beta Access</a>
+                                    <h3 className={`lead-2 ls-3 slideInRight ad-500ms fw-300 text-uppercase mb-7 ${hiddenWrongNetwork}`}><strong>Wrong network! SimThunder is now on Rinkeby Network.</strong></h3>
+                                    <a className={`btn btn-lg btn-round btn-outline-light mr-2 ${hiddenLoginBtn}`} onClick={this.props.login}>Login</a>
+                                    <a className={`btn btn-lg btn-round btn-outline-light ${hiddenRequestBtn}`} onClick={this.requestBtnClick}>Request Beta Access</a>
                                 </div>
                             </div>
                         </div>

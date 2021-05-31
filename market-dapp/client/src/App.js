@@ -13,12 +13,16 @@ import "./css/App.css";
 
 //var web3 = new Web3(Web3.givenProvider);
 
+var NETWORK_ID = 4;
+
 class App extends React.Component {
   constructor(props) {
     super(props);
 
     this.state = {
-      allow_wallets: []
+      allow_wallets: [],
+      isLoggedIn: null,
+      wrongNetwork: null
     }
 
     this.login = this.login.bind(this);
@@ -39,16 +43,21 @@ class App extends React.Component {
     });
 
     let isLoggedIn = false;
-    if(typeof web3 !== 'undefined') {
+    let networkId = 0;
+    if (typeof web3 !== 'undefined') {
       window.web3 = new Web3(Web3.givenProvider);
 
-      await window.web3.eth.getAccounts(function(err, accounts) {
-          if (err != null) console.error("An error occurred: "+err);
-          else if (accounts.length != 0) isLoggedIn = true;
+      //let networkname = await window.web3.eth.net.getNetworkType();
+      networkId = await window.web3.eth.net.getId();
+      //console.log('network: ' + networkname);
+      console.log('network: ' + networkId);
+      await window.web3.eth.getAccounts(function (err, accounts) {
+        if (err != null) console.error("An error occurred: " + err);
+        else if (accounts.length != 0) isLoggedIn = true;
       });
     }
 
-    this.setState({ allow_wallets: allow_wallets, isLoggedIn: isLoggedIn });
+    this.setState({ allow_wallets: allow_wallets, isLoggedIn: isLoggedIn, wrongNetwork: (networkId != NETWORK_ID) });
   }
 
   login() {
@@ -59,6 +68,9 @@ class App extends React.Component {
 
   render() {
     const { state } = this;
+
+    if(state.allow_wallets.length == 0)
+      return (<div id="wait-div" className="spinner-outer"><div className="spinner"></div></div>)
 
     if (state.isLoggedIn) {
       let web3 = window.web3;
@@ -92,13 +104,13 @@ class App extends React.Component {
                 return (<div id="wait-div" className="spinner-outer"><div className="spinner"></div></div>)
               }
 
-              if (state.allow_wallets.includes(drizzleState.accounts[0])) {
+              if (state.allow_wallets.includes(drizzleState.accounts[0]) && !state.wrongNetwork) {
                 return (
                   <RouterPage drizzle={drizzle} drizzleState={drizzleState} />
                 )
               } else {
                 return (
-                  <Underconstruction isLoggedIn={state.isLoggedIn} />
+                  <Underconstruction isLoggedIn={state.isLoggedIn} wrongNetwork={state.wrongNetwork} />
                 )
               }
             }}
@@ -108,7 +120,7 @@ class App extends React.Component {
     }
 
     return (
-      <Underconstruction isLoggedIn={state.isLoggedIn} login={this.login} />
+      <Underconstruction isLoggedIn={state.isLoggedIn} wrongNetwork={state.wrongNetwork} login={this.login} />
     )
   }
 }
