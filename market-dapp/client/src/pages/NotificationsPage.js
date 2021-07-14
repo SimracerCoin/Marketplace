@@ -50,7 +50,7 @@ class NotificationsPage extends Component {
         }
 
         // reverse sort by id
-        notifications.sort((a, b) => parseInt(a.id) < parseInt(b.id));
+        notifications.sort((a, b) => b.date - a.date);
 
         //const purchases = await contract.methods.getPurchases(purchasesIds).call();
 
@@ -92,7 +92,7 @@ class NotificationsPage extends Component {
 
         await this.state.contract.methods.acceptPurchase(purchaseId, encryptedDataKey)
             .send({ from: this.state.currentAccount })
-            .on('sent', UIHelper.transactionOnSent)
+            .on('sent', UIHelper.showSpinning)
             .on('confirmation', function (confNumber, receipt, latestBlockHash) {
                 UIHelper.transactionOnConfirmation("Buyer will be notified", false);
             })
@@ -106,7 +106,9 @@ class NotificationsPage extends Component {
         let st = this.state.contract;
         let stateBack = this.state;
 
-        let res = await st.methods.getResult(descartesId).call();
+        let res = await st.methods.getResult(descartesId, purchaseId).call();
+
+        console.log(res);
 
         if (res["1"]) {
             alert("Still validating. Please wait.");
@@ -119,17 +121,17 @@ class NotificationsPage extends Component {
             res = stateBack.drizzle.web3.utils.hexToAscii(res["3"]).slice(0, 1);
 
             if ("1" == res) {
-                alert("The purchase was successfully validated. No refund will be issued.");
+                alert("The purchase was successfully validated. No refund was issued.");
             } else {
-                alert("A refund will be issued.");
+                alert("A refund was issued.");
             }
 
-            console.log("Buyer: ", buyer);
-            console.log("currentaccount: ", this.state.currentAccount);
+            //console.log("Buyer: ", buyer);
+            //console.log("currentaccount: ", this.state.currentAccount);
 
             // if buyer, finalize purchase
-            if (buyer == this.state.currentAccount)
-                await this.state.contract.methods.finalizePurchase(purchaseId, "1" == res).send({ from: this.state.currentAccount });
+            //if (buyer == this.state.currentAccount)
+            //    await this.state.contract.methods.finalizePurchase(purchaseId, "1" == res).send({ from: this.state.currentAccount });
         }
     }
     // =========================
@@ -141,7 +143,7 @@ class NotificationsPage extends Component {
 
         await this.state.contract.methods.finalizePurchase(purchaseId, true)
             .send({ from: this.state.currentAccount })
-            .on('sent', UIHelper.transactionOnSent)
+            .on('sent', UIHelper.showSpinning)
             .on('confirmation', function (confNumber, receipt, latestBlockHash) {
                 UIHelper.transactionOnConfirmation("Thank you for your purchase!");
             })
@@ -210,7 +212,7 @@ class NotificationsPage extends Component {
         console.log(claimer, challenger, purchaseId, [aDrive, pDrive]);
         let verificationTx = await this.state.contract.methods.instantiateCartesiVerification(claimer, challenger, purchaseId, [aDrive, pDrive])
             .send({ from: this.state.currentAccount })
-            .on('sent', UIHelper.transactionOnSent)
+            .on('sent', UIHelper.showSpinning)
             .on('confirmation', function (confNumber, receipt, latestBlockHash) {
                 UIHelper.transactionOnConfirmation("The challenge will be completed in minutes. Please, check the status shortly.", false);
             })
@@ -316,24 +318,24 @@ class NotificationsPage extends Component {
                     <td>{value.message}</td>
                     <td>
                         {value.nType == 1 ?
-                            <Link onClick={(e) => this.endPurchase(e, value.purchaseId, purchase.adId, ad.ipfsPath, purchase.buyerKey, purchase.encryptedDataKey, ad.encryptedDataHash)}><i class="fas fa-reply"></i></Link> :
+                            <Link onClick={(e) => this.endPurchase(e, value.purchaseId, purchase.adId, ad.ipfsPath, purchase.buyerKey, purchase.encryptedDataKey, ad.encryptedDataHash)}><i className="fas fa-reply"></i></Link> :
                             value.nType == 3 || value.nType == 4 ? '' :
                                 value.nType == 0 ?
-                                    <Link onClick={(e) => this.acceptPurchase(e, value.purchaseId, purchase.buyerKey)}><i class="fas fa-reply"></i></Link> : <Link onClick={(e) => this.resolvePurchase(e, value.purchaseId, purchase.descartesIndex, purchase.buyer)}><i class="fas fa-info"></i></Link>}
+                                    <Link onClick={(e) => this.acceptPurchase(e, value.purchaseId, purchase.buyerKey)}><i className="fas fa-reply"></i></Link> : <Link onClick={(e) => this.resolvePurchase(e, value.purchaseId, purchase.descartesIndex, purchase.buyer)}><i className="fas fa-info"></i></Link>}
                     </td>
                 </tr>)
             }
         }
 
         return (<header className="header">
-            <div class="overlay overflow-hidden pe-n"><img src="/assets/img/bg/bg_shape.png" alt="Background shape" /></div>
+            <div className="overlay overflow-hidden pe-n"><img src="/assets/img/bg/bg_shape.png" alt="Background shape" /></div>
             <section className="content-section text-light br-n bs-c bp-c pb-8">
                 <div id="latest-container" className="container">
                     <div className="center-text">
                         <h1>Notifications</h1>
                     </div>
                     <div>
-                        <table class="table table-striped">
+                        <table className="table table-striped">
                             <thead>
                                 <tr>
                                     <th scope="col">#</th>

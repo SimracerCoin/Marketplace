@@ -191,7 +191,7 @@ contract STMarketplace is ContentMarketplace {
     }
 
     /// @notice Registers seller address
-    function getNickname(address _address) public returns(string memory) {
+    function getNickname(address _address) public view returns(string memory) {
         return userNickname[_address];
     }
     
@@ -310,7 +310,34 @@ contract STMarketplace is ContentMarketplace {
         return index;
     }
 
-    function getResult(uint256 index) public view returns (bool, bool, address, bytes memory) {
-        return descartes.getResult(index);
+    function getResult(
+        uint256 index,                  // cartesi machine result index
+        uint256 _purchaseId             // purchase request identifier
+    ) public returns (bool, bool, address, bytes memory) {
+        bool a;
+        bool b;
+        address c;
+        bytes memory d;
+
+        (a, b, c, d) = descartes.getResult(index);
+
+        if(a && !b) {
+            bool success = utilCompareInternal(d,bytes("1"));
+            finalizePurchase(_purchaseId, success);
+        }
+
+        return (a, b, c, d);
+    }
+
+    function utilCompareInternal(bytes memory a, bytes memory b) public returns (bool) {
+        if (a.length != b.length) {
+            return false;
+        }
+        for (uint i = 0; i < a.length; i++) {
+            if(a[i] != b[i]) {
+                return false;
+            }
+        }
+        return true;
     }
 }

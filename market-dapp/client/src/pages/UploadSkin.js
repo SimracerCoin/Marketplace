@@ -175,6 +175,8 @@ class UploadSkin extends Component {
                 if (!nickname) return;
             }
 
+            UIHelper.showSpinning();
+
             const price = this.state.drizzle.web3.utils.toBN(this.state.currentFilePrice);
 
             //document.getElementById('formInsertCar').reset()
@@ -196,7 +198,7 @@ class UploadSkin extends Component {
                 const response = await this.state.contract.methods.newSkin(ipfsPathBytes, this.state.currentCar,
                     this.state.currentSimulator, price, placeholder, this.state.encryptedDataHash, nickname, this.state.image_ipfsPath)
                     .send({ from: this.state.currentAccount })
-                    .on('sent', UIHelper.transactionOnSent)
+                    //.on('sent', UIHelper.transactionOnSent)
                     .on('confirmation', function (confNumber, receipt, latestBlockHash) {
                         UIHelper.transactionOnConfirmation("The new skin is available for sale!");
                     })

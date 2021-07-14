@@ -207,6 +207,8 @@ class SellOwnership extends Component {
             //     if (!nickname) return;
             // }
 
+            UIHelper.showSpinning();
+
             const response_saveImage = await this.saveImage_toIPFS();
             const response_saveJson = await this.saveJSON_toIPFS(this.state.image_ipfsPath);
 
@@ -215,7 +217,7 @@ class SellOwnership extends Component {
             //'https://gateway.pinata.cloud/ipfs/Qmboj3b42aW2nHGuQizdi2Zp35g6TBKmec6g77X9UiWQXg'
             let tx = await this.state.contractNFTs.methods.awardItem(this.state.contractNFTs.address, this.state.currentAccount, price, 'https://ipfs.io/ipfs/' + this.state.jsonData_ipfsPath)
                 .send({ from: this.state.currentAccount })
-                .on('sent', UIHelper.transactionOnSent)
+                //.on('sent', UIHelper.transactionOnSent)
                 .on('confirmation', function (confNumber, receipt, latestBlockHash) {
                     UIHelper.transactionOnConfirmation("The new car ownership NFT is available for sale!");
                 })

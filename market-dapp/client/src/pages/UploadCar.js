@@ -156,6 +156,8 @@ class UploadCar extends Component {
                 if (!nickname) return;
             }
 
+            UIHelper.showSpinning();
+
             const price = this.state.drizzle.web3.utils.toBN(this.state.currentFilePrice);
 
             console.log("Current account: " + this.state.currentAccount);
@@ -175,7 +177,7 @@ class UploadCar extends Component {
             const response = await this.state.contract.methods.newCarSetup(ipfsPathBytes, this.state.currentCar, this.state.currentTrack,
                 this.state.currentSimulator, this.state.currentSeason, this.state.currentSeries, this.state.currentDescription, price, placeholder, this.state.encryptedDataHash, nickname)
                 .send({ from: this.state.currentAccount })
-                .on('sent', UIHelper.transactionOnSent)
+                //.on('sent', UIHelper.transactionOnSent)
                 .on('confirmation', function (confNumber, receipt, latestBlockHash) {
                     UIHelper.transactionOnConfirmation("The new car setup is available for sale!");
                 })
