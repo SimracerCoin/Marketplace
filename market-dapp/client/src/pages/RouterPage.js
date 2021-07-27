@@ -15,6 +15,7 @@ import NotificationsPage from "./NotificationsPage"
 import SellerPage from "./SellerPage"
 import AboutPage from "./AboutPage"
 import FaqsPage from "./FaqsPage"
+import StorePage from "./StorePage"
 
 class RouterPage extends Component {
 
@@ -59,6 +60,9 @@ class RouterPage extends Component {
                     </Route>
                     <Route exact path="/faqs">
                         <FaqsPage />
+                    </Route>
+                    <Route exact path="/store">
+                        <StorePage drizzle={this.state.drizzle} drizzleState={this.state.drizzleState}/>
                     </Route>
                     <Route exact path="/">
                         <MainPage drizzle={this.state.drizzle} drizzleState={this.state.drizzleState} />
