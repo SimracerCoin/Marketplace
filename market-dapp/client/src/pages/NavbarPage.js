@@ -84,7 +84,7 @@ class NavbarPage extends React.Component {
                         <div className="col-8 col-sm-8 col-md-8 col-lg-6 col-xl-4 ml-auto text-right">
                             <Navbar.Text>{this.state.currentAccount}</Navbar.Text>
                             <ul className="nav navbar-nav d-none d-sm-inline-flex flex-row">
-                                <li className="nav-item dropdown">
+                                <li key="languagesettings" className="nav-item dropdown">
                                     <a className="nav-link dropdown-toggle small" href="store.html#" id="dropdownGaming" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i className="mr-2 fas fa-globe"></i>EN </a>
                                     <div className="dropdown-menu position-absolute" aria-labelledby="dropdownGaming">
                                         <a className="dropdown-item" href="main.html">English</a>
@@ -98,7 +98,7 @@ class NavbarPage extends React.Component {
                                 </span>
                                 </a>
                             </li>*/}
-                                <li className="nav-item">
+                                <li key="notifications" className="nav-item">
                                     <Link to="/notifications" className="nav-link small" data-toggle="offcanvas" data-target="#offcanvas-notification">
                                         <span className="p-relative d-inline-flex">
                                             {this.state.haveNotifications ? <span className="badge-cart badge badge-counter badge-warning position-absolute l-1">!</span> : <span></span>}
@@ -136,6 +136,7 @@ class NavbarPage extends React.Component {
                             </NavDropdown>
                             <NavLink className="nav-link mr-2" to="/about">About</NavLink>
                             <NavLink className="nav-link mr-2" to="/faqs">FAQs</NavLink>
+                            <NavLink className="nav-link mr-2" to="/store">Store</NavLink>
                         </Nav>
                     </Navbar.Collapse>
                 </div>
