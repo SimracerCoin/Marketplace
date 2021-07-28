@@ -51,8 +51,8 @@ contract ContentMarketplace {
 
     // storage of notifications
     uint256 numNotifications = 0;
-    mapping(uint256 => Notification) notifications;
-    mapping(address => uint256[]) notificationsPerUser;
+    mapping(uint256 => Notification) internal notifications;
+    mapping(address => uint256[]) internal notificationsPerUser;
 
     // purchase events
     event PurchaseRequested(uint256 adId, uint256 purchaseId, address buyer, bytes buyerKey);
@@ -229,7 +229,7 @@ contract ContentMarketplace {
         address _sender,               // who sends the message
         address _receiver,             // who receives the message
         NotificationType _type         // type of notification
-    ) public
+    ) internal
         returns (uint256 notificationId)           // returns notification identifier
     {
         Notification storage notification = notifications[numNotifications];

@@ -29,12 +29,12 @@ export default class UIHelper {
       });
   }
 
-  static transactionOnConfirmation = function (message, redirect = true) {
+  static transactionOnConfirmation = function (message, redirect = "/") {
     document.body.removeChild(document.getElementById('wait-div'));
     alert(message);
 
     if (redirect)
-      window.location.href = "/";
+      window.location.href = redirect;
   }
 
   static transactionOnError = function (error) {

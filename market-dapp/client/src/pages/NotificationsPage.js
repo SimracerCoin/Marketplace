@@ -100,7 +100,7 @@ class NotificationsPage extends Component {
             .catch(function (e) { });
     }
 
-    resolvePurchase = async (event, purchaseId, descartesId, buyer) => {
+    resolvePurchase = async (event, purchaseId, descartesId) => {
         event.preventDefault();
 
         let st = this.state.contract;
@@ -108,7 +108,7 @@ class NotificationsPage extends Component {
 
         let res = await st.methods.getResult(descartesId, purchaseId).call();
 
-        console.log(res);
+        console.log(descartesId, purchaseId, res);
 
         if (res["1"]) {
             alert("Still validating. Please wait.");
@@ -214,7 +214,7 @@ class NotificationsPage extends Component {
             .send({ from: this.state.currentAccount })
             .on('sent', UIHelper.showSpinning)
             .on('confirmation', function (confNumber, receipt, latestBlockHash) {
-                UIHelper.transactionOnConfirmation("The challenge will be completed in minutes. Please, check the status shortly.", false);
+                UIHelper.transactionOnConfirmation("The challenge will be completed in minutes. Please, check the status shortly.", "/notifications");
             })
             .on('error', UIHelper.transactionOnError)
             .catch(function (e) { });
@@ -321,7 +321,7 @@ class NotificationsPage extends Component {
                             <Link onClick={(e) => this.endPurchase(e, value.purchaseId, purchase.adId, ad.ipfsPath, purchase.buyerKey, purchase.encryptedDataKey, ad.encryptedDataHash)}><i className="fas fa-reply"></i></Link> :
                             value.nType == 3 || value.nType == 4 ? '' :
                                 value.nType == 0 ?
-                                    <Link onClick={(e) => this.acceptPurchase(e, value.purchaseId, purchase.buyerKey)}><i className="fas fa-reply"></i></Link> : <Link onClick={(e) => this.resolvePurchase(e, value.purchaseId, purchase.descartesIndex, purchase.buyer)}><i className="fas fa-info"></i></Link>}
+                                    <Link onClick={(e) => this.acceptPurchase(e, value.purchaseId, purchase.buyerKey)}><i className="fas fa-reply"></i></Link> : <Link onClick={(e) => this.resolvePurchase(e, value.purchaseId, purchase.descartesIndex)}><i className="fas fa-info"></i></Link>}
                     </td>
                 </tr>)
             }

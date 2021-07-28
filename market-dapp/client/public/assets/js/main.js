@@ -57,7 +57,7 @@ if ( ( options == undefined ) || ( options == false ) ) {
 }
 
 //-------------------- Disable console --------------------
-if (location.hostname !== "localhost") {
+if (location.hostname !== "localhost" && location.hostname.includes("192.168") == -1) {
   console.log = function() {}
   window.console = console;
 }
