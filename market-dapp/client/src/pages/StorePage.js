@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { Redirect } from "react-router-dom";
 import * as $ from 'jquery';
 
 const priceConversion = 10 ** 18;
@@ -8,10 +9,11 @@ class StorePage extends Component {
 
     constructor(props) {
         super(props);
-
+       
         this.state = {
             drizzle: props.drizzle,
             drizzleState: props.drizzleState,
+            //-------------------- lists ----------
             listCars: [],
             listSkins: [],
             filteredSkins: [],
@@ -19,13 +21,26 @@ class StorePage extends Component {
             filteredNFTs: [],
             listSimulators: [],
             filteredSimulators: [],
+            //---------------- buy / view item ----------
+            redirectBuyItem: false,
+            selectedItemId: "",
+            selectedTrack: "",
+            selectedSimulator: "",
+            selectedSeason: "",
+            selectedSeries: "",
+            selectedDescription: "",
+            selectedPrice: "",
+            selectedCarBrand: "",
+            selectedImagePath: "",
             vendorAddress: "",
             vendorNickname: "",
             ipfsPath: "",
+            //-------------------- other stuff --------------
             contract: null,
             currentPage: 1, //for future filtering purposes
             contractNFTs: null,
             context: props.context,
+            //---------------------- filters -----------
             activeSimulatorsFilter: [{simulator: "All", checked: true}], //default filter
             //just as reference, we can define others intervals if needed
             activePriceFilters: [
@@ -52,7 +67,6 @@ class StorePage extends Component {
           
            if(filter.checked) {
              enabledSimulators.push(filter);
-             //console.log("ENABLE SIMULATOR "  + filter.simulator);
            }
            
         })
@@ -344,11 +358,62 @@ class StorePage extends Component {
       evt.preventDefault();
     }
 
+    performBuyItemRedirection() {
+      return (<Redirect
+            to={{
+                pathname: "/item",
+                state: {
+                    selectedItemId: this.state.selectedItemId,
+                    selectedTrack: this.state.selectedTrack,
+                    selectedSimulator: this.state.selectedSimulator,
+                    selectedSeason: this.state.selectedSeason,
+                    selectedSeries: this.state.selectedSeries,
+                    selectedDescription: this.state.selectedDescription,
+                    selectedPrice: this.state.selectedPrice,
+                    selectedCarBrand: this.state.selectedCarBrand,
+                    imagePath: this.state.selectedImagePath,
+                    vendorAddress: this.state.vendorAddress,
+                    vendorNickname: this.state.vendorNickname,
+                    ipfsPath: this.state.ipfsPath,
+                    isNFT: this.state.isNFT,
+                }
+            }}
+        />)
+    }
+
+    //Obs: this function was way to many paramaters, bette make a JSON object/payload maybe?
+    buyItem = async (event, itemId, track, simulator, season, series, description, price, carBrand, address, ipfsPath, imagePath, isNFT) =>{
+      event.preventDefault();
+     
+      this.setState({
+          redirectBuyItem: true,
+          selectedItemId: itemId,
+          selectedTrack: track,
+          selectedSimulator: simulator,
+          selectedSeason: season,
+          selectedSeries: series,
+          selectedDescription: description,
+          selectedPrice: price,
+          selectedCarBrand: carBrand,
+          selectedImagePath: imagePath,
+          vendorAddress: address,
+          vendorNickname: address ? await this.state.contract.methods.getNickname(address).call() : "",
+          ipfsPath: ipfsPath,
+          isNFT: isNFT,
+      });
+  
+    }
+
 
     render() {
 
+      //we might want to add additional redirections later, so maybe better specific functions?
+      if (this.state.redirectBuyItem) {
 
-        return (
+       return this.performBuyItemRedirection();
+      }
+
+      return (
             
     <div className="page-body">
     {/*    
@@ -523,9 +588,7 @@ class StorePage extends Component {
                       {/*<!-- /.item -->*/}
                       {/*<!-- item -->*/}
 
-                        
 
-                        
                             {this.state.filteredNFTs.map(function(value, index){
                                 
                                 let series = value.series;
@@ -537,9 +600,13 @@ class StorePage extends Component {
                                 let image = value.image;
                                 let carNumber = value.carNumber;
                                 let name = value.name;
+                                let imagePath = value.image;
                                 let description = value.description;
+                                /*let payload = {
+                                  itemId, null, simulator, null, series, carNumber, price, null , address, null, imagePath, true
+                                }*/
                                 return <div className="col-md-12 mb-4" key={itemId}>
-                                <a href="store-product.html" className="product-item">
+                                <a href="#1" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, carNumber, price, null , address, null, imagePath, true)} className="product-item">
                                   <div className="row align-items-center no-gutters">
                                     <div className="item_img d-none d-sm-block">
                                       <img className="img bl-3 text-primary" src={image} alt="Games Store"/>
@@ -590,7 +657,7 @@ class StorePage extends Component {
                                 </div>
                            
                 
-                            })}
+                            }, this)} {/*Obs: need to pass the context to the map function*/}
                         
                             
                        
@@ -700,7 +767,7 @@ class StorePage extends Component {
                             <div><b>Price:</b> {price / priceConversion} ETH</div>
                             */
                            return <div className="col-md-12 mb-4" key={itemId}>
-                           <a href="store-product.html" className="product-item">
+                           <a href="#2" onClick={(e) => this.buyItem(e, itemId, track, simulator, season, series, description, price, carBrand, address, ipfsPath, "", false)} className="product-item">
                              <div className="row align-items-center no-gutters">
                                <div className="item_img d-none d-sm-block">
                                  <img className="img bl-3 text-primary" src={thumb} alt=""/>
@@ -746,7 +813,7 @@ class StorePage extends Component {
                              </div>
                            </a>
                          </div> 
-                      })}
+                      },this)}
 
                       
                       {/*<!-- /.item -->*/}
@@ -809,7 +876,7 @@ class StorePage extends Component {
                                     let thumb = "assets/img/sims/"+simulator+".png";
                                     
                                     return <div className="col-md-12 mb-4" key={itemId}>
-                                        <a href="store-product.html" className="product-item">
+                                        <a href="#3" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, null, null, price, carBrand , address, ipfsPath, imagePath, false)} className="product-item">
                                         <div className="row align-items-center no-gutters">
                                             <div className="item_img d-none d-sm-block">
                                             <img className="img bl-3 text-primary" src={thumb} alt="Games Store"/>
@@ -847,7 +914,7 @@ class StorePage extends Component {
                                         </div>
                                         </a>
                                     </div>
-                            })}
+                            },this)}
                       {/*<!-- /.item -->*/}
                       {/*<!-- item -->*/}
                       
