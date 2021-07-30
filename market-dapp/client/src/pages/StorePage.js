@@ -279,7 +279,7 @@ class StorePage extends Component {
         filter.checked = true;
       })
 
-      this.setState({activePriceFilters: filtersSimulators});
+      this.setState({activeSimulatorsFilter: filtersSimulators});
 
       if(filtersSimulators.length === 0) {
         this.setState({filteredNFTs : [], filteredSkins: [],filteredCars: []});
@@ -1021,7 +1021,7 @@ class StorePage extends Component {
                                     </form>
                                   </div>
                                 </li>
-                          })}
+                          }, this)}
                           </ul>
                       </div>
                     </li>
@@ -1033,7 +1033,7 @@ class StorePage extends Component {
 
                           <ul className="list-unstyled py-2">
 
-                          {this.state.activePriceFilters.map( ({name, checked, label}, index) => {
+                          {this.state.activePriceFilters.map( ({name, checked, label, min, max}, index) => {
                             let elemName = index + "_price_" + name;
                             let idKey = index + "_" + name;
                             return <li key={idKey} className="nav-item">
@@ -1048,7 +1048,7 @@ class StorePage extends Component {
                                 </form>
                               </div>
                             </li>
-                          })}
+                          },this)}
                             
                           </ul>
                       </div>
