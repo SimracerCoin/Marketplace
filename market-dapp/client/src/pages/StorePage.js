@@ -15,6 +15,7 @@ class StorePage extends Component {
             drizzleState: props.drizzleState,
             //-------------------- lists ----------
             listCars: [],
+            filteredCars:[],
             listSkins: [],
             filteredSkins: [],
             latestNFTs: [],
@@ -105,6 +106,7 @@ class StorePage extends Component {
   
         this.setState({filteredSkins: filteredListBySimulator})
     }
+    
 
     //filter skinn by price
     filterSkinsByPrice(enabledPrices) {
@@ -173,6 +175,51 @@ class StorePage extends Component {
       this.setState({filteredNFTs: filteredListByPrice});
     }
 
+    //filter cars by price
+    filterCarsByPrice(enabledPrices) {
+
+      let filteredListByPrice = this.state.listCars.filter( function(Car){
+      
+
+        let carPrice = (Car.ad.price / priceConversion);
+           
+           
+        for (let tierPrice of enabledPrices) {
+                
+          let include = ( carPrice  > tierPrice.min &&  carPrice  <= tierPrice.max );
+        
+          if(include) {
+            return true;
+          }
+        }
+        return false;
+          
+      });
+
+      this.setState({filteredCars: filteredListByPrice})
+   }
+
+   filterCarsBySimulator(enabledSimulators) {
+      
+    let filteredListBySimulator = this.state.listCars.filter( function(Car){
+    
+        for (let simulator of enabledSimulators) {
+             
+          let include = (Car.info.simulator === simulator.simulator) || simulator.simulator === "All";
+          
+          if(include) {
+            return true;
+          }
+                
+        }
+        return false;
+          
+      });
+
+
+      this.setState({filteredCars: filteredListBySimulator})
+  }
+
 
     priceFilterChanged = (event) => {
       
@@ -192,7 +239,7 @@ class StorePage extends Component {
 
         //nothing to show, all price filters disabled
         if(enabledPrices.length === 0) {
-          this.setState({filteredNFTs : [], filteredSkins: []});
+          this.setState({filteredNFTs : [], filteredSkins: [], filteredCars: []});
         } else {
 
           this.filterSkinsByPrice(enabledPrices);
@@ -215,11 +262,12 @@ class StorePage extends Component {
       this.setState({activePriceFilters: filtersPrice});
 
       if(filtersPrice.length === 0) {
-        this.setState({filteredNFTs : [], filteredSkins: []});
+        this.setState({filteredNFTs : [], filteredSkins: [], filteredCars: []});
       } else {
 
         this.filterSkinsByPrice(filtersPrice);
         this.filterNFTsByPrice(filtersPrice);
+        this.filterCarsByPrice(filtersPrice);
       }
     }
 
@@ -231,14 +279,15 @@ class StorePage extends Component {
         filter.checked = true;
       })
 
-      this.setState({activePriceFilters: filtersSimulators});
+      this.setState({activeSimulatorsFilter: filtersSimulators});
 
       if(filtersSimulators.length === 0) {
-        this.setState({filteredNFTs : [], filteredSkins: []});
+        this.setState({filteredNFTs : [], filteredSkins: [],filteredCars: []});
       } else {
 
         this.filterSkinsBySimulator(filtersSimulators);
         this.filterNFTsBySimulator(filtersSimulators);
+        this.filterCarsBySimulator(filtersSimulators);
       }
     }
 
@@ -747,7 +796,7 @@ class StorePage extends Component {
                   <div className="tab-pane fade" id="mp-2-02-c" role="tabpanel" aria-labelledby="mp-2-02-tab">
                     <div className="row">
                       {/*<!-- item -->*/}
-                      {this.state.listCars.map(function(value, index){
+                      {this.state.filteredCars.map(function(value, index){
                                 
                             let carBrand = value.info.carBrand
                             let track = value.info.track
@@ -972,7 +1021,7 @@ class StorePage extends Component {
                                     </form>
                                   </div>
                                 </li>
-                          })}
+                          }, this)}
                           </ul>
                       </div>
                     </li>
@@ -984,7 +1033,7 @@ class StorePage extends Component {
 
                           <ul className="list-unstyled py-2">
 
-                          {this.state.activePriceFilters.map( ({name, checked, label}, index) => {
+                          {this.state.activePriceFilters.map( ({name, checked, label, min, max}, index) => {
                             let elemName = index + "_price_" + name;
                             let idKey = index + "_" + name;
                             return <li key={idKey} className="nav-item">
@@ -999,7 +1048,7 @@ class StorePage extends Component {
                                 </form>
                               </div>
                             </li>
-                          })}
+                          },this)}
                             
                           </ul>
                       </div>
