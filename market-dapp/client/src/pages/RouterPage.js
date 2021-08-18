@@ -61,7 +61,7 @@ class RouterPage extends Component {
                     <Route exact path="/faqs">
                         <FaqsPage />
                     </Route>
-                    <Route exact path="/store">
+                    <Route path="/store">
                         <StorePage drizzle={this.state.drizzle} drizzleState={this.state.drizzleState}/>
                     </Route>
                     <Route exact path="/">

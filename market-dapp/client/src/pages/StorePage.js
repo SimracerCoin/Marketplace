@@ -4,7 +4,9 @@ import * as $ from 'jquery';
 
 const priceConversion = 10 ** 18;
 //pagination is out of scope for now, also would require more items to test properly
-//const ITEMS_PER_PAGE = 10;
+const MAX_ITEMS_PER_PAGE = 5;
+
+
 class StorePage extends Component {
 
     constructor(props) {
@@ -39,6 +41,7 @@ class StorePage extends Component {
             //-------------------- other stuff --------------
             contract: null,
             currentPage: 1, //for future filtering purposes
+            numPages: 1,
             contractNFTs: null,
             context: props.context,
             //---------------------- filters -----------
@@ -48,7 +51,8 @@ class StorePage extends Component {
               {name: "tier_1", checked: true, label: "> 0.000001 ETH <= 0.5 ETH", min: 0.00001, max: 0.5},
               {name: "tier_2", checked: true, label: "> 0.5 ETH <= 1.0 ETH", min: 0.500000001, max: 1.0},
               {name: "tier_3", checked: true, label: "> 1.0 ETH", min: 1.00000001, max: 100000000}
-            ]
+            ],
+            searchQuery: ""
         }
 
         // This binding is necessary to make `this` work in the callback
@@ -56,7 +60,212 @@ class StorePage extends Component {
 
     }
 
+    //-----------------------------------------------------------------------------------------------------
+    //-----------------------------------------------------------------------------------------------------
+
+    componentDidMount = async () => {
+
+        const searchQuery = this.hasSearchFilter();
+        if(searchQuery && searchQuery.length > 0) {
+          this.setState({searchQuery: searchQuery});
+        }
+        this.getNFTsData();
+      
+        //------------------------- Collapser hack -------------------------
+        //all the js/jquery will get loaded before the elements are displayed on page so the handlers on main.js don´t work
+        //because the elements are not part of the DOM yet
+      $('.collapser:not(.readmore-btn)').on('click', function() {
+        if($(this).is('.collapser-active')) {
+          $(this).removeClass('collapser-active');
+          $(this).next().removeClass('show');
+        } else {
+          $(this).addClass('collapser-active');
+          $(this).next().addClass('show');
+        }
+        
+        //--------------------------------------------------------------
+    });
     
+    }
+
+
+    //get all contracts data
+    async getNFTsData() {
+
+        const contract = await this.state.drizzle.contracts.STMarketplace;
+        const contractNFTs = await this.state.drizzle.contracts.SimthunderOwner;
+        const response_cars = await contract.methods.getCarSetups().call();
+        const response_skins = await contract.methods.getSkins().call();
+        //const currentAccount = this.state.drizzleState.accounts[0];
+        console.log("STORE: componentDidMount");
+        const nftlist = [];
+        // get info from marketplace NFT contract
+        const numNfts = await contractNFTs.methods.currentTokenId().call();
+        console.log('nft count:' + numNfts);
+
+        let simsList = [];
+        let simulatorsFilter = [];
+        simulatorsFilter.push(this.state.activeSimulatorsFilter[0]);
+
+        //if there is a serach in place
+        //by default include all items
+        let filteredNFTsList = [];
+        let filteredCarsList = response_cars;
+        let filteredSkinsList = response_skins;
+
+        //use search params?
+        let queryString = this.state.searchQuery;
+        const considerSearchQuery = (queryString && queryString.length > 0);
+        
+        //let currentPage = this;
+        for (let i = 1; i < parseInt(numNfts) + 1; i++) {
+            try {
+                //TODO: change for different ids
+                let ownerAddress = await contractNFTs.methods.ownerOf(i).call();
+                console.log('ID:'+i+'ownerAddress: '+ownerAddress.toString()+'nfts addr: '+contractNFTs.address);
+                if(ownerAddress === contractNFTs.address) {
+                    console.log('GOT MATCH');
+                    let uri = await contractNFTs.methods.tokenURI(i).call();
+                    console.log('uri: ', uri);
+                    var xmlhttp = new XMLHttpRequest();
+                    // eslint-disable-next-line no-loop-func
+                    xmlhttp.onload = function(e) {
+                        if (xmlhttp.readyState === 4 && xmlhttp.status === 200) {
+                            var data = JSON.parse(xmlhttp.responseText);
+                            /**  DATA example:
+                            {  
+                                "description": "Simthunder Car Ownership",
+                                "name": "Car",
+                                "image": "https://ipfs.io/ipfs/QmbM3fsbACwV887bMf73tvtY9iA5K1CSZ3kYdwj7G9bL7W",
+                                "series": "Simthunder Trophy",
+                                "seriesOwner": "0xA59DE47b6fa8911DF14F4524B853B742AF1F3a0c",
+                                "carNumber": "48",
+                                "simulator": "iRacing",
+                                "price": 1
+                            }
+                            */
+                            console.log('nft image:' + data.image);
+                            console.log('nft description:' + data.description);
+                            data.id=i;
+
+                            //global list of all
+                            nftlist.push(data);
+                            //TESTING ONLY duplicate it 5 times
+                            for(let j = 0; j<5; j++) {
+                              
+                                let newOne = Object.assign({}, data);;
+                                newOne.series = data.series + "_" + j;
+                                newOne.name = data.name + "_ " + j;
+                                newOne.description = data.description + "_ " + j;
+                                console.log("NEW ONE " + j + " IS " + JSON.stringify(newOne));
+                                nftlist.push(newOne);
+                              
+                            }
+                            
+
+                            //only filtered list
+                            if(considerSearchQuery && (this.shouldIncludeNFTBySearchQuery(queryString.toLowerCase(), data)) ){
+                              filteredNFTsList.push(data);
+                            }
+                            
+
+                            //add simulator if not present already 
+                            let simulator = data.simulator;
+                            if(!simsList.includes(simulator)) {
+
+                              simsList.push(data.simulator);
+
+                              if(!considerSearchQuery ) {
+                                  simulatorsFilter.push({simulator: data.simulator, checked: true});
+                              } else {
+
+                                //matches query, push and check it
+                                if(simulator.toLowerCase().indexOf(queryString.toLowerCase())>-1) {
+                                  simulatorsFilter.push({simulator: data.simulator, checked: true});
+                                } else {
+                                  //still push it but disabled
+                                  simulatorsFilter.push({simulator: data.simulator, checked: false});
+                                }
+
+                                
+                              }
+
+                              
+                            }
+                           
+
+                            this.setState({ latestNFTs: nftlist, 
+                                          filteredNFTs: considerSearchQuery ? filteredNFTsList: this.paginate(nftlist, this.state.currentPage), 
+                                          listSimulators: simsList, 
+                                          activeSimulatorsFilter: simulatorsFilter 
+                                        });
+                        
+                        }
+                    }.bind(this);
+                    xmlhttp.onerror = function (e) {
+                        console.error(xmlhttp.statusText);
+                    };
+                    xmlhttp.open("GET", uri, true);
+                    xmlhttp.send(null);
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        
+
+        if(considerSearchQuery){
+          filteredCarsList = filteredCarsList.filter(value => {
+            
+            return this.shouldIncludeCarBySearchQuery(queryString.toLowerCase(), value);
+
+          });
+
+          filteredSkinsList = filteredSkinsList.filter(value => {
+            return this.shouldIncludeSkinBySearchQuery(queryString.toLowerCase(), value);
+          });
+        } 
+
+        //get the number of elements of the bigger list, use it to define the number of pages, minimum 1
+        let maxElems = numNfts;
+        if(filteredCarsList.length > maxElems) {
+          maxElems = filteredCarsList.length;
+        }
+
+        if(filteredSkinsList.length > maxElems) {
+          maxElems = filteredSkinsList.length;
+        }
+        console.log("max elemenst: " + maxElems + " num pages: " +  Math.ceil((maxElems / MAX_ITEMS_PER_PAGE)) || 1 );
+        
+        this.setState(
+          { 
+          listCars: response_cars, 
+          numPages: ( Math.ceil((maxElems / MAX_ITEMS_PER_PAGE) ) || 1),
+          filteredCars: this.paginate(filteredCarsList, this.state.currentPage), 
+          listSkins: response_skins, 
+          filteredSkins: this.paginate(filteredSkinsList, this.state.currentPage), 
+          contract: contract, 
+          contractNFTs: contractNFTs 
+        });
+    }
+
+    /**
+     * Method for pagination, can be used for any input collection
+     * @param {*} array 
+     * @param {*} page_number 
+     * @returns 
+     */
+    paginate(array, page_number) {
+      if(array.length <= MAX_ITEMS_PER_PAGE) {
+        return array;
+      }
+      // human-readable page numbers usually start with 1, so we reduce 1 in the first argument
+      return array.slice((page_number - 1) * MAX_ITEMS_PER_PAGE, page_number * MAX_ITEMS_PER_PAGE);
+    }
+
+    //-----------------------------------------------------------------------------------------------------
+    //-----------------------------------------------------------------------------------------------------
     simulatorsFilterChanged = (event) => {
       
       let enabledSimulators = [];
@@ -76,7 +285,7 @@ class StorePage extends Component {
 
         //nothing to show, all price filters disabled
         if(enabledSimulators.length === 0) {
-          this.setState({filteredNFTs : [], filteredSkins: []});
+          this.setState({filteredNFTs : [], filteredSkins: [], filteredCars: [] });
         } else {
 
           this.filterSkinsBySimulator(enabledSimulators);
@@ -221,6 +430,7 @@ class StorePage extends Component {
   }
 
 
+
     priceFilterChanged = (event) => {
       
       let filters = this.state.activePriceFilters;
@@ -296,115 +506,145 @@ class StorePage extends Component {
     resetFilters = (event) => {
       
       event.preventDefault();
+      this.setState({searchQuery: ""});
       this.resetPriceFilters();
       this.resetSimulatorsFilters();
+
       
     }
 
-    //get all contracts data
-    async getNFTsData() {
+  
+    /**
+     * Additional filtering based on any search stri
+     * @param {*} queryString 
+     * @param {*} NFT 
+     * @returns 
+     */
+    shouldIncludeNFTBySearchQuery(queryString, NFT) {
 
-        const contract = await this.state.drizzle.contracts.STMarketplace;
-        const contractNFTs = await this.state.drizzle.contracts.SimthunderOwner;
-        const response_cars = await contract.methods.getCarSetups().call();
-        const response_skins = await contract.methods.getSkins().call();
-        //const currentAccount = this.state.drizzleState.accounts[0];
-        console.log("STORE: componentDidMount");
-        const nftlist = [];
-        // get info from marketplace NFT contract
-        const numNfts = await contractNFTs.methods.currentTokenId().call();
-        console.log('nft count:' + numNfts);
 
-        let simsList = [];
-        let simulatorsFilter = [];
-        simulatorsFilter.push(this.state.activeSimulatorsFilter[0]);
-        
-        //let currentPage = this;
-        for (let i = 1; i < parseInt(numNfts) + 1; i++) {
-            try {
-                //TODO: change for different ids
-                let ownerAddress = await contractNFTs.methods.ownerOf(i).call();
-                console.log('ID:'+i+'ownerAddress: '+ownerAddress.toString()+'nfts addr: '+contractNFTs.address);
-                if(ownerAddress === contractNFTs.address) {
-                    console.log('GOT MATCH');
-                    let uri = await contractNFTs.methods.tokenURI(i).call();
-                    console.log('uri: ', uri);
-                    var xmlhttp = new XMLHttpRequest();
-                    xmlhttp.onload = function(e) {
-                        if (xmlhttp.readyState === 4 && xmlhttp.status === 200) {
-                            var data = JSON.parse(xmlhttp.responseText);
-                            /**  DATA example:
-                            {  
-                                "description": "Simthunder Car Ownership",
-                                "name": "Car",
-                                "image": "https://ipfs.io/ipfs/QmbM3fsbACwV887bMf73tvtY9iA5K1CSZ3kYdwj7G9bL7W",
-                                "series": "Simthunder Trophy",
-                                "seriesOwner": "0xA59DE47b6fa8911DF14F4524B853B742AF1F3a0c",
-                                "carNumber": "48",
-                                "simulator": "iRacing",
-                                "price": 1
-                            }
-                            */
-                            console.log('nft image:' + data.image);
-                            console.log('nft description:' + data.description);
-                            data.id=i;
-                            nftlist.push(data);
+        let series = NFT.series;
+        let simulator = NFT.simulator;                 
+        let name = NFT.name;
+        let description = NFT.description;
+        console.log("series: " + series + " simulator: " + simulator + " name: " + name + " description: " + description + " query: " + queryString);
+        if ( 
+          (series && series.toLowerCase().indexOf(queryString)>-1) ||
+            (simulator && simulator.toLowerCase().indexOf(queryString)>-1) || 
+            (name && name.toLowerCase().indexOf(queryString)>-1) ||
+            (description && description.toLowerCase().indexOf(queryString)>-1 )
+          ) {
+            return true;
+          }
+        return false;
 
-                            //add simulator if not present already 
-                            let simulator = data.simulator;
-                            if(!simsList.includes(simulator)) {
-                              simsList.push(data.simulator);
-                              simulatorsFilter.push({simulator: data.simulator, checked: true});
-                            }
-
-                            this.setState({ latestNFTs: nftlist, filteredNFTs: nftlist, listSimulators: simsList, activeSimulatorsFilter: simulatorsFilter });
-                        
-                        }
-                    }.bind(this);
-                    xmlhttp.onerror = function (e) {
-                        console.error(xmlhttp.statusText);
-                    };
-                    xmlhttp.open("GET", uri, true);
-                    xmlhttp.send(null);
-                }
-            } catch (e) {
-                console.error(e);
-            }
-        }
-        
-        this.setState({ listCars: response_cars, listSkins: response_skins, filteredSkins: response_skins, contract: contract, contractNFTs: contractNFTs });
     }
-    componentDidMount = async () => {
-        this.getNFTsData();
 
-        //------------------------- Collapser hack -------------------------
-        //all the js/jquery will get loaded before the elements are displayed on page so the handlers on main.js don´t work
-        //because the elements are not part of the DOM yet
-      $('.collapser:not(.readmore-btn)').on('click', function() {
-        if($(this).is('.collapser-active')) {
-          $(this).removeClass('collapser-active');
-          $(this).next().removeClass('show');
-        } else {
-          $(this).addClass('collapser-active');
-          $(this).next().addClass('show');
+    /**
+     * 
+     * @param {*} queryString 
+     * @param {*} CAR 
+     * @returns 
+     */
+    shouldIncludeCarBySearchQuery(queryString, CAR) {
+
+
+      let carBrand = CAR.info.carBrand
+      let simulator = CAR.info.simulator
+      let series = CAR.info.series
+      let description = CAR.info.description
+
+      if ( 
+        (series && series.toLowerCase().indexOf(queryString)>-1) ||
+          (simulator && simulator.toLowerCase().indexOf(queryString)>-1) || 
+          (carBrand && carBrand.toLowerCase().indexOf(queryString)>-1) ||
+          (description && description.toLowerCase().indexOf(queryString)>-1 )
+        ) {
+          return true;
         }
-        
-        //--------------------------------------------------------------
-    });
-    
+      return false;
+
+    }
+
+    /**
+     * 
+     * @param {*} queryString 
+     * @param {*} SKIN 
+     * @returns 
+     */
+    shouldIncludeSkinBySearchQuery(queryString, SKIN) {
+
+      let carBrand = SKIN.info.carBrand
+      let simulator = SKIN.info.simulator
+
+      if ( (simulator && simulator.toLowerCase().indexOf(queryString)>-1) ||  (carBrand && carBrand.toLowerCase().indexOf(queryString)>-1) ) {
+          return true;
+        }
+      return false;
+
+  }
+
+    //if has filter, just filter by serach query, any other filtering wipes out 
+    //https://stackoverflow.com/questions/24806772/how-to-skip-over-an-element-in-map
+    hasSearchFilter() {
+      const searchParams = new URLSearchParams(window.location.search);
+      if(searchParams) {
+        const query = searchParams.get('q');
+        if(query) {
+          searchParams.delete("q");
+          return query;
+        }
+     
+      }
+      return null;
     }
 
     changeActivePage(evt,pageNum) {
       evt.preventDefault();
-      this.setState({currentPage: pageNum});
+      console.log("PAGE NUM: " + pageNum);
+      let arrayPaginatedNFTS = this.paginate(this.state.latestNFTs, pageNum);
+      let arrayPaginatedCars = this.paginate(this.state.listCars, pageNum);
+      let arrayPaginatedSkins = this.paginate(this.state.listSkins, pageNum);
+      
+      this.setState({currentPage: pageNum, filteredNFTs: arrayPaginatedNFTS, filteredCars: arrayPaginatedCars, filteredSkins: arrayPaginatedSkins});
     }
 
     moveNextPage(evt) {
       evt.preventDefault();
+      let currPage = this.state.currentPage;
+      if(currPage>= this.state.numPages) {
+        //go to first
+        currPage = 1;
+      } else {
+        currPage = currPage + 1;
+      }
+
+      console.log("GO TO NEXT PAGE: " + currPage);
+
+      let arrayPaginatedNFTS = this.paginate(this.state.latestNFTs, currPage);
+      let arrayPaginatedCars = this.paginate(this.state.listCars, currPage);
+      let arrayPaginatedSkins = this.paginate(this.state.listSkins, currPage);
+      
+      this.setState({currentPage: currPage, filteredNFTs: arrayPaginatedNFTS, filteredCars: arrayPaginatedCars, filteredSkins: arrayPaginatedSkins});
     }
 
     movePreviousPage(evt) {
       evt.preventDefault();
+      let currPage = this.state.currentPage;
+      if(currPage <= 1) {
+        //go to last
+        currPage = this.state.numPages;
+      } else {
+        currPage = currPage - 1;
+      }
+
+      console.log("GO TO PREVIOUS PAGE: " + currPage);
+
+      let arrayPaginatedNFTS = this.paginate(this.state.latestNFTs, currPage);
+      let arrayPaginatedCars = this.paginate(this.state.listCars, currPage);
+      let arrayPaginatedSkins = this.paginate(this.state.listSkins, currPage);
+      
+      this.setState({currentPage: currPage, filteredNFTs: arrayPaginatedNFTS, filteredCars: arrayPaginatedCars, filteredSkins: arrayPaginatedSkins});
     }
 
     performBuyItemRedirection() {
@@ -456,11 +696,17 @@ class StorePage extends Component {
 
     render() {
 
+      //const name = this.props.location.;
+      //const name = new URLSearchParams(search).get('q');
+
+      //alert("name " + name);
+
       //we might want to add additional redirections later, so maybe better specific functions?
       if (this.state.redirectBuyItem) {
 
        return this.performBuyItemRedirection();
       }
+      
 
       return (
             
@@ -646,6 +892,7 @@ class StorePage extends Component {
                                 //TODO: change hardcode
                                 let address = value.seriesOwner;
                                 let itemId = value.id;
+                                let key = itemId + "_" + index
                                 let image = value.image;
                                 let carNumber = value.carNumber;
                                 let name = value.name;
@@ -654,7 +901,7 @@ class StorePage extends Component {
                                 /*let payload = {
                                   itemId, null, simulator, null, series, carNumber, price, null , address, null, imagePath, true
                                 }*/
-                                return <div className="col-md-12 mb-4" key={itemId}>
+                                return <div className="col-md-12 mb-4" key={key}>
                                 <a href="#1" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, carNumber, price, null , address, null, imagePath, true)} className="product-item">
                                   <div className="row align-items-center no-gutters">
                                     <div className="item_img d-none d-sm-block">
@@ -807,6 +1054,7 @@ class StorePage extends Component {
                             let price = value.ad.price
                             let address = value.ad.seller
                             let itemId = value.id
+                            let key = itemId + "_" + index;
                             let ipfsPath = value.ad.ipfsPath
                             let thumb = "assets/img/sims/"+simulator+".png";
                             /*
@@ -815,7 +1063,7 @@ class StorePage extends Component {
                             <div><b>Season:</b> {season}</div>
                             <div><b>Price:</b> {price / priceConversion} ETH</div>
                             */
-                           return <div className="col-md-12 mb-4" key={itemId}>
+                           return <div className="col-md-12 mb-4" key={key}>
                            <a href="#2" onClick={(e) => this.buyItem(e, itemId, track, simulator, season, series, description, price, carBrand, address, ipfsPath, "", false)} className="product-item">
                              <div className="row align-items-center no-gutters">
                                <div className="item_img d-none d-sm-block">
@@ -915,16 +1163,19 @@ class StorePage extends Component {
                       </div>
                       */}
                         {this.state.filteredSkins.map(function(value, index) {
+
                                     let carBrand = value.info.carBrand
                                     let simulator = value.info.simulator
+                                    
                                     let price = value.ad.price
                                     let address = value.ad.seller
                                     let itemId = value.id
+                                    let key = itemId + "_" + index;
                                     let ipfsPath = value.ad.ipfsPath
                                     let imagePath = "https://ipfs.io/ipfs/" + value.info.skinPic
                                     let thumb = "assets/img/sims/"+simulator+".png";
                                     
-                                    return <div className="col-md-12 mb-4" key={itemId}>
+                                    return <div className="col-md-12 mb-4" key={key}>
                                         <a href="#3" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, null, null, price, carBrand , address, ipfsPath, imagePath, false)} className="product-item">
                                         <div className="row align-items-center no-gutters">
                                             <div className="item_img d-none d-sm-block">

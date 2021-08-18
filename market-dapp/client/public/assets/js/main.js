@@ -40,6 +40,8 @@
 
 "use strict";
 
+
+
 //------------------- Default options -------------------
 if ( ( options == undefined ) || ( options == false ) ) {
   var options = true,
