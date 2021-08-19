@@ -3508,6 +3508,19 @@ input[type="button"].btn-block {
     text-decoration: none;
     background-color: #d39e00; }
 
+
+.badge-warning-address {
+      color: #212529;
+      background-color: #ffc107; 
+      font-size:11px;
+    
+ }
+.badge-warning-address[href]:hover, .badge-warning-address[href]:focus {
+      color: #212529;
+      text-decoration: none;
+      background-color: #d39e00; 
+}
+
 .badge-danger {
   color: #ffffff;
   background-color: #da2f69; }

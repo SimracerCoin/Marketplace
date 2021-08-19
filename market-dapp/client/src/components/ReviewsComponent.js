@@ -22,16 +22,29 @@ class ReviewsComponent extends Component {
             isNFT: props.location.state.isNFT,*/
             contract: null,
             currentAccount: "",
-            comment: "",
-            listComments: [],
-            review_rating: 0,
-            average_review: 0
+            comment: props.comment
+          
         }
     }
 
     componentDidMount = async (event) => {
         console.log("render reviews component");
+        let commentator = this.state.comment.commentator;
+        let description = this.state.comment.description;
+        let review = parseInt(this.state.comment.review);
+        let date = new Date(this.state.comment.date)
+        let date_time = date.toLocaleDateString() + " " + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        this.setState({commentator: commentator, description: description, review: review, date: date_time});
     }
+
+    getRatingStars = () =>  {
+      let stars = [];
+      for(let i=0; i< this.state.review; i++) {
+        stars.push(<i class="fas fa-star"></i>);
+      }
+      return stars;
+    }
+
 
     render() {
         return (
@@ -41,18 +54,22 @@ class ReviewsComponent extends Component {
                           <div class="review-item ml-sm-4">
                             <div class="small d-flex align-items-start">
                               {/*<!-- user -->*/}
-                              <span class="name text-lt badge badge-info fw-600 small-4">metus</span>
+                              <span class="name text-lt badge badge-info fw-600 small-4">{this.state.commentator}</span>
                               {/*<!-- /.user -->
                               <!-- time -->*/}
-                              <div class="time ml-2">05/08/2020</div>
+                              <div class="time ml-2">{this.state.date}</div>
                               {/*<!-- /.time -->
                               <!-- star -->*/}
                               <div class="ml-2 text-warning">
-                                <i class="fas fa-star"></i>
+                                {this.getRatingStars().map( (star, idx) => {
+                                  return star
+                                })}
+                                {/*<i class="fas fa-star"></i>
                                 <i class="fas fa-star"></i>
                                 <i class="fas fa-star"></i>
                                 <i class="fas fa-star"></i>
                                 <i class="fas fa-star-half-alt"></i>
+                                */}
                               </div>
                              {/*} <!-- /.star -->
                               <!-- info -->*/}
@@ -73,14 +90,15 @@ class ReviewsComponent extends Component {
                               {/*<!-- /.info -->*/}
                             </div>
                             <div>
-                              <span class="d-block lead-2 mb-2">Class aptent taciti sociosqu ad litora torquent per conubia nostra</span>
+                              <span class="d-block lead-2 mb-2">{this.state.description}</span>
                               <div class="collapse readmore r-fade">
-                                <p class="mb-0 small-3">Vestibulum vitae sem eget tortor dignissim convallis. Sed a vehicula tortor. Etiam semper gravida erat eget tristique. Integer suscipit finibus diam, vestibulum lobortis eros lobortis eu.Sed blandit tincidunt nibh, nec ullamcorper lacus porttitor a. Cras vitae justo nisi. Cras in congue turpis. Cras cursus vestibulum diam, vel mollis diam tempus ac. Duis euismod diam et ante egestas, sed porttitor orci euismod. In quis ligula fermentum, elementum quam quis, pellentesque lorem. Vivamus eget ligula ante. Aliquam porttitor nisl sit amet malesuada finibus. Etiam sit amet porttitor purus. Etiam at aliquam massa. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse cursus sollicitudin malesuada.</p>
+                                <p class="mb-0 small-3">{this.state.description}.</p>
                               </div>
                               <a class="readmore-btn collapsed collapser" data-toggle="collapse" aria-expanded="false" href=""></a>
                             </div>
                           </div>
                         </div>
+                        <hr class="border-secondary my-2"/>
                       </div>
         );
     }

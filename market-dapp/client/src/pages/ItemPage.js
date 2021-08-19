@@ -208,6 +208,52 @@ class ItemPage extends Component {
       return retValue;
     }
 
+    //just 1 best
+    getBestReviews = () => {
+      let numRatings = this.state.listComments.length;
+      let best = null;
+      if(numRatings > 0) {
+        for(let i = 0; i < numRatings; i++) {
+          let elem = this.state.listComments[i];
+          let rate = parseInt(elem.review);
+          if(best == null) {
+            best = elem;
+          } else {
+            if(rate > parseInt(best.review)) {
+              //new best
+              best = elem;
+            }
+          }
+        }
+      } else {
+        return <span>No reviews yet</span>
+      }
+
+      let commentator = best.commentator;
+      let description = best.description;
+      //let review = parseInt(best.review); NOT USED
+      let date = new Date(best.date)
+      let date_time = date.toLocaleDateString() + " " + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      return <div class="review-item mb-5">
+            <div class="small d-flex">
+                <div class="flex-1">
+                   <span class="name badge badge-warning-address">{commentator}</span>{/*fw-600 small-4*/}
+                   <span class="time ml-2">{date_time}</span>
+                </div>
+             </div>
+             <div>
+                <span class="lead-2">{description}</span>
+                   <div class="collapse readmore r-fade">
+                    <p class="mb-0 small-3">{description}</p>
+                    <a href="" class="text-info"><i class="fas fa-thumbs-up"></i> 135</a>
+                   </div>
+                  <a class="readmore-btn collapsed collapser" data-toggle="collapse" aria-expanded="false" href=""></a>
+              </div>
+        </div>
+    
+    }
+
     render() {
 
         let item = ""
@@ -251,7 +297,7 @@ class ItemPage extends Component {
                     <div class="d-flex flex-wrap align-items-center">
                       <div class="review d-flex">
                         <div class="review_score">
-                          <div class="review_score-btn">{reviewsRating.rating}</div>
+                          <div class="review_score-btn">{this.state.average_review.toFixed(1)}</div>
                         </div>
 
                         <div class="star_rating-se text-warning mr-7">
@@ -670,16 +716,16 @@ class ItemPage extends Component {
                         </div>*/}
                       </div>
                       <div class="price-box mb-4">
-                          <div class="mr-4">
+                          {/*<div class="mr-4">
                             <div class="quantity-group input-group">
                                 <input type="text" class="form-control form-control-sm h-auto" value="1"/>
                             </div>
-                          </div>
-                        <div class="flex-1"><a href="" class="btn btn-block btn-warning"><i class="fas fa-shopping-cart"></i> Add to Cart</a></div>
+                          </div>*/}
+                        <div class="flex-1"><a href="" onClick={this.buyItem} class="btn btn-block btn-warning"><i class="fas fa-shopping-cart"></i> Buy Item</a></div>
                       </div>
                     </div>
                     <div>
-                        <div class="row mb-4">
+                        {/*<div class="row mb-4">
                             <form class="col mb-3 mb-md-0">
                                 <div class="custom-control custom-checkbox">
                                   <input class="custom-control-input" type="checkbox" value="" id="comp_check"/>
@@ -696,8 +742,8 @@ class ItemPage extends Component {
                                   </label>
                                 </div>
                             </form>
-                        </div>
-                        <a href="" class="btn btn-block btn-secondary"><i class="fas fa-heart"></i> Add to wishlist</a>
+                        </div>*/}
+                        {/*<a href="" class="btn btn-block btn-secondary"><i class="fas fa-heart"></i> Add to wishlist</a>*/}
                     </div>
                   </div>
                   <div class="bg-dark_A-20 p-4">
@@ -715,10 +761,13 @@ class ItemPage extends Component {
                         <span class="developer-item text-lt">{this.state.simulator}</span>
                         {/*<span class="platform-item btn btn-sm btn-outline-warning"><i class="fab fa-windows"></i> PC</span>
                         <span class="platform-item btn btn-sm btn-outline-warning"><i class="fas fa-apple-alt"></i> mac</span>*/}
-                      
                       <li>
                         <span class="platform">Series:</span> 
                         <span class="developer-item text-lt">{this.state.series}</span>
+                      </li>
+                      <li>
+                        <span class="platform">Car Brand:</span> 
+                        <span class="developer-item text-lt">{this.state.car}</span>
                       </li>
                     </ul>
                     {/*<ul class="list-unstyled mb-3">
@@ -827,7 +876,29 @@ class ItemPage extends Component {
                     <hr class="border-secondary mt-2 mb-6"/>
                     <div class="row">
                       {/*<!-- Item -->*/}
-                      <ReviewsComponent/>
+                      {this.state.listComments.map( (comment, index) => {
+                        return <ReviewsComponent comment={comment}/>
+                      })}
+                      {/*cannot comment nfts? */}
+                      {!this.state.isNFT &&
+                        <div className="container">
+                        <h4 className="text-white">Add Review</h4>
+                        <Form onSubmit={this.submitComment}>
+                            <Form.Control as="textarea" rows={3} placeholder="Say something here..." id="comment" /> <br></br>
+                            <StarRatings
+                                rating={this.state.review_rating}
+                                starRatedColor="yellow"
+                                changeRating={this.changeRating}
+                                numberOfStars={5}
+                                starDimension="20px"
+                                name='rating'
+                            />
+                            <br></br>
+                            <Button className="mt-5" onClick={this.submitComment}>Comment</Button>
+                        </Form>
+                      </div>
+                      }
+                      
                       {/*<!-- /.Item -->
                       <!-- Item -->*/}
                       {/*<div class="col-12 mb-7">
@@ -935,22 +1006,7 @@ class ItemPage extends Component {
                     <h6 class="mb-4 fw-400 ls-1 text-uppercase">Best reviews</h6>
                     <div class="border border-secondary rounded p-4">
                       {/*<!-- Item -->*/}
-                      <div class="review-item mb-5">
-                        <div class="small d-flex">
-                          <div class="flex-1">
-                            <span class="name badge badge-warning fw-600 small-4">metus</span>
-                            <span class="time ml-2">05/08/2020</span>
-                          </div>
-                          <a href="" class="text-info"><i class="fas fa-thumbs-up"></i> 135</a>
-                        </div>
-                        <div>
-                          <span class="lead-2">Sociosqu ad litora torquent</span>
-                          <div class="collapse readmore r-fade">
-                            <p class="mb-0 small-3">Vestibulum vitae sem eget tortor dignissim convallis. Sed a vehicula tortor. Etiam semper gravida erat eget tristique. Integer suscipit finibus diam, vestibulum lobortis eros lobortis eu.Sed blandit tincidunt nibh, nec ullamcorper lacus porttitor a. Cras vitae justo nisi. Cras in congue turpis. Cras cursus vestibulum diam.</p>
-                          </div>
-                          <a class="readmore-btn collapsed collapser" data-toggle="collapse" aria-expanded="false" href=""></a>
-                        </div>
-                      </div>
+                       {this.getBestReviews()}
                       <hr class="border-secondary mt-0 mb-5"/>
                       {/*<!-- /.Item -->
                       <!-- Item -->*/}
