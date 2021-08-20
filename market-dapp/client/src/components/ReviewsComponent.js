@@ -75,8 +75,8 @@ class ReviewsComponent extends Component {
                               <!-- info -->*/}
                               <div class="ml-auto">
                                 <div class="d-flex small-1">
-                                  <div class="mr-2"><a href="" class="text-info"><i class="fas fa-thumbs-up"></i></a></div>
-                                  <div class="mr-2"><a href="" class="text-info"><i class="fas fa-thumbs-down"></i></a></div>
+                                  <div class="mr-2"><a href="#" class="text-info"><i class="fas fa-thumbs-up"></i></a></div>
+                                  <div class="mr-2"><a href="#" class="text-info"><i class="fas fa-thumbs-down"></i></a></div>
                                   <div class="dropdown">
                                       <a class="dropdown-toggle text-info" href="store-product.html#" id="dropdownShare_01" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true"><i class="fas fa-share-alt"></i></a>
                                       <div class="dropdown-menu dropdown-menu-share" aria-labelledby="dropdownShare_01">

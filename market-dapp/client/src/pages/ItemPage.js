@@ -254,11 +254,98 @@ class ItemPage extends Component {
     
     }
 
+    /**
+     * 
+     * @returns Handle right side menu with item info
+     */
+    renderItemInformation = () => {
+      if (this.state.isNFT) {
+          return this.renderItemInformationForNFT();
+      } else if (this.state.track == null || this.state.season == null) {
+          return this.renderItemInformationForSkin();
+      } else {
+          return this.renderItemInformationForCarSetup();
+      }
+    }
+
+    //Skin item information
+    renderItemInformationForSkin = () => {
+      return <ul class="list-unstyled mb-3">
+            <li>
+            <span class="platform">Simulator:</span> 
+            <span class="developer-item text-lt">{this.state.simulator}</span>
+            </li>
+            <li>
+            <span class="platform">Car brand:</span> 
+            <span class="developer-item text-lt">{this.state.car}</span>
+            </li>
+            <li>
+            <span class="platform">Price:</span> 
+            <span class="developer-item text-lt">{this.state.price / priceConversion} ETH</span>
+            </li>
+            </ul>
+    }
+    //NFT
+    renderItemInformationForNFT = () => {
+
+      return <ul class="list-unstyled mb-3">
+            <li>
+            <span class="platform">Simulator:</span> 
+            <span class="developer-item text-lt">{this.state.simulator}</span>
+            </li>
+            <li>
+            <span class="platform">Series:</span> 
+            <span class="developer-item text-lt">{this.state.series}</span>
+            </li>
+            <li>
+            <span class="platform">Number:</span> 
+            <span class="developer-item text-lt">{this.state.description}</span>
+            </li>
+            <li>
+            <span class="platform">Price:</span> 
+            <span class="developer-item text-lt">{this.state.price / priceConversion} ETH</span>
+            </li>
+            </ul>
+    }
+
+    //Car setup
+    renderItemInformationForCarSetup = () => {
+
+      return <ul class="list-unstyled mb-3">
+            <li>
+            <span class="platform">Simulator:</span> 
+            <span class="developer-item text-lt">{this.state.simulator}</span>
+            </li>
+            <li>
+            <span class="platform">Series:</span> 
+            <span class="developer-item text-lt">{this.state.series}</span>
+            </li>
+            <li>
+            <span class="platform">Car Brand:</span> 
+            <span class="developer-item text-lt">{this.state.car}</span>
+            </li>
+            <li>
+            <span class="platform">Season:</span> 
+            <span class="developer-item text-lt">{this.state.season}</span>
+            </li>
+            <li>
+            <span class="platform">Description:</span> 
+            <span class="developer-item text-lt">{this.state.description}</span>
+            </li>
+            <li>
+            <span class="platform">Price:</span> 
+            <span class="developer-item text-lt">{this.state.price / priceConversion} ETH</span>
+            </li>
+            </ul>
+    }
+
+
+
     render() {
 
         let item = ""
-        let toRender;
-        let commentsRender = [];
+        //let toRender;
+        //let commentsRender = [];
 
         let hasImage = true;
         if (this.state.isNFT) {
@@ -358,6 +445,7 @@ class ItemPage extends Component {
                           <hr class="border-secondary my-2"/>
                           <div>
                             <div class="collapse readmore" id="collapseSummary">
+                              TODO (what gos here? A description? but not all have description)
                               <p>{this.state.description}</p>
                             </div>
                             {/*<a class="readmore-btn collapsed" data-toggle="collapse" href="store-product.html#collapseSummary" aria-expanded="false" aria-controls="collapseSummary"></a>*/}
@@ -691,7 +779,7 @@ class ItemPage extends Component {
                         <div class="mb-0">
                           <div>
                             <div>
-                              <p class="small">*Duis sit amet lectus pharetra, placerat ante et, varius urna. Praesent euismod lacinia lacus, at posuere quam vestibulum ut. Vivamus eu ligula at massa laoreet commodo. In consequat aliquet scelerisque. Proin dapibus velit quis suscipit interdum. Vestibulum eu sapien eget lorem volutpat dapibus molestie a metus. Proin in turpis a arcu luctus euismod. Sed vitae ante at leo bibendum blandit nec vel mauris. Ut laoreet bibendum lobortis.</p>
+                              <p class="small">TODO (what to put here?)</p>
                             </div>
                           </div>
                         </div>
@@ -704,7 +792,7 @@ class ItemPage extends Component {
                     {hasImage &&
                         <img src={this.state.imagePath} alt="Product" class="mb-3"/>
                     }
-                    <p>TODO</p>
+                    <p>TODO (What goes here? A description maybe? But Skin has none)</p>
                     <div class="price-wrapper">
                       <div class="mb-3">
                         <div class="price">
@@ -749,18 +837,20 @@ class ItemPage extends Component {
                   <div class="bg-dark_A-20 p-4">
                     <h6 class="mb-3">Item Information</h6>
                     <hr class="border-secondary mt-2 mb-4"/>
-                    <ul class="list-unstyled mb-3">
+                    {this.renderItemInformation()}
+                    {/*<ul class="list-unstyled mb-3">
                       <li>
                         <span class="platform">Simulator:</span> 
                         <span class="developer-item text-lt">{this.state.simulator}</span>
                       </li>
-                        {/*<span class="platform-item btn btn-sm btn-outline-warning"><i class="fab fa-windows"></i> PC</span>
+                        <span class="platform-item btn btn-sm btn-outline-warning"><i class="fab fa-windows"></i> PC</span>
                     Seller:</b> 
                       <li>
                         <span class="platform">Simulator:</span> 
                         <span class="developer-item text-lt">{this.state.simulator}</span>
-                        {/*<span class="platform-item btn btn-sm btn-outline-warning"><i class="fab fa-windows"></i> PC</span>
-                        <span class="platform-item btn btn-sm btn-outline-warning"><i class="fas fa-apple-alt"></i> mac</span>*/}
+                        {<span class="platform-item btn btn-sm btn-outline-warning"><i class="fab fa-windows"></i> PC</span>
+                        <span class="platform-item btn btn-sm btn-outline-warning"><i class="fas fa-apple-alt"></i> mac</span>
+                      
                       <li>
                         <span class="platform">Series:</span> 
                         <span class="developer-item text-lt">{this.state.series}</span>
@@ -769,7 +859,7 @@ class ItemPage extends Component {
                         <span class="platform">Car Brand:</span> 
                         <span class="developer-item text-lt">{this.state.car}</span>
                       </li>
-                    </ul>
+                    </ul>*/}
                     {/*<ul class="list-unstyled mb-3">
                       <li class="developer-wrapper d-flex">
                         <span class="developer">Series:</span>
@@ -826,6 +916,7 @@ class ItemPage extends Component {
               <div class="mx-3 mb-6">
                 <h6 class="mb-4 fw-400 ls-1 text-uppercase">Featured & Recommended</h6>
                 <hr class="border-secondary my-2"/>
+                <span>TODO what goes here?</span>
               </div>
               <div class="owl-carousel" data-carousel-items="1, 2, 3, 6">
                 <div class="item mx-3">
@@ -872,7 +963,7 @@ class ItemPage extends Component {
               <div class="row">
                 <div class="col-lg-8">
                   <div class="mb-8">
-                    <h6 class="mb-4 fw-400 ls-1 text-uppercase">Reviews</h6>
+                    <h6 class="mb-4 fw-400 ls-1 text-uppercase">Reviews (NOTE: our reviews have only a field)</h6>
                     <hr class="border-secondary mt-2 mb-6"/>
                     <div class="row">
                       {/*<!-- Item -->*/}
