@@ -4,7 +4,7 @@ import * as $ from 'jquery';
 
 const priceConversion = 10 ** 18;
 //pagination is out of scope for now, also would require more items to test properly
-const MAX_ITEMS_PER_PAGE = 5;
+const MAX_ITEMS_PER_PAGE = 10;
 
 
 class StorePage extends Component {
@@ -16,14 +16,14 @@ class StorePage extends Component {
             drizzle: props.drizzle,
             drizzleState: props.drizzleState,
             //-------------------- lists ----------
-            listCars: [],
-            filteredCars:[],
-            listSkins: [],
-            filteredSkins: [],
-            latestNFTs: [],
-            filteredNFTs: [],
-            listSimulators: [],
-            filteredSimulators: [],
+            latestCars: [], //contains all the cars returned by the contracts
+            filteredCars:[], //list of cars but filtered
+            latestSkins: [], //contains all the skins returned by the contracts
+            filteredSkins: [], //list of skins but filtered
+            latestNFTs: [], //contains all the nfts returned by the contracts
+            filteredNFTs: [], // list of nfst but filtered
+            listSimulators: [], //list of all simulators available
+            filteredSimulators: [], //list of filtered simulators
             //---------------- buy / view item ----------
             redirectBuyItem: false,
             selectedItemId: "",
@@ -41,7 +41,7 @@ class StorePage extends Component {
             //-------------------- other stuff --------------
             contract: null,
             currentPage: 1, //for future filtering purposes
-            numPages: 1,
+            numPages: 1, //num pages by default
             contractNFTs: null,
             context: props.context,
             //---------------------- filters -----------
@@ -102,6 +102,7 @@ class StorePage extends Component {
         // get info from marketplace NFT contract
         const numNfts = await contractNFTs.methods.currentTokenId().call();
         console.log('nft count:' + numNfts);
+        //TODO this number can be misleading because we do not parse them all (only => if(ownerAddress === contractNFTs.address) )
 
         let simsList = [];
         let simulatorsFilter = [];
@@ -116,6 +117,20 @@ class StorePage extends Component {
         //use search params?
         let queryString = this.state.searchQuery;
         const considerSearchQuery = (queryString && queryString.length > 0);
+        let maxElems = 0;
+
+        //by default on load, these filtered lists inlcude all the items, unless we are searching for somethign specific
+        if(considerSearchQuery){
+          filteredCarsList = filteredCarsList.filter(value => {
+            
+            return this.shouldIncludeCarBySearchQuery(queryString.toLowerCase(), value);
+
+          });
+
+          filteredSkinsList = filteredSkinsList.filter(value => {
+            return this.shouldIncludeSkinBySearchQuery(queryString.toLowerCase(), value);
+          });
+        } 
         
         //let currentPage = this;
         for (let i = 1; i < parseInt(numNfts) + 1; i++) {
@@ -150,8 +165,13 @@ class StorePage extends Component {
 
                             //global list of all
                             nftlist.push(data);
-                            //TESTING ONLY duplicate it 5 times
-                            for(let j = 0; j<5; j++) {
+
+                            //update the max elements every time, as we will consider this as the 
+                            maxElems = nftlist.length;
+
+                            //TODO UNCOMMENT BLOCK BELLOW FOR TESTING PAGINATION ONLY -> duplicate each NFT 5 times
+                            //--------------------------------------------------------------------------------
+                            /**for(let j = 0; j<5; j++) {
                               
                                 let newOne = Object.assign({}, data);;
                                 newOne.series = data.series + "_" + j;
@@ -160,13 +180,13 @@ class StorePage extends Component {
                                 console.log("NEW ONE " + j + " IS " + JSON.stringify(newOne));
                                 nftlist.push(newOne);
                               
-                            }
+                            }*/
+                            //--------------------------------------------------------------------------------
                             
-
                             //only filtered list
                             if(considerSearchQuery && (this.shouldIncludeNFTBySearchQuery(queryString.toLowerCase(), data)) ){
                               filteredNFTsList.push(data);
-                            }
+                            }//otherwise goes on the default list => nftlist
                             
 
                             //add simulator if not present already 
@@ -192,14 +212,17 @@ class StorePage extends Component {
 
                               
                             }
-                           
 
-                            this.setState({ latestNFTs: nftlist, 
-                                          filteredNFTs: considerSearchQuery ? filteredNFTsList: this.paginate(nftlist, this.state.currentPage), 
+                            //this this GET is assync we need to recalaculate the pagination after every grab
+                            this.recalculatePaginationAndNumPages(maxElems, filteredCarsList, filteredSkinsList);
+                        
+
+                            this.setState({ 
+                                          latestNFTs: nftlist, 
+                                          filteredNFTs: considerSearchQuery ? this.paginate(filteredNFTsList, this.state.currentPage): this.paginate(nftlist, this.state.currentPage), 
                                           listSimulators: simsList, 
                                           activeSimulatorsFilter: simulatorsFilter 
                                         });
-                        
                         }
                     }.bind(this);
                     xmlhttp.onerror = function (e) {
@@ -212,42 +235,46 @@ class StorePage extends Component {
                 console.error(e);
             }
         }
-
         
-
-        if(considerSearchQuery){
-          filteredCarsList = filteredCarsList.filter(value => {
-            
-            return this.shouldIncludeCarBySearchQuery(queryString.toLowerCase(), value);
-
-          });
-
-          filteredSkinsList = filteredSkinsList.filter(value => {
-            return this.shouldIncludeSkinBySearchQuery(queryString.toLowerCase(), value);
-          });
-        } 
 
         //get the number of elements of the bigger list, use it to define the number of pages, minimum 1
-        let maxElems = numNfts;
-        if(filteredCarsList.length > maxElems) {
-          maxElems = filteredCarsList.length;
-        }
-
-        if(filteredSkinsList.length > maxElems) {
-          maxElems = filteredSkinsList.length;
-        }
-        console.log("max elemenst: " + maxElems + " num pages: " +  Math.ceil((maxElems / MAX_ITEMS_PER_PAGE)) || 1 );
-        
+        //NOTE: we might reach this part before processing all NFTS, so we also call this inside the loop above
+        this.recalculatePaginationAndNumPages(maxElems, filteredCarsList, filteredSkinsList);
+        //these won´t change, set only here
         this.setState(
           { 
-          listCars: response_cars, 
-          numPages: ( Math.ceil((maxElems / MAX_ITEMS_PER_PAGE) ) || 1),
-          filteredCars: this.paginate(filteredCarsList, this.state.currentPage), 
-          listSkins: response_skins, 
-          filteredSkins: this.paginate(filteredSkinsList, this.state.currentPage), 
+          latestCars: response_cars, 
+          latestSkins: response_skins, 
           contract: contract, 
           contractNFTs: contractNFTs 
         });
+        
+        console.log("END getNFTSData");
+    }
+
+    /**
+     * Calculate pagination and set state
+     * @param {*} maxElems 
+     * @param {*} filteredCarsList 
+     * @param {*} filteredSkinsList 
+     */
+    recalculatePaginationAndNumPages(maxElems, filteredCarsList, filteredSkinsList) {
+      if(filteredCarsList.length > maxElems) {
+        maxElems = filteredCarsList.length;
+      }
+
+      if(filteredSkinsList.length > maxElems) {
+        maxElems = filteredSkinsList.length;
+      }
+      console.log("max elemenst: " + maxElems + " num pages: " +  Math.ceil((maxElems / MAX_ITEMS_PER_PAGE)) || 1 );
+      
+      this.setState(
+        { 
+        numPages: ( Math.ceil((maxElems / MAX_ITEMS_PER_PAGE) ) || 1),
+        filteredCars: this.paginate(filteredCarsList, this.state.currentPage), 
+        filteredSkins: this.paginate(filteredSkinsList, this.state.currentPage), 
+        
+      });
     }
 
     /**
@@ -285,11 +312,11 @@ class StorePage extends Component {
 
         //nothing to show, all price filters disabled
         if(enabledSimulators.length === 0) {
-          this.setState({filteredNFTs : [], filteredSkins: [], filteredCars: [] });
+          this.setState({filteredNFTs : [], filteredSkins: [], filteredCars: [], currentPage: 1, numPages: 1 });
         } else {
 
           this.filterSkinsBySimulator(enabledSimulators);
-
+          this.filterCarsBySimulator(enabledSimulators);
           this.filterNFTsBySimulator(enabledSimulators);
         }
     }
@@ -297,7 +324,7 @@ class StorePage extends Component {
     //filter skins by simulator
     filterSkinsBySimulator(enabledSimulators) {
       
-      let filteredListBySimulator = this.state.listSkins.filter( function(SKIN){
+      let filteredListBySimulator = this.state.latestSkins.filter( function(SKIN){
       
           for (let simulator of enabledSimulators) {
                
@@ -312,15 +339,15 @@ class StorePage extends Component {
             
         });
   
-  
-        this.setState({filteredSkins: filteredListBySimulator})
+        
+        this.setState({filteredSkins: this.paginate(filteredListBySimulator, this.state.currentPage) })
     }
     
 
     //filter skinn by price
     filterSkinsByPrice(enabledPrices) {
      
-      let filteredListByPrice = this.state.listSkins.filter( function(SKIN){
+      let filteredListByPrice = this.state.latestSkins.filter( function(SKIN){
       
 
           let skinPrice = (SKIN.ad.price / priceConversion);
@@ -338,7 +365,7 @@ class StorePage extends Component {
             
         });
   
-        this.setState({filteredSkins: filteredListByPrice})
+        this.setState({filteredSkins: this.paginate(filteredListByPrice, this.state.currentPage)})
     }
 
     //filter NFTs by simulator
@@ -360,7 +387,7 @@ class StorePage extends Component {
           
       });
 
-      this.setState({filteredNFTs: filteredListBySimulator});
+      this.setState({filteredNFTs: this.paginate(filteredListBySimulator, this.state.currentPage)});
     }
 
     filterNFTsByPrice(enabledPrices) {
@@ -381,13 +408,13 @@ class StorePage extends Component {
           
       });
 
-      this.setState({filteredNFTs: filteredListByPrice});
+      this.setState({filteredNFTs: this.paginate(filteredListByPrice, this.state.currentPage)});
     }
 
     //filter cars by price
     filterCarsByPrice(enabledPrices) {
 
-      let filteredListByPrice = this.state.listCars.filter( function(Car){
+      let filteredListByPrice = this.state.latestCars.filter( function(Car){
       
 
         let carPrice = (Car.ad.price / priceConversion);
@@ -405,12 +432,12 @@ class StorePage extends Component {
           
       });
 
-      this.setState({filteredCars: filteredListByPrice})
+      this.setState({filteredCars: this.paginate(filteredListByPrice, this.state.currentPage)})
    }
 
    filterCarsBySimulator(enabledSimulators) {
       
-    let filteredListBySimulator = this.state.listCars.filter( function(Car){
+    let filteredListBySimulator = this.state.latestCars.filter( function(Car){
     
         for (let simulator of enabledSimulators) {
              
@@ -426,7 +453,7 @@ class StorePage extends Component {
       });
 
 
-      this.setState({filteredCars: filteredListBySimulator})
+      this.setState({filteredCars: this.paginate(filteredListBySimulator, this.state.currentPage)})
   }
 
 
@@ -449,11 +476,11 @@ class StorePage extends Component {
 
         //nothing to show, all price filters disabled
         if(enabledPrices.length === 0) {
-          this.setState({filteredNFTs : [], filteredSkins: [], filteredCars: []});
+          this.setState({filteredNFTs : [], filteredSkins: [], filteredCars: [], numPages: 1, currentPage: 1});
         } else {
 
           this.filterSkinsByPrice(enabledPrices);
-
+          this.filterCarsByPrice(enabledPrices);
           this.filterNFTsByPrice(enabledPrices);
         }
 
@@ -472,7 +499,7 @@ class StorePage extends Component {
       this.setState({activePriceFilters: filtersPrice});
 
       if(filtersPrice.length === 0) {
-        this.setState({filteredNFTs : [], filteredSkins: [], filteredCars: []});
+        this.setState({filteredNFTs : [], filteredSkins: [], filteredCars: [], numPages: 1, currentPage: 1});
       } else {
 
         this.filterSkinsByPrice(filtersPrice);
@@ -492,7 +519,7 @@ class StorePage extends Component {
       this.setState({activeSimulatorsFilter: filtersSimulators});
 
       if(filtersSimulators.length === 0) {
-        this.setState({filteredNFTs : [], filteredSkins: [],filteredCars: []});
+        this.setState({filteredNFTs : [], filteredSkins: [],filteredCars: [], numPages: 1, currentPage: 1});
       } else {
 
         this.filterSkinsBySimulator(filtersSimulators);
@@ -603,8 +630,8 @@ class StorePage extends Component {
       evt.preventDefault();
       console.log("PAGE NUM: " + pageNum);
       let arrayPaginatedNFTS = this.paginate(this.state.latestNFTs, pageNum);
-      let arrayPaginatedCars = this.paginate(this.state.listCars, pageNum);
-      let arrayPaginatedSkins = this.paginate(this.state.listSkins, pageNum);
+      let arrayPaginatedCars = this.paginate(this.state.latestCars, pageNum);
+      let arrayPaginatedSkins = this.paginate(this.state.latestSkins, pageNum);
       
       this.setState({currentPage: pageNum, filteredNFTs: arrayPaginatedNFTS, filteredCars: arrayPaginatedCars, filteredSkins: arrayPaginatedSkins});
     }
@@ -622,8 +649,8 @@ class StorePage extends Component {
       console.log("GO TO NEXT PAGE: " + currPage);
 
       let arrayPaginatedNFTS = this.paginate(this.state.latestNFTs, currPage);
-      let arrayPaginatedCars = this.paginate(this.state.listCars, currPage);
-      let arrayPaginatedSkins = this.paginate(this.state.listSkins, currPage);
+      let arrayPaginatedCars = this.paginate(this.state.latestCars, currPage);
+      let arrayPaginatedSkins = this.paginate(this.state.latestSkins, currPage);
       
       this.setState({currentPage: currPage, filteredNFTs: arrayPaginatedNFTS, filteredCars: arrayPaginatedCars, filteredSkins: arrayPaginatedSkins});
     }
@@ -641,10 +668,48 @@ class StorePage extends Component {
       console.log("GO TO PREVIOUS PAGE: " + currPage);
 
       let arrayPaginatedNFTS = this.paginate(this.state.latestNFTs, currPage);
-      let arrayPaginatedCars = this.paginate(this.state.listCars, currPage);
-      let arrayPaginatedSkins = this.paginate(this.state.listSkins, currPage);
+      let arrayPaginatedCars = this.paginate(this.state.latestCars, currPage);
+      let arrayPaginatedSkins = this.paginate(this.state.latestSkins, currPage);
       
       this.setState({currentPage: currPage, filteredNFTs: arrayPaginatedNFTS, filteredCars: arrayPaginatedCars, filteredSkins: arrayPaginatedSkins});
+    }
+
+    renderPagination = (suffix) => {
+        //provide unique identifiers for <li> elements
+        let previousKey = "pageprevious_" + suffix;
+        let page_1_Key = "page1_" + suffix;
+        let page_2_Key = "page2_" + suffix;
+        let page_3_Key = "page3_" + suffix;
+        let nextKey = "pagenext_" + suffix;
+        return <nav className="mt-4 pt-4 border-top border-secondary" aria-label="Page navigation">
+                  <ul className="pagination justify-content-end">
+                    {this.state.numPages > 1 &&
+                    <li key={previousKey} className="page-item">
+                    <a className="page-link" href="#" onClick={(e) => this.movePreviousPage(e)} aria-label="Previous">
+                      {/*<!--<span className="ti-angle-left small-7" aria-hidden="true"></span>
+                      <span className="sr-only">Previous</span>-->*/}
+                      &lt;
+                    </a>
+                    </li>
+                    }
+                    <li key={page_1_Key} className={`page-item ${this.state.currentPage === 1 ? 'active' : ''}`}><a className="page-link" href="#" onClick={(e) => this.changeActivePage(e,1)}>1</a></li>
+                    {this.state.numPages >=2 &&
+                    <li key={page_2_Key} className={`page-item ${this.state.currentPage === 2 ? 'active' : ''}`}><a className="page-link" href="#" onClick={(e) => this.changeActivePage(e,2)}>2</a></li>
+                    }
+                    {this.state.numPages >=3 &&
+                    <li key={page_3_Key} className={`page-item ${this.state.currentPage === 3 ? 'active' : ''}`}><a className="page-link" href="#" onClick={(e) => this.changeActivePage(e,3)}>3</a></li>
+                    }
+                    {this.state.numPages > 1 &&
+                    <li key={nextKey} className="page-item">
+                      <a className="page-link" href="#" onClick={(e) => this.moveNextPage(e)} aria-label="Next">
+                        {/*<!--<span className="ti-angle-right small-7" aria-hidden="true"></span>
+                        <span className="sr-only">Next</span>-->*/}
+                        &gt;
+                      </a>
+                    </li>
+                    }
+                  </ul>
+                </nav>
     }
 
     performBuyItemRedirection() {
@@ -819,6 +884,9 @@ class StorePage extends Component {
         <div className="container">
           <header className="header">
             <h2>Items</h2>
+            <div className="navigation-aligned-right">
+             {this.renderPagination('top')}
+            </div>
           </header>
           <div className="position-relative">
             <div className="row">
@@ -1223,27 +1291,7 @@ class StorePage extends Component {
                 </div>
 
                 {/*<!-- pagination -->*/}
-                <nav className="mt-4 pt-4 border-top border-secondary" aria-label="Page navigation">
-                  <ul className="pagination justify-content-end">
-                    <li key="pageprevious" className="page-item">
-                      <a className="page-link" href="#" onClick={(e) => this.movePreviousPage(e)} aria-label="Previous">
-                        {/*<!--<span className="ti-angle-left small-7" aria-hidden="true"></span>
-                        <span className="sr-only">Previous</span>-->*/}
-                        &lt;
-                      </a>
-                    </li>
-                    <li key="page1" className={`page-item ${this.state.currentPage === 1 ? 'active' : ''}`}><a className="page-link" href="#" onClick={(e) => this.changeActivePage(e,1)}>1</a></li>
-                    <li key="page2" className={`page-item ${this.state.currentPage === 2 ? 'active' : ''}`}><a className="page-link" href="#" onClick={(e) => this.changeActivePage(e,2)}>2</a></li>
-                    <li key="page3" className={`page-item ${this.state.currentPage === 3 ? 'active' : ''}`}><a className="page-link" href="#" onClick={(e) => this.changeActivePage(e,3)}>3</a></li>
-                    <li key="pagenext" className="page-item">
-                      <a className="page-link" href="#" onClick={(e) => this.moveNextPage(e)} aria-label="Next">
-                        {/*<!--<span className="ti-angle-right small-7" aria-hidden="true"></span>
-                        <span className="sr-only">Next</span>-->*/}
-                        &gt;
-                      </a>
-                    </li>
-                  </ul>
-                </nav>
+                {this.renderPagination('bottom')}
                 {/*<!-- /.pagination -->*/}
               </div>
               <div className="col-lg-4">
