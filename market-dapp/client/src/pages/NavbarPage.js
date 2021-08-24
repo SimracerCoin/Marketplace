@@ -7,6 +7,7 @@ class NavbarPage extends React.Component {
     
     constructor(props) {
         super(props);
+        this.searchRef = React.createRef();
 
         this.state = {
             drizzle: props.drizzle,
@@ -39,7 +40,8 @@ class NavbarPage extends React.Component {
             to={{
                 pathname: "/store",
                 state: {
-                    searchQuery: this.state.searchQuery
+                    searchQuery: this.state.searchQuery,
+                    searchRef: this.searchRef
                 }
             }}
         />)
@@ -98,7 +100,7 @@ class NavbarPage extends React.Component {
                         </div>
                         <div className="col-4 d-none d-lg-block mx-auto">
                             <form className="input-group border-0 bg-transparent" action="/store" mthod="GET">
-                                <input className="form-control" value={this.state.searchQuery} name="q" onChange={this.handleChange} type="search" placeholder="Search" aria-label="Search"/>
+                                <input ref={this.searchRef} className="form-control" value={this.state.searchQuery} id="search-field" name="q" onChange={this.handleChange} type="search" placeholder="Search" aria-label="Search"/>
                                 <div className="input-group-append">
                                     <button className="btn btn-sm btn-warning text-secondary my-0 mx-0" type="submit" onClick={this.searchOnClick}><i className="fas fa-search"></i></button>
                                 </div>

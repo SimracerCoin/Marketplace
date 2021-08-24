@@ -31,7 +31,8 @@ class MainPage extends Component {
             vendorNickname: "",
             ipfsPath: "",
             contract: null,
-            contractNFTs: null
+            contractNFTs: null,
+            similarItems: []
         }
 
     }
@@ -90,6 +91,15 @@ class MainPage extends Component {
     buyItem = async (event, itemId, track, simulator, season, series, description, price, carBrand, address, ipfsPath, imagePath, isNFT) => {
         event.preventDefault();
 
+        let similarItems = [];
+        if(isNFT) {
+            similarItems = similarItems.concat(this.state.latestNFTs);
+        } else if(track == null || season == null) {
+            similarItems = similarItems.concat(this.state.listSkins);
+        } else {
+            similarItems = similarItems.concat(this.state.listCars);
+        }
+
         this.setState({
             redirectBuyItem: true,
             selectedItemId: itemId,
@@ -105,6 +115,7 @@ class MainPage extends Component {
             vendorNickname: address ? await this.state.contract.methods.getNickname(address).call() : "",
             ipfsPath: ipfsPath,
             isNFT: isNFT,
+            similarItems: similarItems
         });
     }
 
@@ -133,6 +144,7 @@ class MainPage extends Component {
                         vendorNickname: this.state.vendorNickname,
                         ipfsPath: this.state.ipfsPath,
                         isNFT: this.state.isNFT,
+                        similarItems: this.state.similarItems
                     }
                 }}
             />)

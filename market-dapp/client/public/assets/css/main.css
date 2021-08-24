@@ -502,11 +502,14 @@ pre {
   overflow-y: scroll; }
 
 .container {
-  width: 100%;
+  
   padding-right: 15px;
   padding-left: 15px;
   margin-right: auto;
-  margin-left: auto; }
+  margin-left: auto; 
+  min-width: 80%!important;
+  width:80%;
+}
   @media (min-width: 576px) {
     .container {
       max-width: 540px; } }
@@ -518,7 +521,10 @@ pre {
       max-width: 960px; } }
   @media (min-width: 1200px) {
     .container {
-      max-width: 1140px; } }
+      max-width: 1140px; } 
+    }
+
+  
 
 .container-fluid {
   width: 100%;

@@ -5,8 +5,8 @@ class ReviewsComponent extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            drizzle: props.drizzle,
-            drizzleState: props.drizzleState,
+            //drizzle: props.drizzle,
+            //drizzleState: props.drizzleState,
             /*itemId: props.location.state.selectedItemId,
             track: props.location.state.selectedTrack,
             simulator: props.location.state.selectedSimulator,
@@ -20,8 +20,8 @@ class ReviewsComponent extends Component {
             ipfsPath: props.location.state.ipfsPath,
             imagePath: props.location.state.imagePath,
             isNFT: props.location.state.isNFT,*/
-            contract: null,
-            currentAccount: "",
+            //contract: null,
+            //currentAccount: "",
             comment: props.comment
           
         }

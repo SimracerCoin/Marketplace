@@ -52,7 +52,8 @@ class StorePage extends Component {
               {name: "tier_2", checked: true, label: "> 0.5 ETH <= 1.0 ETH", min: 0.500000001, max: 1.0},
               {name: "tier_3", checked: true, label: "> 1.0 ETH", min: 1.00000001, max: 100000000}
             ],
-            searchQuery: ""
+            searchQuery: "",
+            //searchRef: props.searchRef //search field
         }
 
         // This binding is necessary to make `this` work in the callback
@@ -70,6 +71,14 @@ class StorePage extends Component {
           this.setState({searchQuery: searchQuery});
         }
         this.getNFTsData();
+
+       
+        if(searchQuery) {
+          let elem = document.getElementById('search-field');
+          if(elem) {
+            elem.value = this.state.searchQuery;
+          }
+        }
       
         //------------------------- Collapser hack -------------------------
         //all the js/jquery will get loaded before the elements are displayed on page so the handlers on main.js don´t work
@@ -713,6 +722,15 @@ class StorePage extends Component {
     }
 
     performBuyItemRedirection() {
+      let similarItems = [];
+      if (this.state.isNFT) {
+        similarItems = similarItems.concat(this.state.latestNFTs);
+      } else if (this.state.selectedTrack == null || this.state.selectedSeason == null) {
+        similarItems = similarItems.concat(this.state.latestSkins);
+      } else {
+        similarItems = similarItems.concat(this.state.latestCars);
+      }
+
       return (<Redirect
             to={{
                 pathname: "/item",
@@ -730,6 +748,7 @@ class StorePage extends Component {
                     vendorNickname: this.state.vendorNickname,
                     ipfsPath: this.state.ipfsPath,
                     isNFT: this.state.isNFT,
+                    similarItems: similarItems
                 }
             }}
         />)
@@ -758,6 +777,62 @@ class StorePage extends Component {
   
     }
 
+    getListWithResults = () => {
+      if(this.state.filteredNFTs.length > 0) {
+        return "ownership";
+      }
+      if(this.state.filteredCars.length > 0) {
+        return "carsetup";
+      }
+
+      if(this.state.filteredSkins.length > 0) {
+        return "carskins";
+      }
+
+      return "ownership";
+    }
+
+    getActiveClasses = (key) => {
+
+      let queryString = this.state.searchQuery;
+      const considerSearchQuery = (queryString && queryString.length > 0);
+      if(!considerSearchQuery) {
+        if(key === "ownership") {
+          return "nav-link active show";
+        } else {
+          return "nav-link";
+        }
+      } else {
+        let active = this.getListWithResults();
+        //consider search
+         if(key === active) {
+            return "nav-link active show";
+         }
+         return "nav-link";
+      }
+     
+    }
+
+    getPanelActiveClasses = (key) => {
+
+      let queryString = this.state.searchQuery;
+      const considerSearchQuery = (queryString && queryString.length > 0);
+      if(!considerSearchQuery) {
+        if(key === "ownership") {
+          return "tab-pane fade active show";
+        } else {
+          return "tab-pane fade";
+        }
+      } else {
+        let active = this.getListWithResults();
+        //consider search
+         if(key === active) {
+            return "tab-pane fade active show";
+         }
+         return "tab-pane fade";
+      }
+     
+    }
 
     render() {
 
@@ -771,7 +846,6 @@ class StorePage extends Component {
 
        return this.performBuyItemRedirection();
       }
-      
 
       return (
             
@@ -884,29 +958,29 @@ class StorePage extends Component {
         <div className="container">
           <header className="header">
             <h2>Items</h2>
-            <div className="navigation-aligned-right">
-             {this.renderPagination('top')}
-            </div>
           </header>
           <div className="position-relative">
             <div className="row">
               <div className="col-lg-8">
+              <div className="navigation-aligned-right">
+                {this.renderPagination('top')}
+              </div>
                 {/*<!-- nav tabs -->*/}
                 <ul className="spotlight-tabs spotlight-tabs-dark nav nav-tabs border-0 mb-5 position-relative flex-nowrap" id="most_popular_products-carousel-01" role="tablist">
                   <li key="ownership" className="nav-item text-fnwp position-relative">
-                    <a className="nav-link active show" id="mp-2-01-tab" data-toggle="tab" href="#mp-2-01-c" role="tab" aria-controls="mp-2-01-c" aria-selected="true">Car Ownership NFTs</a>
+                    <a className={this.getActiveClasses('ownership')} id="mp-2-01-tab" data-toggle="tab" href="#mp-2-01-c" role="tab" aria-controls="mp-2-01-c" aria-selected="true">Car Ownership NFTs</a>
                   </li>
                   <li key="carsetup" className="nav-item text-fnwp position-relative"> 
-                    <a className="nav-link" id="mp-2-02-tab" data-toggle="tab" href="#mp-2-02-c" role="tab" aria-controls="mp-2-02-c" aria-selected="false">Car Setups</a>
+                    <a className={this.getActiveClasses('carsetup')} id="mp-2-02-tab" data-toggle="tab" href="#mp-2-02-c" role="tab" aria-controls="mp-2-02-c" aria-selected="false">Car Setups</a>
                   </li>
                   <li key="carskins" className="nav-item text-fnwp position-relative"> 
-                    <a className="nav-link" id="mp-2-03-tab" data-toggle="tab" href="#mp-2-03-c" role="tab" aria-controls="mp-2-03-c" aria-selected="false">Car Skins</a>
+                    <a className={this.getActiveClasses('carskins')} id="mp-2-03-tab" data-toggle="tab" href="#mp-2-03-c" role="tab" aria-controls="mp-2-03-c" aria-selected="false">Car Skins</a>
                   </li>
                 </ul>
                 {/*<!-- tab panes -->*/}
                 <div id="color_sel_Carousel-content_02" className="tab-content position-relative w-100">
                   {/*<!-- tab item -->*/}
-                  <div className="tab-pane fade active show" id="mp-2-01-c" role="tabpanel" aria-labelledby="mp-2-01-tab">
+                  <div className={this.getPanelActiveClasses('ownership')} id="mp-2-01-c" role="tabpanel" aria-labelledby="mp-2-01-tab">
                     <div className="row">
                       
                   
@@ -950,7 +1024,9 @@ class StorePage extends Component {
                         </div>*/}
                       {/*<!-- /.item -->*/}
                       {/*<!-- item -->*/}
-
+                            {this.state.filteredNFTs.length === 0 &&
+                              <div className="col-md-12 mb-4"><span>No items found in this category</span></div>
+                            }
 
                             {this.state.filteredNFTs.map(function(value, index){
                                 
@@ -1011,7 +1087,7 @@ class StorePage extends Component {
                                     <div className="item_price">
                                       <div className="row align-items-center h-100 no-gutters">
                                         <div className="text-right">
-                                          <span className="fw-600 td-lt">{price / priceConversion} ETH</span><br/>
+                                          {/*<span className="fw-600 td-lt">{price / priceConversion} ETH</span><br/>*/}
                                           <span className="fw-600">{price / priceConversion} ETH</span>
                                         </div>
                                       </div>
@@ -1108,9 +1184,13 @@ class StorePage extends Component {
                   {/*<!-- tab item -->*/}
 
                   {/*<!-- tab item -->*/}
-                  <div className="tab-pane fade" id="mp-2-02-c" role="tabpanel" aria-labelledby="mp-2-02-tab">
+                  <div className={this.getPanelActiveClasses('carsetup')} id="mp-2-02-c" role="tabpanel" aria-labelledby="mp-2-02-tab">
                     <div className="row">
                       {/*<!-- item -->*/}
+
+                      {this.state.filteredCars.length === 0 &&
+                          <div className="col-md-12 mb-4"><span>No items found in this category</span></div>
+                      }
                       {this.state.filteredCars.map(function(value, index){
                                 
                             let carBrand = value.info.carBrand
@@ -1170,7 +1250,7 @@ class StorePage extends Component {
                                <div className="item_price">
                                  <div className="row align-items-center h-100 no-gutters">
                                    <div className="text-right">
-                                     <span className="fw-600 td-lt">{price / priceConversion} ETH</span><br/>
+                                     {/*<span className="fw-600 td-lt">{price / priceConversion} ETH</span><br/>*/}
                                      <span className="fw-600">{price / priceConversion} ETH</span>
                                    </div>
                                  </div>
@@ -1188,7 +1268,7 @@ class StorePage extends Component {
                   </div>
 
                   {/*<!-- tab item -->*/}
-                  <div className="tab-pane fade" id="mp-2-03-c" role="tabpanel" aria-labelledby="mp-2-03-tab">
+                  <div className={this.getPanelActiveClasses('carskins')} id="mp-2-03-c" role="tabpanel" aria-labelledby="mp-2-03-tab">
                     <div className="row">
                       {/*<!-- item -->*/}
                       {/*
@@ -1230,6 +1310,9 @@ class StorePage extends Component {
                         </a>
                       </div>
                       */}
+                        {this.state.filteredSkins.length === 0 &&
+                          <div className="col-md-12 mb-4"><span>No items found in this category</span></div>
+                        }
                         {this.state.filteredSkins.map(function(value, index) {
 
                                     let carBrand = value.info.carBrand
@@ -1274,7 +1357,7 @@ class StorePage extends Component {
                                             <div className="item_price">
                                             <div className="row align-items-center h-100 no-gutters">
                                                 <div className="text-right">
-                                                <span className="fw-600 td-lt">{price / priceConversion} ETH</span><br/>
+                                                {/*<span className="fw-600 td-lt">{price / priceConversion} ETH</span><br/>*/}
                                                 <span className="fw-600">{price / priceConversion} ETH</span>
                                                 </div>
                                             </div>
