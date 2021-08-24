@@ -7,7 +7,6 @@ class NavbarPage extends React.Component {
     
     constructor(props) {
         super(props);
-        this.searchRef = React.createRef();
 
         this.state = {
             drizzle: props.drizzle,
@@ -32,16 +31,23 @@ class NavbarPage extends React.Component {
         const currentAccount = this.state.drizzleState.accounts[0];
         const haveNotifications = (await contract.methods.listNotificationsPerUser(currentAccount).call()).length != 0;
 
-        this.setState({ currentAccount: currentAccount, haveNotifications: haveNotifications, searchQuery: "" });
+        let previousSearch = localStorage.getItem('searchQuery');
+        let searchQuery = "";
+        if(previousSearch && previousSearch.length>0) {
+            searchQuery = previousSearch;
+        }
+        this.setState({ currentAccount: currentAccount, haveNotifications: haveNotifications, searchQuery: searchQuery });
     }
 
     gotoStoreAndSearch() {
+
+        //save it on localstorage
+        localStorage.setItem('searchQuery', this.state.searchQuery);
         return (<Redirect
             to={{
                 pathname: "/store",
                 state: {
-                    searchQuery: this.state.searchQuery,
-                    searchRef: this.searchRef
+                    searchQuery: this.state.searchQuery
                 }
             }}
         />)
@@ -100,7 +106,7 @@ class NavbarPage extends React.Component {
                         </div>
                         <div className="col-4 d-none d-lg-block mx-auto">
                             <form className="input-group border-0 bg-transparent" action="/store" mthod="GET">
-                                <input ref={this.searchRef} className="form-control" value={this.state.searchQuery} id="search-field" name="q" onChange={this.handleChange} type="search" placeholder="Search" aria-label="Search"/>
+                                <input className="form-control" value={this.state.searchQuery} id="search-field" name="q" onChange={this.handleChange} type="search" placeholder="Search" aria-label="Search"/>
                                 <div className="input-group-append">
                                     <button className="btn btn-sm btn-warning text-secondary my-0 mx-0" type="submit" onClick={this.searchOnClick}><i className="fas fa-search"></i></button>
                                 </div>
