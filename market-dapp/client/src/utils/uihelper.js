@@ -42,4 +42,5 @@ export default class UIHelper {
     alert("Something wrong. Please try again.");
     console.log(error);
   }
+  
 }

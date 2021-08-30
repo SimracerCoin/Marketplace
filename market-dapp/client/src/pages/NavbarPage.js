@@ -1,9 +1,10 @@
 import React from "react";
 import { Navbar, Nav, NavDropdown, Dropdown } from 'react-bootstrap'; // Check out drizzle's react components at @drizzle/react-components
-import { Link, NavLink } from 'react-router-dom';
+import { Link, NavLink, Redirect } from 'react-router-dom';
 
 class NavbarPage extends React.Component {
 
+    
     constructor(props) {
         super(props);
 
@@ -19,7 +20,8 @@ class NavbarPage extends React.Component {
             selectedSimulator: "",
             selectedSeason: "",
             selectedPrice: "",
-            selectedCarBrand: ""
+            selectedCarBrand: "",
+            searchQuery: ""
         }
 
     }
@@ -29,12 +31,41 @@ class NavbarPage extends React.Component {
         const currentAccount = this.state.drizzleState.accounts[0];
         const haveNotifications = (await contract.methods.listNotificationsPerUser(currentAccount).call()).length != 0;
 
-        this.setState({ currentAccount: currentAccount, haveNotifications: haveNotifications });
+        let previousSearch = localStorage.getItem('searchQuery');
+        let searchQuery = "";
+        if(previousSearch && previousSearch.length>0) {
+            searchQuery = previousSearch;
+        }
+        this.setState({ currentAccount: currentAccount, haveNotifications: haveNotifications, searchQuery: searchQuery });
+    }
+
+    gotoStoreAndSearch() {
+
+        //save it on localstorage
+        localStorage.setItem('searchQuery', this.state.searchQuery);
+        return (<Redirect
+            to={{
+                pathname: "/store",
+                state: {
+                    searchQuery: this.state.searchQuery
+                }
+            }}
+        />)
     }
 
     searchOnClick = (event) => {
-        event.preventDefault();
-        alert('Search feature coming soon!'); return false;
+        if(!this.state.searchQuery) {
+            event.preventDefault();
+        }
+
+        this.gotoStoreAndSearch();
+       
+        return false;
+        
+    }
+
+    handleChange = (event) => {
+        this.setState({searchQuery: event.target.value});
     }
 
     render() {
@@ -74,10 +105,10 @@ class NavbarPage extends React.Component {
                             <Navbar.Brand href="/" className="logo font-weight-bold" style={{alignItems: "first baseline"}}><img src="assets/img/logo-2-sm.png" alt="Simthunder" /> beta</Navbar.Brand>
                         </div>
                         <div className="col-4 d-none d-lg-block mx-auto">
-                            <form className="input-group border-0 bg-transparent">
-                                <input className="form-control" type="search" placeholder="Search" aria-label="Search" onClick={this.searchOnClick} />
+                            <form className="input-group border-0 bg-transparent" action="/store" mthod="GET">
+                                <input className="form-control" value={this.state.searchQuery} id="search-field" name="q" onChange={this.handleChange} type="search" placeholder="Search" aria-label="Search"/>
                                 <div className="input-group-append">
-                                    <button className="btn btn-sm btn-warning text-secondary my-0 mx-0" disabled type="submit"><i className="fas fa-search"></i></button>
+                                    <button className="btn btn-sm btn-warning text-secondary my-0 mx-0" type="submit" onClick={this.searchOnClick}><i className="fas fa-search"></i></button>
                                 </div>
                             </form>
                         </div>

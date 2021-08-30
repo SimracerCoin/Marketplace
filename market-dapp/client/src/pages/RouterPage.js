@@ -11,6 +11,7 @@ import SellOwnership from "./SellOwnership";
 import NavbarPage from "./NavbarPage";
 import RegisterVendor from "./RegisterVendor";
 import ItemPage from "./ItemPage";
+import ItemPageOld from "./ItemPageOld";
 import NotificationsPage from "./NotificationsPage"
 import SellerPage from "./SellerPage"
 import AboutPage from "./AboutPage"
@@ -48,6 +49,7 @@ class RouterPage extends Component {
                     </Route>
                     <Route path="/item">
                         <ItemPage drizzle={this.state.drizzle} drizzleState={this.state.drizzleState} />
+                        {/*<ItemPage drizzle={this.state.drizzle} drizzleState={this.state.drizzleState} /> */}
                     </Route>
                     <Route exact path="/notifications">
                         <NotificationsPage drizzle={this.state.drizzle} drizzleState={this.state.drizzleState} />
@@ -61,7 +63,7 @@ class RouterPage extends Component {
                     <Route exact path="/faqs">
                         <FaqsPage />
                     </Route>
-                    <Route exact path="/store">
+                    <Route path="/store">
                         <StorePage drizzle={this.state.drizzle} drizzleState={this.state.drizzleState}/>
                     </Route>
                     <Route exact path="/">
