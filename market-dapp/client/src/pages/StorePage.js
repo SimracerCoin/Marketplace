@@ -61,9 +61,14 @@ class StorePage extends Component {
 
     }
 
+    
+
     //-----------------------------------------------------------------------------------------------------
     //-----------------------------------------------------------------------------------------------------
 
+    componentWillUnmount = async () => {
+      localStorage.removeItem('searchQuery');
+    }
     componentDidMount = async () => {
 
         const searchQuery = this.hasSearchFilter();
@@ -96,7 +101,6 @@ class StorePage extends Component {
     });
     
     }
-
 
     //get all contracts data
     async getNFTsData() {

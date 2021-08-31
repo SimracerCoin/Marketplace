@@ -39,6 +39,11 @@ class NavbarPage extends React.Component {
         this.setState({ currentAccount: currentAccount, haveNotifications: haveNotifications, searchQuery: searchQuery });
     }
 
+    componentWillUnmount = async (event) => {
+        //clean if anything
+        localStorage.removeItem('searchQuery');
+    }
+
     gotoStoreAndSearch() {
 
         //save it on localstorage
