@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { Redirect } from "react-router-dom";
 import * as $ from 'jquery';
+import UIHelper from "../utils/uihelper";
 
 const priceConversion = 10 ** 18;
 //pagination is out of scope for now, also would require more items to test properly
@@ -46,12 +47,17 @@ class StorePage extends Component {
             context: props.context,
             //---------------------- filters -----------
             activeSimulatorsFilter: [{simulator: "All", checked: true}], //default filter
+            priceStep: 0.0001,
+            priceMin: 0,
+            priceMinDefault: 0,
+            priceMax: 1000000,
+            priceMaxDefault: 1000,
+
             //just as reference, we can define others intervals if needed
-            activePriceFilters: [
-              {name: "tier_1", checked: true, label: "> 0.000001 ETH <= 0.5 ETH", min: 0.00001, max: 0.5},
-              {name: "tier_2", checked: true, label: "> 0.5 ETH <= 1.0 ETH", min: 0.500000001, max: 1.0},
-              {name: "tier_3", checked: true, label: "> 1.0 ETH", min: 1.00000001, max: 100000000}
-            ],
+            //activePriceFilters: [
+            //  {name: "min", label: "min", default_value: 0.00000001, value: 0.00000001},
+            //  {name: "max", label: "max", default_value: 100000000, value: 100000000}
+            //],
             searchQuery: "",
             //searchRef: props.searchRef //search field
         }
@@ -71,6 +77,8 @@ class StorePage extends Component {
     }
     componentDidMount = async () => {
 
+       UIHelper.showSpinning("loading ...");
+
         const searchQuery = this.hasSearchFilter();
         if(searchQuery && searchQuery.length > 0) {
           this.setState({searchQuery: searchQuery});
@@ -78,12 +86,12 @@ class StorePage extends Component {
         this.getNFTsData();
 
        
-        if(searchQuery) {
+        /*if(searchQuery) {
           let elem = document.getElementById('search-field');
           if(elem) {
             elem.value = this.state.searchQuery;
           }
-        }
+        }*/
       
         //------------------------- Collapser hack -------------------------
         //all the js/jquery will get loaded before the elements are displayed on page so the handlers on main.js don´t work
@@ -98,7 +106,10 @@ class StorePage extends Component {
         }
         
         //--------------------------------------------------------------
+
     });
+
+    
     
     }
 
@@ -247,6 +258,7 @@ class StorePage extends Component {
             } catch (e) {
                 console.error(e);
             }
+            
         }
         
 
@@ -263,6 +275,7 @@ class StorePage extends Component {
         });
         
         console.log("END getNFTSData");
+        UIHelper.hiddeSpinning();
     }
 
     /**
@@ -358,23 +371,12 @@ class StorePage extends Component {
     
 
     //filter skinn by price
-    filterSkinsByPrice(enabledPrices) {
+    filterSkinsByPrice(priceMin, priceMax) {
      
       let filteredListByPrice = this.state.latestSkins.filter( function(SKIN){
       
-
           let skinPrice = (SKIN.ad.price / priceConversion);
-             
-             
-          for (let tierPrice of enabledPrices) {
-                  
-            let include = ( skinPrice  > tierPrice.min &&  skinPrice  <= tierPrice.max );
-          
-            if(include) {
-              return true;
-            }
-          }
-          return false;
+          return ( skinPrice >= priceMin && skinPrice <= priceMax );
             
         });
   
@@ -403,21 +405,12 @@ class StorePage extends Component {
       this.setState({filteredNFTs: this.paginate(filteredListBySimulator, this.state.currentPage)});
     }
 
-    filterNFTsByPrice(enabledPrices) {
+    filterNFTsByPrice(priceMin, priceMax) {
 
        //get all the nfts available
       let filteredListByPrice = this.state.latestNFTs.filter( function(NFT){
-   
-        for (let tierPrice of enabledPrices) {
-     
-          let include = ( NFT.price  > tierPrice.min &&  NFT.price  <= tierPrice.max );
-          
-          if(include) {
-            return true;
-          }
-                
-        }
-        return false;
+
+          return (NFT.price >= priceMin &&  NFT.price <= priceMax );
           
       });
 
@@ -425,23 +418,12 @@ class StorePage extends Component {
     }
 
     //filter cars by price
-    filterCarsByPrice(enabledPrices) {
+    filterCarsByPrice(priceMin, priceMax) {
 
       let filteredListByPrice = this.state.latestCars.filter( function(Car){
       
-
         let carPrice = (Car.ad.price / priceConversion);
-           
-           
-        for (let tierPrice of enabledPrices) {
-                
-          let include = ( carPrice  > tierPrice.min &&  carPrice  <= tierPrice.max );
-        
-          if(include) {
-            return true;
-          }
-        }
-        return false;
+        return ( carPrice >= priceMin && carPrice <= priceMax );
           
       });
 
@@ -470,55 +452,37 @@ class StorePage extends Component {
   }
 
 
+    priceFilterChanged = (event, name) => {
 
-    priceFilterChanged = (event) => {
+      let { value, min, max } = event.target;
+      value = Math.max(Number(min), Math.min(Number(max), Number(value)));
       
-      let filters = this.state.activePriceFilters;
-      let enabledPrices = [];
-        filters.forEach(filter => {
-           if (filter.name === event.target.value) {
-            filter.checked =  event.target.checked;
-           }
-           if(filter.checked) {
-             enabledPrices.push(filter);
-           }
-           
-        })
 
-        this.setState({activePriceFilters: filters})
+      if(name === "min") {
+        min = value;
+        max = this.state.priceMax;
+      } else {
+        min = this.state.priceMin;
+        max = value;
+      }
 
-        //nothing to show, all price filters disabled
-        if(enabledPrices.length === 0) {
-          this.setState({filteredNFTs : [], filteredSkins: [], filteredCars: [], numPages: 1, currentPage: 1});
-        } else {
+      this.setState({priceMin: min, priceMax: max});
 
-          this.filterSkinsByPrice(enabledPrices);
-          this.filterCarsByPrice(enabledPrices);
-          this.filterNFTsByPrice(enabledPrices);
-        }
+        this.filterSkinsByPrice(min, max);
+        this.filterCarsByPrice(min, max);
+        this.filterNFTsByPrice(min, max);
 
-
-        
     }
 
     //reset filtering by price
     resetPriceFilters() {
 
-      let filtersPrice = this.state.activePriceFilters;
-      filtersPrice.forEach(filter => {
-        filter.checked = true;
-      })
-
-      this.setState({activePriceFilters: filtersPrice});
-
-      if(filtersPrice.length === 0) {
-        this.setState({filteredNFTs : [], filteredSkins: [], filteredCars: [], numPages: 1, currentPage: 1});
-      } else {
-
-        this.filterSkinsByPrice(filtersPrice);
-        this.filterNFTsByPrice(filtersPrice);
-        this.filterCarsByPrice(filtersPrice);
-      }
+      this.setState({priceMin: this.state.priceMinDefault, priceMax: this.state.priceMaxDefault});
+  
+        this.filterSkinsByPrice(this.state.priceMinDefault, this.state.priceMaxDefault);
+        this.filterNFTsByPrice(this.state.priceMinDefault, this.state.priceMaxDefault);
+        this.filterCarsByPrice(this.state.priceMinDefault, this.state.priceMaxDefault);
+      
     }
 
     //reset filtering by simulator
@@ -567,7 +531,7 @@ class StorePage extends Component {
         let simulator = NFT.simulator;                 
         let name = NFT.name;
         let description = NFT.description;
-        console.log("series: " + series + " simulator: " + simulator + " name: " + name + " description: " + description + " query: " + queryString);
+        //console.log("series: " + series + " simulator: " + simulator + " name: " + name + " description: " + description + " query: " + queryString);
         if ( 
           (series && series.toLowerCase().indexOf(queryString)>-1) ||
             (simulator && simulator.toLowerCase().indexOf(queryString)>-1) || 
@@ -659,8 +623,6 @@ class StorePage extends Component {
         currPage = currPage + 1;
       }
 
-      console.log("GO TO NEXT PAGE: " + currPage);
-
       let arrayPaginatedNFTS = this.paginate(this.state.latestNFTs, currPage);
       let arrayPaginatedCars = this.paginate(this.state.latestCars, currPage);
       let arrayPaginatedSkins = this.paginate(this.state.latestSkins, currPage);
@@ -677,8 +639,6 @@ class StorePage extends Component {
       } else {
         currPage = currPage - 1;
       }
-
-      console.log("GO TO PREVIOUS PAGE: " + currPage);
 
       let arrayPaginatedNFTS = this.paginate(this.state.latestNFTs, currPage);
       let arrayPaginatedCars = this.paginate(this.state.latestCars, currPage);
@@ -842,9 +802,6 @@ class StorePage extends Component {
 
       //const name = this.props.location.;
       //const name = new URLSearchParams(search).get('q');
-
-      //alert("name " + name);
-
       //we might want to add additional redirections later, so maybe better specific functions?
       if (this.state.redirectBuyItem) {
 
@@ -854,105 +811,6 @@ class StorePage extends Component {
       return (
             
     <div className="page-body">
-    {/*    
-    <!-- Start Navbar -->
-    <nav className="navbar navbar-expand-lg navbar-dark bg-dark border-nav zi-3">
-      <div className="container">
-        <div className="row">
-          <div className="col-4 col-sm-3 col-md-2 mr-auto">
-            <a className="navbar-brand logo" href="main.html">
-              <img src="assets/img/logo-gaming.png" alt="Wicodus" className="logo-light mx-auto">
-            </a>
-          </div>
-          <div className="col-4 d-none d-lg-block mx-auto">
-            <form className="input-group border-0 bg-transparent">
-              <input className="form-control" type="search" placeholder="Search" aria-label="Search">
-              <div className="input-group-append">
-                <button className="btn btn-sm btn-warning text-secondary my-0 mx-0" type="submit"><i className="fas fa-search"></i></button>
-              </div>
-            </form>
-          </div>
-          <div className="col-8 col-sm-8 col-md-8 col-lg-6 col-xl-4 ml-auto text-right">
-            <a className="btn btn-sm btn-warning text-secondary mr-2" href="store.html#" data-toggle="modal" data-target="#userLogin">Sign in</a>
-            <a className="btn btn-sm text-light d-none d-sm-inline-block" href="main.html">Sign up</a>
-            <ul className="nav navbar-nav d-none d-sm-inline-flex flex-row">
-              <li className="nav-item dropdown">
-                <a className="nav-link dropdown-toggle small" href="store.html#" id="dropdownGaming" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i className="mr-2 fas fa-globe"></i>EN </a>
-                <div className="dropdown-menu position-absolute" aria-labelledby="dropdownGaming">
-                  <a className="dropdown-item" href="main.html">English</a>
-                  <a className="dropdown-item" href="main.html">Deutsch</a>
-                  <a className="dropdown-item" href="main.html">Español</a>
-                </div>
-              </li>
-              <li className="nav-item">
-                <a className="nav-link small" href="" data-toggle="offcanvas" data-target="#offcanvas-cart">
-                  <span className="p-relative d-inline-flex">
-                    <span className="badge-cart badge badge-counter badge-warning position-absolute l-1">2</span>
-                    <i className="fas fa-shopping-cart"></i>
-                  </span>
-                </a>
-              </li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </nav>
-    <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
-      <div className="container">
-        <button className="navbar-toggler navbar-toggler-fixed" type="button" data-toggle="collapse" data-target="#collapsingNavbar" aria-controls="collapsingNavbar" aria-expanded="false" aria-label="Toggle navigation">☰</button>
-        <div className="collapse navbar-collapse" id="collapsingNavbar">
-          <ul className="navbar-nav">
-            <li className="nav-item dropdown dropdown-hover">
-              <a className="nav-link dropdown-toggle pl-lg-0" href="store-product.html" id="dropdownGaming_games" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Games </a>
-              <div className="dropdown-menu dropdown-menu-dark-lg" aria-labelledby="dropdownGaming_games">
-                <a className="dropdown-item" href="store.html">Action</a>
-                <a className="dropdown-item" href="store.html">Adventure</a>
-                <a className="dropdown-item" href="store.html">Cooperative</a>
-                <a className="dropdown-item" href="store.html">MMO</a>
-                <a className="dropdown-item" href="store.html">RPG</a>
-                <a className="dropdown-item" href="store.html">Simulation</a>
-                <a className="dropdown-item" href="store.html">Economy</a>
-                <a className="dropdown-item" href="store.html">Horror</a>
-                <a className="dropdown-item" href="store.html">Arcade</a>
-                <a className="dropdown-item" href="store.html">Hack & Slash</a>
-                <a className="dropdown-item" href="store.html">Puzzle</a>
-              </div>
-            </li>
-            <li className="nav-item dropdown dropdown-hover">
-              <a className="nav-link dropdown-toggle" href="store.html" id="dropdownGaming_software" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Software </a>
-              <div className="dropdown-menu dropdown-menu-dark-lg" aria-labelledby="dropdownGaming_software">
-                <a className="dropdown-item" href="store.html">Animation & Modeling</a>
-                <a className="dropdown-item" href="store.html">Audio Production</a>
-                <a className="dropdown-item" href="store.html">Design & Illustration</a>
-                <a className="dropdown-item" href="store.html">Education</a>
-                <a className="dropdown-item" href="store.html">Game Development</a>
-                <a className="dropdown-item" href="store.html">Photo Editing</a>
-                <a className="dropdown-item" href="store.html">Utilities</a>
-                <a className="dropdown-item" href="store.html">Video Production</a>
-                <a className="dropdown-item" href="store.html">Web Publishing</a>
-              </div>
-            </li>
-            <li className="nav-item dropdown dropdown-hover">
-              <a className="nav-link dropdown-toggle" href="news.html" id="dropdownGaming_community" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Community </a>
-              <div className="dropdown-menu dropdown-menu-dark-lg" aria-labelledby="dropdownGaming_community">
-                <a className="dropdown-item" href="news.html">Discussions</a>
-                <a className="dropdown-item" href="news.html">Workshop</a>
-                <a className="dropdown-item" href="news.html">Market</a>
-                <a className="dropdown-item" href="news.html">Broadcasts</a>
-              </div>
-            </li>
-            <li className="nav-item">
-              <a className="nav-link" href="about.html">About</a>
-            </li>
-            <li className="nav-item">
-              <a className="nav-link" href="contact.html">Support</a>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </nav>
-    <!-- /.End Navbar -->
-    */}
 
  {/*<!-- Start Main Content -->*/}
     <main className="main-content">
@@ -1419,22 +1277,21 @@ class StorePage extends Component {
 
                           <ul className="list-unstyled py-2">
 
-                          {this.state.activePriceFilters.map( ({name, checked, label, min, max}, index) => {
-                            let elemName = index + "_price_" + name;
-                            let idKey = index + "_" + name;
-                            return <li key={idKey} className="nav-item">
+                          
+                            <li key="price_filter" className="nav-item">
                               <div className="nav-link py-2 px-3">
-                                <form>
-                                  <div className="custom-control custom-checkbox">
-                                    <input className="custom-control-input" type="checkbox"  onChange={this.priceFilterChanged} checked={checked} value={name} name={elemName} id={elemName}/>
-                                    <label className="custom-control-label" htmlFor={elemName}>
-                                     {label}
-                                    </label>
-                                  </div>
-                                </form>
+                                
+                                    
+                                    <label className="custom-control-label1" htmlFor="MIN_PRICE">Min: </label>
+                                    <input className="custom-control-input1" type="number" min={this.state.priceMinDefault} max={this.state.priceMaxDefault} step={this.state.priceStep}  onChange={ (e) => this.priceFilterChanged(e,"min")} value={this.state.priceMin} name="MIN_PRICE" id="MIN_PRICE"/>
+                                    <br/>
+                                    <label className="custom-control-label1" htmlFor="MAX_PRICE">Max: </label>
+                                    <input className="custom-control-input1" type="number" min={this.state.priceMinDefault} max={this.state.priceMaxDefault}  step={this.state.priceStep}  onChange={ (e) => this.priceFilterChanged(e, "max")} value={this.state.priceMax} name="MAX_PRICE" id="MAX_PRICE"/>
+                                   
+                               
                               </div>
                             </li>
-                          },this)}
+                         
                             
                           </ul>
                       </div>
