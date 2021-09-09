@@ -1809,3 +1809,23 @@ h1 a, h2 a, h3 a, h4 a, h5 a, h6 a, .h1 a, .h2 a, .h3 a, .h4 a, .h5 a, .h6 a {
 .item-page-img{
   max-height:480px;
 }
+
+.similaritems {
+  max-height:200px;
+}
+
+.custom-control-label1 {
+  margin-right:20px;
+  width:150px;
+}
+
+.custom-control-input1 {
+  min-width:100px;
+}
+
+input[type=number]::-webkit-inner-spin-button, 
+input[type=number]::-webkit-outer-spin-button {  
+
+   opacity: 1;
+
+}

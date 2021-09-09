@@ -1,6 +1,6 @@
 
 export default class UIHelper {
-  static showSpinning = function () {
+  static showSpinning = function (textToDisplay) {
     var elem1 = document.createElement('div');
     elem1.style.top = window.scrollY + 'px';
     elem1.className = 'spinner-outer';
@@ -13,7 +13,7 @@ export default class UIHelper {
     var elem3 = document.createElement('div');
     elem3.className = 'h-100 d-flex justify-content-center align-items-center spinner-msg';
 
-    var text = document.createTextNode("Wait for the transaction to be confirmed...");
+    var text = document.createTextNode(textToDisplay ? textToDisplay : "Wait for the transaction to be confirmed...");
 
     elem3.appendChild(text);
     elem1.appendChild(elem3);
@@ -29,7 +29,14 @@ export default class UIHelper {
       });
   }
 
-  static transactionOnConfirmation = function (message, redirect = "/") {
+  static hiddeSpinning = function() {
+    var elem = document.getElementById("wait-div");
+    if(elem) {
+      elem.parentNode.removeChild(elem);
+    }
+  }
+
+  static transactionOnConfirmation = function (message, redirect = true) {
     document.body.removeChild(document.getElementById('wait-div'));
     alert(message);
 

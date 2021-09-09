@@ -49,6 +49,7 @@ class ItemPage extends Component {
         console.log('istNFT:' + this.state.isNFT);
         let isSkin = !this.state.isNFT && (this.state.track == null || this.state.season == null);
         console.log('istSkin:' + isSkin);
+
         if (!this.state.isNFT) {
             const comments = await contract.methods.getItemComments(this.state.itemId).call();
             const average_review = await this.average_rating(comments);
@@ -58,9 +59,13 @@ class ItemPage extends Component {
             this.setState({ currentAccount: currentAccount, contract: contract, contractNFTs: contractNFTs,isSkin: isSkin });
         }
 
-        // scroll to top
-        document.body.scrollTop = 0;            // For Safari
-        document.documentElement.scrollTop = 0; // For Chrome, Firefox, IE and Opera
+        this.scrollToTop();
+    }
+
+    scrollToTop = () => {
+      // scroll to top
+      document.body.scrollTop = 0;            // For Safari
+      document.documentElement.scrollTop = 0; // For Chrome, Firefox, IE and Opera
     }
 
     average_rating = async (comments) => {
@@ -546,6 +551,72 @@ class ItemPage extends Component {
             </ul>*/
     }
 
+    callbackParent = async (context, isNFT, isSkin, payload, item) => {
+      console.log("PARENT CALLED BACK WITH ARG item.id " + item.id + " : " + JSON.stringify(item));
+      console.log("PAYLOAD IS: " + JSON.stringify(payload));
+      context.setState({
+        itemId: item.id,
+        track: payload.track ? payload.track : null,
+        simulator: payload.simulator,
+        season: payload.season,
+        series: payload.series,
+        description: payload.description,
+        price: payload.price,
+        car: payload.carBrand,
+        ipfsPath: payload.ipfsPath,
+        imagePath: payload.imagePath,
+        isNFT: isNFT,
+        vendorAddress: payload.address,
+        vendorNickname: payload.address ? await context.state.contract.methods.getNickname(payload.address).call() : "",
+        
+      });
+
+      if (!isNFT) {
+          const comments = await context.state.contract.methods.getItemComments(item.id).call();
+          const average_review = context.average_rating(comments);
+
+          context.setState({ listComments: comments, average_review: average_review, isSkin: isSkin });
+      } 
+
+      this.scrollToTop();
+
+      /*
+payload.imagePath = value.ad.ipfsPath;
+          payload.price = value.ad.price;
+          payload.series = value.info.series;
+          payload.simulator = value.info.simulator;
+          payload.address = value.ad.seller;
+          payload.carBrand = value.info.carBrand;
+
+          payload.track = value.info.track;
+          payload.season = value.info.season;
+          payload.description = (value.info.description || value.info.carBrand);
+      */
+      /*
+drizzle: props.drizzle,
+            drizzleState: props.drizzleState,
+            itemId: props.location.state.selectedItemId,
+            track: props.location.state.selectedTrack,
+            simulator: props.location.state.selectedSimulator,
+            season: props.location.state.selectedSeason,
+            series: props.location.state.selectedSeries,
+            description: props.location.state.selectedDescription,
+            price: props.location.state.selectedPrice,
+            car: props.location.state.selectedCarBrand,
+            vendorAddress: props.location.state.vendorAddress,
+            vendorNickname: props.location.state.vendorNickname,
+            ipfsPath: props.location.state.ipfsPath,
+            imagePath: props.location.state.imagePath,
+            isNFT: props.location.state.isNFT,
+            contract: null,
+            currentAccount: "",
+            comment: "",
+            listComments: [],
+            review_rating: 0,
+            average_review: 0,
+            similarItems: props.location.state.similarItems
+      */
+    }
 
 
     render() {
@@ -553,6 +624,8 @@ class ItemPage extends Component {
         let item = ""
         //let toRender;
         //let commentsRender = [];
+
+        console.log("render selected item id: " + this.state.itemId);
 
         let hasImage = true;
         if (this.state.isNFT) {
@@ -853,8 +926,8 @@ class ItemPage extends Component {
                         <div className="mb-6">
                           <h6 className="mb-0 fw-400 ls-1 text-uppercase">More like this</h6>
                           <hr className="border-secondary my-2"/>
-                          <div>TODO (this needs to use react-owl-carousel component... template is basically jquery)
-                              <div className="owl-carousel carousel_sm" data-carousel-items="1, 2, 3, 3" data-carousel-margin="10" data-carousel-nav="false" data-carousel-dots="true">
+                          <div>
+                              {/*<div className="owl-carousel carousel_sm" data-carousel-items="1, 2, 3, 3" data-carousel-margin="10" data-carousel-nav="false" data-carousel-dots="true">
                                   <div className="item">
                                       <a href="store-product.html#">
                                         <div className="d-flex h-100 bs-c br-n bp-c ar-8_5 position-relative" style={ {backgroundImage: `url('assets/img/content/cont/cg-c_02.jpg')`}} >
@@ -870,10 +943,10 @@ class ItemPage extends Component {
                                       </a>
                                     </div>
                                   
-                                  {this.state.similarItems.map( (value, index) => {
-                                     return <SimilarItemsComponent value={value} isNFT={this.state.isNFT} isSkin={!this.state.isNFT && (this.state.track == null || this.state.season == null)} selectedItemId={this.state.itemId}></SimilarItemsComponent>
-                                  })}
-                                </div>
+                                  {this.state.similarItems.map( (value, index) => { */}
+                                     <SimilarItemsComponent contextParent={this} callbackParent={this.callbackParent} className="similaritems"  items={this.state.similarItems} isNFT={this.state.isNFT} isSkin={!this.state.isNFT && (this.state.track == null || this.state.season == null)} selectedItemId={this.state.itemId}></SimilarItemsComponent>
+                                 {/* })}
+                                  </div>*/}
                           </div>
                         </div>
                         <div className="mb-0">

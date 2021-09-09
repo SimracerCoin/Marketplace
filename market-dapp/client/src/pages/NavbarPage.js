@@ -26,6 +26,13 @@ class NavbarPage extends React.Component {
 
     }
 
+    componentDidUpdate() {
+        //if no key is set but i still show something, clean it
+        if(!localStorage.getItem('searchQuery') && this.state.searchQuery) {
+            this.setState({searchQuery: ""});
+        }
+    }
+
     componentDidMount = async (event) => {
         const contract = await this.state.drizzle.contracts.STMarketplace;
         const currentAccount = this.state.drizzleState.accounts[0];
@@ -37,6 +44,11 @@ class NavbarPage extends React.Component {
             searchQuery = previousSearch;
         }
         this.setState({ currentAccount: currentAccount, haveNotifications: haveNotifications, searchQuery: searchQuery });
+    }
+
+    componentWillUnmount = async (event) => {
+        //clean if anything
+        localStorage.removeItem('searchQuery');
     }
 
     gotoStoreAndSearch() {
@@ -65,6 +77,11 @@ class NavbarPage extends React.Component {
     }
 
     handleChange = (event) => {
+        if(event.target.value) {
+            localStorage.setItem('searchQuery', event.target.value);
+        } else {
+            localStorage.removeItem('searchQuery');
+        }
         this.setState({searchQuery: event.target.value});
     }
 
