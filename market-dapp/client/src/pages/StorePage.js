@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { Redirect } from "react-router-dom";
+import { withRouter } from "react-router";
 import * as $ from 'jquery';
 import UIHelper from "../utils/uihelper";
 
@@ -50,8 +51,8 @@ class StorePage extends Component {
             priceStep: 0.0001,
             priceMin: 0,
             priceMinDefault: 0,
-            priceMax: 1000000,
-            priceMaxDefault: 1000,
+            priceMax: 10000,
+            priceMaxDefault: 10000,
 
             //just as reference, we can define others intervals if needed
             //activePriceFilters: [
@@ -71,9 +72,13 @@ class StorePage extends Component {
 
     //-----------------------------------------------------------------------------------------------------
     //-----------------------------------------------------------------------------------------------------
-
+    componentWillMount() {
+      this.unlisten = this.props.history.listen((location, action) => {
+        localStorage.removeItem('searchQuery');
+      });
+    }
     componentWillUnmount = async () => {
-      localStorage.removeItem('searchQuery');
+      this.unlisten();
     }
     componentDidMount = async () => {
 
@@ -1449,4 +1454,4 @@ class StorePage extends Component {
 }
 
 
-export default StorePage;
+export default withRouter(StorePage);
