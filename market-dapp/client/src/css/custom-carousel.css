@@ -1,6 +1,6 @@
 .carousel .slider-wrapper {
     width: 90%; /*override carousel stuff*/
-    /*max-height: 600px;*/
+    max-height: 500px;
 }
 
 .carousel .slide .legend {
@@ -9,16 +9,17 @@
     color: #212529;
     background-color: #ffc107;
     border-color: #ffc107;
+    margin-left: -26%;
 }
-/* DO NOT LOOK GOOD BECAUSE IMAGES CAN BE DISTORTED
+/* MIGHT NOT LOOK GOOD BECAUSE IMAGES CAN BE DISTORTED*/
 .carousel-pointer img {
-    max-height: 500px;
-    max-width: 500px;
+    max-height: 400px;
+    max-width: 400px;
 }
 
 .legend {
-    max-width: 450px;
-}*/
+    max-width: 280px;
+}
 
 .carousel-pointer:hover{
     cursor: pointer;
