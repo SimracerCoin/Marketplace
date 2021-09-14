@@ -9,12 +9,13 @@
     color: #212529;
     background-color: #ffc107;
     border-color: #ffc107;
-    margin-left: -26%;
+    margin-left: -21%;
 }
 /* MIGHT NOT LOOK GOOD BECAUSE IMAGES CAN BE DISTORTED*/
 .carousel-pointer img {
     max-height: 400px;
     max-width: 400px;
+    width: auto!important;
 }
 
 .legend {
