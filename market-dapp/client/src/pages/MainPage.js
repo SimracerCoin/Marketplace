@@ -202,7 +202,7 @@ class MainPage extends Component {
             skins.push(
                 <ListGroup.Item key={itemId} className="bg-dark_A-20 col-3 mb-4" style={{minWidth: '275px'}}>
                     <Card className="card-block">
-                        <Card.Img variant="top" src={imagePath} style={{maxHeight: '320px', width: 'auto'}} />
+                        <Card.Img variant="top" src={imagePath} style={{width: 'auto'}} />
                         <Card.Body>
                             <Card.Title className="mt-5 font-weight-bold">{carBrand}</Card.Title>
                             <div className="text-left">
@@ -232,7 +232,7 @@ class MainPage extends Component {
             nfts.push(
                 <ListGroup.Item key={itemId} className="bg-dark_A-20 col-3 mb-4" style={{minWidth: '275px'}}>
                     <Card className="card-block">
-                        <Card.Img variant="top" src={imagePath} style={{maxHeight: '320px', width: 'auto'}} />
+                        <Card.Img variant="top" src={imagePath} style={{width: 'auto'}} />
                         <Card.Body>
                         <div className="text-left">
                             <div><b>Series:</b> {series}</div>
