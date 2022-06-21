@@ -252,7 +252,7 @@ class SellOwnership extends Component {
                                                 <br></br>
                                                 <Form.Control type="text" pattern="[0-9]*" placeholder="Enter Car number" value={this.state.currentCarNumber} onChange={this.handleCarNumber} />
                                                 <br></br>
-                                                <Form.Control type="text" pattern="([0-9]*[.])?[0-9]+" placeholder="Enter File price (ETH)" value={this.state.priceValue} onChange={this.handleFilePrice} />
+                                                <Form.Control type="text" pattern="([0-9]*[.])?[0-9]+" placeholder="Enter File price (SRC)" value={this.state.priceValue} onChange={this.handleFilePrice} />
                                                 <br></br>
                                                 <DropdownButton id="dropdown-skin-button" title={this.state.currentSimulator} onSelect={this.onSelectSim}>
                                                     {sims}
