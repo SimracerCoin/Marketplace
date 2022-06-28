@@ -34,7 +34,7 @@ class NotificationsPage extends Component {
 
     componentDidMount = async () => {
         const contract = await this.state.drizzle.contracts.STMarketplace;
-        const descartesContract = await this.state.drizzle.contracts.Descartes;
+        //const descartesContract = await this.state.drizzle.contracts.Descartes;
         const currentAccount = this.state.drizzleState.accounts[0];
         const notificationsIds = await contract.methods.listNotificationsPerUser(currentAccount).call()
         const notifications_r = await contract.methods.getNotifications(notificationsIds).call();
@@ -63,7 +63,7 @@ class NotificationsPage extends Component {
         //const ads = await contract.methods.getAds(purchasesIds).call();
 
         ////Descartes test:
-        this.setState({ listNotifications: notifications, currentAccount: currentAccount, contract: contract, descartesContract: descartesContract });
+        this.setState({ listNotifications: notifications, currentAccount: currentAccount, contract: contract /*, descartesContract: descartesContract*/ });
 
         //this.setState({ listNotifications: notifications, currentAccount: currentAccount, contract: contract });
     }

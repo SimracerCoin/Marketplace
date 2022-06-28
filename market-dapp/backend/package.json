@@ -2,7 +2,6 @@
   "name": "backend",
   "version": "0.1.0",
   "dependencies": {
-    "@cartesi/descartes-sdk": "1.1.1",
     "@openzeppelin/contracts": "3.1.0-solc-0.7"
   },
   "devDependencies": {

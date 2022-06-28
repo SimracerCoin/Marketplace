@@ -4,7 +4,7 @@ import { Drizzle } from "@drizzle/store";
 import STMarketplace from "./STMarketplace.json";
 import SimracerCoin from "./SimracerCoin.json";
 import SimthunderOwner from "./SimthunderOwner.json"
-import Descartes from "./Descartes.json";
+//import Descartes from "./Descartes.json";
 import Underconstruction from "./pages/Underconstruction";
 import RouterPage from "./pages/RouterPage";
 import Web3 from "web3";
@@ -89,11 +89,12 @@ class App extends React.Component {
           {
             contractName: "SimthunderOwner",
             web3Contract: new web3.eth.Contract(SimthunderOwner.abi, SimthunderOwner.address, { data: SimthunderOwner.deployedBytecode })
-          },
-          {
-            contractName: "Descartes",
-            web3Contract: new web3.eth.Contract(Descartes.abi, Descartes.address, { data: Descartes.deployedBytecode })
           }
+          //,
+          //{
+          //  contractName: "Descartes",
+          //  web3Contract: new web3.eth.Contract(Descartes.abi, Descartes.address, { data: Descartes.deployedBytecode })
+          //}
         ]
       };
 
