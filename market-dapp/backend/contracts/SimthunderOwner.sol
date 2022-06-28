@@ -47,7 +47,7 @@ contract SimthunderOwner is ERC721 {
     }
 
     function buyItem(uint256 itemId, uint256 itemPrice) external {
-        require(itemPrice == prices[itemId], "Check the item price" + itemPrice + ":" + prices[itemId]);
+        require(itemPrice == prices[itemId], "Check the item price");
         address accountAddress = seriesOwners[itemId];
         //accountAddress.transfer(prices[itemId]);
         //return _transfer(address(this), msg.sender, itemId);

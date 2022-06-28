@@ -86,9 +86,9 @@ contract STMarketplace is ContentMarketplace {
     event skinSaved(address _address, bytes _ipfsPath, string _carBrand, string _simulator, uint256 _price);
     
     /**
-    /// @notice Creates an instance of the contract
-    /// @param descartesAddress address of the Descartes contract
-    constructor(address descartesAddress) ContentMarketplace(descartesAddress) {
+    /// notice_ Creates an instance of the contract
+    /// param_ descartesAddress address of the Descartes contract
+    /// constructor(address descartesAddress) ContentMarketplace(descartesAddress) {
     }*/
 
     // new constructor, without descartes address supplied
