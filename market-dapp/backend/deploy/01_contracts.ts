@@ -6,16 +6,16 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const { deploy, get } = deployments;
   const { deployer } = await getNamedAccounts();
 
-  const Descartes = await get("Descartes");
+  //const Descartes = await get("Descartes");
   await deploy("ContentMarketplace", {
     from: deployer,
     log: true,
-    args: [Descartes.address],
+    //args: [Descartes.address],
   });
   await deploy("STMarketplace", {
     from: deployer,
     log: true,
-    args: [Descartes.address],
+    //args: [Descartes.address],
   });
   const SimracerCoin = await deploy("SimracerCoin", {
     from: deployer,
