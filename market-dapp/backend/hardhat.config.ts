@@ -9,6 +9,9 @@ import "hardhat-deploy";
 import "@nomiclabs/hardhat-solpp";
 // import "solidity-coverage"; @dev WIP this plugin is not updated to hardhat yet
 
+//npx hardhat deploy was not getting access to process.env
+require('dotenv').config({path:__dirname+'/.env'});
+
 // This is a sample hardhat task. To learn how to create your own go to
 // https://hardhat.dev/guides/create-task.html
 task("accounts", "Prints the list of accounts", async (taskArgs, bre) => {
