@@ -336,7 +336,7 @@ contract STMarketplace is ContentMarketplace {
         return (a, b, c, d);
     }*/
 
-    function utilCompareInternal(bytes memory a, bytes memory b) public returns (bool) {
+    function utilCompareInternal(bytes memory a, bytes memory b) internal returns (bool) {
         if (a.length != b.length) {
             return false;
         }

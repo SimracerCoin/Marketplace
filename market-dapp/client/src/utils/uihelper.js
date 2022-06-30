@@ -41,7 +41,7 @@ export default class UIHelper {
     alert(message);
 
     if (redirect)
-      window.location.href = "/";
+      window.location.href = redirect;
   }
 
   static transactionOnError = function (error) {
