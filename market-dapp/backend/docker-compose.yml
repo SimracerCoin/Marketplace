@@ -2,30 +2,17 @@ version: '3'
 
 services:
 
-  hardhatnet:
-    build:
-      context: .
-      dockerfile: ./Dockerfile-hardhatnet
-    environment:
-      MNEMONIC: "test test test test test test test test test test test junk"
-    expose:
-      - 8545
-    ports:
-      - 8545:8545
-    volumes:
-      - ./:/opt/cartesi/share/blockchain
-    networks:
-      - ethereum
-
   alice_dispatcher:
-    image: cartesi/descartes:1.0.0
+    image: cartesi/descartes:1.2.0
     restart: always
     environment:
-      MNEMONIC: "test test test test test test test test test test test junk"
+      ETHEREUM_HOST: ${ETHEREUM_HOST}
+      ETHEREUM_PORT: ${ETHEREUM_PORT}
+      ETHEREUM_NETWORK: ${ETHEREUM_NETWORK}
+      MNEMONIC: ${MNEMONIC}
       ACCOUNT_INDEX: 0
       RUST_LOG: dispatcher=info,transaction=info,configuration=trace,utils=trace,state=info,descartes=trace
-      WEB3_PROVIDER_URI: http://hardhatnet:8545
-      DEPLOYMENT_SEMAPHORE: http://hardhatnet:8545
+      WEB3_PROVIDER_URI: https://${ETHEREUM_HOST}/v3/${PROJECT_ID}
       QUERY_PORT: 3001
       MACHINE_MANAGER_HOST: machine-manager
       MACHINE_MANAGER_PORT: 50051
@@ -36,8 +23,7 @@ services:
       DOCKER: "TRUE"
       RUST_BACKTRACE: 1
     volumes:
-      - ./:/opt/cartesi/share/blockchain:ro
-      - alice_data:/opt/cartesi/srv/descartes
+      - alice_data:/opt/cartesi/srv/descartes/flashdrive
     networks:
       ethereum: {}
       alice:
@@ -47,16 +33,14 @@ services:
       - "3001:3001"
 
   alice_logger:
-    image: cartesi/logger-server:0.6.2
-    command: [ "-c", "/opt/cartesi/share/blockchain/deployments/localhost/Logger.json" ]
+    image: cartesi/logger-server:0.7.0
+    command: [ "-c", "/opt/cartesi/share/blockchain/node_modules/@cartesi/logger/deployments/rinkeby/Logger.json", "-d", "/opt/cartesi/srv/descartes/flashdrive"]
     volumes:
-      - ./:/opt/cartesi/share/blockchain:ro
-      - alice_data:/opt/cartesi/srv/descartes
+      - alice_data:/opt/cartesi/srv/descartes/flashdrive
     environment:
-      MNEMONIC: "test test test test test test test test test test test junk"
+      MNEMONIC: ${MNEMONIC}
       ACCOUNT_INDEX: 0
-      WEB3_PROVIDER_URI: http://hardhatnet:8545
-      DEPLOYMENT_SEMAPHORE: http://hardhatnet:8545
+      WEB3_PROVIDER_URI: https://${ETHEREUM_HOST}/v3/${PROJECT_ID}
     networks:
       ethereum: {}
       alice:
@@ -66,7 +50,7 @@ services:
   alice_ipfs:
     image: cartesi/ipfs-server:0.2.0
     volumes:
-      - alice_data:/opt/cartesi/srv/descartes
+      - alice_data:/opt/cartesi/srv/descartes/flashdrive
     networks:
       ipfs: {}
       alice:
@@ -79,7 +63,7 @@ services:
     image: cartesi/machine-manager:0.5.0
     volumes:
       - ./machines:/opt/cartesi/srv/descartes/cartesi-machine
-      - alice_data:/opt/cartesi/srv/descartes
+      - alice_data:/opt/cartesi/srv/descartes/flashdrive
     networks:
       ethereum: {}
       alice:
@@ -87,14 +71,16 @@ services:
           - machine-manager
 
   bob_dispatcher:
-    image: cartesi/descartes:1.0.0
+    image: cartesi/descartes:1.2.0
     restart: always
     environment:
-      MNEMONIC: "test test test test test test test test test test test junk"
+      ETHEREUM_HOST: ${ETHEREUM_HOST}
+      ETHEREUM_PORT: ${ETHEREUM_PORT}
+      ETHEREUM_NETWORK: ${ETHEREUM_NETWORK}
+      MNEMONIC: ${MNEMONIC}
       ACCOUNT_INDEX: 1
       RUST_LOG: dispatcher=info,transaction=info,configuration=trace,utils=trace,state=info,descartes=trace
-      WEB3_PROVIDER_URI: http://hardhatnet:8545
-      DEPLOYMENT_SEMAPHORE: http://hardhatnet:8545
+      WEB3_PROVIDER_URI: https://${ETHEREUM_HOST}/v3/${PROJECT_ID}
       QUERY_PORT: 3001
       MACHINE_MANAGER_HOST: machine-manager
       MACHINE_MANAGER_PORT: 50051
@@ -105,8 +91,7 @@ services:
       DOCKER: "TRUE"
       RUST_BACKTRACE: 1
     volumes:
-      - ./:/opt/cartesi/share/blockchain:ro
-      - bob_data:/opt/cartesi/srv/descartes
+      - bob_data:/opt/cartesi/srv/descartes/flashdrive
     networks:
       ethereum: {}
       bob:
@@ -116,16 +101,14 @@ services:
       - "3002:3001"
 
   bob_logger:
-    image: cartesi/logger-server:0.6.2
-    command: [ "-c", "/opt/cartesi/share/blockchain/deployments/localhost/Logger.json" ]
+    image: cartesi/logger-server:0.7.0
+    command: [ "-c", "/opt/cartesi/share/blockchain/node_modules/@cartesi/logger/deployments/rinkeby/Logger.json", "-d", "/opt/cartesi/srv/descartes/flashdrive"]
     volumes:
-      - ./:/opt/cartesi/share/blockchain:ro
-      - bob_data:/opt/cartesi/srv/descartes
+      - bob_data:/opt/cartesi/srv/descartes/flashdrive
     environment:
-      MNEMONIC: "test test test test test test test test test test test junk"
+      MNEMONIC: ${MNEMONIC}
       ACCOUNT_INDEX: 1
-      WEB3_PROVIDER_URI: http://hardhatnet:8545
-      DEPLOYMENT_SEMAPHORE: http://hardhatnet:8545
+      WEB3_PROVIDER_URI: https://${ETHEREUM_HOST}/v3/${PROJECT_ID}
     networks:
       ethereum: {}
       bob:
@@ -135,7 +118,7 @@ services:
   bob_ipfs:
     image: cartesi/ipfs-server:0.2.0
     volumes:
-      - bob_data:/opt/cartesi/srv/descartes
+      - bob_data:/opt/cartesi/srv/descartes/flashdrive
     networks:
       ipfs: {}
       bob:
@@ -148,7 +131,7 @@ services:
     image: cartesi/machine-manager:0.5.0
     volumes:
       - ./machines:/opt/cartesi/srv/descartes/cartesi-machine
-      - bob_data:/opt/cartesi/srv/descartes
+      - bob_data:/opt/cartesi/srv/descartes/flashdrive
     networks:
       ethereum: {}
       bob:
