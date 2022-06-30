@@ -1,0 +1,27 @@
+.carousel .slider-wrapper {
+    width: 90%; /*override carousel stuff*/
+    max-height: 500px;
+}
+
+.carousel .slide .legend {
+    
+    opacity: 0.75;
+    color: #212529;
+    background-color: #ffc107;
+    border-color: #ffc107;
+    margin-left: -21%;
+}
+/* MIGHT NOT LOOK GOOD BECAUSE IMAGES CAN BE DISTORTED*/
+.carousel-pointer img {
+    max-height: 400px;
+    max-width: 400px;
+    width: auto!important;
+}
+
+.legend {
+    max-width: 280px;
+}
+
+.carousel-pointer:hover{
+    cursor: pointer;
+}

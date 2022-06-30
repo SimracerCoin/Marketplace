@@ -40,6 +40,8 @@
 
 "use strict";
 
+
+
 //------------------- Default options -------------------
 if ( ( options == undefined ) || ( options == false ) ) {
   var options = true,
@@ -54,6 +56,12 @@ if ( ( options == undefined ) || ( options == false ) ) {
       },
       scrollToElement = { scrollSpeed : 700 },
       slider = { interval : 8500 };
+}
+
+//-------------------- Disable console --------------------
+if (location.hostname !== "localhost" && location.hostname.includes("192.168") == -1) {
+  console.log = function() {}
+  window.console = console;
 }
 
 //----------------------- Init Map ------------------------

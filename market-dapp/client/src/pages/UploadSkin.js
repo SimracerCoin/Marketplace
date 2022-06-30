@@ -1,8 +1,9 @@
 import React, { Component } from 'react';
-import { Dropdown, Form, DropdownButton, Button } from 'react-bootstrap';
+import { Dropdown, Form, DropdownButton, Button, FormLabel } from 'react-bootstrap';
 import { Prompt } from 'react-st-modal';
 import ipfs from "../ipfs";
-import computeMerkleRootHash from "../merkle"
+import computeMerkleRootHash from "../utils/merkle"
+import UIHelper from "../utils/uihelper"
 
 const openpgp = require('openpgp');
 
@@ -17,12 +18,12 @@ class UploadSkin extends Component {
             drizzle: props.drizzle,
             drizzleState: props.drizzleState,
             currentAccount: null,
-            currentCar: "Choose your car brand",
             currentSimulator: "Choose your simulator",
             currentFilePrice: null,
             contract: null,
             ipfsPath: null,
             image_ipfsPath: "",
+            encryptedDataHash: null,
             formIPFS: "",
             formAddress: "",
             receivedIPFS: "",
@@ -52,7 +53,7 @@ class UploadSkin extends Component {
     }
 
     handleFilePrice = (event) => {
-        const re = /^[0-9\b]+$/;
+        const re = /([0-9]*[.])?[0-9]+/;
         if (event.target.value === '' || re.test(event.target.value)) {
             this.setState({ priceValue: event.target.value });
             console.log("File price: " + event.target.value);
@@ -63,8 +64,8 @@ class UploadSkin extends Component {
 
     onSelectCar = async (event) => {
         //event.preventDefault();
-        console.log("Choosing car: " + event);
-        this.setState({ currentCar: event });
+        console.log("Choosing car: " + event.target.value);
+        this.setState({ currentCar: event.target.value });
     }
 
 
@@ -90,7 +91,7 @@ class UploadSkin extends Component {
         reader.readAsArrayBuffer(file)
         reader.onloadend = () => this.convertToBuffer(reader)
     };
-    
+
     //Guarda a imagem no ipfs 
     saveImage_toIPFS = async () => {
         var fileName = document.getElementById('skin-image').value.toLowerCase();
@@ -99,7 +100,7 @@ class UploadSkin extends Component {
 
         const valid_fileName = fileName.endsWith('.jpg') || fileName.endsWith('.png') || fileName.endsWith('.jpeg')
         console.log("Valid filename: " + valid_fileName)
-        if(!valid_fileName) {
+        if (!valid_fileName) {
             alert('You can upload .jpg, .png or .jpeg files only. Invalid file!');
             return false;
         }
@@ -110,7 +111,7 @@ class UploadSkin extends Component {
             //setState by setting ipfsPath to ipfsPath[0].hash 
             this.setState({ image_ipfsPath: ipfsPath[0].hash });
         })
-        
+
         this.setState({ image_ipfsPath: response.path });
         return true;
 
@@ -124,8 +125,8 @@ class UploadSkin extends Component {
         const reader = new window.FileReader()
         reader.readAsArrayBuffer(file)
         reader.onloadend = () => {
-          this.setState({ imageBuffer: Buffer(reader.result) })
-          console.log('buffer', this.state.imageBuffer)
+            this.setState({ imageBuffer: Buffer(reader.result) })
+            console.log('buffer', this.state.imageBuffer)
         }
     }
 
@@ -135,7 +136,7 @@ class UploadSkin extends Component {
         event.preventDefault();
 
         var fileName = document.getElementById('skin-file').value.toLowerCase();
-        if(!fileName.endsWith('.tga')) {
+        if (!fileName.endsWith('.tga')) {
             alert('You can upload .tga files only.');
             return false;
         }
@@ -151,15 +152,15 @@ class UploadSkin extends Component {
         });
         const encryptedBuffer = message.packets.write(); // get raw encrypted packets as Uint8Array
 
-        const loggerRootHash = computeMerkleRootHash(Buffer.from(encryptedBuffer));
-        console.log(`Logger Root Hash: ${loggerRootHash}`);
+        const encryptedDataHash = computeMerkleRootHash(Buffer.from(encryptedBuffer));
+        console.log(`Logger Root Hash: ${encryptedDataHash}`);
 
         const response = await ipfs.add(encryptedBuffer, (err, ipfsPath) => {
             console.log(err, ipfsPath);
             //setState by setting ipfsPath to ipfsPath[0].hash 
             this.setState({ ipfsPath: ipfsPath[0].hash });
         })
-        this.setState({ ipfsPath: response.path });
+        this.setState({ ipfsPath: response.path, encryptedDataHash: encryptedDataHash });
     };
 
     saveSkin = async (event) => {
@@ -173,6 +174,8 @@ class UploadSkin extends Component {
                 nickname = await Prompt('You are adding your first item for sale, please choose your seller nickname.');
                 if (!nickname) return;
             }
+
+            UIHelper.showSpinning();
 
             const price = this.state.drizzle.web3.utils.toBN(this.state.currentFilePrice);
 
@@ -191,83 +194,89 @@ class UploadSkin extends Component {
 
             const response_saveImage = await this.saveImage_toIPFS();
 
-            if(response_saveImage == true) {
+            if (response_saveImage == true) {
                 const response = await this.state.contract.methods.newSkin(ipfsPathBytes, this.state.currentCar,
-                    this.state.currentSimulator, price, placeholder, placeholder, nickname, this.state.image_ipfsPath).send({ from: this.state.currentAccount });
-                console.log(response);
-    
-    
-                alert("The new skin is available for sale!");
-            }  
+                    this.state.currentSimulator, price, placeholder, this.state.encryptedDataHash, nickname, this.state.image_ipfsPath)
+                    .send({ from: this.state.currentAccount })
+                    //.on('sent', UIHelper.transactionOnSent)
+                    .on('confirmation', function (confNumber, receipt, latestBlockHash) {
+                        UIHelper.transactionOnConfirmation("The new skin is available for sale!");
+                    })
+                    .on('error', UIHelper.transactionOnError)
+                    .catch(function (e) { });
+            }
         }
     }
 
     render() {
-        const carsElements = ["Chevrolet Monte Carlo SS", "Legends Ford 34 Coupe", "Legends Ford 34 Coupe - Rookie", "NASCAR Cup Series Chevrolet Camaro ZL1", "NASCAR Cup Series Ford Mustang",
-            "NASCAR Cup Series Toyota Camry", "Super Late Model", "Aston Martin DBR9 GT1", "Audi 90 GTO", "Audi R18", "Audi R8 LMS",
-            "BMW M4 GT4", "BMW M8 GTE", "Cadillac CTS-V Racecar", "Chevrolet Corvette C6R GT1", "Dallara F3", "Dallara IR18", "Ferrari 488 GT3",
-            "Ferrari 488 GTE", "Ford Fiesta RS WRC", "Ford GT", "Ford Mustang FR500S", "McLaren MP4-30"];
-        const simsElements = ["iRacing", "F12020", "rFactor", "Asseto Corsa"];
-
-        const cars = [];
+        const simsElements = ["iRacing", "F12020", "rFactor", "Assetto Corsa"];
         const sims = [];
 
-        for (const [index, value] of carsElements.entries()) {
-            cars.push(<Dropdown.Item eventKey={value} key={index}>{value}</Dropdown.Item>)
-        }
-
         for (const [index, value] of simsElements.entries()) {
-            sims.push(<Dropdown.Item eventKey={value} key={index}>{value}</Dropdown.Item>)
+            let thumb = "/assets/img/sims/" + value + ".png";
+            sims.push(<Dropdown.Item eventKey={value} key={index}><img src={thumb} width="24" /> {value}</Dropdown.Item>)
         }
-
 
         return (
             <header className="header">
-                <section className="content-section text-light br-n bs-c bp-c pb-8" style={{ backgroundImage: 'url(\'/assets/img/bg/bg_shape.png\')' }}>
-                    <div className="container">
-                        <div>
-                            <h2> Add new Car Skin for sale </h2>
-                            <Form onSubmit={this.onIPFSSubmit}>
-                                <input id="skin-file"
-                                    type="file" accept=".tga"
-                                    onChange={this.captureFile}
-                                />
-                                <br></br>
-                                <Button type="submit">Generate IPFS Hash</Button>
-                            </Form>
-
-                        </div>
-                        <div>
-                            <Form>
-                                <Form.Group controlId="formInsertCar">
-                                    <Form.Label>Insert Car</Form.Label>
-                                    <Form.Control type="text" placeholder="Generate IPFS Hash" value={this.state.ipfsPath} onChange={this.handleChangeHash} readOnly />
-                                    <br></br>
-                                    <Form.Control type="text" pattern="[0-9]*" placeholder="Enter File Price" value={this.state.priceValue} onChange={this.handleFilePrice} />
-                                    <br></br>
-                                    <DropdownButton id="dropdown-cars-button" title={this.state.currentCar} onSelect={this.onSelectCar}>
-                                        {cars}
-                                    </DropdownButton>
-                                    <br></br>
-                                    <DropdownButton id="dropdown-skin-button" title={this.state.currentSimulator} onSelect={this.onSelectSim}>
-                                        {sims}
-                                    </DropdownButton>
-                                </Form.Group>
-                            </Form>
-                        </div>
-                         <div>
-                            <div> Add Image for new Car Skin </div>
-                            <Form onSubmit={this.saveImage_toIPFS}>
-                                <input id="skin-image"
-                                    type="file"
-                                    onChange={this.uploadImageIPFS}
-                                />
-                                <br></br>
-                               
-                            </Form>
-                        </div><br></br>
-                        <div>
-                            <Button onClick={this.saveSkin}>Save Skin</Button>
+                <div class="overlay overflow-hidden pe-n"><img src="/assets/img/bg/bg_shape.png" alt="Background shape" /></div>
+                <section className="content-section text-light br-n bs-c bp-c pb-8">
+                    <div class="container position-relative">
+                        <div class="row">
+                            <div class="col-lg-8 mx-auto">
+                                <div>
+                                    <h2 class="ls-1 text-center">Add new Car Skin for sale</h2>
+                                    <hr class="w-10 border-warning border-top-2 o-90" />
+                                    <div>
+                                        <Form onSubmit={this.onIPFSSubmit}>
+                                            <div class="form-group">
+                                                <FormLabel for="skin-file" className="col-sm-3 mr-2 col-form-label font-weight-bold">Choose Skin file:</FormLabel>
+                                                <input id="skin-file"
+                                                    type="file" accept=".tga"
+                                                    onChange={this.captureFile} />
+                                            </div>
+                                            <div class="form-row">
+                                                <Button className="col-3 mr-2" type="submit">Generate IPFS Hash</Button>
+                                                <Form.Control className="col-8" type="text" placeholder="Generate IPFS Hash" value={this.state.ipfsPath} onChange={this.handleChangeHash} readOnly />
+                                            </div>
+                                        </Form>
+                                    </div>
+                                    <div class="mt-4">
+                                        <Form>
+                                            <div class="form-row">
+                                                <div class="form-group col-6">
+                                                    <Form.Control type="text" pattern="([0-9]*[.])?[0-9]+" placeholder="Enter File price (ETH)" value={this.state.priceValue} onChange={this.handleFilePrice} />
+                                                </div>
+                                            </div>
+                                            <div class="form-row">
+                                                <div class="form-group col-6">
+                                                    <Form.Control type="text" placeholder="Enter Car brand" onChange={this.onSelectCar} />
+                                                </div>
+                                            </div>
+                                            <div class="form-row">
+                                                <div class="form-group col-6">
+                                                    <DropdownButton id="dropdown-skin-button" title={this.state.currentSimulator} onSelect={this.onSelectSim}>
+                                                        {sims}
+                                                    </DropdownButton>
+                                                </div>
+                                            </div>
+                                        </Form>
+                                    </div>
+                                    <div>
+                                        <Form onSubmit={this.saveImage_toIPFS}>
+                                            <div class="form-group">
+                                                <FormLabel for="skin-image" className="col-sm-3 mr-2 col-form-label font-weight-bold">Choose Skin image:</FormLabel>
+                                                <input id="skin-image"
+                                                    type="file" accept=".png,.jpg,.jpeg"
+                                                    onChange={this.uploadImageIPFS} />
+                                            </div>
+                                        </Form>
+                                    </div>
+                                    <div class="form-row mt-4">
+                                        <Button onClick={this.saveSkin}>Save Skin</Button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </section>

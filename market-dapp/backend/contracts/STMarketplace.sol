@@ -6,7 +6,17 @@ import "./ContentMarketplace.sol";
 /// @title Simthunder Sim Racing Marketplace - first iteration
 /// @notice Non-Cartesi blockchain code for registering sellers and sim racing assets
 
-contract STMarketplace is ContentMarketplace {    
+contract STMarketplace is ContentMarketplace {   
+
+    bytes32 templateHash = 0x565ed3f9210522787f757fd3a4d2cb1714cd46523bcef460d3d630cd5a29c3aa;
+    uint64 outputPosition = 0xc000000000000000;
+    uint8 outputLog2Size = 5;
+    uint256 finalTime = 1e11;
+    uint256 roundDuration = 51;
+    //DescartesInterface.Drive[] drives;
+
+    // defines password size as 1024 bytes
+    // uint64 passwordLog2Size = 10;
 
     // cartesi machine template used to validate each asset category
     bytes32 validateCarSetupTemplateHash = "0x123";
@@ -181,7 +191,7 @@ contract STMarketplace is ContentMarketplace {
     }
 
     /// @notice Registers seller address
-    function getNickname(address _address) public returns(string memory) {
+    function getNickname(address _address) public view returns(string memory) {
         return userNickname[_address];
     }
     
@@ -271,5 +281,63 @@ contract STMarketplace is ContentMarketplace {
             str[3+i*2] = alphabet[uint8(value[i + 12] & 0x0f)];
         }
         return string(str);
+    }
+
+    function instantiateCartesiVerification(address claimer, address challenger, uint256 _purchaseId, DescartesInterface.Drive[] memory drives) public returns (uint256 index) 
+    {
+        address[] memory actors = new address[](2);
+        actors[0] = claimer;
+        actors[1] = challenger;
+
+        Purchase storage purchase = purchases[_purchaseId];
+        Advertisement memory ad = getAd(purchase.adId);
+
+        index = descartes.instantiate(
+            finalTime,
+            templateHash,
+            outputPosition,
+            outputLog2Size,
+            roundDuration,
+            actors,
+            drives
+        );
+
+        purchase.descartesIndex = index;
+
+        newNotification(_purchaseId, "Purchase was challenged. Check status.", address(0), ad.seller, NotificationType.Challenge);
+        newNotification(_purchaseId, "Challenged purchase. Check status.", address(0), msg.sender, NotificationType.Challenge);
+
+        return index;
+    }
+
+    function getResult(
+        uint256 index,                  // cartesi machine result index
+        uint256 _purchaseId             // purchase request identifier
+    ) public returns (bool, bool, address, bytes memory) {
+        bool a;
+        bool b;
+        address c;
+        bytes memory d;
+
+        (a, b, c, d) = descartes.getResult(index);
+
+        if(a && !b) {
+            bool success = utilCompareInternal(d,bytes("1"));
+            finalizePurchase(_purchaseId, success);
+        }
+
+        return (a, b, c, d);
+    }
+
+    function utilCompareInternal(bytes memory a, bytes memory b) internal returns (bool) {
+        if (a.length != b.length) {
+            return false;
+        }
+        for (uint i = 0; i < a.length; i++) {
+            if(a[i] != b[i]) {
+                return false;
+            }
+        }
+        return true;
     }
 }
