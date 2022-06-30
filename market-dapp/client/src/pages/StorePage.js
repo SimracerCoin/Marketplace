@@ -955,7 +955,7 @@ class StorePage extends Component {
                                       <div className="row align-items-center h-100 no-gutters">
                                         <div className="text-right">
                                           {/*<span className="fw-600 td-lt">{price / priceConversion} ETH</span><br/>*/}
-                                          <span className="fw-600">{price / priceConversion} ETH</span>
+                                          <span className="fw-600">{price / priceConversion} SRC</span>
                                         </div>
                                       </div>
                                     </div>
@@ -1118,7 +1118,7 @@ class StorePage extends Component {
                                  <div className="row align-items-center h-100 no-gutters">
                                    <div className="text-right">
                                      {/*<span className="fw-600 td-lt">{price / priceConversion} ETH</span><br/>*/}
-                                     <span className="fw-600">{price / priceConversion} ETH</span>
+                                     <span className="fw-600">{price / priceConversion} SRC</span>
                                    </div>
                                  </div>
                                </div>
@@ -1225,7 +1225,7 @@ class StorePage extends Component {
                                             <div className="row align-items-center h-100 no-gutters">
                                                 <div className="text-right">
                                                 {/*<span className="fw-600 td-lt">{price / priceConversion} ETH</span><br/>*/}
-                                                <span className="fw-600">{price / priceConversion} ETH</span>
+                                                <span className="fw-600">{price / priceConversion} SRC</span>
                                                 </div>
                                             </div>
                                             </div>

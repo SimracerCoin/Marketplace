@@ -49,7 +49,7 @@ class SimilarItemsComponent extends React.Component {
 
         return <div id={payload.itemId} className="carousel-pointer" onClick={(e) => this.switchSimilarItem(e, true, false, payload, fullItem)} >
             <img className="carousel-pointer" alt={payload.description} src={payload.imagePath} />
-            <p className="legend">{payload.description} : {payload.price / priceConversion} ETH</p>
+            <p className="legend">{payload.description} : {payload.price / priceConversion} SRC</p>
           </div>
 
       }
@@ -57,14 +57,14 @@ class SimilarItemsComponent extends React.Component {
         
         return <div className="carousel-pointer" id={payload.itemId} onClick={(e) => this.switchSimilarItem(e, false, true, payload, fullItem )}>
             <img className="carousel-pointer" alt={payload.description} src={payload.imagePath}/>
-            <p className="legend">{payload.description} : {payload.price / priceConversion} ETH</p>
+            <p className="legend">{payload.description} : {payload.price / priceConversion} SRC</p>
           </div>
 
       } else {
         //car
         return <div className="carousel-pointer" id={payload.itemId} onClick={(e) => this.switchSimilarItem(e, false, false, payload, fullItem)}>
             <img className="carousel-pointer" alt={payload.description} src={payload.imagePath} />
-            <p className="legend">{payload.description} : {payload.price / priceConversion} ETH</p>
+            <p className="legend">{payload.description} : {payload.price / priceConversion} SRC</p>
           </div>
 
       }
