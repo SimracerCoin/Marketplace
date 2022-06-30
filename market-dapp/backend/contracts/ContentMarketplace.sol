@@ -1,7 +1,11 @@
 pragma solidity ^0.7.0;
 pragma experimental ABIEncoderV2;
 
+//import "@cartesi/descartes-sdk/contracts/DescartesInterface.sol";
+
 contract ContentMarketplace {
+
+    //DescartesInterface descartes;
 
     /// @notice records necessary information for an advertisement
     struct Advertisement {
@@ -16,13 +20,14 @@ contract ContentMarketplace {
     /// @notice records information regarding a purchase
     struct Purchase {
         uint256 adId;
-        address buyer;
+        address payable buyer;
         bytes buyerKey;
         bytes encryptedDataKey;
-        uint256 date;
+        //uint256 descartesIndex;  // descartes computation that will verify the challenge
+        uint256 date;            // purchase date
     }
 
-    enum NotificationType { Request, Accept_A, Challenge, Accept_B }
+    enum NotificationType { Request, Accept_A, Challenge, Accept_B, Reject }
     // @notice full representation of a notification
     struct Notification {
         uint256 purchaseId;       // purchase information
@@ -46,19 +51,23 @@ contract ContentMarketplace {
 
     // storage of notifications
     uint256 numNotifications = 0;
-    mapping(uint256 => Notification) notifications;
-    mapping(address => uint256[]) notificationsPerUser;
+    mapping(uint256 => Notification) internal notifications;
+    mapping(address => uint256[]) internal notificationsPerUser;
 
     // purchase events
     event PurchaseRequested(uint256 adId, uint256 purchaseId, address buyer, bytes buyerKey);
     event PurchaseAccepted(uint256 adId, uint256 purchaseId, bytes encryptedDataKey);
-    event PurchaseChallenged(uint256 adId, uint256 purchaseId, uint256 descartesIndex);
+    //event PurchaseChallenged(uint256 adId, uint256 purchaseId, uint256 descartesIndex);
     event PurchaseFinalized(uint256 adId, uint256 purchaseId, bool isSuccess);
 
 
-    /// @param descartesAddress address of the Descartes contract
+    /**
     constructor(address descartesAddress) {
         // TODO retrieve Descartes interface from the address
+        descartes = DescartesInterface(descartesAddress);
+    } */
+
+    constructor() {
     }
 
     /// @notice creates a new advertisement for published and encrypted content
@@ -178,6 +187,7 @@ contract ContentMarketplace {
 
 
     /// @notice called by buyer to challenge a purchase, stating that content could not be retrieved
+    /**
     function challengePurchase(
         uint256 _purchaseId,           // purchase request identifier
         bytes memory _privateKey       // buyer's private key used to decrypt the data key
@@ -193,22 +203,27 @@ contract ContentMarketplace {
 
         emit PurchaseChallenged(purchase.adId, _purchaseId, descartesIndex);
         return descartesIndex;
-    }
+    }*/
 
     /// @notice finalizes purchase, unlocking buyer's funds and seller's deposit as appropriate
     function finalizePurchase(
-        uint256 _purchaseId            // purchase request identifier
+        uint256 _purchaseId,            // purchase request identifier
+        bool isSuccess
     ) public {
-        // TODO...
         Purchase memory purchase = getPurchase(_purchaseId);
         Advertisement memory ad = getAd(purchase.adId);
 
-        address payable accountAddress = ad.seller;
+        address payable accountAddress = isSuccess ? ad.seller : purchase.buyer;
         accountAddress.transfer(ad.price);
 
-        newNotification(_purchaseId, "Purchase was accepted", msg.sender, ad.seller, NotificationType.Accept_B);
+        if(isSuccess) {
+            newNotification(_purchaseId, "Purchase was accepted.", msg.sender, ad.seller, NotificationType.Accept_B);
+        }
+        else {
+            newNotification(_purchaseId, "Purchase was rejected.", msg.sender, ad.seller, NotificationType.Reject);
+        }
 
-        emit PurchaseFinalized(purchase.adId, _purchaseId, true); 
+        emit PurchaseFinalized(purchase.adId, _purchaseId, isSuccess); 
     }
 
     // @notice create notification
@@ -218,7 +233,7 @@ contract ContentMarketplace {
         address _sender,               // who sends the message
         address _receiver,             // who receives the message
         NotificationType _type         // type of notification
-    ) public
+    ) internal
         returns (uint256 notificationId)           // returns notification identifier
     {
         Notification storage notification = notifications[numNotifications];
