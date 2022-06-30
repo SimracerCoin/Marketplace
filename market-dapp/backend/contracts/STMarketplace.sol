@@ -85,10 +85,15 @@ contract STMarketplace is ContentMarketplace {
     event carSetupSaved(address _address, bytes _ipfsPath, string _carBrand, string _track, string _simulator, string _season, uint256 _price);
     event skinSaved(address _address, bytes _ipfsPath, string _carBrand, string _simulator, uint256 _price);
     
-    /// @notice Creates an instance of the contract
-    /// @param descartesAddress address of the Descartes contract
-    constructor(address descartesAddress) ContentMarketplace(descartesAddress) {
-    }    
+    /**
+    /// notice_ Creates an instance of the contract
+    /// param_ descartesAddress address of the Descartes contract
+    /// constructor(address descartesAddress) ContentMarketplace(descartesAddress) {
+    }*/
+
+    // new constructor, without descartes address supplied
+    constructor() {
+    } 
     
     /// @notice Registers a new car setup for sale
     function newCarSetup(
@@ -283,6 +288,7 @@ contract STMarketplace is ContentMarketplace {
         return string(str);
     }
 
+    /**
     function instantiateCartesiVerification(address claimer, address challenger, uint256 _purchaseId, DescartesInterface.Drive[] memory drives) public returns (uint256 index) 
     {
         address[] memory actors = new address[](2);
@@ -308,8 +314,9 @@ contract STMarketplace is ContentMarketplace {
         newNotification(_purchaseId, "Challenged purchase. Check status.", address(0), msg.sender, NotificationType.Challenge);
 
         return index;
-    }
+    } */
 
+    /**
     function getResult(
         uint256 index,                  // cartesi machine result index
         uint256 _purchaseId             // purchase request identifier
@@ -327,7 +334,7 @@ contract STMarketplace is ContentMarketplace {
         }
 
         return (a, b, c, d);
-    }
+    }*/
 
     function utilCompareInternal(bytes memory a, bytes memory b) internal returns (bool) {
         if (a.length != b.length) {

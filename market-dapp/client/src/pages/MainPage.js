@@ -177,7 +177,7 @@ class MainPage extends Component {
                             <div><b>Track:</b> {track}</div>
                             <div><b>Simulator:</b> {simulator}</div>
                             <div><b>Season:</b> {season}</div>
-                            <div><b>Price:</b> {price / priceConversion} ETH</div>
+                            <div><b>Price:</b> {price / priceConversion} SRC</div>
                             {/* <div><b>Vendor address:</b> {address}</div> */}
                             </div>
                             <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, track, simulator, season, series, description, price, carBrand, address, ipfsPath, "", false)}> View item</Button>
@@ -207,7 +207,7 @@ class MainPage extends Component {
                             <Card.Title className="mt-5 font-weight-bold">{carBrand}</Card.Title>
                             <div className="text-left">
                                 <div><b>Simulator:</b>&nbsp;<img src={thumb} width="24" alt={simulator} /> {simulator}</div>
-                                <div><b>Price:</b> {price / priceConversion} ETH</div>
+                                <div><b>Price:</b> {price / priceConversion} SRC</div>
                             </div>
                             <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, null, null, price, carBrand , address, ipfsPath, imagePath, false)}> View item</Button>
                         </Card.Body>
@@ -238,7 +238,7 @@ class MainPage extends Component {
                             <div><b>Series:</b> {series}</div>
                             <div><b>Simulator:</b> {simulator}</div>
                             <div><b>Car Number:</b> {carNumber}</div>
-                            <div><b>Price:</b> {price / priceConversion} ETH</div>
+                            <div><b>Price:</b> {price / priceConversion} SRC</div>
                             </div>
                             <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, carNumber, price, null , address, null, imagePath, true)}> View item</Button>
                         </Card.Body>

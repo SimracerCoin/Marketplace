@@ -1,11 +1,11 @@
 pragma solidity ^0.7.0;
 pragma experimental ABIEncoderV2;
 
-import "@cartesi/descartes-sdk/contracts/DescartesInterface.sol";
+//import "@cartesi/descartes-sdk/contracts/DescartesInterface.sol";
 
 contract ContentMarketplace {
 
-    DescartesInterface descartes;
+    //DescartesInterface descartes;
 
     /// @notice records necessary information for an advertisement
     struct Advertisement {
@@ -23,7 +23,7 @@ contract ContentMarketplace {
         address payable buyer;
         bytes buyerKey;
         bytes encryptedDataKey;
-        uint256 descartesIndex;  // descartes computation that will verify the challenge
+        //uint256 descartesIndex;  // descartes computation that will verify the challenge
         uint256 date;            // purchase date
     }
 
@@ -57,14 +57,17 @@ contract ContentMarketplace {
     // purchase events
     event PurchaseRequested(uint256 adId, uint256 purchaseId, address buyer, bytes buyerKey);
     event PurchaseAccepted(uint256 adId, uint256 purchaseId, bytes encryptedDataKey);
-    event PurchaseChallenged(uint256 adId, uint256 purchaseId, uint256 descartesIndex);
+    //event PurchaseChallenged(uint256 adId, uint256 purchaseId, uint256 descartesIndex);
     event PurchaseFinalized(uint256 adId, uint256 purchaseId, bool isSuccess);
 
 
-    /// @param descartesAddress address of the Descartes contract
+    /**
     constructor(address descartesAddress) {
         // TODO retrieve Descartes interface from the address
         descartes = DescartesInterface(descartesAddress);
+    } */
+
+    constructor() {
     }
 
     /// @notice creates a new advertisement for published and encrypted content
@@ -184,6 +187,7 @@ contract ContentMarketplace {
 
 
     /// @notice called by buyer to challenge a purchase, stating that content could not be retrieved
+    /**
     function challengePurchase(
         uint256 _purchaseId,           // purchase request identifier
         bytes memory _privateKey       // buyer's private key used to decrypt the data key
@@ -199,7 +203,7 @@ contract ContentMarketplace {
 
         emit PurchaseChallenged(purchase.adId, _purchaseId, descartesIndex);
         return descartesIndex;
-    }
+    }*/
 
     /// @notice finalizes purchase, unlocking buyer's funds and seller's deposit as appropriate
     function finalizePurchase(

@@ -45,6 +45,8 @@ class ItemPage extends Component {
     componentDidMount = async (event) => {
         const contract = await this.state.drizzle.contracts.STMarketplace;
         const contractNFTs = this.state.drizzle.contracts.SimthunderOwner;
+        const contractSimracerCoin = this.state.drizzle.contracts.SimracerCoin;
+
         const currentAccount = this.state.drizzleState.accounts[0];
         console.log('istNFT:' + this.state.isNFT);
         let isSkin = !this.state.isNFT && (this.state.track == null || this.state.season == null);
@@ -54,9 +56,9 @@ class ItemPage extends Component {
             const comments = await contract.methods.getItemComments(this.state.itemId).call();
             const average_review = await this.average_rating(comments);
 
-            this.setState({ currentAccount: currentAccount, contract: contract, listComments: comments, average_review: average_review, isSkin: isSkin });
+            this.setState({ currentAccount: currentAccount, contract: contract, contractSimracerCoin: contractSimracerCoin, listComments: comments, average_review: average_review, isSkin: isSkin });
         } else {
-            this.setState({ currentAccount: currentAccount, contract: contract, contractNFTs: contractNFTs,isSkin: isSkin });
+            this.setState({ currentAccount: currentAccount, contract: contract, contractNFTs: contractNFTs, contractSimracerCoin: contractSimracerCoin, isSkin: isSkin });
         }
 
         this.scrollToTop();
@@ -108,6 +110,8 @@ class ItemPage extends Component {
 
         UIHelper.showSpinning();
 
+        const contractNFTs = this.state.drizzle.contracts.SimthunderOwner;
+
         // TODO: buyer public key
         //const buyerPK = this.state.drizzle.web3.utils.hexToBytes(this.state.drizzle.web3.utils.randomHex(16));
         //console.log('Item price:' + this.state.price);
@@ -128,23 +132,39 @@ class ItemPage extends Component {
             }
 
             console.log('price =' + this.state.price);
+            
             await this.state.contract.methods.requestPurchase(this.state.itemId, buyerKey)
-                .send({ value: this.state.price, from: this.state.currentAccount })
-                //.on('sent', UIHelper.transactionOnSent)
-                .on('confirmation', function (confNumber, receipt, latestBlockHash) {
-                    UIHelper.transactionOnConfirmation("Thank you for your purchase request. Seller will contact you soon.", false);
-                })
-                .on('error', UIHelper.transactionOnError)
-                .catch(function (e) { });
+            .send({ value: this.state.price, from: this.state.currentAccount })
+            //.on('sent', UIHelper.transactionOnSent)
+            .on('confirmation', function (confNumber, receipt, latestBlockHash) {
+                UIHelper.transactionOnConfirmation("Thank you for your purchase request. Seller will contact you soon.", false);
+            })
+            .on('error', UIHelper.transactionOnError)
+            .catch(function (e) { });
+            
         } else {
-            let tx = await this.state.contractNFTs.methods.buyItem(this.state.itemId)
-                .send({ value: this.state.price, from: this.state.currentAccount })
-                //.on('sent', UIHelper.transactionOnSent)
-                .on('confirmation', function (confNumber, receipt, latestBlockHash) {
-                    UIHelper.transactionOnConfirmation("Thank you for your purchase.", false);
-                })
-                .on('error', UIHelper.transactionOnError)
-                .catch(function (e) { });
+
+            const price = this.state.drizzle.web3.utils.toBN(this.state.price);
+            let approval = await this.state.contractSimracerCoin.methods.approve(contractNFTs.address, price)
+            .send({from: this.state.currentAccount })
+            .catch(function (e) {
+              UIHelper.transactionOnError(e);
+             });
+            if(!approval) {
+              UIHelper.transactionOnError("ERROR ON APPROVAL");
+            } else {
+              //do it!
+              let tx = await this.state.contractNFTs.methods.buyItem(this.state.itemId,price)
+              .send({from: this.state.currentAccount })
+              //.on('sent', UIHelper.transactionOnSent)
+              .on('confirmation', function (confNumber, receipt, latestBlockHash) {
+                  UIHelper.transactionOnConfirmation("Thank you for your purchase.", false);
+              })
+              .on('error', UIHelper.transactionOnError)
+              .catch(function (e) { });
+            }
+
+            
         }
 
         // const responseFile = await ipfs.get(this.state.ipfsHash);
@@ -305,7 +325,7 @@ class ItemPage extends Component {
                         <div className="px-4 py-3 lh-1">
                               <h6 className="mb-1 small-1 text-light text-uppercase">{description}</h6>
                               <div className="price d-flex flex-wrap align-items-center">
-                                <span className="discount_final text-warning small-2">{price / priceConversion} ETH</span>
+                                <span className="discount_final text-warning small-2">{price / priceConversion} SRC</span>
                             </div>
                         </div>
                       </div>
@@ -332,7 +352,7 @@ class ItemPage extends Component {
                         <div className="px-4 py-3 lh-1">
                               <h6 className="mb-1 small-1 text-light text-uppercase">{description}</h6>
                               <div className="price d-flex flex-wrap align-items-center">
-                                <span className="discount_final text-warning small-2">{price / priceConversion} ETH</span>
+                                <span className="discount_final text-warning small-2">{price / priceConversion} SRC</span>
                             </div>
                         </div>
                       </div>
@@ -362,7 +382,7 @@ class ItemPage extends Component {
                           <div className="px-4 py-3 lh-1">
                                 <h6 className="mb-1 small-1 text-light text-uppercase">{description}</h6>
                                 <div className="price d-flex flex-wrap align-items-center">
-                                  <span className="discount_final text-warning small-2">{price / priceConversion} ETH</span>
+                                  <span className="discount_final text-warning small-2">{price / priceConversion} SRC</span>
                               </div>
                           </div>
                         </div>
@@ -392,7 +412,7 @@ class ItemPage extends Component {
                   <li>
 
                   <span className="platform">Price:</span> 
-                  <span className="developer-item text-lt">{this.state.price / priceConversion} ETH</span>
+                  <span className="developer-item text-lt">{this.state.price / priceConversion} SRC</span>
                   </li>
                   </ul>
       } else {
@@ -405,7 +425,7 @@ class ItemPage extends Component {
                   <li>
 
                   <span className="platform">Price:</span> 
-                  <span className="developer-item text-lt">{this.state.price / priceConversion} ETH</span>
+                  <span className="developer-item text-lt">{this.state.price / priceConversion} SRC</span>
                   </li>
                   </ul>
       }
@@ -428,7 +448,7 @@ class ItemPage extends Component {
                 
                 <div className="row mb-4 mb-sm-0">
                 <div className="col-sm-4"><strong className="fw-500">Price:</strong></div>
-                <div className="col-sm-8">{this.state.price / priceConversion} ETH</div>
+                <div className="col-sm-8">{this.state.price / priceConversion} SRC</div>
                 </div>
               </div>
             </div>
@@ -444,7 +464,7 @@ class ItemPage extends Component {
             </li>
             <li>
             <span className="platform">Price:</span> 
-            <span className="developer-item text-lt">{this.state.price / priceConversion} ETH</span>
+            <span className="developer-item text-lt">{this.state.price / priceConversion} SRC</span>
             </li>
             </ul>*/
     }
@@ -467,7 +487,7 @@ class ItemPage extends Component {
                 </div>
                 <div className="row mb-4 mb-sm-0">
                 <div className="col-sm-4"><strong className="fw-500">Price:</strong></div>
-                <div className="col-sm-8">{this.state.price / priceConversion} ETH</div>
+                <div className="col-sm-8">{this.state.price / priceConversion} SRC</div>
                 </div>
               </div>
             </div>
@@ -486,7 +506,7 @@ class ItemPage extends Component {
             </li>
             <li>
             <span className="platform">Price:</span> 
-            <span className="developer-item text-lt">{this.state.price / priceConversion} ETH</span>
+            <span className="developer-item text-lt">{this.state.price / priceConversion} SRC</span>
             </li>
             </ul>*/
     }
@@ -518,7 +538,7 @@ class ItemPage extends Component {
                 </div>
                 <div className="row mb-4 mb-sm-0">
                 <div className="col-sm-4"><strong className="fw-500">Price:</strong></div>
-                <div className="col-sm-8">{this.state.price / priceConversion} ETH</div>
+                <div className="col-sm-8">{this.state.price / priceConversion} SRC</div>
                 </div>
               </div>
             </div>
@@ -546,7 +566,7 @@ class ItemPage extends Component {
             </li>
             <li>
             <span className="platform">Price:</span> 
-            <span className="developer-item text-lt">{this.state.price / priceConversion} ETH</span>
+            <span className="developer-item text-lt">{this.state.price / priceConversion} SRC</span>
             </li>
             </ul>*/
     }
@@ -767,7 +787,7 @@ drizzle: props.drizzle,
                                     </div>
                                     <div className="row mb-4 mb-sm-0">
                                       <div className="col-sm-4"><strong className="fw-500">Price:</strong></div>
-                                      <div className="col-sm-8">{this.state.price / priceConversion} ETH</div>
+                                      <div className="col-sm-8">{this.state.price / priceConversion} SRC</div>
                                     </div>*/}
                                     {/*
                                     <div className="row mb-4 mb-sm-0">
@@ -974,7 +994,7 @@ drizzle: props.drizzle,
                       <div className="mb-3">
                         <div className="price">
                             {/*<div className="price-prev">300$</div>*/}
-                            <div className="price-current">{this.state.price / priceConversion} ETH</div>
+                            <div className="price-current">{this.state.price / priceConversion} SRC</div>
                           </div>
                         {/*<div className="discount">
                             Save: $20.00 (33%)

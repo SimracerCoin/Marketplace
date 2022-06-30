@@ -2,8 +2,9 @@ import React from 'react';
 import { DrizzleContext } from "@drizzle/react-plugin";
 import { Drizzle } from "@drizzle/store";
 import STMarketplace from "./STMarketplace.json";
+import SimracerCoin from "./SimracerCoin.json";
 import SimthunderOwner from "./SimthunderOwner.json"
-import Descartes from "./Descartes.json";
+//import Descartes from "./Descartes.json";
 import Underconstruction from "./pages/Underconstruction";
 import RouterPage from "./pages/RouterPage";
 import Web3 from "web3";
@@ -74,7 +75,7 @@ class App extends React.Component {
 
     if (state.isLoggedIn) {
       let web3 = window.web3;
-
+      
       const drizzleOptions = {
         contracts: [
           {
@@ -82,13 +83,18 @@ class App extends React.Component {
             web3Contract: new web3.eth.Contract(STMarketplace.abi, STMarketplace.address, { data: STMarketplace.deployedBytecode })
           },
           {
-            contractName: "SimthunderOwner",
-            web3Contract: new web3.eth.Contract(SimthunderOwner.abi, SimthunderOwner.address, { data: SimthunderOwner.deployedBytecode })
+            contractName: "SimracerCoin",
+            web3Contract: new web3.eth.Contract(SimracerCoin.abi, SimracerCoin.address, { data: SimracerCoin.deployedBytecode })
           },
           {
-            contractName: "Descartes",
-            web3Contract: new web3.eth.Contract(Descartes.abi, Descartes.address, { data: Descartes.deployedBytecode })
+            contractName: "SimthunderOwner",
+            web3Contract: new web3.eth.Contract(SimthunderOwner.abi, SimthunderOwner.address, { data: SimthunderOwner.deployedBytecode })
           }
+          //,
+          //{
+          //  contractName: "Descartes",
+          //  web3Contract: new web3.eth.Contract(Descartes.abi, Descartes.address, { data: Descartes.deployedBytecode })
+          //}
         ]
       };
 
@@ -99,7 +105,6 @@ class App extends React.Component {
           <DrizzleContext.Consumer>
             {drizzleContext => {
               const { drizzle, drizzleState, initialized } = drizzleContext;
-
               if (!initialized) {
                 return (<div id="wait-div" className="spinner-outer"><div className="spinner"></div></div>)
               }

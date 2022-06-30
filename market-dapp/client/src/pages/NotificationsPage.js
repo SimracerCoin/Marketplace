@@ -13,8 +13,8 @@ const openpgp = require('openpgp');
 const BufferList = require('bl/BufferList');
 
 // TODO: use addresses from config file of the Cartesi nodes that will participating
-const claimer = '0xF393a9865cb4f1b68813359D5D282878d5d0BdE1';
-const challenger = '0x3Ac21b20E16eF666Db34Ba208d7f67Aa8c5f6B0D';
+//const claimer = '0xF393a9865cb4f1b68813359D5D282878d5d0BdE1';
+//const challenger = '0x3Ac21b20E16eF666Db34Ba208d7f67Aa8c5f6B0D';
 const passphrase = process.env.REACT_APP_PASSPHRASE;
 
 class NotificationsPage extends Component {
@@ -34,7 +34,7 @@ class NotificationsPage extends Component {
 
     componentDidMount = async () => {
         const contract = await this.state.drizzle.contracts.STMarketplace;
-        const descartesContract = await this.state.drizzle.contracts.Descartes;
+        //const descartesContract = await this.state.drizzle.contracts.Descartes;
         const currentAccount = this.state.drizzleState.accounts[0];
         const notificationsIds = await contract.methods.listNotificationsPerUser(currentAccount).call()
         const notifications_r = await contract.methods.getNotifications(notificationsIds).call();
@@ -63,7 +63,7 @@ class NotificationsPage extends Component {
         //const ads = await contract.methods.getAds(purchasesIds).call();
 
         ////Descartes test:
-        this.setState({ listNotifications: notifications, currentAccount: currentAccount, contract: contract, descartesContract: descartesContract });
+        this.setState({ listNotifications: notifications, currentAccount: currentAccount, contract: contract /*, descartesContract: descartesContract*/ });
 
         //this.setState({ listNotifications: notifications, currentAccount: currentAccount, contract: contract });
     }
@@ -185,6 +185,7 @@ class NotificationsPage extends Component {
         //const ipfsPath = '/ipfs/QmfM8ipwA8Ja2PmJwzLSdGdYRYtZmRMQB8TDZrgM1wYWBk';
         //const loggerRootHash = '0x878c868df0c867cff5ad4fc7750600bb59981dcc6c3cf77c1e0447cb507b7812';
 
+        /** TODO handle the dispute without cartesi
         const aDrive = {
             position: '0xa000000000000000',
             driveLog2Size: Math.ceil(Math.log2(ipfsSize)),
@@ -218,6 +219,7 @@ class NotificationsPage extends Component {
             })
             .on('error', UIHelper.transactionOnError)
             .catch(function (e) { });
+        */
     }
 
     endPurchase = async (event, purchaseId, adId, ipfsPath, buyerKey, encryptedDataKey, loggerRootHash) => {
