@@ -226,8 +226,10 @@ contract ContentMarketplace {
         Purchase memory purchase = getPurchase(_purchaseId);
         Advertisement memory ad = getAd(purchase.adId);
 
-        address payable accountAddress = isSuccess ? ad.seller : purchase.buyer;
-        accountAddress.transfer(ad.price);
+        address accountAddress = isSuccess ? ad.seller : purchase.buyer;
+
+        require(SIMRACERCOIN.transferFrom(address(this), accountAddress, ad.price),"Cannot unlock funds to transfer ownership");
+        //accountAddress.transfer(ad.price);
 
         if(isSuccess) {
             newNotification(_purchaseId, "Purchase was accepted.", msg.sender, ad.seller, NotificationType.Accept_B);
