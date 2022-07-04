@@ -1,11 +1,17 @@
 pragma solidity ^0.7.0;
 pragma experimental ABIEncoderV2;
 
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 //import "@cartesi/descartes-sdk/contracts/DescartesInterface.sol";
+
+// NOTE IF building on Remix use the same solidity version of openzeppelin, that is here on the package.json
+// 3.1.0-solc-0.7 this is to avoid issues with versions/deprecated/change functions, etc:;
+// import "@openzeppelin/contracts@3.1.0-solc-0.7/token/ERC20/ERC20.sol";
 
 contract ContentMarketplace {
 
     //DescartesInterface descartes;
+    ERC20 SIMRACERCOIN;
 
     /// @notice records necessary information for an advertisement
     struct Advertisement {
@@ -67,7 +73,8 @@ contract ContentMarketplace {
         descartes = DescartesInterface(descartesAddress);
     } */
 
-    constructor() {
+    constructor(address payable_token) {
+        SIMRACERCOIN = ERC20(payable_token);
     }
 
     /// @notice creates a new advertisement for published and encrypted content
@@ -141,16 +148,19 @@ contract ContentMarketplace {
 
     /// @notice requests purchase of a registered advertisement
     function requestPurchase(
+        uint256 adPrice,                //price as arg, cannot use msg.value if not payable
         uint256 _adId,                 // ad identifier
         bytes memory _buyerKey         // buyer's public key used for encrypting messages so that only the buyer can see
     ) public
-        payable                        // funds matching ad price, which will be locked until purchase is finalized
+        // funds matching ad price, which will be locked until purchase is finalized
         returns (uint256 purchaseId)   // returns purchase request identifier
     {
         // TODO: ensure ad exists
         // TODO: ensure funds are adequade
         Advertisement memory ad = getAd(_adId);
-        require(msg.value == (ad.price),"Amount should be equal to the item price");
+        require(adPrice == (ad.price),"Amount should be equal to the item price");
+        //check if allowed to spend SRC
+        require(SIMRACERCOIN.allowance(msg.sender, address(this)) >= ad.price, "Check the token allowance");
 
         // stores purchase info
         Purchase storage purchase = purchases[numPurchases];
@@ -161,6 +171,9 @@ contract ContentMarketplace {
 
         purchaseId = numPurchases++;
         purchasesPerAd[purchase.adId].push(purchaseId);
+
+        //transfer SRC to the contract address
+        require(SIMRACERCOIN.transferFrom(msg.sender, address(this), ad.price),"Cannot transfer Item ownership");
 
         newNotification(purchaseId, "Purchase was requested", msg.sender, ad.seller, NotificationType.Request);
 
@@ -173,7 +186,7 @@ contract ContentMarketplace {
         uint256 _purchaseId,           // purchase request identifier
         bytes memory _encryptedDataKey // key for decrypting data, encrypted using buyer's public key
     ) public
-        payable                        // deposit sent by the seller that will be locked until purchase is finalized
+                                // deposit sent by the seller that will be locked until purchase is finalized
     {
         // TODO...
 

@@ -92,7 +92,7 @@ contract STMarketplace is ContentMarketplace {
     }*/
 
     // new constructor, without descartes address supplied
-    constructor() {
+    constructor(address payable_token) ContentMarketplace(payable_token) {
     } 
     
     /// @notice Registers a new car setup for sale

@@ -110,7 +110,8 @@ class ItemPage extends Component {
 
         UIHelper.showSpinning();
 
-        const contractNFTs = this.state.drizzle.contracts.SimthunderOwner;
+        const price = this.state.drizzle.web3.utils.toBN(this.state.price);
+        console.log('item price =' + price);
 
         // TODO: buyer public key
         //const buyerPK = this.state.drizzle.web3.utils.hexToBytes(this.state.drizzle.web3.utils.randomHex(16));
@@ -131,21 +132,33 @@ class ItemPage extends Component {
                 localStorage.setItem('bk', this.state.drizzle.web3.utils.asciiToHex(privateKeyArmored));
             }
 
-            console.log('price =' + this.state.price);
+            //approve contract ot spend our SRC
+            let approval = await this.state.contractSimracerCoin.methods.approve(this.state.contract.address, price)
+            .send({from: this.state.currentAccount })
+            .catch(function (e) {
+              UIHelper.transactionOnError(e);
+             });
+            if(!approval) {
+              UIHelper.transactionOnError("ERROR ON APPROVAL");
+            } else {
+              //approved
+              await this.state.contract.methods.requestPurchase(price, this.state.itemId, buyerKey)
+              .send({from: this.state.currentAccount })
+              //.on('sent', UIHelper.transactionOnSent)
+              .on('confirmation', function (confNumber, receipt, latestBlockHash) {
+                  UIHelper.transactionOnConfirmation("Thank you for your purchase request. Seller will contact you soon.", false);
+              })
+              .on('error', UIHelper.transactionOnError)
+              .catch(function (e) {
+                console.log(e);
+               });
+            }
             
-            await this.state.contract.methods.requestPurchase(this.state.itemId, buyerKey)
-            .send({ value: this.state.price, from: this.state.currentAccount })
-            //.on('sent', UIHelper.transactionOnSent)
-            .on('confirmation', function (confNumber, receipt, latestBlockHash) {
-                UIHelper.transactionOnConfirmation("Thank you for your purchase request. Seller will contact you soon.", false);
-            })
-            .on('error', UIHelper.transactionOnError)
-            .catch(function (e) { });
+            
             
         } else {
 
-            const price = this.state.drizzle.web3.utils.toBN(this.state.price);
-            let approval = await this.state.contractSimracerCoin.methods.approve(contractNFTs.address, price)
+            let approval = await this.state.contractSimracerCoin.methods.approve(this.state.contractNFTs.address, price)
             .send({from: this.state.currentAccount })
             .catch(function (e) {
               UIHelper.transactionOnError(e);
@@ -154,14 +167,16 @@ class ItemPage extends Component {
               UIHelper.transactionOnError("ERROR ON APPROVAL");
             } else {
               //do it!
-              let tx = await this.state.contractNFTs.methods.buyItem(this.state.itemId,price)
+              await this.state.contractNFTs.methods.buyItem(this.state.itemId,price)
               .send({from: this.state.currentAccount })
               //.on('sent', UIHelper.transactionOnSent)
               .on('confirmation', function (confNumber, receipt, latestBlockHash) {
                   UIHelper.transactionOnConfirmation("Thank you for your purchase.", false);
               })
               .on('error', UIHelper.transactionOnError)
-              .catch(function (e) { });
+              .catch(function (e) {
+                console.log(e);
+               });
             }
 
             
