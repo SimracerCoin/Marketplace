@@ -12,6 +12,8 @@ import Web3 from "web3";
 
 import "./css/App.css";
 
+require('dotenv').config({path:__dirname+'/.env'});
+
 //var web3 = new Web3(Web3.givenProvider);
 
 var NETWORK_ID = 4;
@@ -32,16 +34,22 @@ class App extends React.Component {
   componentDidMount = async () => {
     var allow_wallets = [];
 
-    await fetch('/allow.json', {
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      }
-    }).then(function (response) {
-      return response.json();
-    }).then(function (myJson) {
-      allow_wallets = myJson;
-    });
+    //if not set or evaluates to false
+    if(!process.env.ALLOW_ALL_WALLETS) {
+
+      await fetch('/allow.json', {
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
+      }).then(function (response) {
+        return response.json();
+      }).then(function (myJson) {
+        allow_wallets = myJson;
+      });
+    }
+
+    
 
     let isLoggedIn = false;
     let networkId = 0;
@@ -70,7 +78,7 @@ class App extends React.Component {
   render() {
     const { state } = this;
 
-    if(state.allow_wallets.length == 0)
+    if(state.allow_wallets.length == 0 && !process.env.ALLOW_ALL_WALLETS)
       return (<div id="wait-div" className="spinner-outer"><div className="spinner"></div></div>)
 
     if (state.isLoggedIn) {
@@ -109,7 +117,7 @@ class App extends React.Component {
                 return (<div id="wait-div" className="spinner-outer"><div className="spinner"></div></div>)
               }
 
-              if (state.allow_wallets.includes(drizzleState.accounts[0]) && !state.wrongNetwork) {
+              if ( (process.env.ALLOW_ALL_WALLETS || state.allow_wallets.includes(drizzleState.accounts[0]) ) && !state.wrongNetwork) {
                 return (
                   <RouterPage drizzle={drizzle} drizzleState={drizzleState} />
                 )
