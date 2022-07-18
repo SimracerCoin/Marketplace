@@ -12,9 +12,12 @@ import Web3 from "web3";
 
 import "./css/App.css";
 
+
 //var web3 = new Web3(Web3.givenProvider);
 
 var NETWORK_ID = 137;
+
+const allowAllWallets = (process.env.REACT_APP_ALLOW_ALL_WALLETS == "true" ? true : false);
 
 class App extends React.Component {
   constructor(props) {
@@ -32,16 +35,22 @@ class App extends React.Component {
   componentDidMount = async () => {
     var allow_wallets = [];
 
-    await fetch('/allow.json', {
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      }
-    }).then(function (response) {
-      return response.json();
-    }).then(function (myJson) {
-      allow_wallets = myJson;
-    });
+    //if not set or evaluates to false
+    if(!allowAllWallets) {
+
+      await fetch('/allow.json', {
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
+      }).then(function (response) {
+        return response.json();
+      }).then(function (myJson) {
+        allow_wallets = myJson;
+      });
+    }
+
+    
 
     let isLoggedIn = false;
     let networkId = 0;
@@ -54,11 +63,11 @@ class App extends React.Component {
       console.log('network: ' + networkId);
       await window.web3.eth.getAccounts(function (err, accounts) {
         if (err != null) console.error("An error occurred: " + err);
-        else if (accounts.length != 0) isLoggedIn = true;
+        else if (accounts.length !== 0) isLoggedIn = true;
       });
     }
 
-    this.setState({ allow_wallets: allow_wallets, isLoggedIn: isLoggedIn, wrongNetwork: (networkId != NETWORK_ID) });
+    this.setState({ allow_wallets: allow_wallets, isLoggedIn: isLoggedIn, wrongNetwork: (networkId !== NETWORK_ID) });
   }
 
   login() {
@@ -70,7 +79,7 @@ class App extends React.Component {
   render() {
     const { state } = this;
 
-    if(state.allow_wallets.length == 0)
+    if(state.allow_wallets.length === 0 && !allowAllWallets)
       return (<div id="wait-div" className="spinner-outer"><div className="spinner"></div></div>)
 
     if (state.isLoggedIn) {
@@ -109,7 +118,7 @@ class App extends React.Component {
                 return (<div id="wait-div" className="spinner-outer"><div className="spinner"></div></div>)
               }
 
-              if (state.allow_wallets.includes(drizzleState.accounts[0]) && !state.wrongNetwork) {
+              if ( (allowAllWallets || state.allow_wallets.includes(drizzleState.accounts[0]) ) && !state.wrongNetwork) {
                 return (
                   <RouterPage drizzle={drizzle} drizzleState={drizzleState} />
                 )
