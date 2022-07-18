@@ -38,7 +38,7 @@ class Underconstruction extends Component {
             if(!web3) {
                 error_msg = "No Ethereum wallet detected.";
             } else if(state.isLoggedIn && state.wrongNetwork) {
-                error_msg = "Wrong network! SimThunder is now on Rinkeby Network.";
+                error_msg = "Wrong network! SimThunder is now on Polygon Network.";
             }
         }
 

@@ -14,7 +14,7 @@ import "./css/App.css";
 
 //var web3 = new Web3(Web3.givenProvider);
 
-var NETWORK_ID = 4;
+var NETWORK_ID = 137;
 
 class App extends React.Component {
   constructor(props) {
