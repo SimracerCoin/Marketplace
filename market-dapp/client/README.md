@@ -68,3 +68,11 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/d
 ### `yarn build` fails to minify
 
 This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+
+#### Dapp wallet access HOWTO
+use allow.json to have a whitelist of allowed wallets
+remove REACT_APP_ALLOW_ALL_WALLETS property, or set it to "false" on the .env file
+This way only whitelisted address will have access
+
+In order to allow all wallets and ignore the file (so no whitelist) set REACT_APP_ALLOW_ALL_WALLETS to "true"
+
