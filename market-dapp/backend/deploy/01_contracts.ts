@@ -7,6 +7,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const { deployer } = await getNamedAccounts();
 
   //const Descartes = await get("Descartes");
+
+  //NOTE: if deploying to polygon use instead
+  //const SimracerCoin = "0xf0c3C4AC63Be272a94712bCcc39490A159Cd0D7C";
+  //and then npx hardhat deploy --network polygon
   const SimracerCoin = await deploy("SimracerCoin", {
     from: deployer,
     log: true,
