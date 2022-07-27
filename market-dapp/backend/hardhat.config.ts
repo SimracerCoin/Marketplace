@@ -68,7 +68,7 @@ const config: HardhatUserConfig = {
     polygon: {
       url: "https://polygon-rpc.com/",
       chainId: 137,
-      accounts: mnemonic ? { mnemonic } : undefined
+      accounts: [`0x${mnemonic}`]
     }
   },
   solidity: {
