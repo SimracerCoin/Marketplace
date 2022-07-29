@@ -131,9 +131,12 @@ class UploadSimracerMoment extends Component {
     /**
      * Creates a screenshot from the video
      */
-    captureScreenshotFromVideo() {
+    captureScreenshotFromVideo(video, scope) {
         let canvas = document.createElement('canvas');
-        let video = document.getElementById('nft-video');
+
+        const getBase64StringFromDataURL = (dataURL) => {
+            return dataURL.replace('data:', '').replace(/^.+,/, '');
+        }
 
         video.addEventListener('seeked', function(){
             canvas.width = 1920;
@@ -142,14 +145,15 @@ class UploadSimracerMoment extends Component {
             let ctx = canvas.getContext('2d');
             ctx.drawImage( video, 0, 0, canvas.width, canvas.height );
 
-            let image = canvas.toDataURL('image/jpeg');
-            const reader = new window.FileReader();
-            reader.onloadend = () => {
-                this.setState({ imageBuffer: Buffer(reader.result) })
-                console.log('buffer image', this.state.imageBuffer)
-            }
+            let dataURL = canvas.toDataURL('image/jpeg');
+            console.log('img', dataURL);
 
-            reader.readAsArrayBuffer(image);
+            const imageBase64 = getBase64StringFromDataURL(dataURL);
+
+            const imageBuffer = Uint8Array.from(atob(imageBase64), (c) => c.charCodeAt(0));
+
+            scope.setState({ imageBuffer: imageBuffer})
+            console.log('got buffer image', scope.state.imageBuffer)
             
         });
         //take a screenshot at 5 seconds of video play moment
@@ -159,26 +163,31 @@ class UploadSimracerMoment extends Component {
     //Transforma o video num buffer e guarda como estado
     //apenas se tiver menos de 30secs
     uploadVideoIPFS = (event) => {
-        event.stopPropagation()
-        event.preventDefault()
+        event.stopPropagation();
+        event.preventDefault();
+        console.log('uploadVideoIPFS started...');
         const file = event.target.files[0];
 
-
-        const readVideoAsBuffer = () => {
+        let self = this;
+        console.log('files is ',file);
+        const readVideoAsBuffer = (video) => {
 
             const reader = new window.FileReader()
             reader.readAsArrayBuffer(file)
             reader.onloadend = () => {
                 this.setState({ videoBuffer: Buffer(reader.result) })
-                console.log('video buffer', this.state.videoBuffer)
+                console.log('video buffer', this.state.videoBuffer);
+                self.captureScreenshotFromVideo(video, self);
             }
         } 
 
-        const video = document.createElement('nft-video');
+        const video = document.createElement('video');
         video.preload = 'metadata';
 
-        let self = this;
+        console.log('still here');
+
         video.onloadedmetadata = function() {
+            console.log('inside?');
             window.URL.revokeObjectURL(video.src);
             const duration = video.duration;
             console.log("video duration: " + duration + " secs");
@@ -186,8 +195,7 @@ class UploadSimracerMoment extends Component {
             if(duration > 30) {
                 alert("The video duration must not exceed 30 seconds!");
             } else {
-                readVideoAsBuffer();
-                self.captureScreenshotFromVideo();
+                readVideoAsBuffer(video);
             }
         
         }
