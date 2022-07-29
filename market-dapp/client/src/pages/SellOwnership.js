@@ -195,7 +195,7 @@ class SellOwnership extends Component {
         this.setState({ ipfsPath: response.path });
     };
 
-    saveSkin = async (event) => {
+    saveCarOwnershipNFT = async (event) => {
         event.preventDefault();
 
         if (this.state.currentFilePrice === null) {
@@ -272,7 +272,7 @@ class SellOwnership extends Component {
                                         </Form>
                                     </div><br></br>
                                     <div>
-                                        <Button onClick={this.saveSkin}>Mint Car Ownership NFT</Button>
+                                        <Button onClick={this.saveCarOwnershipNFT}>Mint Car Ownership NFT</Button>
                                     </div>
                                 </div>
                             </div>

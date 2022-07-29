@@ -22,17 +22,17 @@ class UploadSkin extends Component {
             currentFilePrice: null,
             contract: null,
             ipfsPath: null,
-            image_ipfsPath: "",
+            video_ipfsPath: "",
             encryptedDataHash: null,
             formIPFS: "",
             formAddress: "",
             receivedIPFS: "",
             isSeller: false,
-            imageBuffer: null,
+            videoBuffer: null,
         }
 
 
-        this.handleChangeHash = this.handleChangeHash.bind(this);
+        //this.handleChangeHash = this.handleChangeHash.bind(this);
         this.handleFilePrice = this.handleFilePrice.bind(this);
         this.uploadVideoIPFS = this.uploadVideoIPFS.bind(this);
         this.saveVideo_toIPFS = this.saveVideo_toIPFS.bind(this);
@@ -47,40 +47,32 @@ class UploadSkin extends Component {
     };
 
 
-    handleChangeHash = (event) => {
-        console.log("IPFS Hash: " + event.target.value);
-        this.setState({ ipfsPath: event.target.value });
-    }
+    //handleChangeHash = (event) => {
+    //    console.log("Handling IPFS Hash: " + event.target.value);
+    //    this.setState({ ipfsPath: event.target.value });
+    //}
 
     handleFilePrice = (event) => {
         const re = /([0-9]*[.])?[0-9]+/;
         if (event.target.value === '' || re.test(event.target.value)) {
             this.setState({ priceValue: event.target.value });
-            console.log("File price: " + event.target.value);
+            console.log("Handling File price: " + event.target.value);
             this.setState({ currentFilePrice: event.target.value * priceConversion });
         }
     }
 
     handleDescription = (event) => {
-        console.log("Description: " + event.target.value);
+        console.log("Handling Description: " + event.target.value);
         this.setState({ currentDescription: event.target.value });
     }
 
     handleSeries = (event) => {
-        console.log("Series: " + event.target.value);
+        console.log("Handling Series: " + event.target.value);
         this.setState({ currentSeries: event.target.value });
     }
 
-    onSelectCar = async (event) => {
-        //event.preventDefault();
-        console.log("Choosing car: " + event.target.value);
-        this.setState({ currentCar: event.target.value });
-    }
-
-
     onSelectSimulator = async (event) => {
-        //event.preventDefault();
-        console.log("Choosing sim: " + event);
+        console.log("Choosing Simulator: " + event);
         this.setState({ currentSimulator: event });
     }
 
@@ -101,27 +93,19 @@ class UploadSkin extends Component {
         reader.onloadend = () => this.convertToBuffer(reader)
     };
 
-    //Guarda a imagem no ipfs 
-    saveImage_toIPFS = async () => {
-        var fileName = document.getElementById('skin-image').value.toLowerCase();
+    //Guarda o video no ipfs 
+    saveVideo_toIPFS = async () => {
+        
 
-        console.log("Filename: " + fileName)
+        console.log('saveVideo_toIPFS....');
 
-        const valid_fileName = fileName.endsWith('.jpg') || fileName.endsWith('.png') || fileName.endsWith('.jpeg')
-        console.log("Valid filename: " + valid_fileName)
-        if (!valid_fileName) {
-            alert('You can upload .jpg, .png or .jpeg files only. Invalid file!');
-            return false;
-        }
-
-        const response = await ipfs.add(this.state.imageBuffer, (err, ipfsPath) => {
+        const response = await ipfs.add(this.state.videoBuffer, (err, ipfsPath) => {
             console.log(err, ipfsPath);
-            console.log("Response image: ", ipfsPath[0].hash)
-            //setState by setting ipfsPath to ipfsPath[0].hash 
-            this.setState({ image_ipfsPath: ipfsPath[0].hash });
+            console.log("Response video path on ipfs: ", ipfsPath[0].hash);
+            this.setState({ video_ipfsPath: ipfsPath[0].hash });
         })
 
-        this.setState({ image_ipfsPath: response.path });
+        this.setState({ video_ipfsPath: response.path });
         return true;
 
     }
@@ -139,8 +123,8 @@ class UploadSkin extends Component {
             const reader = new window.FileReader()
             reader.readAsArrayBuffer(file)
             reader.onloadend = () => {
-                this.setState({ imageBuffer: Buffer(reader.result) })
-                console.log('video buffer', this.state.imageBuffer)
+                this.setState({ videoBuffer: Buffer(reader.result) })
+                console.log('video buffer', this.state.videoBuffer)
             }
         } 
 
@@ -150,8 +134,7 @@ class UploadSkin extends Component {
         video.onloadedmetadata = function() {
             window.URL.revokeObjectURL(video.src);
             const duration = video.duration;
-            alert("video duration: " + duration + " secs");
-
+            console.log("video duration: " + duration + " secs");
 
             if(duration > 30) {
                 alert("The video duration must not exceed 30 seconds!");
@@ -164,80 +147,17 @@ class UploadSkin extends Component {
         video.src = URL.createObjectURL(file);
     }
 
-    //Guarda o video no ipfs 
-    saveVideo_toIPFS = async () => {
-        var fileName = document.getElementById('skin-image').value.toLowerCase();
-
-        console.log("Filename: " + fileName)
-
-        const valid_fileName = fileName.endsWith('.jpg') || fileName.endsWith('.png') || fileName.endsWith('.jpeg')
-        console.log("Valid filename: " + valid_fileName)
-        if (!valid_fileName) {
-            alert('You can upload .jpg, .png or .jpeg files only. Invalid file!');
-            return false;
-        }
-
-        const response = await ipfs.add(this.state.imageBuffer, (err, ipfsPath) => {
-            console.log(err, ipfsPath);
-            console.log("Response image: ", ipfsPath[0].hash)
-            //setState by setting ipfsPath to ipfsPath[0].hash 
-            this.setState({ image_ipfsPath: ipfsPath[0].hash });
-        })
-
-        this.setState({ image_ipfsPath: response.path });
-        return true;
-
-    }
-
-
-
-    onIPFSSubmit = async (event) => {
-        event.preventDefault();
-
-        var fileName = document.getElementById('skin-file').value.toLowerCase();
-        if (!fileName.endsWith('.tga')) {
-            alert('You can upload .tga files only.');
-            return false;
-        }
-
-        const password = await Prompt('Type the password to encrypt the file. Use different password for each item.');
-
-        if (!password) return;
-
-        const { message } = await openpgp.encrypt({
-            message: openpgp.message.fromBinary(this.state.buffer), // input as Message object
-            passwords: [password],                                  // multiple passwords possible
-            armor: false                                            // don't ASCII armor (for Uint8Array output)
-        });
-        const encryptedBuffer = message.packets.write(); // get raw encrypted packets as Uint8Array
-
-        const encryptedDataHash = computeMerkleRootHash(Buffer.from(encryptedBuffer));
-        console.log(`Logger Root Hash: ${encryptedDataHash}`);
-
-        const response = await ipfs.add(encryptedBuffer, (err, ipfsPath) => {
-            console.log(err, ipfsPath);
-            //setState by setting ipfsPath to ipfsPath[0].hash 
-            this.setState({ ipfsPath: ipfsPath[0].hash });
-        })
-        this.setState({ ipfsPath: response.path, encryptedDataHash: encryptedDataHash });
-    };
-
     saveSimracerMoment = async (event) => {
         event.preventDefault();
 
         if (this.state.currentFilePrice === null) {
             alert('Item price must be an integer');
         } else {
-            // let nickname = "";
-            // if (!this.state.isSeller) {
-            //     nickname = await Prompt('You are adding your first item for sale, please choose your seller nickname.');
-            //     if (!nickname) return;
-            // }
 
             UIHelper.showSpinning();
 
-            const response_saveImage = await this.saveImage_toIPFS();
-            const response_saveJson = await this.saveJSON_toIPFS(this.state.image_ipfsPath);
+            const response_saveImage = await this.saveVideo_toIPFS();
+            const response_saveJson = await this.saveJSON_toIPFS(this.state.video_ipfsPath);
 
             const price = this.state.drizzle.web3.utils.toBN(this.state.currentFilePrice);
 
@@ -246,7 +166,7 @@ class UploadSkin extends Component {
                 .send({ from: this.state.currentAccount })
                 //.on('sent', UIHelper.transactionOnSent)
                 .on('confirmation', function (confNumber, receipt, latestBlockHash) {
-                    UIHelper.transactionOnConfirmation("The new car ownership NFT is available for sale!");
+                    UIHelper.transactionOnConfirmation("The new Simracing Moment NFT is available for sale!");
                 })
                 .on('error', UIHelper.transactionOnError)
                 .catch(function (e) { });
