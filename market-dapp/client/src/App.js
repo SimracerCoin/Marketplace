@@ -15,7 +15,7 @@ import "./css/App.css";
 
 //var web3 = new Web3(Web3.givenProvider);
 
-var NETWORK_ID = 137;
+var NETWORK_ID = Number(process.env.REACT_APP_NETWORK_ID) || 137;
 
 const allowAllWallets = (process.env.REACT_APP_ALLOW_ALL_WALLETS == "true" ? true : false);
 

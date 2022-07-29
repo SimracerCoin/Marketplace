@@ -9,7 +9,7 @@ const openpgp = require('openpgp');
 
 const priceConversion = 10 ** 18;
 
-class UploadSkin extends Component {
+class UploadSimracerMoment extends Component {
 
     constructor(props) {
         super(props)
@@ -23,12 +23,14 @@ class UploadSkin extends Component {
             contract: null,
             ipfsPath: null,
             video_ipfsPath: "",
+            image_ipfsPath: "",
             encryptedDataHash: null,
             formIPFS: "",
             formAddress: "",
             receivedIPFS: "",
             isSeller: false,
             videoBuffer: null,
+            imageBuffer: null
         }
 
 
@@ -110,6 +112,50 @@ class UploadSkin extends Component {
 
     }
 
+    //Guarda o screenshot no ipfs 
+    saveImage_toIPFS = async () => {
+        
+        console.log('saveImage_toIPFS....');
+
+        const response = await ipfs.add(this.state.imageBuffer, (err, ipfsPath) => {
+            console.log(err, ipfsPath);
+            console.log("Response video path on ipfs: ", ipfsPath[0].hash);
+            this.setState({ image_ipfsPath: ipfsPath[0].hash });
+        })
+
+        this.setState({ image_ipfsPath: response.path });
+        return true;
+
+    }
+
+    /**
+     * Creates a screenshot from the video
+     */
+    captureScreenshotFromVideo() {
+        let canvas = document.createElement('canvas');
+        let video = document.getElementById('nft-video');
+
+        video.addEventListener('seeked', function(){
+            canvas.width = 1920;
+            canvas.height = 1080;
+
+            let ctx = canvas.getContext('2d');
+            ctx.drawImage( video, 0, 0, canvas.width, canvas.height );
+
+            let image = canvas.toDataURL('image/jpeg');
+            const reader = new window.FileReader();
+            reader.onloadend = () => {
+                this.setState({ imageBuffer: Buffer(reader.result) })
+                console.log('buffer image', this.state.imageBuffer)
+            }
+
+            reader.readAsArrayBuffer(image);
+            
+        });
+        //take a screenshot at 5 seconds of video play moment
+        video.currentTime = 5;
+    }
+
     //Transforma o video num buffer e guarda como estado
     //apenas se tiver menos de 30secs
     uploadVideoIPFS = (event) => {
@@ -128,9 +174,10 @@ class UploadSkin extends Component {
             }
         } 
 
-        const video = document.createElement('video');
+        const video = document.createElement('nft-video');
         video.preload = 'metadata';
 
+        let self = this;
         video.onloadedmetadata = function() {
             window.URL.revokeObjectURL(video.src);
             const duration = video.duration;
@@ -140,6 +187,7 @@ class UploadSkin extends Component {
                 alert("The video duration must not exceed 30 seconds!");
             } else {
                 readVideoAsBuffer();
+                self.captureScreenshotFromVideo();
             }
         
         }
@@ -156,8 +204,9 @@ class UploadSkin extends Component {
 
             UIHelper.showSpinning();
 
-            const response_saveImage = await this.saveVideo_toIPFS();
-            const response_saveJson = await this.saveJSON_toIPFS(this.state.video_ipfsPath);
+            const response_saveVideo = await this.saveVideo_toIPFS();
+            const response_saveImage = await this.saveImage_toIPFS();
+            const response_saveJson = await this.saveJSON_toIPFS(this.state.image_ipfsPath, this.state.video_ipfsPath);
 
             const price = this.state.drizzle.web3.utils.toBN(this.state.currentFilePrice);
 
@@ -173,6 +222,68 @@ class UploadSkin extends Component {
         }
     }
 
+    //Save JSON in ipfs 
+    saveJSON_toIPFS = async (imagePath, videoPath) => {
+
+        /*
+        ERC721 NFT schema
+        {
+    "title": "Asset Metadata",
+    "type": "object",
+    "properties": {
+        "name": {
+            "type": "string",
+            "description": "Identifies the asset to which this NFT represents"
+        },
+        "description": {
+            "type": "string",
+            "description": "Describes the asset to which this NFT represents"
+        },
+        "image": {
+            "type": "string",
+            "description": "A URI pointing to a resource with mime type image/* representing the asset to which this NFT represents. Consider making any images at a width between 320 and 1080 pixels and aspect ratio between 1.91:1 and 4:5 inclusive."
+        }
+            }
+        }
+        */
+        var jsonData = { 'description': 'Simracing Moment NFT', 'name': 'Simracing Moment NFT', 'image': 'https://ipfs.io/ipfs/' + imagePath };
+
+        jsonData.attributes = [];
+        //Opensea style attributes
+        jsonData.attributes.push(
+            {
+                "trait_type": "series", 
+                "value": this.state.currentSeries
+            },
+            {
+                "trait_type": "seriesOwner", 
+                "value": this.state.currentAccount
+            },
+            {
+                "trait_type": "simulator", 
+                "value": this.state.currentSimulator
+            },
+            {
+                "trait_type": "price", 
+                "value": this.state.currentFilePrice / priceConversion
+            }
+        );
+
+        var jsonStr = JSON.stringify(jsonData);
+
+        const response = await ipfs.add(Buffer.from(jsonStr), (err, ipfsPath) => {
+            console.log(err, ipfsPath);
+            console.log("Response image: ", ipfsPath[0].hash)
+            //setState by setting ipfsPath to ipfsPath[0].hash 
+            this.setState({ jsonData_ipfsPath: ipfsPath[0].hash });
+        })
+
+        console.log('json ipfs: ' + response.path);
+        this.setState({ jsonData_ipfsPath: response.path });
+        return true;
+
+    }
+
     render() {
         const simsElements = ["iRacing", "F12020", "rFactor", "Assetto Corsa"];
         const sims = [];
@@ -184,14 +295,14 @@ class UploadSkin extends Component {
 
         return (
             <header className="header">
-                <div class="overlay overflow-hidden pe-n"><img src="/assets/img/bg/bg_shape.png" alt="Background shape" /></div>
+                <div className="overlay overflow-hidden pe-n"><img src="/assets/img/bg/bg_shape.png" alt="Background shape" /></div>
                 <section className="content-section text-light br-n bs-c bp-c pb-8">
-                    <div class="container position-relative">
-                        <div class="row">
-                            <div class="col-lg-8 mx-auto">
+                    <div className="container position-relative">
+                        <div className="row">
+                            <div className="col-lg-8 mx-auto">
                                 <div>
-                                    <h2 class="ls-1 text-center">Mint new Simracing Moment NFT</h2>
-                                    <hr class="w-10 border-warning border-top-2 o-90" />
+                                    <h2 className="ls-1 text-center">Mint new Simracing Moment NFT</h2>
+                                    <hr className="w-10 border-warning border-top-2 o-90" />
                                     <div>
                                         <Form>
                                             <Form.Group controlId="formInsertCar">
@@ -220,7 +331,7 @@ class UploadSkin extends Component {
 
                                         </Form>
                                     </div><br></br>
-                                    <div class="form-row mt-4">
+                                    <div className="form-row mt-4">
                                         <Button onClick={this.saveSimracerMomentNFT}>Mint Simracing Moment NFT</Button>
                                     </div>
                                 </div>
@@ -234,4 +345,4 @@ class UploadSkin extends Component {
 }
 
 
-export default UploadSkin;
+export default UploadSimracerMoment;
