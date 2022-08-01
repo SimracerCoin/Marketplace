@@ -30,7 +30,8 @@ class UploadSimracerMoment extends Component {
             receivedIPFS: "",
             isSeller: false,
             videoBuffer: null,
-            imageBuffer: null
+            imageBuffer: null,
+            priceValue:0
         }
 
 
@@ -38,14 +39,16 @@ class UploadSimracerMoment extends Component {
         this.handleFilePrice = this.handleFilePrice.bind(this);
         this.uploadVideoIPFS = this.uploadVideoIPFS.bind(this);
         this.saveVideo_toIPFS = this.saveVideo_toIPFS.bind(this);
+        this.saveSimracingMomentNFT = this.saveSimracingMomentNFT.bind(this);
     };
 
 
     componentDidMount = async () => {
         const currentAccount = this.state.drizzleState.accounts[0];
         const contract = this.state.drizzle.contracts.STMarketplace;
+        const contractNFTs = this.state.drizzle.contracts.SimthunderOwner;
         const isSeller = await contract.methods.isSeller(currentAccount).call();
-        this.setState({ currentAccount: currentAccount, contract: contract, isSeller: isSeller });
+        this.setState({ currentAccount: currentAccount, contract: contract, contractNFTs: contractNFTs, isSeller: isSeller });
     };
 
 
@@ -107,6 +110,7 @@ class UploadSimracerMoment extends Component {
             this.setState({ video_ipfsPath: ipfsPath[0].hash });
         })
 
+        console.log('saveVideo_toIPFS - response.path', response.path);
         this.setState({ video_ipfsPath: response.path });
         return true;
 
@@ -123,6 +127,7 @@ class UploadSimracerMoment extends Component {
             this.setState({ image_ipfsPath: ipfsPath[0].hash });
         })
 
+        console.log('saveImage_toIPFS - response.path', response.path);
         this.setState({ image_ipfsPath: response.path });
         return true;
 
@@ -203,7 +208,7 @@ class UploadSimracerMoment extends Component {
         video.src = URL.createObjectURL(file);
     }
 
-    saveSimracerMoment = async (event) => {
+    saveSimracingMomentNFT = async (event) => {
         event.preventDefault();
 
         if (this.state.currentFilePrice === null) {
@@ -213,8 +218,12 @@ class UploadSimracerMoment extends Component {
             UIHelper.showSpinning();
 
             const response_saveVideo = await this.saveVideo_toIPFS();
+            console.log('response_saveVideo: ', response_saveVideo);
             const response_saveImage = await this.saveImage_toIPFS();
+            console.log('response_saveImage: ', response_saveImage);
             const response_saveJson = await this.saveJSON_toIPFS(this.state.image_ipfsPath, this.state.video_ipfsPath);
+
+            console.log('response_saveJson: ', response_saveJson);
 
             const price = this.state.drizzle.web3.utils.toBN(this.state.currentFilePrice);
 
@@ -233,6 +242,7 @@ class UploadSimracerMoment extends Component {
     //Save JSON in ipfs 
     saveJSON_toIPFS = async (imagePath, videoPath) => {
 
+        console.log('saveJSON_toIPFS... ');
         /*
         ERC721 NFT schema
         {
@@ -318,7 +328,7 @@ class UploadSimracerMoment extends Component {
                                                 <br></br>
                                                 <Form.Control as="textarea" placeholder="Enter Description" onChange={this.handleDescription} />
                                                 <br></br>
-                                                <Form.Control type="text" pattern="([0-9]*[.])?[0-9]+" placeholder="Enter File price (SRC)" value={this.state.priceValue} onChange={this.handleFilePrice} />
+                                                <Form.Control size="50" min="0" step="0.001" max="999999999" type="number" pattern="([0-9]*[.])?[0-9]+" placeholder="Enter File price (SRC)" value={this.state.priceValue} onChange={this.handleFilePrice} />
                                                 <br></br>
                                                 <DropdownButton id="dropdown-skin-button" title={this.state.currentSimulator} onSelect={this.onSelectSimulator}>
                                                     {sims}
@@ -340,7 +350,7 @@ class UploadSimracerMoment extends Component {
                                         </Form>
                                     </div><br></br>
                                     <div className="form-row mt-4">
-                                        <Button onClick={this.saveSimracerMomentNFT}>Mint Simracing Moment NFT</Button>
+                                        <Button onClick={this.saveSimracingMomentNFT}>Mint Simracing Moment NFT</Button>
                                     </div>
                                 </div>
                             </div>
