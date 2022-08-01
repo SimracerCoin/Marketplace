@@ -284,10 +284,15 @@ class UploadSimracerMoment extends Component {
             {
                 "trait_type": "price", 
                 "value": this.state.currentFilePrice / priceConversion
+            },
+            {
+                "trait_type": "moment", 
+                "value": 'https://ipfs.io/ipfs/' + videoPath
             }
         );
 
-        var jsonStr = JSON.stringify(jsonData);
+        const jsonStr = JSON.stringify(jsonData);
+        console.log('json str: ', jsonStr);
 
         const response = await ipfs.add(Buffer.from(jsonStr), (err, ipfsPath) => {
             console.log(err, ipfsPath);

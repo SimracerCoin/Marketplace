@@ -124,6 +124,7 @@ class MainPage extends Component {
         const cars = [];
         const skins = [];
         const nfts = [];
+        const momentNfts = [];
 
 
         if (this.state.redirectBuyItem) {
@@ -219,6 +220,7 @@ class MainPage extends Component {
         if(skins) skins.reverse();
 
         for (const [index, value] of this.state.latestNFTs.entries()) {
+            console.log('nft value is,',value);
             let series = value.series;
             let simulator = value.simulator;
             let price = value.price*priceConversion;
@@ -228,23 +230,57 @@ class MainPage extends Component {
             let carNumber = value.carNumber;
             // let ipfsPath = value.ad.ipfsPath
             console.log(' ID NFT:'+value.id);
-            let imagePath = value.image
-            nfts.push(
-                <ListGroup.Item key={itemId} className="bg-dark_A-20 col-3 mb-4" style={{minWidth: '275px'}}>
+            let imagePath = value.image;
+
+            if(value.attributes) {
+
+                /**
+                 *  attribute:  {trait_type: 'series', value: 'Cupra series'}
+                    attribute:  {trait_type: 'seriesOwner', value: '0xeDc2448E33cE4fE46597BCbb0e5281E6CF3e253C'}
+                    attribute:  {trait_type: 'simulator', value: 'iRacing'}
+                    attribute:  {trait_type: 'price', value: 2.1}
+                    attribute:  {trait_type: 'moment', value: 'https://ipfs.io/ipfs/QmbNW26he9uk8R7FHEE5KUDbTfBaHDCKgPAkUUnpeoWdZH'}
+                 */
+                
+                    console.log('attributes: ', value.attributes);
+                    momentNfts.push(
+                        <ListGroup.Item key={itemId} className="bg-dark_A-20 col-3 mb-4" style={{minWidth: '275px'}}>
                     <Card className="card-block">
                         <Card.Img variant="top" src={imagePath} style={{width: 'auto'}} />
                         <Card.Body>
-                        <div className="text-left">
-                            <div><b>Series:</b> {series}</div>
-                            <div><b>Simulator:</b> {simulator}</div>
-                            <div><b>Car Number:</b> {carNumber}</div>
-                            <div><b>Price:</b> {price / priceConversion} SRC</div>
+                            <div className="text-left">
+                            {value.attributes.map( function(att) {
+                            return (
+                                att.trait_type === 'price' ? <div><b>{att.trait_type}:</b> {att.value} SRC </div> : <div><b>{att.trait_type}:</b> {att.value}</div> 
+                                )
+                            }, this)}
                             </div>
-                            <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, carNumber, price, null , address, null, imagePath, true)}> View item</Button>
+                        <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, carNumber, price, null , address, null, imagePath, true)}> View item</Button>
                         </Card.Body>
                     </Card>
-                </ListGroup.Item>
-            )
+            </ListGroup.Item>
+                    )
+                
+            } else {
+                nfts.push(
+                    <ListGroup.Item key={itemId} className="bg-dark_A-20 col-3 mb-4" style={{minWidth: '275px'}}>
+                        <Card className="card-block">
+                            <Card.Img variant="top" src={imagePath} style={{width: 'auto'}} />
+                            <Card.Body>
+                            <div className="text-left">
+                                <div><b>Series:</b> {series}</div>
+                                <div><b>Simulator:</b> {simulator}</div>
+                                <div><b>Car Number:</b> {carNumber}</div>
+                                <div><b>Price:</b> {price / priceConversion} SRC</div>
+                                </div>
+                                <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, carNumber, price, null , address, null, imagePath, true)}> View item</Button>
+                            </Card.Body>
+                        </Card>
+                    </ListGroup.Item>
+                )
+            }
+
+            
         }
 
         if(nfts) nfts.reverse();
@@ -284,6 +320,15 @@ class MainPage extends Component {
                         <div>
                             <ListGroup horizontal className="scrolling-wrapper">
                                 {skins}
+                            </ListGroup>
+                        </div>
+                        <br /><br />
+                        <div>
+                            <h4>Latest Simracing Moment NFTs</h4>
+                        </div>
+                        <div>
+                            <ListGroup horizontal className="scrolling-wrapper">
+                                {momentNfts}
                             </ListGroup>
                         </div>
                     </div>
