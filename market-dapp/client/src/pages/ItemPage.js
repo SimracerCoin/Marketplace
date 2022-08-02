@@ -430,7 +430,7 @@ class ItemPage extends Component {
                   <li>
 
                   <span className="platform">Price:</span> 
-                  <span className="developer-item text-lt">{this.state.price / priceConversion} SRC</span>
+                  <span className="developer-item text-lt">{this.state.isMomentNFT ? this.state.price : this.state.price / priceConversion} SRC</span>
                   </li>
                   </ul>
       } else {
@@ -443,7 +443,7 @@ class ItemPage extends Component {
                   <li>
 
                   <span className="platform">Price:</span> 
-                  <span className="developer-item text-lt">{this.state.price / priceConversion} SRC</span>
+                  <span className="developer-item text-lt">{this.state.isMomentNFT ? this.state.price : this.state.price / priceConversion} SRC</span>
                   </li>
                   </ul>
       }
