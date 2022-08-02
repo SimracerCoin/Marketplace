@@ -264,7 +264,7 @@ class UploadSimracerMoment extends Component {
             }
         }
         */
-        var jsonData = { 'description': 'Simracing Moment NFT', 'name': 'Simracing Moment NFT', 'image': 'https://ipfs.io/ipfs/' + imagePath };
+        var jsonData = { 'description': this.state.currentDescription, 'name': 'Simracing Moment NFT', 'image': 'https://ipfs.io/ipfs/' + imagePath };
 
         jsonData.attributes = [];
         //Opensea style attributes
@@ -286,7 +286,7 @@ class UploadSimracerMoment extends Component {
                 "value": this.state.currentFilePrice / priceConversion
             },
             {
-                "trait_type": "moment", 
+                "trait_type": "video", 
                 "value": 'https://ipfs.io/ipfs/' + videoPath
             }
         );
@@ -333,7 +333,7 @@ class UploadSimracerMoment extends Component {
                                                 <br></br>
                                                 <Form.Control as="textarea" placeholder="Enter Description" onChange={this.handleDescription} />
                                                 <br></br>
-                                                <Form.Control size="50" min="0" step="0.001" max="999999999" type="number" pattern="([0-9]*[.])?[0-9]+" placeholder="Enter File price (SRC)" value={this.state.priceValue} onChange={this.handleFilePrice} />
+                                                <Form.Control htmlSize="50" min="0" step="0.001" max="999999999" type="number" pattern="([0-9]*[.])?[0-9]+" placeholder="Enter File price (SRC)" value={this.state.priceValue} onChange={this.handleFilePrice} />
                                                 <br></br>
                                                 <DropdownButton id="dropdown-skin-button" title={this.state.currentSimulator} onSelect={this.onSelectSimulator}>
                                                     {sims}

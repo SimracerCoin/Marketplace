@@ -17,6 +17,7 @@ class MainPage extends Component {
             listCars: [],
             listSkins: [],
             latestNFTs: [],
+            latestVideoNFTs: [],
             redirectBuyItem: false,
             selectedItemId: "",
             selectedTrack: "",
@@ -44,6 +45,7 @@ class MainPage extends Component {
         const response_skins = await contract.methods.getSkins().call();
         //const currentAccount = this.state.drizzleState.accounts[0];
         const nftlist = [];
+        const videoNftsList = [];
         
         console.log('componentDidMount');
 
@@ -69,8 +71,19 @@ class MainPage extends Component {
                             console.log('nftData:' + data.image);
                             console.log('nftData:' + data.description);
                             data.id=i;
+
+                            //always put on main list
                             nftlist.push(data);
+
+                            //but also keep a separate/dedicated one
+                            if(data.attributes && this.isMomentVideoNFT(data.attributes)) {
+                                videoNftsList.push(data);
+                                this.setState({ latestVideoNfts: videoNftsList });
+                            } 
+                                
                             this.setState({ latestNFTs: nftlist });
+                            
+                            
                         }
                     }.bind(this);
                     xmlhttp.onerror = function (e) {
@@ -88,11 +101,14 @@ class MainPage extends Component {
     }
 
 
-    buyItem = async (event, itemId, track, simulator, season, series, description, price, carBrand, address, ipfsPath, imagePath, isNFT) => {
+    buyItem = async (event, itemId, track, simulator, season, series, description, price, carBrand, address, ipfsPath, imagePath, isNFT, isMomentNFT, videoPath) => {
         event.preventDefault();
 
         let similarItems = [];
-        if(isNFT) {
+        if(isMomentNFT) {
+            similarItems = similarItems.concat(this.state.latestVideoNfts);
+        }
+        else if(isNFT) {
             similarItems = similarItems.concat(this.state.latestNFTs);
         } else if(track == null || season == null) {
             similarItems = similarItems.concat(this.state.listSkins);
@@ -114,9 +130,30 @@ class MainPage extends Component {
             vendorAddress: address,
             vendorNickname: address ? await this.state.contract.methods.getNickname(address).call() : "",
             ipfsPath: ipfsPath,
+            videoPath: videoPath,
             isNFT: isNFT,
+            isMomentNFT: isMomentNFT,
             similarItems: similarItems
         });
+    }
+
+    isMomentVideoNFT(attributes) {
+        
+        for(let attribute of attributes) {
+            if(attribute.trait_type === 'video') {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    extractMomentNFTTraitTypes(attributes) {
+
+        let data = {};
+        for(let attribute of attributes) {
+            data[attribute.trait_type] = attribute.value;
+        }
+        return data;
     }
 
     render() {
@@ -145,6 +182,7 @@ class MainPage extends Component {
                         vendorNickname: this.state.vendorNickname,
                         ipfsPath: this.state.ipfsPath,
                         isNFT: this.state.isNFT,
+                        isMomentNFT: this.state.isMomentNFT,
                         similarItems: this.state.similarItems
                     }
                 }}
@@ -219,6 +257,7 @@ class MainPage extends Component {
 
         if(skins) skins.reverse();
 
+        //TODO we can use already videoNftsList here
         for (const [index, value] of this.state.latestNFTs.entries()) {
             console.log('nft value is,',value);
             let series = value.series;
@@ -227,19 +266,28 @@ class MainPage extends Component {
             //TODO: change hardcode
             let address = value.seriesOwner;
             let itemId = value.id;
-            let carNumber = value.carNumber;
+            let carNumberOrDescription = value.carNumber;
             // let ipfsPath = value.ad.ipfsPath
             console.log(' ID NFT:'+value.id);
             let imagePath = value.image;
 
-            if(value.attributes) {
+            let video = "";
 
+            if(value.attributes && this.isMomentVideoNFT(value.attributes)) {
+
+                let metadata = this.extractMomentNFTTraitTypes(value.attributes);
+                series = metadata.series;
+                simulator = metadata.simulator;
+                address = metadata.seriesOwner;
+                price = metadata.price;
+                video = metadata.video; 
+                carNumberOrDescription = value.description;
                 /**
                  *  attribute:  {trait_type: 'series', value: 'Cupra series'}
                     attribute:  {trait_type: 'seriesOwner', value: '0xeDc2448E33cE4fE46597BCbb0e5281E6CF3e253C'}
                     attribute:  {trait_type: 'simulator', value: 'iRacing'}
                     attribute:  {trait_type: 'price', value: 2.1}
-                    attribute:  {trait_type: 'moment', value: 'https://ipfs.io/ipfs/QmbNW26he9uk8R7FHEE5KUDbTfBaHDCKgPAkUUnpeoWdZH'}
+                    attribute:  {trait_type: 'video', value: 'https://ipfs.io/ipfs/QmbNW26he9uk8R7FHEE5KUDbTfBaHDCKgPAkUUnpeoWdZH'}
                  */
                 
                     console.log('attributes: ', value.attributes);
@@ -247,15 +295,40 @@ class MainPage extends Component {
                         <ListGroup.Item key={itemId} className="bg-dark_A-20 col-3 mb-4" style={{minWidth: '275px'}}>
                     <Card className="card-block">
                         <Card.Img variant="top" src={imagePath} style={{width: 'auto'}} />
+                        {/*value.attributes.map( function(att) {
+                                if(att.trait_type === 'video') {
+                                    return (
+                                        <div>
+                                            <video width="180px" height="80px"
+                                            controls 
+                                            autoPlay
+                                            currentTime={0}
+                                            src={att.value} />
+                                        </div>
+                                    )
+                                }
+                        }, this)*/}
+
                         <Card.Body>
                             <div className="text-left">
                             {value.attributes.map( function(att) {
-                            return (
-                                att.trait_type === 'price' ? <div><b>{att.trait_type}:</b> {att.value} SRC </div> : <div><b>{att.trait_type}:</b> {att.value}</div> 
-                                )
+                                if(att.trait_type === 'price') {
+                                   return (
+                                        <div><b>{att.trait_type}:</b> {att.value} SRC </div>
+                                   ) 
+                                } else {
+                                    if(att.trait_type === 'video') {
+                                       return (
+                                         <div><b>{att.trait_type}:</b><a href={att.value} rel="noreferrer" target="_blank">{att.value}</a></div> 
+                                       )
+                                    }
+                                    return(
+                                        <div><b>{att.trait_type}:</b> {att.value}</div> 
+                                    )
+                                }
                             }, this)}
                             </div>
-                        <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, carNumber, price, null , address, null, imagePath, true)}> View item</Button>
+                        <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, carNumberOrDescription, price, null , address, null, imagePath, true, true, video)}> View item</Button>
                         </Card.Body>
                     </Card>
             </ListGroup.Item>
@@ -270,10 +343,10 @@ class MainPage extends Component {
                             <div className="text-left">
                                 <div><b>Series:</b> {series}</div>
                                 <div><b>Simulator:</b> {simulator}</div>
-                                <div><b>Car Number:</b> {carNumber}</div>
+                                <div><b>Car Number:</b> {carNumberOrDescription}</div>
                                 <div><b>Price:</b> {price / priceConversion} SRC</div>
                                 </div>
-                                <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, carNumber, price, null , address, null, imagePath, true)}> View item</Button>
+                                <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, carNumberOrDescription, price, null , address, null, imagePath, true)}> View item</Button>
                             </Card.Body>
                         </Card>
                     </ListGroup.Item>

@@ -30,8 +30,10 @@ class ItemPage extends Component {
             vendorAddress: props.location.state.vendorAddress,
             vendorNickname: props.location.state.vendorNickname,
             ipfsPath: props.location.state.ipfsPath,
+            videoPath: props.location.state.videoPath,
             imagePath: props.location.state.imagePath,
             isNFT: props.location.state.isNFT,
+            isMomentNFT: props.location.state.isMomentNFT,
             contract: null,
             currentAccount: "",
             comment: "",
@@ -48,9 +50,10 @@ class ItemPage extends Component {
         const contractSimracerCoin = this.state.drizzle.contracts.SimracerCoin;
 
         const currentAccount = this.state.drizzleState.accounts[0];
-        console.log('istNFT:' + this.state.isNFT);
+        console.log('isNFT:' + this.state.isNFT);
+        console.log('isMomentNFT:' + this.state.isMomentNFT);
         let isSkin = !this.state.isNFT && (this.state.track == null || this.state.season == null);
-        console.log('istSkin:' + isSkin);
+        console.log('isSkin:' + isSkin);
 
         if (!this.state.isNFT) {
             const comments = await contract.methods.getItemComments(this.state.itemId).call();
@@ -304,7 +307,7 @@ class ItemPage extends Component {
      */
     renderItemInformation = () => {
       if (this.state.isNFT) {
-          return this.renderItemInformationForNFT();
+          return this.renderItemInformationForNFT(this.state.isMomentNFT);
       } else if (this.state.track == null || this.state.season == null) {
           return this.renderItemInformationForSkin();
       } else {
@@ -484,7 +487,7 @@ class ItemPage extends Component {
             </ul>*/
     }
     //NFT
-    renderItemInformationForNFT = () => {
+    renderItemInformationForNFT = (isMomentNFT) => {
 
       return <div className="row">
               <div className="col-xs-12 col-lg-6 mb-6 mb-lg-0">
@@ -497,12 +500,12 @@ class ItemPage extends Component {
                 <div className="col-sm-8">{this.state.series}</div>
                 </div>
                 <div className="row mb-4 mb-sm-0">
-                <div className="col-sm-4"><strong className="fw-500">Number:</strong></div>
+                <div className="col-sm-4"><strong className="fw-500">{isMomentNFT ? 'Description' : 'Number'}</strong></div>
                 <div className="col-sm-8">{this.state.description}</div>
                 </div>
                 <div className="row mb-4 mb-sm-0">
                 <div className="col-sm-4"><strong className="fw-500">Price:</strong></div>
-                <div className="col-sm-8">{this.state.price / priceConversion} SRC</div>
+                <div className="col-sm-8">{isMomentNFT ? this.state.price : (this.state.price / priceConversion)} SRC</div>
                 </div>
               </div>
             </div>
@@ -664,7 +667,12 @@ drizzle: props.drizzle,
 
         let hasImage = true;
         if (this.state.isNFT) {
-          item = "Car Ownership NFT";
+          if(this.state.isMomentNFT) {
+            item = "Simcaring Moment NFT";
+          } else {
+            item = "Car Ownership NFT";
+          }
+          
         }
         else if (this.state.track == null || this.state.season == null) {
           item = "Skin";
