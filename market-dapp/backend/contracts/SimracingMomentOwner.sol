@@ -21,7 +21,7 @@ contract SimracingMomentOwner is ERC721 {
     mapping(uint256 => uint256) prices;
     mapping(uint256 => address payable) seriesOwners;
 
-    //NOT used, like CarOwnership on CarOwnership is not used either
+    //NOT used, like CarOwnership on SimthunderOwner is not used either
     struct MomentOwnership {
         uint256 price;
         address seriesOwner;
