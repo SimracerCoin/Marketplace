@@ -25,7 +25,7 @@ contract SimracingMomentOwner is ERC721 {
      * @notice The constructor for the Simthunder Owner NFT contract.
      * @param payable_token Address of SRC ERC20 contract, the contract in wich we pay the transactions
      */
-    constructor(address payable_token) public ERC721("Simracing Moment NFT", "SRM") {
+    constructor(address payable_token) public ERC721("Simthunder Moment", "STCLIP") {
         SIMRACERCOIN = ERC20(payable_token);
     }
 
