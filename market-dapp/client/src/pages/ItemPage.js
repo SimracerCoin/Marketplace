@@ -6,6 +6,8 @@ import StarRatings from 'react-star-ratings';
 import UIHelper from "../utils/uihelper";
 import ReviewsComponent from "../components/ReviewsComponent";
 import SimilarItemsComponent from '../components/SimilarItemsComponent';
+import "../css/itempage.css";
+
 const openpgp = require('openpgp');
 
 const priceConversion = 10 ** 18;
@@ -430,7 +432,7 @@ class ItemPage extends Component {
                   <li>
 
                   <span className="platform">Price:</span> 
-                  <span className="developer-item text-lt">{this.state.isMomentNFT ? this.state.price : this.state.price / priceConversion} SRC</span>
+                  <span className="developer-item text-lt">{this.state.price / priceConversion} SRC</span>
                   </li>
                   </ul>
       } else {
@@ -443,7 +445,7 @@ class ItemPage extends Component {
                   <li>
 
                   <span className="platform">Price:</span> 
-                  <span className="developer-item text-lt">{this.state.isMomentNFT ? this.state.price : this.state.price / priceConversion} SRC</span>
+                  <span className="developer-item text-lt">{this.state.price / priceConversion} SRC</span>
                   </li>
                   </ul>
       }
@@ -505,7 +507,7 @@ class ItemPage extends Component {
                 </div>
                 <div className="row mb-4 mb-sm-0">
                 <div className="col-sm-4"><strong className="fw-500">Price:</strong></div>
-                <div className="col-sm-8">{isMomentNFT ? this.state.price : (this.state.price / priceConversion)} SRC</div>
+                <div className="col-sm-8">{this.state.price / priceConversion} SRC</div>
                 </div>
               </div>
             </div>
@@ -666,6 +668,9 @@ drizzle: props.drizzle,
         console.log("render selected item id: " + this.state.itemId);
 
         let hasImage = true;
+        let hasVideo = this.state.isMomentNFT && this.state.videoPath !== null;
+        console.log('has video ', this.state.videoPath);
+        
         if (this.state.isNFT) {
           if(this.state.isMomentNFT) {
             item = "Simcaring Moment NFT";
@@ -733,9 +738,17 @@ drizzle: props.drizzle,
                   <div className="row">
                     <div className="col-12">
                       <div className="product-body">
+
+                        { hasVideo &&
+                            <div className="carousel-product">
+                              <div className="slider text-secondary" data-slick="product-body">
+                                  <video className="videoContainer" controls autoPlay currentTime={0} src={this.state.videoPath} />          
+                              </div>
+                            </div>
+                        }
                         {/*<!--Carousel Wrapper-->*/}
                         {/** Later we might have more images, for now display just 1 if any */}
-                        { hasImage &&
+                        { hasImage && !hasVideo &&
                         <div className="carousel-product">
                           <div className="slider text-secondary" data-slick="product-body">
                             <img src={this.state.imagePath} alt={this.state.imagePath}/>

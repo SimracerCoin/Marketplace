@@ -1,3 +1,4 @@
+/* eslint-disable no-loop-func */
 import React, { Component } from 'react';
 import { Redirect } from "react-router-dom";
 import { withRouter } from "react-router";
@@ -89,7 +90,6 @@ class StorePage extends Component {
           this.setState({searchQuery: searchQuery});
         }
         this.getNFTsData();
-
        
         /*if(searchQuery) {
           let elem = document.getElementById('search-field');
@@ -125,13 +125,21 @@ class StorePage extends Component {
         const contractNFTs = await this.state.drizzle.contracts.SimthunderOwner;
         const response_cars = await contract.methods.getCarSetups().call();
         const response_skins = await contract.methods.getSkins().call();
+
+        const contractMomentNFTs = await this.state.drizzle.contracts.SimracingMomentOwner;
+
         //const currentAccount = this.state.drizzleState.accounts[0];
         console.log("STORE: componentDidMount");
         const nftlist = [];
         // get info from marketplace NFT contract
         const numNfts = await contractNFTs.methods.currentTokenId().call();
-        console.log('nft count:' + numNfts);
+        console.log('ownership nft count:' + numNfts);
         //TODO this number can be misleading because we do not parse them all (only => if(ownerAddress === contractNFTs.address) )
+
+        const momentNftslist = [];
+        // get info from marketplace NFT contract
+        const numMomentNfts = await contractMomentNFTs.methods.currentTokenId().call();
+        console.log('moment nft count:' + numMomentNfts);
 
         let simsList = [];
         let simulatorsFilter = [];
@@ -143,10 +151,15 @@ class StorePage extends Component {
         let filteredCarsList = response_cars;
         let filteredSkinsList = response_skins;
 
+        let filteredMomentNFTsList = [];
+
         //use search params?
         let queryString = this.state.searchQuery;
         const considerSearchQuery = (queryString && queryString.length > 0);
         let maxElems = 0;
+
+        //use another counter
+        let maxElems2 = 0;
 
         //by default on load, these filtered lists inlcude all the items, unless we are searching for somethign specific
         if(considerSearchQuery){
@@ -161,7 +174,8 @@ class StorePage extends Component {
           });
         } 
         
-        //let currentPage = this;
+        //------------------------ Car ownership nfts ------------------------------
+        //--------------------------------------------------------------------------
         for (let i = 1; i < parseInt(numNfts) + 1; i++) {
             try {
                 //TODO: change for different ids
@@ -265,6 +279,92 @@ class StorePage extends Component {
             }
             
         }
+        //--------------------------------------------------------------------------
+
+        //--------------------------------------------------------------------------
+        //-------------------------- MOMENT NFTS -----------------------------------
+        for (let i = 1; i < parseInt(numMomentNfts) + 1; i++) {
+          try {
+              //TODO: change for different ids
+              let ownerAddress = await contractMomentNFTs.methods.ownerOf(i).call();
+              console.log('ID:'+i+'ownerAddress: '+ownerAddress.toString()+'nfts addr: '+contractMomentNFTs.address);
+              if(ownerAddress === contractMomentNFTs.address) {
+                  console.log('GOT MATCH');
+                  let uri = await contractMomentNFTs.methods.tokenURI(i).call();
+                  console.log('uri: ', uri);
+                  var xmlhttp = new XMLHttpRequest();
+                  xmlhttp.onload = function(e) {
+                      if (xmlhttp.readyState === 4 && xmlhttp.status === 200) {
+                          var data = JSON.parse(xmlhttp.responseText);
+                          
+                          console.log('nft image:' + data.image);
+                          console.log('nft description:' + data.description);
+                          data.id=i;
+
+                          let metadata = this.extractMomentNFTTraitTypes(data.attributes);
+                          //global list of all
+                          momentNftslist.push(data);
+
+                          //update the max elements every time, as we will consider this as the 
+                          maxElems2 = momentNftslist.length;
+                          
+                          //only filtered list
+                          if(considerSearchQuery && (this.shouldIncludeMomentNFTBySearchQuery(queryString.toLowerCase(), data, metadata)) ){
+                            filteredMomentNFTsList.push(data);
+                          }//otherwise goes on the default list => nftlist
+                          
+
+                          //add simulator if not present already 
+                          let simulator = metadata.simulator;
+                          if(!simsList.includes(simulator)) {
+
+                            simsList.push(metadata.simulator);
+
+                            if(!considerSearchQuery ) {
+                                simulatorsFilter.push({simulator: metadata.simulator, checked: true});
+                            } else {
+
+                              //matches query, push and check it
+                              if(simulator.toLowerCase().indexOf(queryString.toLowerCase())>-1) {
+                                simulatorsFilter.push({simulator: metadata.simulator, checked: true});
+                              } else {
+                                //still push it but disabled
+                                simulatorsFilter.push({simulator: metadata.simulator, checked: false});
+                              }
+
+                              
+                            }
+
+                            
+                          }
+
+                          //this this GET is assync we need to recalaculate the pagination after every grab
+                          this.recalculatePaginationAndNumPages(maxElems, filteredCarsList, filteredSkinsList);
+                      
+
+                          this.setState({ 
+                                        latestNFTs: nftlist, 
+                                        filteredNFTs: considerSearchQuery ? this.paginate(filteredNFTsList, this.state.currentPage): this.paginate(nftlist, this.state.currentPage), 
+                                        listSimulators: simsList, 
+                                        activeSimulatorsFilter: simulatorsFilter 
+                                      });
+                      }
+                  }.bind(this);
+                  xmlhttp.onerror = function (e) {
+                      console.error(xmlhttp.statusText);
+                  };
+                  xmlhttp.open("GET", uri, true);
+                  xmlhttp.send(null);
+              }
+          } catch (e) {
+              console.error(e);
+          }
+          
+        }
+        //--------------------------------------------------------------------------
+
+
+        //-------------------
         
 
         //get the number of elements of the bigger list, use it to define the number of pages, minimum 1
@@ -282,6 +382,16 @@ class StorePage extends Component {
         console.log("END getNFTSData");
         UIHelper.hiddeSpinning();
     }
+
+    //specific for moment NFTS
+    extractMomentNFTTraitTypes(attributes) {
+
+      let data = {};
+      for(let attribute of attributes) {
+          data[attribute.trait_type] = attribute.value;
+      }
+      return data;
+     }
 
     /**
      * Calculate pagination and set state
@@ -548,6 +658,32 @@ class StorePage extends Component {
         return false;
 
     }
+
+    /**
+     * Additional filtering based on any search stri
+     * @param {*} queryString 
+     * @param {*} NFT 
+     * @returns 
+     */
+     shouldIncludeMomentNFTBySearchQuery(queryString, NFT, metadata) {
+
+
+      let series = NFT.series;
+      let simulator = NFT.simulator;                 
+      let name = NFT.name;
+      let description = NFT.description;
+      //console.log("series: " + series + " simulator: " + simulator + " name: " + name + " description: " + description + " query: " + queryString);
+      if ( 
+        (series && series.toLowerCase().indexOf(queryString)>-1) ||
+          (simulator && simulator.toLowerCase().indexOf(queryString)>-1) || 
+          (name && name.toLowerCase().indexOf(queryString)>-1) ||
+          (description && description.toLowerCase().indexOf(queryString)>-1 )
+        ) {
+          return true;
+        }
+      return false;
+
+  }
 
     /**
      * 
@@ -836,6 +972,9 @@ class StorePage extends Component {
                 <ul className="spotlight-tabs spotlight-tabs-dark nav nav-tabs border-0 mb-5 position-relative flex-nowrap" id="most_popular_products-carousel-01" role="tablist">
                   <li key="ownership" className="nav-item text-fnwp position-relative">
                     <a className={this.getActiveClasses('ownership')} id="mp-2-01-tab" data-toggle="tab" href="#mp-2-01-c" role="tab" aria-controls="mp-2-01-c" aria-selected="true">Car Ownership NFTs</a>
+                  </li>
+                  <li key="momentnfts" className="nav-item text-fnwp position-relative"> 
+                    <a className={this.getActiveClasses('momentnfts')} id="mp-2-03-tab" data-toggle="tab" href="#mp-2-03-c" role="tab" aria-controls="mp-2-03-c" aria-selected="false">Simracing Moment NFTs</a>
                   </li>
                   <li key="carsetup" className="nav-item text-fnwp position-relative"> 
                     <a className={this.getActiveClasses('carsetup')} id="mp-2-02-tab" data-toggle="tab" href="#mp-2-02-c" role="tab" aria-controls="mp-2-02-c" aria-selected="false">Car Setups</a>

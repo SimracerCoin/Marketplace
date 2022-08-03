@@ -46,7 +46,7 @@ class UploadSimracerMoment extends Component {
     componentDidMount = async () => {
         const currentAccount = this.state.drizzleState.accounts[0];
         const contract = this.state.drizzle.contracts.STMarketplace;
-        const contractNFTs = this.state.drizzle.contracts.SimthunderOwner;
+        const contractNFTs = this.state.drizzle.contracts.SimracingMomentOwner;
         const isSeller = await contract.methods.isSeller(currentAccount).call();
         this.setState({ currentAccount: currentAccount, contract: contract, contractNFTs: contractNFTs, isSeller: isSeller });
     };
