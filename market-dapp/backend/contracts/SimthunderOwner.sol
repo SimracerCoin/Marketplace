@@ -21,13 +21,6 @@ contract SimthunderOwner is ERC721 {
     mapping(uint256 => uint256) prices;
     mapping(uint256 => address payable) seriesOwners;
 
-    struct CarOwnership {
-        uint256 price;
-        address leagueOwner;
-        string skinPic;
-        string series;
-    }
-
     /**
      * @notice The constructor for the Simthunder Owner NFT contract.
      * @param payable_token Address of SRC ERC20 contract, the contract in wich we pay the transactions

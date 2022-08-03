@@ -21,14 +21,6 @@ contract SimracingMomentOwner is ERC721 {
     mapping(uint256 => uint256) prices;
     mapping(uint256 => address payable) seriesOwners;
 
-    //NOT used, like CarOwnership on SimthunderOwner is not used either
-    struct MomentOwnership {
-        uint256 price;
-        address seriesOwner;
-        string skinPic;
-        string series;
-    }
-
     /**
      * @notice The constructor for the Simthunder Owner NFT contract.
      * @param payable_token Address of SRC ERC20 contract, the contract in wich we pay the transactions
