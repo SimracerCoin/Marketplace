@@ -264,7 +264,10 @@ class UploadSimracerMoment extends Component {
             }
         }
         */
-        var jsonData = { 'description': this.state.currentDescription, 'name': 'Simracing Moment NFT', 'image': 'https://ipfs.io/ipfs/' + imagePath };
+        var jsonData = { 'description': this.state.currentDescription, 
+                        'name': 'Simracing Moment NFT', 
+                        'image': 'https://ipfs.io/ipfs/' + imagePath, 
+                        'animation_url': 'https://ipfs.io/ipfs/' + videoPath};
 
         jsonData.attributes = [];
         //Opensea style attributes
@@ -284,11 +287,12 @@ class UploadSimracerMoment extends Component {
             {
                 "trait_type": "price", 
                 "value": this.state.currentFilePrice / priceConversion
-            },
-            {
-                "trait_type": "video", 
-                "value": 'https://ipfs.io/ipfs/' + videoPath
             }
+            //,
+            //{
+            //    "trait_type": "video", 
+            //    "value": 'https://ipfs.io/ipfs/' + videoPath
+            //}
         );
 
         const jsonStr = JSON.stringify(jsonData);
