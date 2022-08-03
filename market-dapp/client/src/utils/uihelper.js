@@ -30,7 +30,7 @@ export default class UIHelper {
   }
 
   static hiddeSpinning = function() {
-    var elem = document.getElementById("wait-div");
+    const elem = document.getElementById("wait-div");
     if(elem) {
       elem.parentNode.removeChild(elem);
     }
@@ -45,7 +45,10 @@ export default class UIHelper {
   }
 
   static transactionOnError = function (error) {
-    document.body.removeChild(document.getElementById('wait-div'));
+    const elem = document.getElementById("wait-div");
+    if(elem) {
+      elem.parentNode.removeChild(elem);
+    }
     alert("Something wrong. Please try again.");
     console.log(error);
   }
