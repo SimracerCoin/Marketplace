@@ -346,7 +346,7 @@ class MainPage extends Component {
             let simulator = metadata.simulator;
             let address = metadata.seriesOwner;
             let price = metadata.price * priceConversion;
-            let video = metadata.video; 
+            let video = metadata.video || value.animation_url; 
             let carNumberOrDescription = value.description;
 
             console.log('METADATA VIDEO ', video);
@@ -396,7 +396,7 @@ class MainPage extends Component {
                                 }
                             }, this)}
                             </div>
-                        <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, carNumberOrDescription, price, null , address, null, imagePath, true, true, video)}> View item</Button>
+                        <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, carNumberOrDescription, price, null , address, null, imagePath, false, true, video)}> View item</Button>
                         </Card.Body>
                     </Card>
             </ListGroup.Item>

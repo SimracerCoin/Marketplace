@@ -57,7 +57,7 @@ class ItemPage extends Component {
         let isSkin = !this.state.isNFT && (this.state.track == null || this.state.season == null);
         console.log('isSkin:' + isSkin);
 
-        if (!this.state.isNFT) {
+        if (!this.state.isNFT && !this.state.isMomentNFT) {
             const comments = await contract.methods.getItemComments(this.state.itemId).call();
             const average_review = await this.average_rating(comments);
 
@@ -665,11 +665,8 @@ drizzle: props.drizzle,
         //let toRender;
         //let commentsRender = [];
 
-        console.log("render selected item id: " + this.state.itemId);
-
         let hasImage = true;
         let hasVideo = this.state.isMomentNFT && this.state.videoPath !== null;
-        console.log('has video ', this.state.videoPath);
         
         if (this.state.isNFT) {
           if(this.state.isMomentNFT) {
@@ -1000,7 +997,7 @@ drizzle: props.drizzle,
                                     </div>
                                   
                                   {this.state.similarItems.map( (value, index) => { */}
-                                     <SimilarItemsComponent contextParent={this} callbackParent={this.callbackParent} className="similaritems"  items={this.state.similarItems} isNFT={this.state.isNFT} isSkin={!this.state.isNFT && (this.state.track == null || this.state.season == null)} selectedItemId={this.state.itemId}></SimilarItemsComponent>
+                                     <SimilarItemsComponent contextParent={this} callbackParent={this.callbackParent} className="similaritems"  items={this.state.similarItems} isNFT={this.state.isNFT} isMomentNFT={this.state.isMomentNFT} isSkin={!this.state.isNFT && (this.state.track == null || this.state.season == null)} selectedItemId={this.state.itemId}></SimilarItemsComponent>
                                  {/* })}
                                   </div>*/}
                           </div>
