@@ -138,6 +138,8 @@ class MainPage extends Component {
     buyItem = async (event, itemId, track, simulator, season, series, description, price, carBrand, address, ipfsPath, imagePath, isNFT, isMomentNFT, videoPath) => {
         event.preventDefault();
 
+        console.log('is nft: ' + isNFT + ' is moment: ', isMomentNFT);
+
         let similarItems = [];
         if(isMomentNFT) {
             similarItems = similarItems.concat(this.state.latestVideoNFTs);
@@ -254,7 +256,7 @@ class MainPage extends Component {
                             <div><b>Price:</b> {price / priceConversion} SRC</div>
                             {/* <div><b>Vendor address:</b> {address}</div> */}
                             </div>
-                            <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, track, simulator, season, series, description, price, carBrand, address, ipfsPath, "", false)}> View item</Button>
+                            <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, track, simulator, season, series, description, price, carBrand, address, ipfsPath, "", false, false,null)}> View item</Button>
                         </Card.Body>
                     </Card>
                 </ListGroup.Item>
@@ -283,7 +285,7 @@ class MainPage extends Component {
                                 <div><b>Simulator:</b>&nbsp;<img src={thumb} width="24" alt={simulator} /> {simulator}</div>
                                 <div><b>Price:</b> {price / priceConversion} SRC</div>
                             </div>
-                            <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, null, null, price, carBrand , address, ipfsPath, imagePath, false)}> View item</Button>
+                            <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, null, null, price, carBrand , address, ipfsPath, imagePath, false, false, null)}> View item</Button>
                         </Card.Body>
                     </Card>
                 </ListGroup.Item>
@@ -318,7 +320,7 @@ class MainPage extends Component {
                                 <div><b>Car Number:</b> {carNumberOrDescription}</div>
                                 <div><b>Price:</b> {price / priceConversion} SRC</div>
                                 </div>
-                                <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, carNumberOrDescription, price, null , address, null, imagePath, true)}> View item</Button>
+                                <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, carNumberOrDescription, price, null , address, null, imagePath, true, false, null)}> View item</Button>
                             </Card.Body>
                         </Card>
                     </ListGroup.Item>

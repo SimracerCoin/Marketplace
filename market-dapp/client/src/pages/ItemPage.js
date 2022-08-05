@@ -54,7 +54,7 @@ class ItemPage extends Component {
         const currentAccount = this.state.drizzleState.accounts[0];
         console.log('isNFT:' + this.state.isNFT);
         console.log('isMomentNFT:' + this.state.isMomentNFT);
-        let isSkin = !this.state.isNFT && (this.state.track == null || this.state.season == null);
+        let isSkin = !this.state.isNFT && !this.state.isMomentNFT && (this.state.track == null || this.state.season == null);
         console.log('isSkin:' + isSkin);
 
         if (!this.state.isNFT && !this.state.isMomentNFT) {
@@ -308,9 +308,10 @@ class ItemPage extends Component {
      * @returns Handle right side menu with item info
      */
     renderItemInformation = () => {
-      if (this.state.isNFT) {
+      if (this.state.isNFT || this.state.isMomentNFT) {
           return this.renderItemInformationForNFT(this.state.isMomentNFT);
-      } else if (this.state.track == null || this.state.season == null) {
+      } 
+      else if (this.state.track == null || this.state.season == null) {
           return this.renderItemInformationForSkin();
       } else {
           return this.renderItemInformationForCarSetup();
@@ -669,12 +670,10 @@ drizzle: props.drizzle,
         let hasVideo = this.state.isMomentNFT && this.state.videoPath !== null;
         
         if (this.state.isNFT) {
-          if(this.state.isMomentNFT) {
-            item = "Simcaring Moment NFT";
-          } else {
-            item = "Car Ownership NFT";
-          }
-          
+          item = "Car Ownership NFT";
+        }
+        else if(this.state.isMomentNFT) {
+          item = "Simracing Moment NFT";
         }
         else if (this.state.track == null || this.state.season == null) {
           item = "Skin";
@@ -685,8 +684,6 @@ drizzle: props.drizzle,
         //compute ratings
         let reviewsRating = this.getReviewsRating();
 
-        
-        
 
         return (
         <div className="page-body">     
@@ -739,7 +736,7 @@ drizzle: props.drizzle,
                         { hasVideo &&
                             <div className="carousel-product">
                               <div className="slider text-secondary" data-slick="product-body">
-                                  <video className="videoContainer" controls autoPlay currentTime={0} src={this.state.videoPath} />          
+                                  <video className="videoContainer" controls autoPlay currenttime={0} src={this.state.videoPath} />          
                               </div>
                             </div>
                         }
@@ -997,7 +994,7 @@ drizzle: props.drizzle,
                                     </div>
                                   
                                   {this.state.similarItems.map( (value, index) => { */}
-                                     <SimilarItemsComponent contextParent={this} callbackParent={this.callbackParent} className="similaritems"  items={this.state.similarItems} isNFT={this.state.isNFT} isMomentNFT={this.state.isMomentNFT} isSkin={!this.state.isNFT && (this.state.track == null || this.state.season == null)} selectedItemId={this.state.itemId}></SimilarItemsComponent>
+                                     <SimilarItemsComponent contextParent={this} callbackParent={this.callbackParent} className="similaritems"  items={this.state.similarItems} isNFT={this.state.isNFT} isMomentNFT={this.state.isMomentNFT} isSkin={!this.state.isNFT && !this.state.isMomentNFT && (this.state.track == null || this.state.season == null)} selectedItemId={this.state.itemId}></SimilarItemsComponent>
                                  {/* })}
                                   </div>*/}
                           </div>
