@@ -132,7 +132,7 @@ class StorePage extends Component {
 
         //use search params?
         let queryString = this.state.searchQuery;
-        const considerSearchQuery = (queryString && queryString.length > 0);
+        const considerSearchQuery = (queryString && queryString.length > 0) ? true : false;
 
         const nftlist = [];
         // get info from marketplace NFT contract
@@ -241,8 +241,9 @@ class StorePage extends Component {
                         }
 
                         //this GET is assync, so we need to recalaculate the pagination after every grab
-                            this.recalculatePaginationAndNumPages(maxElems2, maxElems, filteredCarsList, filteredSkinsList, filteredMomentNFTsList);
+                            this.recalculatePaginationAndNumPages(maxElems2, maxElems, filteredCarsList, filteredSkinsList, considerSearchQuery ? filteredMomentNFTsList : momentNftslist);
                         
+                            //console.log('considerSearchQuery ' + considerSearchQuery + 'momentNftslist size: ' + momentNftslist.length + " filteredMomentNFTsList: " + filteredMomentNFTsList.length)
 
                             this.setState({ 
                                           latestMomentNFTs: momentNftslist, 
@@ -337,7 +338,7 @@ class StorePage extends Component {
                             }
 
                             //this GET is assync, so we need to recalaculate the pagination after every grab
-                            this.recalculatePaginationAndNumPages(maxElems2, maxElems, filteredCarsList, filteredSkinsList, filteredMomentNFTsList);
+                            this.recalculatePaginationAndNumPages(maxElems2, maxElems, filteredCarsList, filteredSkinsList, considerSearchQuery ? filteredMomentNFTsList : momentNftslist);
                         
 
                             this.setState({ 
@@ -369,7 +370,7 @@ class StorePage extends Component {
 
         //get the number of elements of the bigger list, use it to define the number of pages, minimum 1
         //NOTE: we might reach this part before processing all NFTS, so we also call this inside the loop above
-        this.recalculatePaginationAndNumPages(maxElems2, maxElems, filteredCarsList, filteredSkinsList, filteredMomentNFTsList);
+        this.recalculatePaginationAndNumPages(maxElems2, maxElems, filteredCarsList, filteredSkinsList, considerSearchQuery ? filteredMomentNFTsList: momentNftslist);
         //these won´t change, set only here
         this.setState(
           { 
@@ -417,6 +418,11 @@ class StorePage extends Component {
       if(filteredSkinsList.length > maxElems) {
         maxElems = filteredSkinsList.length;
       }
+
+      if(filteredMomentNFTsList.length > maxElems) {
+        maxElems = filteredMomentNFTsList.length;
+      }
+      
       console.log("max elemenst: " + maxElems + " num pages: " +  Math.ceil((maxElems / MAX_ITEMS_PER_PAGE)) || 1 );
       
       this.setState(
@@ -553,7 +559,7 @@ class StorePage extends Component {
          
      }, this);
 
-     this.setState({filteredNFTs: this.paginate(filteredListBySimulator, this.state.currentPage)});
+     this.setState({filteredMomentNFTs: this.paginate(filteredListBySimulator, this.state.currentPage)});
    }
 
     filterNFTsByPrice(priceMin, priceMax) {
@@ -578,7 +584,7 @@ class StorePage extends Component {
           
       }, this);
 
-      this.setState({filteredNFTs: this.paginate(filteredListByPrice, this.state.currentPage)});
+      this.setState({filteredMomentNFTs: this.paginate(filteredListByPrice, this.state.currentPage)});
     }
 
     //filter cars by price
@@ -800,10 +806,11 @@ class StorePage extends Component {
       evt.preventDefault();
       console.log("PAGE NUM: " + pageNum);
       let arrayPaginatedNFTS = this.paginate(this.state.latestNFTs, pageNum);
+      let arrayPaginatedMomentNFTS = this.paginate(this.state.latestMomentNFTs, pageNum);
       let arrayPaginatedCars = this.paginate(this.state.latestCars, pageNum);
       let arrayPaginatedSkins = this.paginate(this.state.latestSkins, pageNum);
       
-      this.setState({currentPage: pageNum, filteredNFTs: arrayPaginatedNFTS, filteredCars: arrayPaginatedCars, filteredSkins: arrayPaginatedSkins});
+      this.setState({currentPage: pageNum, filteredNFTs: arrayPaginatedNFTS, filteredMomentNFTs: arrayPaginatedMomentNFTS, filteredCars: arrayPaginatedCars, filteredSkins: arrayPaginatedSkins});
     }
 
     moveNextPage(evt) {
@@ -817,10 +824,11 @@ class StorePage extends Component {
       }
 
       let arrayPaginatedNFTS = this.paginate(this.state.latestNFTs, currPage);
+      let arrayPaginatedMomentNFTS = this.paginate(this.state.latestMomentNFTs, currPage);
       let arrayPaginatedCars = this.paginate(this.state.latestCars, currPage);
       let arrayPaginatedSkins = this.paginate(this.state.latestSkins, currPage);
       
-      this.setState({currentPage: currPage, filteredNFTs: arrayPaginatedNFTS, filteredCars: arrayPaginatedCars, filteredSkins: arrayPaginatedSkins});
+      this.setState({currentPage: currPage, filteredNFTs: arrayPaginatedNFTS, filteredMomentNFTs: arrayPaginatedMomentNFTS, filteredCars: arrayPaginatedCars, filteredSkins: arrayPaginatedSkins});
     }
 
     movePreviousPage(evt) {
@@ -834,10 +842,11 @@ class StorePage extends Component {
       }
 
       let arrayPaginatedNFTS = this.paginate(this.state.latestNFTs, currPage);
+      let arrayPaginatedMomentNFTS = this.paginate(this.state.latestMomentNFTs, currPage);
       let arrayPaginatedCars = this.paginate(this.state.latestCars, currPage);
       let arrayPaginatedSkins = this.paginate(this.state.latestSkins, currPage);
       
-      this.setState({currentPage: currPage, filteredNFTs: arrayPaginatedNFTS, filteredCars: arrayPaginatedCars, filteredSkins: arrayPaginatedSkins});
+      this.setState({currentPage: currPage, filteredNFTs: arrayPaginatedNFTS, filteredMomentNFTs: arrayPaginatedMomentNFTS, filteredCars: arrayPaginatedCars, filteredSkins: arrayPaginatedSkins});
     }
 
     renderPagination = (suffix) => {
