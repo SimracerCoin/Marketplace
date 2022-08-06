@@ -8,6 +8,7 @@ import MainPage from "./MainPage";
 import UploadCar from "./UploadCar";
 import UploadSkin from "./UploadSkin";
 import SellOwnership from "./SellOwnership";
+import UploadSimracerMoment from "./UploadSimracerMoment";
 import NavbarPage from "./NavbarPage";
 import RegisterVendor from "./RegisterVendor";
 import ItemPage from "./ItemPage";
@@ -43,6 +44,9 @@ class RouterPage extends Component {
                     </Route>
                     <Route exact path="/sellownership">
                         <SellOwnership drizzle={this.state.drizzle} drizzleState={this.state.drizzleState} />
+                    </Route>
+                    <Route exact path="/sellmomentnft">
+                        <UploadSimracerMoment drizzle={this.state.drizzle} drizzleState={this.state.drizzleState} />
                     </Route>
                     <Route exact path="/registorvendor">
                         <RegisterVendor drizzle={this.state.drizzle} drizzleState={this.state.drizzleState} />

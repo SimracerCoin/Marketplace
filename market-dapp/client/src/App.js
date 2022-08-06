@@ -4,6 +4,7 @@ import { Drizzle } from "@drizzle/store";
 import STMarketplace from "./STMarketplace.json";
 import SimracerCoin from "./SimracerCoin.json";
 import SimthunderOwner from "./SimthunderOwner.json"
+import SimracingMomentOwner from "./SimracingMomentOwner.json"
 //import Descartes from "./Descartes.json";
 import Underconstruction from "./pages/Underconstruction";
 import RouterPage from "./pages/RouterPage";
@@ -15,7 +16,7 @@ import "./css/App.css";
 
 //var web3 = new Web3(Web3.givenProvider);
 
-var NETWORK_ID = 137;
+var NETWORK_ID = Number(process.env.REACT_APP_NETWORK_ID) || 137;
 
 const allowAllWallets = (process.env.REACT_APP_ALLOW_ALL_WALLETS == "true" ? true : false);
 
@@ -98,6 +99,10 @@ class App extends React.Component {
           {
             contractName: "SimthunderOwner",
             web3Contract: new web3.eth.Contract(SimthunderOwner.abi, SimthunderOwner.address, { data: SimthunderOwner.deployedBytecode })
+          },
+          {
+            contractName: "SimracingMomentOwner",
+            web3Contract: new web3.eth.Contract(SimracingMomentOwner.abi, SimracingMomentOwner.address, { data: SimracingMomentOwner.deployedBytecode })
           }
           //,
           //{

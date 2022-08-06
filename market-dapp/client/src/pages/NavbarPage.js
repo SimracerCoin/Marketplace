@@ -170,6 +170,11 @@ class NavbarPage extends React.Component {
                                         Sell Car Ownership NFT
                                     </NavDropdown.Item>
                                 </Link>
+                                <Link to="/sellmomentnft">
+                                    <NavDropdown.Item as="div">
+                                        Sell Simracer Moment NFT
+                                    </NavDropdown.Item>
+                                </Link>
                                 <Link to="/uploadcar">
                                     <NavDropdown.Item as="div">
                                         Sell Car Setup

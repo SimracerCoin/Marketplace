@@ -13,7 +13,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 // import "@openzeppelin/contracts@3.1.0-solc-0.7/token/ERC721/ERC721.sol";
 // import "@openzeppelin/contracts@3.1.0-solc-0.7/token/ERC20/ERC20.sol";
 
-contract SimthunderOwner is ERC721 {
+contract SimracingMomentOwner is ERC721 {
 
     ERC20 SIMRACERCOIN; //pay with simracercoin
     using Counters for Counters.Counter;
@@ -25,7 +25,7 @@ contract SimthunderOwner is ERC721 {
      * @notice The constructor for the Simthunder Owner NFT contract.
      * @param payable_token Address of SRC ERC20 contract, the contract in wich we pay the transactions
      */
-    constructor(address payable_token) public ERC721("Simthunder Owner", "STCAR") {
+    constructor(address payable_token) public ERC721("Simthunder Moment", "STCLIP") {
         SIMRACERCOIN = ERC20(payable_token);
     }
 
@@ -42,8 +42,7 @@ contract SimthunderOwner is ERC721 {
     function buyItem(uint256 itemId, uint256 itemPrice) external {
         require(itemPrice == prices[itemId], "Check the item price");
         address accountAddress = seriesOwners[itemId];
-        //accountAddress.transfer(prices[itemId]);
-        //return _transfer(address(this), msg.sender, itemId);
+
 
         require(SIMRACERCOIN.allowance(msg.sender, address(this)) >= prices[itemId], "Check the token allowance");
         require(SIMRACERCOIN.transferFrom(msg.sender, accountAddress, prices[itemId]),"Cannot transfer NFT ownership");

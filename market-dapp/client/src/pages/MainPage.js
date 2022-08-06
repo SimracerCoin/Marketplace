@@ -17,6 +17,7 @@ class MainPage extends Component {
             listCars: [],
             listSkins: [],
             latestNFTs: [],
+            latestVideoNFTs: [],
             redirectBuyItem: false,
             selectedItemId: "",
             selectedTrack: "",
@@ -40,19 +41,27 @@ class MainPage extends Component {
     componentDidMount = async () => {
         const contract = await this.state.drizzle.contracts.STMarketplace;
         const contractNFTs = await this.state.drizzle.contracts.SimthunderOwner;
+        const contractMomentNFTs = await this.state.drizzle.contracts.SimracingMomentOwner;
+
         const response_cars = await contract.methods.getCarSetups().call();
         const response_skins = await contract.methods.getSkins().call();
         //const currentAccount = this.state.drizzleState.accounts[0];
+        //car ownership nfts
         const nftlist = [];
+        //simracing moment nfts
+        const videoNftsList = [];
         
         console.log('componentDidMount');
 
         // get info from marketplace NFT contract
-        //let numNfts = await contractNFTs.methods.balanceOf(contractNFTs.address).call();
+      
         const numNfts = await contractNFTs.methods.currentTokenId().call();
-        console.log('nft count:' + numNfts);
+
+        const numMomentNfts = await contractMomentNFTs.methods.currentTokenId().call();
+
+        console.log('car ownership nfts count:' + numNfts);
         
-        //let currentPage = this;
+        //car ownership nfts
         for (let i = 1; i < parseInt(numNfts) + 1; i++) {
             try {
                 //TODO: change for different ids
@@ -66,11 +75,49 @@ class MainPage extends Component {
                     xmlhttp.onload = function(e) {
                         if (xmlhttp.readyState === 4 && xmlhttp.status === 200) {
                             var data = JSON.parse(xmlhttp.responseText);
-                            console.log('nftData:' + data.image);
-                            console.log('nftData:' + data.description);
+                            console.log('ownership nftData:' + data.image);
+                            console.log('ownership nftData:' + data.description);
                             data.id=i;
-                            nftlist.push(data);
-                            this.setState({ latestNFTs: nftlist });
+
+                            //always put on main list
+                            nftlist.push(data);  
+                            this.setState({ latestNFTs: nftlist }); 
+                            
+                        }
+                    }.bind(this);
+                    xmlhttp.onerror = function (e) {
+                        console.error(xmlhttp.statusText);
+                    };
+                    xmlhttp.open("GET", uri, true);
+                    xmlhttp.send(null);
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        //moment nfts
+        for (let i = 1; i < parseInt(numMomentNfts) + 1; i++) {
+            try {
+                //TODO: change for different ids
+                let ownerAddress = await contractMomentNFTs.methods.ownerOf(i).call();
+                console.log('ID:'+i+'ownerAddress: '+ownerAddress.toString()+'nfts addr: '+contractMomentNFTs.address);
+                if(ownerAddress === contractMomentNFTs.address) {
+                    console.log('GOT MATCH');
+                    let uri = await contractMomentNFTs.methods.tokenURI(i).call();
+                    console.log('uri: ', uri);
+                    var xmlhttp = new XMLHttpRequest();
+                    xmlhttp.onload = function(e) {
+                        if (xmlhttp.readyState === 4 && xmlhttp.status === 200) {
+                            var data = JSON.parse(xmlhttp.responseText);
+                            console.log('moment nftData:' + data.image);
+                            console.log('moment nftData:' + data.description);
+                            data.id=i;
+
+                            videoNftsList.push(data);
+                            this.setState({ latestVideoNFTs: videoNftsList });
+                            
+                            
                         }
                     }.bind(this);
                     xmlhttp.onerror = function (e) {
@@ -84,15 +131,20 @@ class MainPage extends Component {
             }
         }
         
-        this.setState({ listCars: response_cars, listSkins: response_skins, contract: contract, contractNFTs: contractNFTs });
+        this.setState({ listCars: response_cars, listSkins: response_skins, contract: contract, contractNFTs: contractNFTs, contractMomentNFTs: contractMomentNFTs });
     }
 
 
-    buyItem = async (event, itemId, track, simulator, season, series, description, price, carBrand, address, ipfsPath, imagePath, isNFT) => {
+    buyItem = async (event, itemId, track, simulator, season, series, description, price, carBrand, address, ipfsPath, imagePath, isNFT, isMomentNFT, videoPath) => {
         event.preventDefault();
 
+        console.log('is nft: ' + isNFT + ' is moment: ', isMomentNFT);
+
         let similarItems = [];
-        if(isNFT) {
+        if(isMomentNFT) {
+            similarItems = similarItems.concat(this.state.latestVideoNFTs);
+        }
+        else if(isNFT) {
             similarItems = similarItems.concat(this.state.latestNFTs);
         } else if(track == null || season == null) {
             similarItems = similarItems.concat(this.state.listSkins);
@@ -114,9 +166,30 @@ class MainPage extends Component {
             vendorAddress: address,
             vendorNickname: address ? await this.state.contract.methods.getNickname(address).call() : "",
             ipfsPath: ipfsPath,
+            videoPath: videoPath,
             isNFT: isNFT,
+            isMomentNFT: isMomentNFT,
             similarItems: similarItems
         });
+    }
+
+    isMomentVideoNFT(attributes) {
+        
+        for(let attribute of attributes) {
+            if(attribute.trait_type === 'video') {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    extractMomentNFTTraitTypes(attributes) {
+
+        let data = {};
+        for(let attribute of attributes) {
+            data[attribute.trait_type] = attribute.value;
+        }
+        return data;
     }
 
     render() {
@@ -124,6 +197,7 @@ class MainPage extends Component {
         const cars = [];
         const skins = [];
         const nfts = [];
+        const momentNfts = [];
 
 
         if (this.state.redirectBuyItem) {
@@ -143,7 +217,9 @@ class MainPage extends Component {
                         vendorAddress: this.state.vendorAddress,
                         vendorNickname: this.state.vendorNickname,
                         ipfsPath: this.state.ipfsPath,
+                        videoPath: this.state.videoPath,
                         isNFT: this.state.isNFT,
+                        isMomentNFT: this.state.isMomentNFT,
                         similarItems: this.state.similarItems
                     }
                 }}
@@ -180,7 +256,7 @@ class MainPage extends Component {
                             <div><b>Price:</b> {price / priceConversion} SRC</div>
                             {/* <div><b>Vendor address:</b> {address}</div> */}
                             </div>
-                            <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, track, simulator, season, series, description, price, carBrand, address, ipfsPath, "", false)}> View item</Button>
+                            <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, track, simulator, season, series, description, price, carBrand, address, ipfsPath, "", false, false,null)}> View item</Button>
                         </Card.Body>
                     </Card>
                 </ListGroup.Item>
@@ -209,7 +285,7 @@ class MainPage extends Component {
                                 <div><b>Simulator:</b>&nbsp;<img src={thumb} width="24" alt={simulator} /> {simulator}</div>
                                 <div><b>Price:</b> {price / priceConversion} SRC</div>
                             </div>
-                            <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, null, null, price, carBrand , address, ipfsPath, imagePath, false)}> View item</Button>
+                            <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, null, null, price, carBrand , address, ipfsPath, imagePath, false, false, null)}> View item</Button>
                         </Card.Body>
                     </Card>
                 </ListGroup.Item>
@@ -218,36 +294,119 @@ class MainPage extends Component {
 
         if(skins) skins.reverse();
 
+        //car ownership ones
         for (const [index, value] of this.state.latestNFTs.entries()) {
+            console.log('ownership nft value is,',value);
             let series = value.series;
             let simulator = value.simulator;
             let price = value.price*priceConversion;
             //TODO: change hardcode
             let address = value.seriesOwner;
             let itemId = value.id;
-            let carNumber = value.carNumber;
+            let carNumberOrDescription = value.carNumber;
             // let ipfsPath = value.ad.ipfsPath
             console.log(' ID NFT:'+value.id);
-            let imagePath = value.image
-            nfts.push(
-                <ListGroup.Item key={itemId} className="bg-dark_A-20 col-3 mb-4" style={{minWidth: '275px'}}>
-                    <Card className="card-block">
-                        <Card.Img variant="top" src={imagePath} style={{width: 'auto'}} />
-                        <Card.Body>
-                        <div className="text-left">
-                            <div><b>Series:</b> {series}</div>
-                            <div><b>Simulator:</b> {simulator}</div>
-                            <div><b>Car Number:</b> {carNumber}</div>
-                            <div><b>Price:</b> {price / priceConversion} SRC</div>
-                            </div>
-                            <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, carNumber, price, null , address, null, imagePath, true)}> View item</Button>
-                        </Card.Body>
-                    </Card>
-                </ListGroup.Item>
-            )
+            let imagePath = value.image;
+
+            
+                nfts.push(
+                    <ListGroup.Item key={itemId} className="bg-dark_A-20 col-3 mb-4" style={{minWidth: '275px'}}>
+                        <Card className="card-block">
+                            <Card.Img variant="top" src={imagePath} style={{width: 'auto'}} />
+                            <Card.Body>
+                            <div className="text-left">
+                                <div><b>Series:</b> {series}</div>
+                                <div><b>Simulator:</b> {simulator}</div>
+                                <div><b>Car Number:</b> {carNumberOrDescription}</div>
+                                <div><b>Price:</b> {price / priceConversion} SRC</div>
+                                </div>
+                                <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, carNumberOrDescription, price, null , address, null, imagePath, true, false, null)}> View item</Button>
+                            </Card.Body>
+                        </Card>
+                    </ListGroup.Item>
+                )
+            
         }
 
+        //moment nfts
+
         if(nfts) nfts.reverse();
+
+
+        //TODO we can use already videoNftsList here
+        for (const [index, value] of this.state.latestVideoNFTs.entries()) {
+            console.log('moment nft value is,',value);
+  
+            let itemId = value.id;
+       
+            // let ipfsPath = value.ad.ipfsPath
+            console.log(' ID NFT:'+value.id);
+            let imagePath = value.image;
+
+            let metadata = this.extractMomentNFTTraitTypes(value.attributes);
+            let series = metadata.series;
+            let simulator = metadata.simulator;
+            let address = metadata.seriesOwner;
+            let price = metadata.price * priceConversion;
+            let video = metadata.video || value.animation_url; 
+            let carNumberOrDescription = value.description;
+
+            console.log('METADATA VIDEO ', video);
+                /**
+                 *  attribute:  {trait_type: 'series', value: 'Cupra series'}
+                    attribute:  {trait_type: 'seriesOwner', value: '0xeDc2448E33cE4fE46597BCbb0e5281E6CF3e253C'}
+                    attribute:  {trait_type: 'simulator', value: 'iRacing'}
+                    attribute:  {trait_type: 'price', value: 2.1}
+                    attribute:  {trait_type: 'video', value: 'https://ipfs.io/ipfs/QmbNW26he9uk8R7FHEE5KUDbTfBaHDCKgPAkUUnpeoWdZH'}
+                 */
+                
+            console.log('attributes: ', value.attributes);
+            momentNfts.push(
+                        <ListGroup.Item key={itemId} className="bg-dark_A-20 col-3 mb-4" style={{minWidth: '275px'}}>
+                    <Card className="card-block">
+                        <Card.Img variant="top" src={imagePath} style={{width: 'auto'}} />
+                        {/*value.attributes.map( function(att) {
+                                if(att.trait_type === 'video') {
+                                    return (
+                                        <div>
+                                            <video width="180px" height="80px"
+                                            controls 
+                                            autoPlay
+                                            currentTime={0}
+                                            src={att.value} />
+                                        </div>
+                                    )
+                                }
+                        }, this)*/}
+
+                        <Card.Body>
+                            <div className="text-left">
+                            {value.attributes.map( function(att) {
+                                if(att.trait_type === 'price') {
+                                   return (
+                                        <div><b>{att.trait_type}:</b> {price / priceConversion} SRC </div>
+                                   ) 
+                                } else {
+                                    if(att.trait_type === 'video') {
+                                       return (
+                                         <div><b>{att.trait_type}:</b><a href={att.value} rel="noreferrer" target="_blank">{att.value}</a></div> 
+                                       )
+                                    }
+                                    return(
+                                        <div><b>{att.trait_type}:</b> {att.value}</div> 
+                                    )
+                                }
+                            }, this)}
+                            </div>
+                        <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, carNumberOrDescription, price, null , address, null, imagePath, false, true, video)}> View item</Button>
+                        </Card.Body>
+                    </Card>
+            </ListGroup.Item>
+            )
+                
+        }
+
+        if(momentNfts) momentNfts.reverse();
 
         return (
             <header className="header">
@@ -284,6 +443,15 @@ class MainPage extends Component {
                         <div>
                             <ListGroup horizontal className="scrolling-wrapper">
                                 {skins}
+                            </ListGroup>
+                        </div>
+                        <br /><br />
+                        <div>
+                            <h4>Latest Simracing Moment NFTs</h4>
+                        </div>
+                        <div>
+                            <ListGroup horizontal className="scrolling-wrapper">
+                                {momentNfts}
                             </ListGroup>
                         </div>
                     </div>

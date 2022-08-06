@@ -6,6 +6,8 @@ import StarRatings from 'react-star-ratings';
 import UIHelper from "../utils/uihelper";
 import ReviewsComponent from "../components/ReviewsComponent";
 import SimilarItemsComponent from '../components/SimilarItemsComponent';
+import "../css/itempage.css";
+
 const openpgp = require('openpgp');
 
 const priceConversion = 10 ** 18;
@@ -30,8 +32,10 @@ class ItemPage extends Component {
             vendorAddress: props.location.state.vendorAddress,
             vendorNickname: props.location.state.vendorNickname,
             ipfsPath: props.location.state.ipfsPath,
+            videoPath: props.location.state.videoPath,
             imagePath: props.location.state.imagePath,
             isNFT: props.location.state.isNFT,
+            isMomentNFT: props.location.state.isMomentNFT,
             contract: null,
             currentAccount: "",
             comment: "",
@@ -48,11 +52,12 @@ class ItemPage extends Component {
         const contractSimracerCoin = this.state.drizzle.contracts.SimracerCoin;
 
         const currentAccount = this.state.drizzleState.accounts[0];
-        console.log('istNFT:' + this.state.isNFT);
-        let isSkin = !this.state.isNFT && (this.state.track == null || this.state.season == null);
-        console.log('istSkin:' + isSkin);
+        console.log('isNFT:' + this.state.isNFT);
+        console.log('isMomentNFT:' + this.state.isMomentNFT);
+        let isSkin = !this.state.isNFT && !this.state.isMomentNFT && (this.state.track == null || this.state.season == null);
+        console.log('isSkin:' + isSkin);
 
-        if (!this.state.isNFT) {
+        if (!this.state.isNFT && !this.state.isMomentNFT) {
             const comments = await contract.methods.getItemComments(this.state.itemId).call();
             const average_review = await this.average_rating(comments);
 
@@ -303,9 +308,10 @@ class ItemPage extends Component {
      * @returns Handle right side menu with item info
      */
     renderItemInformation = () => {
-      if (this.state.isNFT) {
-          return this.renderItemInformationForNFT();
-      } else if (this.state.track == null || this.state.season == null) {
+      if (this.state.isNFT || this.state.isMomentNFT) {
+          return this.renderItemInformationForNFT(this.state.isMomentNFT);
+      } 
+      else if (this.state.track == null || this.state.season == null) {
           return this.renderItemInformationForSkin();
       } else {
           return this.renderItemInformationForCarSetup();
@@ -484,7 +490,7 @@ class ItemPage extends Component {
             </ul>*/
     }
     //NFT
-    renderItemInformationForNFT = () => {
+    renderItemInformationForNFT = (isMomentNFT) => {
 
       return <div className="row">
               <div className="col-xs-12 col-lg-6 mb-6 mb-lg-0">
@@ -497,7 +503,7 @@ class ItemPage extends Component {
                 <div className="col-sm-8">{this.state.series}</div>
                 </div>
                 <div className="row mb-4 mb-sm-0">
-                <div className="col-sm-4"><strong className="fw-500">Number:</strong></div>
+                <div className="col-sm-4"><strong className="fw-500">{isMomentNFT ? 'Description' : 'Number'}</strong></div>
                 <div className="col-sm-8">{this.state.description}</div>
                 </div>
                 <div className="row mb-4 mb-sm-0">
@@ -660,11 +666,14 @@ drizzle: props.drizzle,
         //let toRender;
         //let commentsRender = [];
 
-        console.log("render selected item id: " + this.state.itemId);
-
         let hasImage = true;
+        let hasVideo = this.state.isMomentNFT && this.state.videoPath !== null;
+        
         if (this.state.isNFT) {
           item = "Car Ownership NFT";
+        }
+        else if(this.state.isMomentNFT) {
+          item = "Simracing Moment NFT";
         }
         else if (this.state.track == null || this.state.season == null) {
           item = "Skin";
@@ -675,8 +684,6 @@ drizzle: props.drizzle,
         //compute ratings
         let reviewsRating = this.getReviewsRating();
 
-        
-        
 
         return (
         <div className="page-body">     
@@ -725,9 +732,17 @@ drizzle: props.drizzle,
                   <div className="row">
                     <div className="col-12">
                       <div className="product-body">
+
+                        { hasVideo &&
+                            <div className="carousel-product">
+                              <div className="slider text-secondary" data-slick="product-body">
+                                  <video className="videoContainer" controls autoPlay currenttime={0} src={this.state.videoPath} />          
+                              </div>
+                            </div>
+                        }
                         {/*<!--Carousel Wrapper-->*/}
                         {/** Later we might have more images, for now display just 1 if any */}
-                        { hasImage &&
+                        { hasImage && !hasVideo &&
                         <div className="carousel-product">
                           <div className="slider text-secondary" data-slick="product-body">
                             <img src={this.state.imagePath} alt={this.state.imagePath}/>
@@ -979,7 +994,7 @@ drizzle: props.drizzle,
                                     </div>
                                   
                                   {this.state.similarItems.map( (value, index) => { */}
-                                     <SimilarItemsComponent contextParent={this} callbackParent={this.callbackParent} className="similaritems"  items={this.state.similarItems} isNFT={this.state.isNFT} isSkin={!this.state.isNFT && (this.state.track == null || this.state.season == null)} selectedItemId={this.state.itemId}></SimilarItemsComponent>
+                                     <SimilarItemsComponent contextParent={this} callbackParent={this.callbackParent} className="similaritems"  items={this.state.similarItems} isNFT={this.state.isNFT} isMomentNFT={this.state.isMomentNFT} isSkin={!this.state.isNFT && !this.state.isMomentNFT && (this.state.track == null || this.state.season == null)} selectedItemId={this.state.itemId}></SimilarItemsComponent>
                                  {/* })}
                                   </div>*/}
                           </div>
