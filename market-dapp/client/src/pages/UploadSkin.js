@@ -219,42 +219,42 @@ class UploadSkin extends Component {
 
         return (
             <header className="header">
-                <div class="overlay overflow-hidden pe-n"><img src="/assets/img/bg/bg_shape.png" alt="Background shape" /></div>
+                <div className="overlay overflow-hidden pe-n"><img src="/assets/img/bg/bg_shape.png" alt="Background shape" /></div>
                 <section className="content-section text-light br-n bs-c bp-c pb-8">
-                    <div class="container position-relative">
-                        <div class="row">
-                            <div class="col-lg-8 mx-auto">
+                    <div className="container position-relative">
+                        <div className="row">
+                            <div className="col-lg-8 mx-auto">
                                 <div>
-                                    <h2 class="ls-1 text-center">Add new Car Skin for sale</h2>
-                                    <hr class="w-10 border-warning border-top-2 o-90" />
+                                    <h2 className="ls-1 text-center">Add new Car Skin for sale</h2>
+                                    <hr className="w-10 border-warning border-top-2 o-90" />
                                     <div>
                                         <Form onSubmit={this.onIPFSSubmit}>
-                                            <div class="form-group">
-                                                <FormLabel for="skin-file" className="col-sm-3 mr-2 col-form-label font-weight-bold">Choose Skin file:</FormLabel>
-                                                <input id="skin-file"
+                                            <div className="form-group">
+                                                <FormLabel htmlFor="skin-file" className="col-sm-3 mr-2 col-form-label font-weight-bold">Choose Skin file:</FormLabel>
+                                                <input id="skin-file"  
                                                     type="file" accept=".tga"
                                                     onChange={this.captureFile} />
                                             </div>
-                                            <div class="form-row">
+                                            <div className="form-row">
                                                 <Button className="col-3 mr-2" type="submit">Generate IPFS Hash</Button>
                                                 <Form.Control className="col-8" type="text" placeholder="Generate IPFS Hash" value={this.state.ipfsPath} onChange={this.handleChangeHash} readOnly />
                                             </div>
                                         </Form>
                                     </div>
-                                    <div class="mt-4">
+                                    <div className="mt-4">
                                         <Form>
-                                            <div class="form-row">
-                                                <div class="form-group col-6">
+                                            <div className="form-row">
+                                                <div className="form-group col-6">
                                                     <Form.Control type="text" pattern="([0-9]*[.])?[0-9]+" placeholder="Enter File price (SRC)" value={this.state.priceValue} onChange={this.handleFilePrice} />
                                                 </div>
                                             </div>
-                                            <div class="form-row">
-                                                <div class="form-group col-6">
+                                            <div className="form-row">
+                                                <div className="form-group col-6">
                                                     <Form.Control type="text" placeholder="Enter Car brand" onChange={this.onSelectCar} />
                                                 </div>
                                             </div>
-                                            <div class="form-row">
-                                                <div class="form-group col-6">
+                                            <div className="form-row">
+                                                <div className="form-group col-6">
                                                     <DropdownButton id="dropdown-skin-button" title={this.state.currentSimulator} onSelect={this.onSelectSim}>
                                                         {sims}
                                                     </DropdownButton>
@@ -264,15 +264,15 @@ class UploadSkin extends Component {
                                     </div>
                                     <div>
                                         <Form onSubmit={this.saveImage_toIPFS}>
-                                            <div class="form-group">
-                                                <FormLabel for="skin-image" className="col-sm-3 mr-2 col-form-label font-weight-bold">Choose Skin image:</FormLabel>
-                                                <input id="skin-image"
+                                            <div className="form-group">
+                                                <FormLabel htmlFor="skin-image" className="col-sm-3 mr-2 col-form-label font-weight-bold">Choose Skin image:</FormLabel>
+                                                <input id="skin-image"  
                                                     type="file" accept=".png,.jpg,.jpeg"
                                                     onChange={this.uploadImageIPFS} />
                                             </div>
                                         </Form>
                                     </div>
-                                    <div class="form-row mt-4">
+                                    <div className="form-row mt-4">
                                         <Button onClick={this.saveSkin}>Save Skin</Button>
                                     </div>
                                 </div>
