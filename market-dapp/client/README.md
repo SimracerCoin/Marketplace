@@ -76,3 +76,10 @@ This way only whitelisted address will have access
 
 In order to allow all wallets and ignore the file (so no whitelist) set REACT_APP_ALLOW_ALL_WALLETS to "true"
 
+### Using Infura IPFS HOWTO
+In order to connect to IPFS, Infura requires Authorization HTTP header for all requests
+https://docs.infura.io/infura/networks/ipfs/how-to/authenticate-requests
+The following keys must be provided on the client .env file (taken from the project dashboard):
+REACT_APP_INFURA_IPFS_PROJECT_ID
+REACT_APP_INFURA_IPFS_API_SECRET
+
