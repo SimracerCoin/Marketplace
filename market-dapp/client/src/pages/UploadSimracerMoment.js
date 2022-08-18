@@ -4,10 +4,17 @@ import { Prompt } from 'react-st-modal';
 import ipfs from "../ipfs";
 import computeMerkleRootHash from "../utils/merkle"
 import UIHelper from "../utils/uihelper"
+import fetch from 'node-fetch';
+
+const api_url = 'https://api.json2video.com/v2/movies';
+const api_key = process.env.REACT_APP_JSON2VIDEO_API_KEY;
 
 const openpgp = require('openpgp');
 
 const priceConversion = 10 ** 18;
+
+
+const testingVideo = 'https://assets.json2video.com/sites/github/hello-world.mp4';
 
 class UploadSimracerMoment extends Component {
 
@@ -37,10 +44,10 @@ class UploadSimracerMoment extends Component {
 
         //this.handleChangeHash = this.handleChangeHash.bind(this);
         this.handleFilePrice = this.handleFilePrice.bind(this);
-        this.uploadVideoIPFS = this.uploadVideoIPFS.bind(this);
+        this.uploadVideo = this.uploadVideo.bind(this);
         this.saveVideo_toIPFS = this.saveVideo_toIPFS.bind(this);
         this.saveSimracingMomentNFT = this.saveSimracingMomentNFT.bind(this);
-    };
+    }
 
 
     componentDidMount = async () => {
@@ -64,22 +71,56 @@ class UploadSimracerMoment extends Component {
             console.log("Handling File price: " + event.target.value);
             this.setState({ currentFilePrice: event.target.value * priceConversion });
         }
-    }
+    };
 
     handleDescription = (event) => {
         console.log("Handling Description: " + event.target.value);
         this.setState({ currentDescription: event.target.value });
-    }
+    };
 
     handleSeries = (event) => {
         console.log("Handling Series: " + event.target.value);
         this.setState({ currentSeries: event.target.value });
-    }
+    };
 
     onSelectSimulator = async (event) => {
         console.log("Choosing Simulator: " + event);
         this.setState({ currentSimulator: event });
-    }
+    };
+
+    createVideoScene = (description, series) => {
+
+        return  {
+        
+            "scenes": [
+              {
+                "background-color": "#4392F1",
+                "elements": [
+                  {
+                    "type": "text",
+                    "style": "003",
+                    "text": description,
+                    "duration": 2,
+                    "start": 2
+                  }
+                ]
+              },
+              {
+                "background-color": "#4392F1",
+                "elements": [
+                  {
+                    "type": "text",
+                    "style": "003",
+                    "text": series,
+                    "duration": 2,
+                    "start": 5
+                  }
+                ]
+              }
+            ]
+          }
+           
+    };
 
 
     convertToBuffer = async (reader) => {
@@ -97,6 +138,54 @@ class UploadSimracerMoment extends Component {
         reader.readAsArrayBuffer(file)
         reader.onloadend = () => this.convertToBuffer(reader)
     };
+
+
+    // render(): Starts a new rendering job
+    /*render = async () => {
+        if (!this.apikey) throw "Invalid API Key";
+
+        let response = await this.fetch("POST", api_url, videoTemplate, {
+            "Content-Type": "application/json",
+            "x-api-key": apikey
+        });
+
+        if (response && response.success && response.project) this.object.project = response.project;
+
+        return response;
+    };*/
+
+    /**
+     * ex:
+     *  "resolution": "full-hd",
+        "quality": "high",
+        "scenes": [
+            {
+                    "background-color": "#000000",
+                    "elements": [
+                        {
+                            "type": "text",
+                            "text": "Hello world",
+                            "duration": 10
+                        }
+                    ]
+                }
+            ]
+        }
+     */
+
+    //JSON2VIDEO
+    //##############################################################    
+    saveCustomVideo = async () => {
+
+        //create the scenes template
+        const videoTemplate = this.createVideoScene(this.state.currentDescription, this.state.currentSeries);
+        //call backend API
+        //get the video URL
+        //crate buffer from it
+        //append it to the beginning of the uploaded video buffer
+    };
+
+    //##############################################################  
 
     //Guarda o video no ipfs 
     saveVideo_toIPFS = async () => {
@@ -165,22 +254,109 @@ class UploadSimracerMoment extends Component {
         video.currentTime = 5;
     }
 
+
+    //the video returned by JSON2VIDEO
+    getVideoFrames = async (videoFramesPath) => {
+
+        console.log('will get video frames from path: ', videoFramesPath);
+
+        let response = await fetch('http://localhost:3001/blob');
+        console.log('still here array:', response);
+        const data = await response.arrayBuffer();
+        console.log('data is:', data);
+        return data;
+
+        // const arrayBuffer = await fetch(url).then(r => r.arrayBuffer());
+
+        /**return new Promise((resolve) => {
+
+            try {
+
+                const video = document.createElement('video');
+                video.preload = 'metadata';
+
+                const readVideoAsBuffer = (blob) => {
+
+                    const reader = new window.FileReader()
+                    reader.readAsArrayBuffer(blob);
+                    reader.onloadend = () => {
+
+                        resolve(Buffer(reader.result));
+                        this.setState({ videoFramesBuffer: Buffer(reader.result) })
+                        console.log('video buffer', this.state.videoFramesBuffer);
+                    }
+                }    
+
+                video.onloadeddata = function(event) {
+
+                    console.log('event,',event);
+                    readVideoAsBuffer(video);
+                }
+
+                //const blob = URL.createObjectURL(videoFramesPath);
+                //console.log('blob is: ', blob);
+                //blob.arrayBuffer().then(buffer => {
+                //    console.log('processed buffer:' ,buffer);
+                //} );
+
+                video.src = videoFramesPath;
+
+            }catch(error) {
+                console.log('got error: ', error);
+                resolve(-1);
+            }
+            
+
+        });*/
+
+        
+    }
+
+    appendBuffers = async (buffer1, buffer2) => {
+        let tmp = new Uint8Array(buffer1.byteLength + buffer2.byteLength);
+        tmp.set(new Uint8Array(buffer1), 0);
+        tmp.set(new Uint8Array(buffer2), buffer1.byteLength);
+        console.log('Appended buffers: ',tmp.buffer);
+        return tmp.buffer;
+    };
+
     //Transforma o video num buffer e guarda como estado
     //apenas se tiver menos de 30secs
-    uploadVideoIPFS = (event) => {
+    uploadVideo = async (event) => {
+
+       
+
+
         event.stopPropagation();
         event.preventDefault();
-        console.log('uploadVideoIPFS started...');
+        console.log('uploadVideo started...');
+
+        const scenesBuffer = await this.getVideoFrames('https://assets.json2video.com/clients/vkyssyob9a/renders/2022-08-18-89909.mp4');
+        console.log('scenesBuffer: ', scenesBuffer);
+
         const file = event.target.files[0];
 
         let self = this;
-        console.log('files is ',file);
-        const readVideoAsBuffer = (video) => {
+      
+        const readVideoAsBuffer = () => {
 
-            const reader = new window.FileReader()
-            reader.readAsArrayBuffer(file)
+            const reader = new window.FileReader();
+            reader.readAsArrayBuffer(file);
             reader.onloadend = () => {
-                this.setState({ videoBuffer: Buffer(reader.result) })
+                const videoBuffer = reader.result;
+                console.log('video buffer original: ', videoBuffer);
+                if(scenesBuffer !== -1 ) {
+                    //append frames
+                    this.appendBuffers(scenesBuffer, videoBuffer).then( fullVideo => {
+                        console.log('full video: ', fullVideo);
+                        self.setState({ videoBuffer: fullVideo });
+                    });
+                    
+                } else {
+                    //just this one
+                    this.setState({ videoBuffer: videoBuffer});
+                }
+                
                 console.log('video buffer', this.state.videoBuffer);
                 self.captureScreenshotFromVideo(video, self);
             }
@@ -200,7 +376,7 @@ class UploadSimracerMoment extends Component {
             if(duration > 30) {
                 alert("The video duration must not exceed 30 seconds!");
             } else {
-                readVideoAsBuffer(video);
+                readVideoAsBuffer();
             }
         
         }
@@ -352,7 +528,7 @@ class UploadSimracerMoment extends Component {
                                         <Form onSubmit={this.saveVideo_toIPFS}>
                                             <input id="skin-video"
                                                 type="file" accept="video/*"
-                                                onChange={this.uploadVideoIPFS}
+                                                onChange={this.uploadVideo}
                                             />
                                             <br></br>
 
@@ -360,6 +536,9 @@ class UploadSimracerMoment extends Component {
                                     </div><br></br>
                                     <div className="form-row mt-4">
                                         <Button onClick={this.saveSimracingMomentNFT}>Mint Simracing Moment NFT</Button>
+                                    </div>
+                                    <div className="form-row mt-4">
+                                        <Button onClick={this.saveCustomVideo}>Save Custom Video</Button>
                                     </div>
                                 </div>
                             </div>

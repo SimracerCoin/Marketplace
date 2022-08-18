@@ -1,0 +1,21 @@
+{
+  "name": "proxy-server",
+  "version": "1.0.0",
+  "description": "Simple proxy server for JSON2VIDEO API calls",
+  "main": "index.js",
+  "repository": "git@github.com:SimracerCoin/Marketplace.git",
+  "author": "Paulo Cristo",
+  "license": "MIT",
+  "private": true,
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.1",
+    "http-proxy-middleware": "^2.0.6",
+    "json2video-sdk": "^2.0.0",
+    "morgan": "^1.10.0",
+    "node-fetch": "2"
+  },
+  "scripts": {
+    "start": "node index.js"
+  }
+}
