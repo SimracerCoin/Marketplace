@@ -547,9 +547,6 @@ class UploadSimracerMoment extends Component {
                                     <div className="form-row mt-4">
                                         <Button onClick={this.saveSimracingMomentNFT}>Mint Simracing Moment NFT</Button>
                                     </div>
-                                    <div className="form-row mt-4">
-                                        <Button onClick={this.saveCustomVideo}>Save Custom Video</Button>
-                                    </div>
                                 </div>
                             </div>
                         </div>
