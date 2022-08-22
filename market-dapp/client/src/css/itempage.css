@@ -2,3 +2,39 @@
     max-width: 100%;
     height:100%;
 }
+
+.video-sound-control--btn {
+    width: 32px;
+    height: 32px;
+    display: block;
+    position: relative;
+    bottom: 40px;
+    left: 45px;
+    z-index: 1000;
+    outline:none;
+    border: none;
+    background: url('../imgs/ico-sound-on.svg') 50% 50% no-repeat;
+    background-size: 32px 32px;
+    cursor: pointer;
+    -webkit-transition: none;
+}
+
+.video-sound-control--btn-off {
+    width: 32px;
+    height: 32px;
+    display: block;
+    position: relative;
+    bottom: 40px;
+    left: 45px;
+    z-index: 1000;
+    border: none;
+    outline:none;
+    background: url('../imgs/ico-sound-off.svg') 50% 50% no-repeat;
+    background-size: 32px 32px;
+    cursor: pointer;
+    -webkit-transition: none;
+}
+
+*:focus {
+    outline: 0 !important;
+}
