@@ -42,8 +42,12 @@ class ItemPage extends Component {
             listComments: [],
             review_rating: 0,
             average_review: 0,
-            similarItems: props.location.state.similarItems
+            similarItems: props.location.state.similarItems,
+            isMuted: true
         }
+
+        this.mute = this.mute.bind(this);
+        this.unmute = this.unmute.bind(this);
     }
 
     componentDidMount = async (event) => {
@@ -57,6 +61,8 @@ class ItemPage extends Component {
         let isSkin = !this.state.isNFT && !this.state.isMomentNFT && (this.state.track == null || this.state.season == null);
         console.log('isSkin:' + isSkin);
 
+        const hasVideo = this.state.isMomentNFT;
+
         if (!this.state.isNFT && !this.state.isMomentNFT) {
             const comments = await contract.methods.getItemComments(this.state.itemId).call();
             const average_review = await this.average_rating(comments);
@@ -66,6 +72,8 @@ class ItemPage extends Component {
             this.setState({ currentAccount: currentAccount, contract: contract, contractNFTs: contractNFTs, contractSimracerCoin: contractSimracerCoin, isSkin: isSkin });
         }
 
+        this.setState({isMuted: hasVideo});
+        
         this.scrollToTop();
     }
 
@@ -231,6 +239,14 @@ class ItemPage extends Component {
             document.getElementById("comment").value = "";
             this.setState({ listComments: listComments, review_rating: 0, average_review: average_review });
         }
+    }
+
+    unmute = async() => {
+      this.setState({isMuted: false});    
+    }
+
+    mute = async() => {
+      this.setState({isMuted: true});
     }
 
     handleReview = async (event) => {
@@ -659,6 +675,26 @@ drizzle: props.drizzle,
       */
     }
 
+    renderVideoFrame = (hasVideo) => {
+
+      if(!hasVideo) {
+        return "";
+      }
+      if(this.state.isMuted) {
+        return <div className="carousel-product">
+                   <div className="slider text-secondary" data-slick="product-body">
+                      <video className="videoContainer" loop muted autoPlay currenttime={0} src={this.state.videoPath} />  
+                      <button onClick={this.unmute} className="video-sound-control--btn video-sound-control--btn-off" label="Unmmute" type="button"></button> 
+                   </div>
+               </div>
+      } 
+      return  <div className="carousel-product">
+                <div className="slider text-secondary" data-slick="product-body">
+                  <video className="videoContainer" loop autoPlay currenttime={0} src={this.state.videoPath} />  
+                  <button onClick={this.mute} className="video-sound-control--btn video-sound-control--btn-on" label="Mute" type="button"></button> 
+                </div>
+            </div>
+    } 
 
     render() {
 
@@ -733,13 +769,7 @@ drizzle: props.drizzle,
                     <div className="col-12">
                       <div className="product-body">
 
-                        { hasVideo &&
-                            <div className="carousel-product">
-                              <div className="slider text-secondary" data-slick="product-body">
-                                  <video className="videoContainer" controls autoPlay currenttime={0} src={this.state.videoPath} />          
-                              </div>
-                            </div>
-                        }
+                        { this.renderVideoFrame(hasVideo)}
                         {/*<!--Carousel Wrapper-->*/}
                         {/** Later we might have more images, for now display just 1 if any */}
                         { hasImage && !hasVideo &&
