@@ -775,7 +775,7 @@ drizzle: props.drizzle,
                         { hasImage && !hasVideo &&
                         <div className="carousel-product">
                           <div className="slider text-secondary" data-slick="product-body">
-                            <img src={this.state.imagePath} alt={this.state.imagePath}/>
+                            <img className="imageContainer" src={this.state.imagePath} alt={this.state.imagePath}/>
                             {/*<img src="assets/img/content/product/02.jpg" alt="Game"/>
                             <img src="assets/img/content/product/03.jpg" alt="Game"/>
                             <img src="assets/img/content/product/05.jpg" alt="Game"/>
