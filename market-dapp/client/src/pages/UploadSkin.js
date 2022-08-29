@@ -200,7 +200,7 @@ class UploadSkin extends Component {
                     .send({ from: this.state.currentAccount })
                     //.on('sent', UIHelper.transactionOnSent)
                     .on('confirmation', function (confNumber, receipt, latestBlockHash) {
-                        UIHelper.transactionOnConfirmation("The new skin is available for sale!");
+                        UIHelper.transactionOnConfirmation("The new skin is available for sale!","/");
                     })
                     .on('error', UIHelper.transactionOnError)
                     .catch(function (e) { });

@@ -414,7 +414,7 @@ class UploadSimracerMoment extends Component {
                 .send({ from: this.state.currentAccount })
                 //.on('sent', UIHelper.transactionOnSent)
                 .on('confirmation', function (confNumber, receipt, latestBlockHash) {
-                    UIHelper.transactionOnConfirmation("The new Simracing Moment NFT is available for sale!");
+                    UIHelper.transactionOnConfirmation("The new Simracing Moment NFT is available for sale!","/");
                     //reset stuff
                     self.setState({videoBuffer: null, imageBuffer: null});
                 })

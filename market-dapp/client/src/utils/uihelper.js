@@ -36,7 +36,7 @@ export default class UIHelper {
     }
   }
 
-  static transactionOnConfirmation = function (message, redirect = true) {
+  static transactionOnConfirmation = function (message, redirect = "/") {
     document.body.removeChild(document.getElementById('wait-div'));
     alert(message);
 
