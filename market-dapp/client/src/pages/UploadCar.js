@@ -149,6 +149,8 @@ class UploadCar extends Component {
 
         if (this.state.currentFilePrice === null) {
             alert('Item price must be an integer');
+        } else if(this.state.ipfsPath === null) {
+            alert('File missing or invalid!');
         } else {
             let nickname = "";
             if (!this.state.isSeller) {
@@ -179,6 +181,7 @@ class UploadCar extends Component {
                 .send({ from: this.state.currentAccount })
                 //.on('sent', UIHelper.transactionOnSent)
                 .on('confirmation', function (confNumber, receipt, latestBlockHash) {
+                    window.localStorage.setItem('forceUpdate','yes');
                     UIHelper.transactionOnConfirmation("The new car setup is available for sale!","/");
                 })
                 .on('error', UIHelper.transactionOnError)
