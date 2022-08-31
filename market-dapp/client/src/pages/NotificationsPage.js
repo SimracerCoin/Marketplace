@@ -145,7 +145,7 @@ class NotificationsPage extends Component {
             .send({ from: this.state.currentAccount })
             .on('sent', UIHelper.showSpinning)
             .on('confirmation', function (confNumber, receipt, latestBlockHash) {
-                UIHelper.transactionOnConfirmation("Thank you for your purchase!");
+                UIHelper.transactionOnConfirmation("Thank you for your purchase!","/");
             })
             .on('error', UIHelper.transactionOnError)
             .catch(function (e) { });

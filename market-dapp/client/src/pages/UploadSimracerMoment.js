@@ -238,18 +238,18 @@ class UploadSimracerMoment extends Component {
             ctx.drawImage( video, 0, 0, canvas.width, canvas.height );
 
             let dataURL = canvas.toDataURL('image/jpeg');
-            console.log('img', dataURL);
+            //console.log('img', dataURL);
 
             const imageBase64 = getBase64StringFromDataURL(dataURL);
 
             const imageBuffer = Uint8Array.from(atob(imageBase64), (c) => c.charCodeAt(0));
 
             scope.setState({ imageBuffer: imageBuffer})
-            console.log('got buffer image', scope.state.imageBuffer)
+            console.log('screenshot got buffer image', scope.state.imageBuffer)
             
         });
-        //take a screenshot at 5 seconds of video play moment
-        video.currentTime = 5;
+        //take a screenshot at 2 seconds of video play moment
+        video.currentTime = 2;
     }
 
     //JSON2VIDEO
@@ -407,21 +407,34 @@ class UploadSimracerMoment extends Component {
 
             console.log('response_saveJson: ', response_saveJson);
 
-            const price = this.state.drizzle.web3.utils.toBN(this.state.currentFilePrice);
+            if(response_saveVideo && response_saveImage && response_saveJson) {
+                //all good!
 
-            //'https://gateway.pinata.cloud/ipfs/Qmboj3b42aW2nHGuQizdi2Zp35g6TBKmec6g77X9UiWQXg'
-            let tx = await this.state.contractNFTs.methods.awardItem(this.state.contractNFTs.address, this.state.currentAccount, price, 'https://ipfs.io/ipfs/' + this.state.jsonData_ipfsPath)
-                .send({ from: this.state.currentAccount })
-                //.on('sent', UIHelper.transactionOnSent)
-                .on('confirmation', function (confNumber, receipt, latestBlockHash) {
-                    UIHelper.transactionOnConfirmation("The new Simracing Moment NFT is available for sale!");
-                    //reset stuff
-                    self.setState({videoBuffer: null, imageBuffer: null});
-                })
-                .on('error', UIHelper.transactionOnError)
-                .catch(function (e) { 
+                const price = this.state.drizzle.web3.utils.toBN(this.state.currentFilePrice);
 
-                });
+                //'https://gateway.pinata.cloud/ipfs/Qmboj3b42aW2nHGuQizdi2Zp35g6TBKmec6g77X9UiWQXg'
+                let tx = await this.state.contractNFTs.methods.awardItem(this.state.contractNFTs.address, this.state.currentAccount, price, 'https://ipfs.io/ipfs/' + this.state.jsonData_ipfsPath)
+                    .send({ from: this.state.currentAccount })
+                    //.on('sent', UIHelper.transactionOnSent)
+                    .on('confirmation', function (confNumber, receipt, latestBlockHash) {
+                        window.localStorage.setItem('forceUpdate','yes');
+
+                        if(confNumber > 9) {
+                            UIHelper.transactionOnConfirmation("The new Simracing Moment NFT is available for sale!","/");     
+                            //reset stuff
+                            self.setState({videoBuffer: null, imageBuffer: null});                       
+                        }
+                        
+                    })
+                    .on('error', UIHelper.transactionOnError)
+                    .catch(function (e) { 
+                        UIHelper.hiddeSpinning();
+                    });
+            } else {
+                UIHelper.hiddeSpinning();
+            }
+
+            
         }
     }
 

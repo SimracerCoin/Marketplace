@@ -38,20 +38,20 @@ class MainPage extends Component {
 
     }
 
-    componentDidMount = async () => {
+    updateData = async () => {
+
         const contract = await this.state.drizzle.contracts.STMarketplace;
         const contractNFTs = await this.state.drizzle.contracts.SimthunderOwner;
         const contractMomentNFTs = await this.state.drizzle.contracts.SimracingMomentOwner;
 
         const response_cars = await contract.methods.getCarSetups().call();
         const response_skins = await contract.methods.getSkins().call();
+
         //const currentAccount = this.state.drizzleState.accounts[0];
         //car ownership nfts
         const nftlist = [];
         //simracing moment nfts
         const videoNftsList = [];
-        
-        console.log('componentDidMount');
 
         // get info from marketplace NFT contract
       
@@ -60,37 +60,29 @@ class MainPage extends Component {
         const numMomentNfts = await contractMomentNFTs.methods.currentTokenId().call();
 
         console.log('car ownership nfts count:' + numNfts);
+        console.log('car moment nfts count:' + numMomentNfts);
         
         //car ownership nfts
         for (let i = 1; i < parseInt(numNfts) + 1; i++) {
             try {
                 //TODO: change for different ids
                 let ownerAddress = await contractNFTs.methods.ownerOf(i).call();
-                console.log('ID:'+i+'ownerAddress: '+ownerAddress.toString()+'nfts addr: '+contractNFTs.address);
+                //console.log('ID:'+i+'ownerAddress: '+ownerAddress.toString()+'nfts addr: '+contractNFTs.address);
                 if(ownerAddress === contractNFTs.address) {
-                    console.log('GOT MATCH');
+                    
                     let uri = await contractNFTs.methods.tokenURI(i).call();
-                    console.log('uri: ', uri);
-                    var xmlhttp = new XMLHttpRequest();
-                    xmlhttp.onload = function(e) {
-                        if (xmlhttp.readyState === 4 && xmlhttp.status === 200) {
-                            var data = JSON.parse(xmlhttp.responseText);
-                            console.log('ownership nftData:' + data.image);
-                            console.log('ownership nftData:' + data.description);
-                            data.id=i;
 
-                            //always put on main list
-                            nftlist.push(data);  
-                            this.setState({ latestNFTs: nftlist }); 
-                            
-                        }
-                    }.bind(this);
-                    xmlhttp.onerror = function (e) {
-                        console.error(xmlhttp.statusText);
-                    };
-                    xmlhttp.open("GET", uri, true);
-                    xmlhttp.send(null);
+                    let response = await fetch(uri);
+                    let data = await response.json();
+                    //console.log('ownership nftData:' + data.image);
+                    //console.log('ownership nftData:' + data.description);
+                    data.id=i;
+
+                    //always put on main list
+                    nftlist.push(data);  
+                    this.setState({ latestNFTs: nftlist }); 
                 }
+
             } catch (e) {
                 console.error(e);
             }
@@ -101,30 +93,21 @@ class MainPage extends Component {
             try {
                 //TODO: change for different ids
                 let ownerAddress = await contractMomentNFTs.methods.ownerOf(i).call();
-                console.log('ID:'+i+'ownerAddress: '+ownerAddress.toString()+'nfts addr: '+contractMomentNFTs.address);
+                //console.log('ID:'+i+'ownerAddress: '+ownerAddress.toString()+'nfts addr: '+contractMomentNFTs.address);
                 if(ownerAddress === contractMomentNFTs.address) {
-                    console.log('GOT MATCH');
+                    
                     let uri = await contractMomentNFTs.methods.tokenURI(i).call();
-                    console.log('uri: ', uri);
-                    var xmlhttp = new XMLHttpRequest();
-                    xmlhttp.onload = function(e) {
-                        if (xmlhttp.readyState === 4 && xmlhttp.status === 200) {
-                            var data = JSON.parse(xmlhttp.responseText);
-                            console.log('moment nftData:' + data.image);
-                            console.log('moment nftData:' + data.description);
-                            data.id=i;
+                    //console.log('uri: ', uri);
 
-                            videoNftsList.push(data);
-                            this.setState({ latestVideoNFTs: videoNftsList });
-                            
-                            
-                        }
-                    }.bind(this);
-                    xmlhttp.onerror = function (e) {
-                        console.error(xmlhttp.statusText);
-                    };
-                    xmlhttp.open("GET", uri, true);
-                    xmlhttp.send(null);
+                    let response = await fetch(uri);
+                    let data = await response.json();
+
+                    //console.log('moment nftData:' + data.image);
+                    //console.log('moment nftData:' + data.description);
+                    data.id=i;
+
+                    videoNftsList.push(data);
+                    this.setState({ latestVideoNFTs: videoNftsList });
                 }
             } catch (e) {
                 console.error(e);
@@ -134,11 +117,25 @@ class MainPage extends Component {
         this.setState({ listCars: response_cars, listSkins: response_skins, contract: contract, contractNFTs: contractNFTs, contractMomentNFTs: contractMomentNFTs });
     }
 
+    componentDidMount = async () => {
+
+        this.updateData();
+    }
+
+    componentDidUpdate = async () => {
+        //Handy trick to know when we should update again (using react navigation approach was a total mess, and not even building)
+        const forceUpdate = window.localStorage.getItem('forceUpdate');
+        if("yes" === forceUpdate) {
+            window.localStorage.removeItem('forceUpdate'); 
+            this.updateData();
+        }
+    }
+
 
     buyItem = async (event, itemId, track, simulator, season, series, description, price, carBrand, address, ipfsPath, imagePath, isNFT, isMomentNFT, videoPath) => {
         event.preventDefault();
 
-        console.log('is nft: ' + isNFT + ' is moment: ', isMomentNFT);
+        //console.log('is nft: ' + isNFT + ' is moment: ', isMomentNFT);
 
         let similarItems = [];
         if(isMomentNFT) {
@@ -296,7 +293,7 @@ class MainPage extends Component {
 
         //car ownership ones
         for (const [index, value] of this.state.latestNFTs.entries()) {
-            console.log('ownership nft value is,',value);
+            //console.log('ownership nft value is,',value);
             let series = value.series;
             let simulator = value.simulator;
             let price = value.price*priceConversion;
@@ -305,7 +302,7 @@ class MainPage extends Component {
             let itemId = value.id;
             let carNumberOrDescription = value.carNumber;
             // let ipfsPath = value.ad.ipfsPath
-            console.log(' ID NFT:'+value.id);
+            //console.log(' ID NFT:'+value.id);
             let imagePath = value.image;
 
             
@@ -335,12 +332,12 @@ class MainPage extends Component {
 
         //TODO we can use already videoNftsList here
         for (const [index, value] of this.state.latestVideoNFTs.entries()) {
-            console.log('moment nft value is,',value);
+            //console.log('moment nft value is,',value);
   
             let itemId = value.id;
        
             // let ipfsPath = value.ad.ipfsPath
-            console.log(' ID NFT:'+value.id);
+            //console.log(' ID NFT:'+value.id);
             let imagePath = value.image;
 
             let metadata = this.extractMomentNFTTraitTypes(value.attributes);
@@ -351,7 +348,7 @@ class MainPage extends Component {
             let video = metadata.video || value.animation_url; 
             let carNumberOrDescription = value.description;
 
-            console.log('METADATA VIDEO ', video);
+            //console.log('METADATA VIDEO ', video);
                 /**
                  *  attribute:  {trait_type: 'series', value: 'Cupra series'}
                     attribute:  {trait_type: 'seriesOwner', value: '0xeDc2448E33cE4fE46597BCbb0e5281E6CF3e253C'}
@@ -360,7 +357,7 @@ class MainPage extends Component {
                     attribute:  {trait_type: 'video', value: 'https://ipfs.io/ipfs/QmbNW26he9uk8R7FHEE5KUDbTfBaHDCKgPAkUUnpeoWdZH'}
                  */
                 
-            console.log('attributes: ', value.attributes);
+            //console.log('attributes: ', value.attributes);
             momentNfts.push(
                         <ListGroup.Item key={itemId} className="bg-dark_A-20 col-3 mb-4" style={{minWidth: '275px'}}>
                     <Card className="card-block">

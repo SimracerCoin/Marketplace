@@ -168,14 +168,14 @@ class UploadSkin extends Component {
 
         if (this.state.currentFilePrice === null) {
             alert('Item price must be an integer');
+        } else if(this.state.ipfsPath === null) {
+            alert('File missing or invalid!');
         } else {
             let nickname = "";
             if (!this.state.isSeller) {
                 nickname = await Prompt('You are adding your first item for sale, please choose your seller nickname.');
                 if (!nickname) return;
             }
-
-            UIHelper.showSpinning();
 
             const price = this.state.drizzle.web3.utils.toBN(this.state.currentFilePrice);
 
@@ -192,18 +192,28 @@ class UploadSkin extends Component {
             const placeholder = this.state.drizzle.web3.utils.fromAscii('some hash');
             console.log(placeholder);
 
+            UIHelper.showSpinning();
+
             const response_saveImage = await this.saveImage_toIPFS();
 
-            if (response_saveImage == true) {
+            if (response_saveImage) {
                 const response = await this.state.contract.methods.newSkin(ipfsPathBytes, this.state.currentCar,
                     this.state.currentSimulator, price, placeholder, this.state.encryptedDataHash, nickname, this.state.image_ipfsPath)
                     .send({ from: this.state.currentAccount })
                     //.on('sent', UIHelper.transactionOnSent)
                     .on('confirmation', function (confNumber, receipt, latestBlockHash) {
-                        UIHelper.transactionOnConfirmation("The new skin is available for sale!");
+                        window.localStorage.setItem('forceUpdate','yes');
+                        if(confNumber > 9) {
+                            UIHelper.transactionOnConfirmation("The new skin is available for sale!","/");
+                        }
+                        
                     })
                     .on('error', UIHelper.transactionOnError)
-                    .catch(function (e) { });
+                    .catch(function (e) { 
+                        UIHelper.hiddeSpinning();
+                    });
+            } else {
+                UIHelper.hiddeSpinning();
             }
         }
     }

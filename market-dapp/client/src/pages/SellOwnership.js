@@ -200,6 +200,8 @@ class SellOwnership extends Component {
 
         if (this.state.currentFilePrice === null) {
             alert('Item price must be an integer');
+        } else if(this.state.imageBuffer === null) {
+            alert('Image file missing or invalid!');
         } else {
             // let nickname = "";
             // if (!this.state.isSeller) {
@@ -212,17 +214,29 @@ class SellOwnership extends Component {
             const response_saveImage = await this.saveImage_toIPFS();
             const response_saveJson = await this.saveJSON_toIPFS(this.state.image_ipfsPath);
 
-            const price = this.state.drizzle.web3.utils.toBN(this.state.currentFilePrice);
+            if(response_saveImage && response_saveJson) {
 
-            //'https://gateway.pinata.cloud/ipfs/Qmboj3b42aW2nHGuQizdi2Zp35g6TBKmec6g77X9UiWQXg'
-            let tx = await this.state.contractNFTs.methods.awardItem(this.state.contractNFTs.address, this.state.currentAccount, price, 'https://ipfs.io/ipfs/' + this.state.jsonData_ipfsPath)
-                .send({ from: this.state.currentAccount })
-                //.on('sent', UIHelper.transactionOnSent)
-                .on('confirmation', function (confNumber, receipt, latestBlockHash) {
-                    UIHelper.transactionOnConfirmation("The new car ownership NFT is available for sale!");
-                })
-                .on('error', UIHelper.transactionOnError)
-                .catch(function (e) { });
+                const price = this.state.drizzle.web3.utils.toBN(this.state.currentFilePrice);
+
+                //'https://gateway.pinata.cloud/ipfs/Qmboj3b42aW2nHGuQizdi2Zp35g6TBKmec6g77X9UiWQXg'
+                let tx = await this.state.contractNFTs.methods.awardItem(this.state.contractNFTs.address, this.state.currentAccount, price, 'https://ipfs.io/ipfs/' + this.state.jsonData_ipfsPath)
+                    .send({ from: this.state.currentAccount })
+                    //.on('sent', UIHelper.transactionOnSent)
+                    .on('confirmation', function (confNumber, receipt, latestBlockHash) {
+                        window.localStorage.setItem('forceUpdate','yes');
+                        if(confNumber > 9) {
+                            UIHelper.transactionOnConfirmation("The new car ownership NFT is available for sale!","/");
+                        }
+                    })
+                    .on('error', UIHelper.transactionOnError)
+                    .catch(function (e) {
+                        UIHelper.hiddeSpinning();
+                     });
+            } else {
+                UIHelper.hiddeSpinning();
+            }
+
+            
         }
     }
 
@@ -232,19 +246,20 @@ class SellOwnership extends Component {
         const sims = [];
 
         for (const [index, value] of simsElements.entries()) {
-            sims.push(<Dropdown.Item eventKey={value} key={index}>{value}</Dropdown.Item>)
+            let thumb = "/assets/img/sims/" + value + ".png";
+            sims.push(<Dropdown.Item eventKey={value} key={index}><img src={thumb} width="16" /> {value}</Dropdown.Item>)
         }
 
 
         return (
             <header className="header">
                 <section className="content-section text-light br-n bs-c bp-c pb-8" style={{ backgroundImage: 'url(\'/assets/img/bg/bg_shape.png\')' }}>
-                    <div class="container position-relative">
-                        <div class="row">
-                            <div class="col-lg-8 mx-auto">
+                    <div className="container position-relative">
+                        <div className="row">
+                            <div className="col-lg-8 mx-auto">
                                 <div>
-                                    <h2 class="ls-1 text-center"> Mint new Car Ownership NFT for sale </h2>
-                                    <hr class="w-10 border-warning border-top-2 o-90" />
+                                    <h2 className="ls-1 text-center"> Mint new Car Ownership NFT for sale </h2>
+                                    <hr className="w-10 border-warning border-top-2 o-90" />
                                     <div>
                                         <Form>
                                             <Form.Group controlId="formInsertCar">

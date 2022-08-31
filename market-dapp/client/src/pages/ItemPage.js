@@ -159,7 +159,7 @@ class ItemPage extends Component {
               .send({from: this.state.currentAccount })
               //.on('sent', UIHelper.transactionOnSent)
               .on('confirmation', function (confNumber, receipt, latestBlockHash) {
-                  UIHelper.transactionOnConfirmation("Thank you for your purchase request. Seller will contact you soon.", false);
+                  UIHelper.transactionOnConfirmation("Thank you for your purchase request. Seller will contact you soon.", "/");
               })
               .on('error', UIHelper.transactionOnError)
               .catch(function (e) {
@@ -184,7 +184,7 @@ class ItemPage extends Component {
               .send({from: this.state.currentAccount })
               //.on('sent', UIHelper.transactionOnSent)
               .on('confirmation', function (confNumber, receipt, latestBlockHash) {
-                  UIHelper.transactionOnConfirmation("Thank you for your purchase.", false);
+                  UIHelper.transactionOnConfirmation("Thank you for your purchase.", "/");
               })
               .on('error', UIHelper.transactionOnError)
               .catch(function (e) {
