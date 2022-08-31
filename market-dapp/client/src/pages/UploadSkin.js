@@ -177,8 +177,6 @@ class UploadSkin extends Component {
                 if (!nickname) return;
             }
 
-            UIHelper.showSpinning();
-
             const price = this.state.drizzle.web3.utils.toBN(this.state.currentFilePrice);
 
             //document.getElementById('formInsertCar').reset()
@@ -194,19 +192,28 @@ class UploadSkin extends Component {
             const placeholder = this.state.drizzle.web3.utils.fromAscii('some hash');
             console.log(placeholder);
 
+            UIHelper.showSpinning();
+
             const response_saveImage = await this.saveImage_toIPFS();
 
-            if (response_saveImage == true) {
+            if (response_saveImage) {
                 const response = await this.state.contract.methods.newSkin(ipfsPathBytes, this.state.currentCar,
                     this.state.currentSimulator, price, placeholder, this.state.encryptedDataHash, nickname, this.state.image_ipfsPath)
                     .send({ from: this.state.currentAccount })
                     //.on('sent', UIHelper.transactionOnSent)
                     .on('confirmation', function (confNumber, receipt, latestBlockHash) {
                         window.localStorage.setItem('forceUpdate','yes');
-                        UIHelper.transactionOnConfirmation("The new skin is available for sale!","/");
+                        if(confNumber > 9) {
+                            UIHelper.transactionOnConfirmation("The new skin is available for sale!","/");
+                        }
+                        
                     })
                     .on('error', UIHelper.transactionOnError)
-                    .catch(function (e) { });
+                    .catch(function (e) { 
+                        UIHelper.hiddeSpinning();
+                    });
+            } else {
+                UIHelper.hiddeSpinning();
             }
         }
     }

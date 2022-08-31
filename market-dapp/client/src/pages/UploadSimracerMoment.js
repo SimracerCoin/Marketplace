@@ -407,22 +407,34 @@ class UploadSimracerMoment extends Component {
 
             console.log('response_saveJson: ', response_saveJson);
 
-            const price = this.state.drizzle.web3.utils.toBN(this.state.currentFilePrice);
+            if(response_saveVideo && response_saveImage && response_saveJson) {
+                //all good!
 
-            //'https://gateway.pinata.cloud/ipfs/Qmboj3b42aW2nHGuQizdi2Zp35g6TBKmec6g77X9UiWQXg'
-            let tx = await this.state.contractNFTs.methods.awardItem(this.state.contractNFTs.address, this.state.currentAccount, price, 'https://ipfs.io/ipfs/' + this.state.jsonData_ipfsPath)
-                .send({ from: this.state.currentAccount })
-                //.on('sent', UIHelper.transactionOnSent)
-                .on('confirmation', function (confNumber, receipt, latestBlockHash) {
-                    window.localStorage.setItem('forceUpdate','yes');
-                    UIHelper.transactionOnConfirmation("The new Simracing Moment NFT is available for sale!","/");
-                    //reset stuff
-                    self.setState({videoBuffer: null, imageBuffer: null});
-                })
-                .on('error', UIHelper.transactionOnError)
-                .catch(function (e) { 
+                const price = this.state.drizzle.web3.utils.toBN(this.state.currentFilePrice);
 
-                });
+                //'https://gateway.pinata.cloud/ipfs/Qmboj3b42aW2nHGuQizdi2Zp35g6TBKmec6g77X9UiWQXg'
+                let tx = await this.state.contractNFTs.methods.awardItem(this.state.contractNFTs.address, this.state.currentAccount, price, 'https://ipfs.io/ipfs/' + this.state.jsonData_ipfsPath)
+                    .send({ from: this.state.currentAccount })
+                    //.on('sent', UIHelper.transactionOnSent)
+                    .on('confirmation', function (confNumber, receipt, latestBlockHash) {
+                        window.localStorage.setItem('forceUpdate','yes');
+
+                        if(confNumber > 9) {
+                            UIHelper.transactionOnConfirmation("The new Simracing Moment NFT is available for sale!","/");     
+                            //reset stuff
+                            self.setState({videoBuffer: null, imageBuffer: null});                       
+                        }
+                        
+                    })
+                    .on('error', UIHelper.transactionOnError)
+                    .catch(function (e) { 
+                        UIHelper.hiddeSpinning();
+                    });
+            } else {
+                UIHelper.hiddeSpinning();
+            }
+
+            
         }
     }
 

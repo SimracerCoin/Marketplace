@@ -182,10 +182,15 @@ class UploadCar extends Component {
                 //.on('sent', UIHelper.transactionOnSent)
                 .on('confirmation', function (confNumber, receipt, latestBlockHash) {
                     window.localStorage.setItem('forceUpdate','yes');
-                    UIHelper.transactionOnConfirmation("The new car setup is available for sale!","/");
+                    if(confNumber > 9) {
+                        UIHelper.transactionOnConfirmation("The new car setup is available for sale!","/");
+                    }
+                    
                 })
                 .on('error', UIHelper.transactionOnError)
-                .catch(function (e) { });
+                .catch(function (e) {
+                    UIHelper.hiddeSpinning();
+                 });
         }
     }
 
