@@ -6,6 +6,7 @@ import StarRatings from 'react-star-ratings';
 import UIHelper from "../utils/uihelper";
 import ReviewsComponent from "../components/ReviewsComponent";
 import SimilarItemsComponent from '../components/SimilarItemsComponent';
+import AlertComponent from '../components/AlertComponent';
 import "../css/itempage.css";
 
 const openpgp = require('openpgp');
@@ -43,7 +44,8 @@ class ItemPage extends Component {
             review_rating: 0,
             average_review: 0,
             similarItems: props.location.state.similarItems,
-            isMuted: true
+            isMuted: true,
+            messageOptions: {show: false, title:'', variant:'sucess',message:''}
         }
 
         this.mute = this.mute.bind(this);

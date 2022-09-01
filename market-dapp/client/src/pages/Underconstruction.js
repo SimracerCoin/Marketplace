@@ -2,6 +2,8 @@ import React, { Component } from 'react';
 
 import "../css/mainpage.css";
 
+const allowAllWallets = (process.env.REACT_APP_ALLOW_ALL_WALLETS == "true" ? true : false);
+
 class Underconstruction extends Component {
 
     constructor(props) {
@@ -30,7 +32,7 @@ class Underconstruction extends Component {
         const { web3 } = window;
 
         let hiddenLoginBtn = !web3 || state.isLoggedIn ? 'd-none' : '';
-        let hiddenRequestBtn = state.wrongNetwork ? 'd-none' : '';
+        let hiddenRequestBtn = state.wrongNetwork || allowAllWallets ? 'd-none' : '';
         let hiddenErrorMsg = web3 && !state.wrongNetwork ? 'd-none' : 'd-block';
 
         let error_msg = '';
