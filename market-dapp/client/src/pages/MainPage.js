@@ -224,7 +224,7 @@ class MainPage extends Component {
         }
 
         for (const [index, value] of this.state.listCars.entries()) {
-            console.log('list cars value:');
+            //console.log('list cars value:');
             console.log(value);
             let carBrand = value.info.carBrand
             let track = value.info.track

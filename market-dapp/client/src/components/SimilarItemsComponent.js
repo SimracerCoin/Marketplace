@@ -57,14 +57,14 @@ class SimilarItemsComponent extends React.Component {
 
       if(this.state.isNFT) {
 
-        return <div id={payload.itemId} className="carousel-pointer" onClick={(e) => this.switchSimilarItem(e, true, false, payload, fullItem)} >
+        return <div id={payload.itemId} className="carousel-pointer" onClick={(e) => this.switchSimilarItem(e, true, false,false, payload, fullItem)} >
             <img className="carousel-pointer" alt={payload.description} src={payload.imagePath} />
             <p className="legend">{payload.description} : {payload.price / priceConversion} SRC</p>
           </div>
 
       } else if(this.state.isMomentNFT) {
 
-        return <div id={payload.itemId} className="carousel-pointer" onClick={(e) => this.switchSimilarItem(e, true, false, payload, fullItem)} >
+        return <div id={payload.itemId} className="carousel-pointer" onClick={(e) => this.switchSimilarItem(e, false, true, false, payload, fullItem)} >
             <img className="carousel-pointer" alt={payload.description} src={payload.imagePath} />
             <p className="legend">{payload.description} : {payload.price / priceConversion} SRC</p>
           </div>
@@ -72,14 +72,14 @@ class SimilarItemsComponent extends React.Component {
       }
       else if(this.state.isSkin) {
         
-        return <div className="carousel-pointer" id={payload.itemId} onClick={(e) => this.switchSimilarItem(e, false, true, payload, fullItem )}>
+        return <div className="carousel-pointer" id={payload.itemId} onClick={(e) => this.switchSimilarItem(e, false, false, true, payload, fullItem )}>
             <img className="carousel-pointer" alt={payload.description} src={payload.imagePath}/>
             <p className="legend">{payload.description} : {payload.price / priceConversion} SRC</p>
           </div>
 
       } else {
         //car
-        return <div className="carousel-pointer" id={payload.itemId} onClick={(e) => this.switchSimilarItem(e, false, false, payload, fullItem)}>
+        return <div className="carousel-pointer" id={payload.itemId} onClick={(e) => this.switchSimilarItem(e, false, false, false, payload, fullItem)}>
             <img className="carousel-pointer" alt={payload.description} src={payload.imagePath} />
             <p className="legend">{payload.description} : {payload.price / priceConversion} SRC</p>
           </div>
@@ -96,11 +96,11 @@ class SimilarItemsComponent extends React.Component {
      * @param {*} isSkin 
      * @param {*} item 
      */
-    switchSimilarItem = async (event, isNFT, isSkin, payload, item) =>{
+    switchSimilarItem = async (event, isNFT, isMomentNFT, isSkin, payload, item) =>{
 
       //console.log("set new selected on to " + item.id);
       //this will update parent
-      this.state.callbackParent(this.state.contextParent, isNFT, isSkin, payload, item); //payload is actually the entire item data
+      this.state.callbackParent(this.state.contextParent, isNFT, isMomentNFT, isSkin, payload, item); //payload is actually the entire item data
 
       let referenceItem = item.id;
       //this will update children
