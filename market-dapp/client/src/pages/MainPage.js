@@ -195,48 +195,6 @@ class MainPage extends Component {
         return data;
     }
 
-    switchNetwork = async () => {
-        const ethereum = window.ethereum;
-        if(ethereum !== 'undefined') {
-  
-            try {
-                await ethereum.request({
-                  method: 'wallet_switchEthereumChain',
-                  params: [{ chainId: '0x89' }],
-                });
-                console.log("Sucessfully switched to Polygon");
-                window.location.reload();
-              } catch (switchError) {
-                // This error code indicates that the chain has not been added to MetaMask.
-                console.log("error switching network:", switchError);
-                if (switchError.code === 4902) {
-                  try {
-                    await ethereum.request({
-                      method: 'wallet_addEthereumChain',
-                      params: [
-                        {
-                          chainId: '0x89', //137 in hex
-                          chainName: 'Polygon',
-                          rpcUrls: ['https://polygon-rpc.com'],
-                          nativeCurrency: {
-                            name: 'Matic',
-                            symbol: 'Matic', // 2-6 characters long
-                            decimals: 18
-                          }
-                        },
-                      ],
-                    });
-                  } catch (addError) {
-                    // handle "add" error
-                    console.log("error switching network:", addError);
-                  }
-                }
-                // handle other "switch" errors
-              }
-        }
-  
-      }
-
     fetchUSDPrice = async () => {
         try {
             const priceUSD = await UIHelper.fetchSRCPriceVsUSD();

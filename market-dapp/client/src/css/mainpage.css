@@ -16,3 +16,16 @@
     padding: 0 !important;
     margin: 2px !important;
 }
+
+.switch-btn {
+    background-color: #fff;
+    color: #000;
+    font-weight: bold;
+    padding: 7px;
+    border: 3px solid #f1cf12;
+    border-radius: 5px;
+}
+
+.switch-btn:hover {
+    cursor: pointer!important;
+}
