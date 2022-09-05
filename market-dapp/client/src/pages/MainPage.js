@@ -228,6 +228,7 @@ class MainPage extends Component {
                         selectedSeries: this.state.selectedSeries,
                         selectedDescription: this.state.selectedDescription,
                         selectedPrice: this.state.selectedPrice,
+                        usdPrice : this.state.usdValue,
                         selectedCarBrand: this.state.selectedCarBrand,
                         imagePath: this.state.selectedImagePath,
                         vendorAddress: this.state.vendorAddress,
@@ -372,6 +373,8 @@ class MainPage extends Component {
             let video = metadata.video || value.animation_url; 
             let carNumberOrDescription = value.description;
 
+            let usdPrice = Number(metadata.price  * this.state.usdValue).toFixed(4);
+
             //console.log('METADATA VIDEO ', video);
                 /**
                  *  attribute:  {trait_type: 'series', value: 'Cupra series'}
@@ -405,7 +408,7 @@ class MainPage extends Component {
                             {value.attributes.map( function(att) {
                                 if(att.trait_type === 'price') {
                                    return (
-                                        <div><b>{att.trait_type}:</b> {price / priceConversion} SRC </div>
+                                        <div><b>{att.trait_type}:</b> {price / priceConversion} SRC ({usdPrice}$)</div>
                                    ) 
                                 } else {
                                     if(att.trait_type === 'video') {

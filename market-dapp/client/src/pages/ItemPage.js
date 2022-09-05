@@ -46,7 +46,7 @@ class ItemPage extends Component {
             similarItems: props.location.state.similarItems,
             isMuted: true,
             messageOptions: {show: false, title:'', variant:'sucess',message:''},
-            usdValue : props.location.state.usdValue
+            usdValue : props.location.state.usdPrice
         }
 
         this.mute = this.mute.bind(this);
