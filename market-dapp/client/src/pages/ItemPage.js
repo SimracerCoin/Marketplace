@@ -45,7 +45,8 @@ class ItemPage extends Component {
             average_review: 0,
             similarItems: props.location.state.similarItems,
             isMuted: true,
-            messageOptions: {show: false, title:'', variant:'sucess',message:''}
+            messageOptions: {show: false, title:'', variant:'sucess',message:''},
+            usdValue : props.location.state.usdValue
         }
 
         this.mute = this.mute.bind(this);
@@ -336,7 +337,14 @@ class ItemPage extends Component {
       }
     }
 
+    renderUSDPrice = (price) => {
+      const usd = Number( ( Number(price) / priceConversion) * this.state.usdValue).toFixed(4);
+      return "(" + usd + "$) ";
+    }
+
     renderSellerInfo =() => {
+
+      
 
       if(this.state.vendorNickname) {
             return <ul className="list-unstyled mb-3">
@@ -352,7 +360,7 @@ class ItemPage extends Component {
                   <li>
 
                   <span className="platform">Price:</span> 
-                  <span className="developer-item text-lt">{this.state.price / priceConversion} SRC</span>
+                  <span className="developer-item text-lt">{this.state.price / priceConversion} SRC {this.renderUSDPrice(this.state.price)}</span>
                   </li>
                   </ul>
       } else {
@@ -365,7 +373,7 @@ class ItemPage extends Component {
                   <li>
 
                   <span className="platform">Price:</span> 
-                  <span className="developer-item text-lt">{this.state.price / priceConversion} SRC</span>
+                  <span className="developer-item text-lt">{this.state.price / priceConversion} SRC {this.renderUSDPrice(this.state.price)}</span>
                   </li>
                   </ul>
       }
@@ -374,6 +382,7 @@ class ItemPage extends Component {
 
     //Skin item information
     renderItemInformationForSkin = () => {
+
       return <div className="row">
               <div className="col-xs-12 col-lg-6 mb-6 mb-lg-0">
                 <div className="row mb-4 mb-sm-0">
@@ -388,7 +397,7 @@ class ItemPage extends Component {
                 
                 <div className="row mb-4 mb-sm-0">
                 <div className="col-sm-4"><strong className="fw-500">Price:</strong></div>
-                <div className="col-sm-8">{this.state.price / priceConversion} SRC</div>
+                <div className="col-sm-8">{this.state.price / priceConversion} SRC {this.renderUSDPrice(this.state.price)}</div>
                 </div>
               </div>
             </div>
@@ -413,7 +422,7 @@ class ItemPage extends Component {
                 </div>
                 <div className="row mb-4 mb-sm-0">
                 <div className="col-sm-4"><strong className="fw-500">Price:</strong></div>
-                <div className="col-sm-8">{this.state.price / priceConversion} SRC</div>
+                <div className="col-sm-8">{this.state.price / priceConversion} SRC {this.renderUSDPrice(this.state.price)}</div>
                 </div>
               </div>
             </div>
@@ -447,7 +456,7 @@ class ItemPage extends Component {
                 </div>
                 <div className="row mb-4 mb-sm-0">
                 <div className="col-sm-4"><strong className="fw-500">Price:</strong></div>
-                <div className="col-sm-8">{this.state.price / priceConversion} SRC</div>
+                <div className="col-sm-8">{this.state.price / priceConversion} SRC {this.renderUSDPrice(this.state.price)}</div>
                 </div>
               </div>
             </div>
@@ -657,7 +666,7 @@ class ItemPage extends Component {
                           <h6 className="mb-0 fw-400 ls-1 text-uppercase">More like this</h6>
                           <hr className="border-secondary my-2"/>
                           <div>
-                              <SimilarItemsComponent contextParent={this} callbackParent={this.callbackParent} className="similaritems"  items={this.state.similarItems} isNFT={this.state.isNFT} isMomentNFT={this.state.isMomentNFT} isSkin={!this.state.isNFT && !this.state.isMomentNFT && (this.state.track == null || this.state.season == null)} selectedItemId={this.state.itemId}></SimilarItemsComponent>   
+                              <SimilarItemsComponent contextParent={this} usdValue={this.state.usdValue} callbackParent={this.callbackParent} className="similaritems"  items={this.state.similarItems} isNFT={this.state.isNFT} isMomentNFT={this.state.isMomentNFT} isSkin={!this.state.isNFT && !this.state.isMomentNFT && (this.state.track == null || this.state.season == null)} selectedItemId={this.state.itemId}></SimilarItemsComponent>   
                           </div>
                         </div>
                         <div className="mb-0">
