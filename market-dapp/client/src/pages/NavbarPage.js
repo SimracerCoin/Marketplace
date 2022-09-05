@@ -1,5 +1,5 @@
 import React from "react";
-import { Navbar, Nav, NavDropdown, Dropdown } from 'react-bootstrap'; // Check out drizzle's react components at @drizzle/react-components
+import { Navbar, Nav, NavDropdown, Container } from 'react-bootstrap'; // Check out drizzle's react components at @drizzle/react-components
 import { Link, NavLink, Redirect } from 'react-router-dom';
 
 class NavbarPage extends React.Component {
@@ -87,36 +87,8 @@ class NavbarPage extends React.Component {
 
     render() {
         return ([
-            // <Navbar className="navbar navbar-expand-lg navbar-dark bg-dark border-nav zi-3">
-            //     <Navbar.Brand href="/">Simthunder</Navbar.Brand>
-            //     <Navbar.Toggle aria-controls="basic-navbar-nav" />
-            //     <Navbar.Collapse id="basic-navbar-nav">
-            //         <Nav className="mr-auto">
-            //             <Nav>
-            //                 <Nav.Link as={NavLink} to='/'>Home</Nav.Link>
-            //             </Nav>
-            //             <NavDropdown title="Sell" id="basic-nav-dropdown">
-            //                 <Link to="/uploadcar">
-            //                     <NavDropdown.Item as="div">
-            //                         Car Setup
-            //                 </NavDropdown.Item>
-            //                 </Link>
-
-            //                 <Link to="/uploadskin">
-            //                     <NavDropdown.Item as="div">
-            //                         Skin
-            //                 </NavDropdown.Item>
-            //                 </Link>
-            //             </NavDropdown>
-            //             {/* <Nav>
-            //                 <Nav.Link as={NavLink} to='/registorvendor'>Register</Nav.Link>
-            //             </Nav> */}
-            //             <Navbar.Text>{this.state.currentAccount}</Navbar.Text>
-            //         </Nav>
-            //     </Navbar.Collapse>
-            // </Navbar>,
             <Navbar className="navbar navbar-expand-lg navbar-dark bg-dark border-nav zi-3">
-                <div className="container">
+                <Container>
                     <div className="row">
                         <div className="col-4 col-sm-3 col-md-2 mr-auto ml-4">
                             <Navbar.Brand href="/" className="logo font-weight-bold" style={{alignItems: "first baseline"}}><img src="assets/img/logo-2-sm.png" alt="Simthunder" /> beta</Navbar.Brand>
@@ -157,14 +129,14 @@ class NavbarPage extends React.Component {
                             </ul>
                         </div>
                     </div>
-                </div>
+                </Container>
             </Navbar>,
             <Navbar className="navbar-expand-lg navbar-dark bg-dark">
-                <div className="container">
-                    <Navbar.Toggle aria-controls="collapsingNavbar" aria-label="Toggle navigation" aria-expanded="false" className="navbar-toggler navbar-toggler-fixed" />
+                <Container>
+                    <Navbar.Toggle aria-controls="collapsingNavbar" aria-label="Toggle navigation" aria-expanded="false" className="navbar-toggler-fixed" />
                     <Navbar.Collapse id="collapsingNavbar">
                         <Nav>
-                            <NavDropdown title="Sell" className="dropdown-hover" id="basic-nav-dropdown">
+                            <NavDropdown title="Sell">
                                 <Link to="/sellownership">
                                     <NavDropdown.Item as="div">
                                         Sell Car Ownership NFT
@@ -180,7 +152,6 @@ class NavbarPage extends React.Component {
                                         Sell Car Setup
                             </NavDropdown.Item>
                                 </Link>
-
                                 <Link to="/uploadskin">
                                     <NavDropdown.Item as="div">
                                         Sell Skin
@@ -192,7 +163,7 @@ class NavbarPage extends React.Component {
                             <NavLink className="nav-link mr-2" to="/store">Store</NavLink>
                         </Nav>
                     </Navbar.Collapse>
-                </div>
+                </Container>
             </Navbar>
 
         ]);

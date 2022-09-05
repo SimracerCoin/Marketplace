@@ -224,7 +224,7 @@ class MainPage extends Component {
         }
 
         for (const [index, value] of this.state.listCars.entries()) {
-            console.log('list cars value:');
+            //console.log('list cars value:');
             console.log(value);
             let carBrand = value.info.carBrand
             let track = value.info.track
@@ -241,9 +241,9 @@ class MainPage extends Component {
             cars.push(
                 <ListGroup.Item key={itemId} className="bg-dark_A-20 col-3 mb-4" style={{minWidth: '275px'}}>
                     <Card className="card-block">
-                        <div style={{height: '160px'}} className="d-flex flex-wrap align-items-center justify-content-center">
+                        <Card.Header style={{height: '160px'}} className="d-flex flex-wrap align-items-center justify-content-center">
                             <Card.Img variant="top" src={thumb} style={{width: 'auto', maxHeight: '160px'}} />
-                        </div>
+                        </Card.Header>
                         <Card.Body>
                             <Card.Title className="mt-5 font-weight-bold">{carBrand}</Card.Title>
                             <div className="text-left">

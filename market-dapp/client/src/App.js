@@ -58,6 +58,15 @@ class App extends React.Component {
     if (typeof web3 !== 'undefined') {
       window.web3 = new Web3(Web3.givenProvider);
 
+
+      //set bigger timeouts (provided values according to the documentation examples)
+      if(window.web3 && window.web3.eth) {
+        // set the transaction block timeout (default is 50)
+        window.web3.eth.transactionBlockTimeout = 150;
+        // set the transaction polling timeout (default is 750) => 12.5 minutes
+        window.web3.eth.transactionPollingTimeout = 1250;  //=> ~20 minutes
+      }
+
       //let networkname = await window.web3.eth.net.getNetworkType();
       networkId = await window.web3.eth.net.getId();
       //console.log('network: ' + networkname);
