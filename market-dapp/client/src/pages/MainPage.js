@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { Button, Card, ListGroup } from 'react-bootstrap';
 import { Redirect } from "react-router-dom";
-
+import UIHelper from "../utils/uihelper";
 import "../css/mainpage.css";
 
 const priceConversion = 10 ** 18;
@@ -33,7 +33,8 @@ class MainPage extends Component {
             ipfsPath: "",
             contract: null,
             contractNFTs: null,
-            similarItems: []
+            similarItems: [],
+            usdValue: 1
         }
 
     }
@@ -45,6 +46,10 @@ class MainPage extends Component {
         const contractMomentNFTs = await this.state.drizzle.contracts.SimracingMomentOwner;
 
         const response_cars = await contract.methods.getCarSetups().call();
+
+        const usdValue = await this.fetchUSDPrice();
+        console.log('usdValue: ', usdValue);
+        
         const response_skins = await contract.methods.getSkins().call();
 
         //const currentAccount = this.state.drizzleState.accounts[0];
@@ -114,7 +119,7 @@ class MainPage extends Component {
             }
         }
         
-        this.setState({ listCars: response_cars, listSkins: response_skins, contract: contract, contractNFTs: contractNFTs, contractMomentNFTs: contractMomentNFTs });
+        this.setState({ usdValue: usdValue, listCars: response_cars, listSkins: response_skins, contract: contract, contractNFTs: contractNFTs, contractMomentNFTs: contractMomentNFTs });
     }
 
     componentDidMount = async () => {
@@ -158,6 +163,7 @@ class MainPage extends Component {
             selectedSeries: series,
             selectedDescription: description,
             selectedPrice: price,
+            usdPrice : this.state.usdValue,
             selectedCarBrand: carBrand,
             selectedImagePath: imagePath,
             vendorAddress: address,
@@ -189,12 +195,67 @@ class MainPage extends Component {
         return data;
     }
 
+    switchNetwork = async () => {
+        const ethereum = window.ethereum;
+        if(ethereum !== 'undefined') {
+  
+            try {
+                await ethereum.request({
+                  method: 'wallet_switchEthereumChain',
+                  params: [{ chainId: '0x89' }],
+                });
+                console.log("Sucessfully switched to Polygon");
+                window.location.reload();
+              } catch (switchError) {
+                // This error code indicates that the chain has not been added to MetaMask.
+                console.log("error switching network:", switchError);
+                if (switchError.code === 4902) {
+                  try {
+                    await ethereum.request({
+                      method: 'wallet_addEthereumChain',
+                      params: [
+                        {
+                          chainId: '0x89', //137 in hex
+                          chainName: 'Polygon',
+                          rpcUrls: ['https://polygon-rpc.com'],
+                          nativeCurrency: {
+                            name: 'Matic',
+                            symbol: 'Matic', // 2-6 characters long
+                            decimals: 18
+                          }
+                        },
+                      ],
+                    });
+                  } catch (addError) {
+                    // handle "add" error
+                    console.log("error switching network:", addError);
+                  }
+                }
+                // handle other "switch" errors
+              }
+        }
+  
+      }
+
+    fetchUSDPrice = async () => {
+        try {
+            const priceUSD = await UIHelper.fetchSRCPriceVsUSD();
+            const priceObj = await priceUSD.json();
+            const key = Object.keys(priceObj);
+            return priceObj[key]['usd']; 
+        } catch(err) {
+            return 1;
+        } 
+    }
+      
+
     render() {
 
         const cars = [];
         const skins = [];
         const nfts = [];
         const momentNfts = [];
+        let self = this;
 
 
         if (this.state.redirectBuyItem) {
@@ -225,7 +286,7 @@ class MainPage extends Component {
 
         for (const [index, value] of this.state.listCars.entries()) {
             //console.log('list cars value:');
-            console.log(value);
+            //console.log(value);
             let carBrand = value.info.carBrand
             let track = value.info.track
             let simulator = value.info.simulator
@@ -237,6 +298,7 @@ class MainPage extends Component {
             let itemId = value.id
             let ipfsPath = value.ad.ipfsPath
             let thumb = "assets/img/sims/"+simulator+".png";
+            let usdPrice = Number( (price / priceConversion) * this.state.usdValue ).toFixed(4);
 
             cars.push(
                 <ListGroup.Item key={itemId} className="bg-dark_A-20 col-3 mb-4" style={{minWidth: '275px'}}>
@@ -250,7 +312,7 @@ class MainPage extends Component {
                             <div><b>Track:</b> {track}</div>
                             <div><b>Simulator:</b> {simulator}</div>
                             <div><b>Season:</b> {season}</div>
-                            <div><b>Price:</b> {price / priceConversion} SRC</div>
+                            <div><b>Price:</b> {price / priceConversion} SRC ({usdPrice}$)</div>
                             {/* <div><b>Vendor address:</b> {address}</div> */}
                             </div>
                             <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, track, simulator, season, series, description, price, carBrand, address, ipfsPath, "", false, false,null)}> View item</Button>
@@ -271,6 +333,8 @@ class MainPage extends Component {
             let ipfsPath = value.ad.ipfsPath
             let imagePath = "https://ipfs.io/ipfs/" + value.info.skinPic
             let thumb = "assets/img/sims/"+simulator+".png";
+
+            let usdPrice = Number( (price / priceConversion) * this.state.usdValue ).toFixed(4);
             
             skins.push(
                 <ListGroup.Item key={itemId} className="bg-dark_A-20 col-3 mb-4" style={{minWidth: '275px'}}>
@@ -280,7 +344,7 @@ class MainPage extends Component {
                             <Card.Title className="mt-5 font-weight-bold">{carBrand}</Card.Title>
                             <div className="text-left">
                                 <div><b>Simulator:</b>&nbsp;<img src={thumb} width="24" alt={simulator} /> {simulator}</div>
-                                <div><b>Price:</b> {price / priceConversion} SRC</div>
+                                <div><b>Price:</b> {price / priceConversion} SRC ({usdPrice}$)</div>
                             </div>
                             <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, null, null, price, carBrand , address, ipfsPath, imagePath, false, false, null)}> View item</Button>
                         </Card.Body>
@@ -305,6 +369,8 @@ class MainPage extends Component {
             //console.log(' ID NFT:'+value.id);
             let imagePath = value.image;
 
+            let usdPrice = Number( (price / priceConversion) * this.state.usdValue ).toFixed(4);
+
             
                 nfts.push(
                     <ListGroup.Item key={itemId} className="bg-dark_A-20 col-3 mb-4" style={{minWidth: '275px'}}>
@@ -315,7 +381,7 @@ class MainPage extends Component {
                                 <div><b>Series:</b> {series}</div>
                                 <div><b>Simulator:</b> {simulator}</div>
                                 <div><b>Car Number:</b> {carNumberOrDescription}</div>
-                                <div><b>Price:</b> {price / priceConversion} SRC</div>
+                                <div><b>Price:</b> {price / priceConversion} SRC ({usdPrice}$)</div>
                                 </div>
                                 <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, carNumberOrDescription, price, null , address, null, imagePath, true, false, null)}> View item</Button>
                             </Card.Body>

@@ -52,5 +52,27 @@ export default class UIHelper {
     alert("Something wrong. Please try again.");
     console.log(error);
   }
+
+  /**
+   * 
+   * curl -X 'GET' \
+  'https://api.coingecko.com/api/v3/simple/token_price/ethereum?contract_addresses=0x16587cf43f044aba0165ffa00acf412631194e4b&vs_currencies=usd' \
+  -H 'accept: application/json'
+
+  https://api.coingecko.com/api/v3/simple/token_price/ethereum?contract_addresses=0x16587cf43f044aba0165ffa00acf412631194e4b&vs_currencies=usd
+
+  {
+  "0x16587cf43f044aba0165ffa00acf412631194e4b": {
+    "usd": 0.0178802
+  }
+  }
+   */
+
+  static fetchSRCPriceVsUSD = async function(contract_address = '0x16587cf43f044aba0165ffa00acf412631194e4b', vs_currency = 'usd') {
+    
+    //'0x16587cf43f044aba0165ffa00acf412631194e4b','usd'
+    const uri = 'https://api.coingecko.com/api/v3/simple/token_price/ethereum?contract_addresses=' + contract_address +'&vs_currencies=' +  vs_currency;
+    return fetch(uri);
+  }
   
 }
