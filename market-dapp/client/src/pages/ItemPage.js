@@ -504,14 +504,14 @@ class ItemPage extends Component {
       if(this.state.isMuted) {
         return <div className="carousel-product">
                    <div className="slider text-secondary" data-slick="product-body">
-                      <video className="videoContainer" loop muted autoPlay currenttime={0} src={this.state.videoPath} />  
+                      <video async className="videoContainer" loop muted autoPlay currenttime={0} src={this.state.videoPath} />  
                       <button onClick={this.unmute} className="video-sound-control--btn video-sound-control--btn-off" label="Unmmute" type="button"></button> 
                    </div>
                </div>
       } 
       return  <div className="carousel-product">
                 <div className="slider text-secondary" data-slick="product-body">
-                  <video className="videoContainer" loop autoPlay currenttime={0} src={this.state.videoPath} />  
+                  <video async className="videoContainer" loop autoPlay currenttime={0} src={this.state.videoPath} />  
                   <button onClick={this.mute} className="video-sound-control--btn video-sound-control--btn-on" label="Mute" type="button"></button> 
                 </div>
             </div>
