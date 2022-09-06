@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { Button, Card, ListGroup } from 'react-bootstrap';
-import { Redirect } from "react-router-dom";
+import { Redirect, withRouter } from "react-router-dom";
 import UIHelper from "../utils/uihelper";
 import "../css/mainpage.css";
 
@@ -36,6 +36,9 @@ class MainPage extends Component {
             similarItems: [],
             usdValue: 1
         }
+
+        this.props.history.push('/');
+        this.props.history.push(this.props.match.url);
 
     }
 
@@ -485,4 +488,4 @@ class MainPage extends Component {
     }
 }
 
-export default MainPage;
+export default withRouter(MainPage);
