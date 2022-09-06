@@ -143,8 +143,6 @@ class MainPage extends Component {
     buyItem = async (event, itemId, track, simulator, season, series, description, price, carBrand, address, ipfsPath, imagePath, isNFT, isMomentNFT, videoPath) => {
         event.preventDefault();
 
-        //console.log('is nft: ' + isNFT + ' is moment: ', isMomentNFT);
-
         let similarItems = [];
         if(isMomentNFT) {
             similarItems = similarItems.concat(this.state.latestVideoNFTs);
