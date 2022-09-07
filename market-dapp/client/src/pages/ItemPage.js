@@ -338,8 +338,8 @@ class ItemPage extends Component {
     }
 
     renderUSDPrice = (price) => {
-      const usd = Number( ( Number(price) / priceConversion) * this.state.usdValue).toFixed(4);
-      return "(" + usd + "$) ";
+      let usdPrice = Number(Math.round((price / priceConversion) * this.state.usdValue * 100) / 100).toFixed(2);
+      return (<span>(${usdPrice} <small>USD</small>)</span>);
     }
 
     renderSellerInfo =() => {
@@ -360,7 +360,7 @@ class ItemPage extends Component {
                   <li>
 
                   <span className="platform">Price:</span> 
-                  <span className="developer-item text-lt">{this.state.price / priceConversion} SRC {this.renderUSDPrice(this.state.price)}</span>
+                  <span className="developer-item text-lt price">{this.state.price / priceConversion} <small>SRC</small> {this.renderUSDPrice(this.state.price)}</span>
                   </li>
                   </ul>
       } else {
@@ -373,7 +373,7 @@ class ItemPage extends Component {
                   <li>
 
                   <span className="platform">Price:</span> 
-                  <span className="developer-item text-lt">{this.state.price / priceConversion} SRC {this.renderUSDPrice(this.state.price)}</span>
+                  <span className="developer-item text-lt price">{this.state.price / priceConversion} <small>SRC</small> {this.renderUSDPrice(this.state.price)}</span>
                   </li>
                   </ul>
       }
@@ -397,7 +397,7 @@ class ItemPage extends Component {
                 
                 <div className="row mb-4 mb-sm-0">
                 <div className="col-sm-4"><strong className="fw-500">Price:</strong></div>
-                <div className="col-sm-8">{this.state.price / priceConversion} SRC {this.renderUSDPrice(this.state.price)}</div>
+                <div className="col-sm-8 price">{this.state.price / priceConversion} <small>SRC</small> {this.renderUSDPrice(this.state.price)}</div>
                 </div>
               </div>
             </div>
@@ -422,7 +422,7 @@ class ItemPage extends Component {
                 </div>
                 <div className="row mb-4 mb-sm-0">
                 <div className="col-sm-4"><strong className="fw-500">Price:</strong></div>
-                <div className="col-sm-8">{this.state.price / priceConversion} SRC {this.renderUSDPrice(this.state.price)}</div>
+                <div className="col-sm-8 price">{this.state.price / priceConversion} <small>SRC</small> {this.renderUSDPrice(this.state.price)}</div>
                 </div>
               </div>
             </div>
@@ -456,7 +456,7 @@ class ItemPage extends Component {
                 </div>
                 <div className="row mb-4 mb-sm-0">
                 <div className="col-sm-4"><strong className="fw-500">Price:</strong></div>
-                <div className="col-sm-8">{this.state.price / priceConversion} SRC {this.renderUSDPrice(this.state.price)}</div>
+                <div className="col-sm-8 price">{this.state.price / priceConversion} <small>SRC</small> {this.renderUSDPrice(this.state.price)}</div>
                 </div>
               </div>
             </div>
@@ -694,7 +694,7 @@ class ItemPage extends Component {
                       <div className="mb-3">
                         <div className="price">
                             {/*<div className="price-prev">300$</div>*/}
-                            <div className="price-current">{this.state.price / priceConversion} SRC</div>
+                            <div className="price-current">{this.state.price / priceConversion} <small>SRC</small> {this.renderUSDPrice(this.state.price)}</div>
                           </div>
                         {/*<div className="discount">
                             Save: $20.00 (33%)
