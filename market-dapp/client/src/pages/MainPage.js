@@ -241,8 +241,8 @@ class MainPage extends Component {
             cars.push(
                 <ListGroup.Item key={itemId} className="bg-dark_A-20 col-3 mb-4" style={{minWidth: '275px'}}>
                     <Card className="card-block">
-                        <Card.Header style={{height: '160px'}} className="d-flex flex-wrap align-items-center justify-content-center">
-                            <Card.Img variant="top" src={thumb} style={{width: 'auto', maxHeight: '160px'}} />
+                        <Card.Header style={{height: '240px'}} className="d-flex flex-wrap align-items-center justify-content-center">
+                            <Card.Img variant="top" src={thumb} style={{width: 'auto', maxHeight: '100%'}} />
                         </Card.Header>
                         <Card.Body>
                             <Card.Title className="mt-5 font-weight-bold">{carBrand}</Card.Title>
@@ -275,7 +275,9 @@ class MainPage extends Component {
             skins.push(
                 <ListGroup.Item key={itemId} className="bg-dark_A-20 col-3 mb-4" style={{minWidth: '275px'}}>
                     <Card className="card-block">
-                        <Card.Img variant="top" src={imagePath} style={{width: 'auto'}} />
+                        <Card.Header style={{height: '240px'}} className="d-flex flex-wrap align-items-center justify-content-center">
+                            <Card.Img variant="top" src={imagePath} style={{width: 'auto', maxHeight: '100%'}} />
+                        </Card.Header>
                         <Card.Body>
                             <Card.Title className="mt-5 font-weight-bold">{carBrand}</Card.Title>
                             <div className="text-left">
@@ -309,7 +311,9 @@ class MainPage extends Component {
                 nfts.push(
                     <ListGroup.Item key={itemId} className="bg-dark_A-20 col-3 mb-4" style={{minWidth: '275px'}}>
                         <Card className="card-block">
-                            <Card.Img variant="top" src={imagePath} style={{width: 'auto'}} />
+                            <Card.Header style={{height: '240px'}} className="d-flex flex-wrap align-items-center justify-content-center">
+                                <Card.Img variant="top" src={imagePath} style={{width: 'auto', maxHeight: '100%'}} />
+                            </Card.Header>
                             <Card.Body>
                             <div className="text-left">
                                 <div><b>Series:</b> {series}</div>
@@ -361,21 +365,9 @@ class MainPage extends Component {
             momentNfts.push(
                         <ListGroup.Item key={itemId} className="bg-dark_A-20 col-3 mb-4" style={{minWidth: '275px'}}>
                     <Card className="card-block">
-                        <Card.Img variant="top" src={imagePath} style={{width: 'auto'}} />
-                        {/*value.attributes.map( function(att) {
-                                if(att.trait_type === 'video') {
-                                    return (
-                                        <div>
-                                            <video width="180px" height="80px"
-                                            controls 
-                                            autoPlay
-                                            currentTime={0}
-                                            src={att.value} />
-                                        </div>
-                                    )
-                                }
-                        }, this)*/}
-
+                        <Card.Header style={{height: '240px'}} className="d-flex flex-wrap align-items-center justify-content-center">
+                            <Card.Img variant="top" src={imagePath} style={{width: 'auto', maxHeight: '100%'}} />
+                        </Card.Header>
                         <Card.Body>
                             <div className="text-left">
                             {value.attributes.map( function(att) {
