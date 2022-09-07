@@ -18,7 +18,8 @@ class SimilarItemsComponent extends React.Component {
             items: props.items,
             filteredItems: [],
             contextParent : props.contextParent,
-            callbackParent: props.callbackParent
+            callbackParent: props.callbackParent,
+            usdValue: props.usdValue
             //drizzle: props.drizzle,
             //drizzleState: props.drizzleState,
         }
@@ -53,20 +54,25 @@ class SimilarItemsComponent extends React.Component {
       return data;
     }
 
+    renderUSDPrice = (price) => {
+      const usd = Number( ( Number(price) / priceConversion) * this.state.usdValue).toFixed(4);
+      return "(" + usd + "$) ";
+    }
+
     renderItemDetails = (payload, fullItem) => {
 
       if(this.state.isNFT) {
 
         return <div id={payload.itemId} className="carousel-pointer" onClick={(e) => this.switchSimilarItem(e, true, false,false, payload, fullItem)} >
             <img className="carousel-pointer" alt={payload.description} src={payload.imagePath} />
-            <p className="legend">{payload.description} : {payload.price / priceConversion} SRC</p>
+            <p className="legend">{payload.description} : {payload.price / priceConversion} SRC {this.renderUSDPrice(payload.price)}</p>
           </div>
 
       } else if(this.state.isMomentNFT) {
 
         return <div id={payload.itemId} className="carousel-pointer" onClick={(e) => this.switchSimilarItem(e, false, true, false, payload, fullItem)} >
             <img className="carousel-pointer" alt={payload.description} src={payload.imagePath} />
-            <p className="legend">{payload.description} : {payload.price / priceConversion} SRC</p>
+            <p className="legend">{payload.description} : {payload.price / priceConversion} SRC {this.renderUSDPrice(payload.price)}</p>
           </div>
 
       }
@@ -74,14 +80,14 @@ class SimilarItemsComponent extends React.Component {
         
         return <div className="carousel-pointer" id={payload.itemId} onClick={(e) => this.switchSimilarItem(e, false, false, true, payload, fullItem )}>
             <img className="carousel-pointer" alt={payload.description} src={payload.imagePath}/>
-            <p className="legend">{payload.description} : {payload.price / priceConversion} SRC</p>
+            <p className="legend">{payload.description} : {payload.price / priceConversion} SRC {this.renderUSDPrice(payload.price)}</p>
           </div>
 
       } else {
         //car
         return <div className="carousel-pointer" id={payload.itemId} onClick={(e) => this.switchSimilarItem(e, false, false, false, payload, fullItem)}>
             <img className="carousel-pointer" alt={payload.description} src={payload.imagePath} />
-            <p className="legend">{payload.description} : {payload.price / priceConversion} SRC</p>
+            <p className="legend">{payload.description} : {payload.price / priceConversion} SRC {this.renderUSDPrice(payload.price)}</p>
           </div>
 
       }
