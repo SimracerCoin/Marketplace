@@ -4,6 +4,7 @@ import { Redirect } from "react-router-dom";
 import { withRouter } from "react-router";
 import * as $ from 'jquery';
 import UIHelper from "../utils/uihelper";
+import "../css/itempage.css";
 
 const priceConversion = 10 ** 18;
 //pagination is out of scope for now, also would require more items to test properly
@@ -66,6 +67,7 @@ class StorePage extends Component {
             //],
             searchQuery: "",
             //searchRef: props.searchRef //search field
+            usdValue: 1
         }
 
         // This binding is necessary to make `this` work in the callback
@@ -90,6 +92,9 @@ class StorePage extends Component {
       console.log("STORE: componentDidMount");
 
        UIHelper.showSpinning("loading ...");
+
+        const usdValue = await this.fetchUSDPrice();
+        this.setState({usdValue: Number(usdValue)});
 
         const searchQuery = this.hasSearchFilter();
         if(searchQuery && searchQuery.length > 0) {
@@ -116,6 +121,28 @@ class StorePage extends Component {
     
     
     }
+
+    fetchUSDPrice = async () => {
+      try {
+          const priceUSD = await UIHelper.fetchSRCPriceVsUSD();
+          const priceObj = await priceUSD.json();
+          const key = Object.keys(priceObj);
+          return priceObj[key]['usd']; 
+      } catch(err) {
+          return 1;
+      } 
+  }
+
+  renderUSDPrice = (price) => {
+
+    let usdPrice = Number(Math.round((price / priceConversion) * this.state.usdValue * 100) / 100).toFixed(2);
+
+
+    if(usdPrice == 0.00) {
+      usdPrice = 0.01;
+    }
+    return "$" + usdPrice;
+  }
 
     //get all contracts data
     async getNFTsData() {
@@ -1160,7 +1187,7 @@ class StorePage extends Component {
                                       <div className="row align-items-center h-100 no-gutters">
                                         <div className="text-right">
                                           {/*<span className="fw-600 td-lt">{price / priceConversion} ETH</span><br/>*/}
-                                          <span className="fw-600">{price / priceConversion} SRC</span>
+                                          <span className="fw-600"><strong>{price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/><span className="secondary-price">{this.renderUSDPrice(price)}<sup className="secondary-sup">USD</sup></span></span>
                                         </div>
                                       </div>
                                     </div>
@@ -1326,7 +1353,7 @@ class StorePage extends Component {
                                       <div className="row align-items-center h-100 no-gutters">
                                         <div className="text-right">
                                           {/*<span className="fw-600 td-lt">{price / priceConversion} ETH</span><br/>*/}
-                                          <span className="fw-600">{price / priceConversion} SRC</span>
+                                          <span className="fw-600"><strong>{price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/><span className="secondary-price">{this.renderUSDPrice(price)}<sup className="secondary-sup">USD</sup></span></span>
                                         </div>
                                       </div>
                                     </div>
@@ -1413,7 +1440,7 @@ class StorePage extends Component {
                                  <div className="row align-items-center h-100 no-gutters">
                                    <div className="text-right">
                                      {/*<span className="fw-600 td-lt">{price / priceConversion} ETH</span><br/>*/}
-                                     <span className="fw-600">{price / priceConversion} SRC</span>
+                                     <span className="fw-600"><strong>{price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/><span className="secondary-price">{this.renderUSDPrice(price)}<sup className="secondary-sup">USD</sup></span></span>
                                    </div>
                                  </div>
                                </div>
@@ -1520,7 +1547,7 @@ class StorePage extends Component {
                                             <div className="row align-items-center h-100 no-gutters">
                                                 <div className="text-right">
                                                 {/*<span className="fw-600 td-lt">{price / priceConversion} ETH</span><br/>*/}
-                                                <span className="fw-600">{price / priceConversion} SRC</span>
+                                                <span className="fw-600"><strong>{price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/><span className="secondary-price">{this.renderUSDPrice(price)}<sup className="secondary-sup">USD</sup></span></span>
                                                 </div>
                                             </div>
                                             </div>
