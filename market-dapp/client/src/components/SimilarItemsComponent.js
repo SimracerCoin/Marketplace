@@ -55,8 +55,13 @@ class SimilarItemsComponent extends React.Component {
     }
 
     renderUSDPrice = (price) => {
+
       let usdPrice = Number(Math.round((price / priceConversion) * this.state.usdValue * 100) / 100).toFixed(2);
-      return "(" + usdPrice + "$) ";
+      //return "(" + usdPrice + "$) ";
+
+      //const usd = Number( ( Number(price) / priceConversion) * this.state.usdValue).toFixed(2);
+      return "$" + usdPrice + "USD";
+
     }
 
     renderItemDetails = (payload, fullItem) => {

@@ -258,7 +258,13 @@ class MainPage extends Component {
             let itemId = value.id
             let ipfsPath = value.ad.ipfsPath
             let thumb = "assets/img/sims/"+simulator+".png";
+
             let usdPrice = Number(Math.round((price / priceConversion) * this.state.usdValue * 100) / 100).toFixed(2);
+
+            if(usdPrice == 0.00) {
+                usdPrice = 0.01;
+            }
+            usdPrice = "$" + usdPrice;
 
             cars.push(
                 <ListGroup.Item key={itemId} className="bg-dark_A-20 col-3 mb-4" style={{minWidth: '275px'}}>
@@ -272,7 +278,9 @@ class MainPage extends Component {
                             <div><b>Track:</b> {track}</div>
                             <div><b>Simulator:</b> {simulator}</div>
                             <div><b>Season:</b> {season}</div>
-                            <div class="price"><b>Price:</b> {price / priceConversion} <small>SRC</small> (${usdPrice} <small>USD</small>)</div>
+
+                            <div><b>Price:</b> <strong>{price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/> <span className="secondary-price">{usdPrice}<sup className="secondary-sup">USD</sup></span></div>
+
                             {/* <div><b>Vendor address:</b> {address}</div> */}
                             </div>
                             <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, track, simulator, season, series, description, price, carBrand, address, ipfsPath, "", false, false,null)}> View item</Button>
@@ -293,7 +301,14 @@ class MainPage extends Component {
             let ipfsPath = value.ad.ipfsPath
             let imagePath = "https://ipfs.io/ipfs/" + value.info.skinPic
             let thumb = "assets/img/sims/"+simulator+".png";
+
             let usdPrice = Number(Math.round((price / priceConversion) * this.state.usdValue * 100) / 100).toFixed(2);
+
+            if(usdPrice == 0.00) {
+                usdPrice = 0.01;
+            }
+            usdPrice = "$" + usdPrice;
+
             
             skins.push(
                 <ListGroup.Item key={itemId} className="bg-dark_A-20 col-3 mb-4" style={{minWidth: '275px'}}>
@@ -305,7 +320,7 @@ class MainPage extends Component {
                             <Card.Title className="mt-5 font-weight-bold">{carBrand}</Card.Title>
                             <div className="text-left">
                                 <div><b>Simulator:</b>&nbsp;<img src={thumb} width="24" alt={simulator} /> {simulator}</div>
-                                <div class="price"><b>Price:</b> {price / priceConversion} <small>SRC</small> (${usdPrice} <small>USD</small>)</div>
+                                <div><b>Price:</b> <strong>{price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/> <span className="secondary-price">{usdPrice}<sup className="secondary-sup">USD</sup></span></div>
                             </div>
                             <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, null, null, price, carBrand , address, ipfsPath, imagePath, false, false, null)}> View item</Button>
                         </Card.Body>
@@ -329,7 +344,13 @@ class MainPage extends Component {
             // let ipfsPath = value.ad.ipfsPath
             //console.log(' ID NFT:'+value.id);
             let imagePath = value.image;
+
             let usdPrice = Number(Math.round((price / priceConversion) * this.state.usdValue * 100) / 100).toFixed(2);
+
+            if(usdPrice == 0.00) {
+                usdPrice = 0.01;
+            }
+            usdPrice = '$' + usdPrice;
 
             
                 nfts.push(
@@ -343,8 +364,8 @@ class MainPage extends Component {
                                 <div><b>Series:</b> {series}</div>
                                 <div><b>Simulator:</b> {simulator}</div>
                                 <div><b>Car Number:</b> {carNumberOrDescription}</div>
-                                <div class="price"><b>Price:</b> {price / priceConversion} <small>SRC</small> (${usdPrice} <small>USD</small>)</div>
-                                </div>
+                                <div><b>Price:</b> <strong>{price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/> <span className="secondary-price">{usdPrice}<sup className="secondary-sup">USD</sup></span></div>
+                              </div>
                                 <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, carNumberOrDescription, price, null , address, null, imagePath, true, false, null)}> View item</Button>
                             </Card.Body>
                         </Card>
@@ -376,7 +397,15 @@ class MainPage extends Component {
             let video = metadata.video || value.animation_url; 
             let carNumberOrDescription = value.description;
 
+
             let usdPrice = Number(Math.round(metadata.price  * this.state.usdValue * 100) / 100).toFixed(2);
+          
+            if(usdPrice == 0.00) {
+                usdPrice = 0.01;
+            }
+            
+            usdPrice = "$" + usdPrice;
+
 
             //console.log('METADATA VIDEO ', video);
                 /**
@@ -399,7 +428,7 @@ class MainPage extends Component {
                             {value.attributes.map( function(att) {
                                 if(att.trait_type === 'price') {
                                    return (
-                                        <div class="price"><b>{att.trait_type}:</b> {price / priceConversion} <small>SRC</small> (${usdPrice} <small>USD</small>)</div>
+                                        <div><b>{att.trait_type}:</b> <strong>{price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/> <span className="secondary-price">{usdPrice}<sup className="secondary-sup">USD</sup></span></div>
                                    ) 
                                 } else {
                                     if(att.trait_type === 'video') {
