@@ -37,9 +37,9 @@ class SimilarItemsComponent extends React.Component {
 
         
         let filteredItems = this.state.items.filter(function(value, index) {
-          console.log("filtering items: value " + JSON.stringify(value));
+          //console.log("filtering items: value " + JSON.stringify(value));
           let itemId = value.id;
-          console.log("item id: " + itemId + " selected one " + referenceItem); 
+          //console.log("item id: " + itemId + " selected one " + referenceItem); 
           return itemId!== referenceItem;
         });
         this.setState({filteredItems: filteredItems});
