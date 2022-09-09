@@ -279,7 +279,7 @@ class MainPage extends Component {
                             <div><b>Simulator:</b> {simulator}</div>
                             <div><b>Season:</b> {season}</div>
 
-                            <div><b>Price:</b> <strong>{price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/> <span className="secondary-price">{usdPrice}<sup className="secondary-sup">USD</sup></span></div>
+                            <div><b>Price:</b> <strong>{price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/> <span className="secondary-price ahead27">{usdPrice}<sup className="secondary-sup">USD</sup></span></div>
 
                             {/* <div><b>Vendor address:</b> {address}</div> */}
                             </div>
@@ -320,7 +320,7 @@ class MainPage extends Component {
                             <Card.Title className="mt-5 font-weight-bold">{carBrand}</Card.Title>
                             <div className="text-left">
                                 <div><b>Simulator:</b>&nbsp;<img src={thumb} width="24" alt={simulator} /> {simulator}</div>
-                                <div><b>Price:</b> <strong>{price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/> <span className="secondary-price">{usdPrice}<sup className="secondary-sup">USD</sup></span></div>
+                                <div><b>Price:</b> <strong>{price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/> <span className="secondary-price ahead27">{usdPrice}<sup className="secondary-sup">USD</sup></span></div>
                             </div>
                             <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, null, null, price, carBrand , address, ipfsPath, imagePath, false, false, null)}> View item</Button>
                         </Card.Body>
@@ -364,7 +364,7 @@ class MainPage extends Component {
                                 <div><b>Series:</b> {series}</div>
                                 <div><b>Simulator:</b> {simulator}</div>
                                 <div><b>Car Number:</b> {carNumberOrDescription}</div>
-                                <div><b>Price:</b> <strong>{price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/> <span className="secondary-price">{usdPrice}<sup className="secondary-sup">USD</sup></span></div>
+                                <div><b>Price:</b> <strong>{price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/> <span className="secondary-price ahead27">{usdPrice}<sup className="secondary-sup">USD</sup></span></div>
                               </div>
                                 <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, carNumberOrDescription, price, null , address, null, imagePath, true, false, null)}> View item</Button>
                             </Card.Body>
@@ -426,18 +426,19 @@ class MainPage extends Component {
                         <Card.Body>
                             <div className="text-left">
                             {value.attributes.map( function(att) {
+                                let label = att.trait_type.charAt(0).toUpperCase() + att.trait_type.slice(1);
                                 if(att.trait_type === 'price') {
                                    return (
-                                        <div><b>{att.trait_type}:</b> <strong>{price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/> <span className="secondary-price">{usdPrice}<sup className="secondary-sup">USD</sup></span></div>
+                                        <div><b>{label}:</b> <strong>{price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/> <span className="secondary-price ahead27">{usdPrice}<sup className="secondary-sup">USD</sup></span></div>
                                    ) 
                                 } else {
                                     if(att.trait_type === 'video') {
                                        return (
-                                         <div><b>{att.trait_type}:</b><a href={att.value} rel="noreferrer" target="_blank">{att.value}</a></div> 
+                                         <div><b>{label}:</b><a href={att.value} rel="noreferrer" target="_blank">{att.value}</a></div> 
                                        )
                                     }
                                     return(
-                                        <div><b>{att.trait_type}:</b> {att.value}</div> 
+                                        <div><b>{label}:</b> {att.value}</div> 
                                     )
                                 }
                             }, this)}
