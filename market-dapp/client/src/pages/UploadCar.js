@@ -176,9 +176,13 @@ class UploadCar extends Component {
             const placeholder = this.state.drizzle.web3.utils.fromAscii('some hash');
             console.log(placeholder);
 
+            let gasLimit = UIHelper.defaultGasLimit;
+            let paramsForCall = await UIHelper.calculateGasUsingStation(gasLimit, this.state.currentAccount);
+
+
             const response = await this.state.contract.methods.newCarSetup(ipfsPathBytes, this.state.currentCar, this.state.currentTrack,
                 this.state.currentSimulator, this.state.currentSeason, this.state.currentSeries, this.state.currentDescription, price, placeholder, this.state.encryptedDataHash, nickname)
-                .send({ from: this.state.currentAccount })
+                .send(paramsForCall)
                 //.on('sent', UIHelper.transactionOnSent)
                 .on('confirmation', function (confNumber, receipt, latestBlockHash) {
                     window.localStorage.setItem('forceUpdate','yes');

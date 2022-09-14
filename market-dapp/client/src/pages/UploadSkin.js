@@ -197,9 +197,13 @@ class UploadSkin extends Component {
             const response_saveImage = await this.saveImage_toIPFS();
 
             if (response_saveImage) {
+
+                let gasLimit = UIHelper.defaultGasLimit;
+                let paramsForCall = await UIHelper.calculateGasUsingStation(gasLimit, this.state.currentAccount);
+
                 const response = await this.state.contract.methods.newSkin(ipfsPathBytes, this.state.currentCar,
                     this.state.currentSimulator, price, placeholder, this.state.encryptedDataHash, nickname, this.state.image_ipfsPath)
-                    .send({ from: this.state.currentAccount })
+                    .send(paramsForCall)
                     //.on('sent', UIHelper.transactionOnSent)
                     .on('confirmation', function (confNumber, receipt, latestBlockHash) {
                         window.localStorage.setItem('forceUpdate','yes');

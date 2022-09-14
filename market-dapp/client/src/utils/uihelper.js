@@ -1,5 +1,15 @@
+const ethers = require('ethers');
+const axios = require('axios');
 
 export default class UIHelper {
+
+  static defaultGasLimit = 300000;
+
+
+  static getProvider = async function(rpc_uri) {
+    return new ethers.providers.JsonRpcProvider({url: rpc_uri });
+  }
+
   static showSpinning = function (textToDisplay) {
     var elem1 = document.createElement('div');
     elem1.style.top = window.scrollY + 'px';
@@ -74,5 +84,44 @@ export default class UIHelper {
     const uri = 'https://api.coingecko.com/api/v3/simple/token_price/ethereum?contract_addresses=' + contract_address +'&vs_currencies=' +  vs_currency;
     return fetch(uri);
   }
+
+
+  //using gas station
+//https://github.com/ethers-io/ethers.js/issues/2828
+//workaround for "transaction underpriced" error
+static calculateGasUsingStation = async function(gasLimit, fromAccount) {
+
+   const convertGwei2Wei = (input) =>  {
+    console.log("convert " + input + " (gwei) to (wei) => " + ethers.BigNumber.from(input * 1000000000) );
+    return ethers.BigNumber.from(input * 1000000000);
+  }
+
+  let gas = {
+      gasLimit: Number(Math.trunc(gasLimit * 1.1)),   //this would add extra 10% if needed
+      from: fromAccount,
+      maxFeePerGas: Number(ethers.BigNumber.from(40000000000)), //40 gwei
+      maxPriorityFeePerGas: Number(ethers.BigNumber.from(40000000000))
+  };
+
+  try {
+      const {data} = await axios({
+          method: 'get',
+          url: 'https://gasstation-mainnet.matic.network/v2'
+      });
+      console.log('gassatation data: ', data);
+
+      return { 
+        gasLimit: Number(Math.trunc(gasLimit * 1.1)),
+        from: fromAccount,
+        maxPriorityFeePerGas : Number(convertGwei2Wei( Math.trunc(data.fast.maxPriorityFee))),
+        maxFeePerGas : Number(convertGwei2Wei( Math.trunc(data.fast.maxFee)))
+      }
+
+  } catch (error) {
+    
+    return gas;
+  }
+  
+}
   
 }
