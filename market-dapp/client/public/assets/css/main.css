@@ -503,12 +503,12 @@ pre {
 
 .container {
   
-  padding-right: 15px;
-  padding-left: 15px;
+  padding-right: 10px;
+  padding-left: 10px;
   margin-right: auto;
   margin-left: auto; 
-  min-width: 80%!important;
-  width:80%;
+  min-width: 90%!important;
+  width:90%;
 }
   @media (min-width: 576px) {
     .container {

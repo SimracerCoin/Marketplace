@@ -10,6 +10,12 @@ const priceConversion = 10 ** 18;
 //pagination is out of scope for now, also would require more items to test properly
 const MAX_ITEMS_PER_PAGE = 10;
 
+const MORE_ITEMS = {
+  CARSETUP: 'carsetup',
+  CARSKIN: 'carskins', 
+  OWNERSHIP: 'ownership', 
+  MOMENTNFTS: 'momentnfts'
+}
 
 class StorePage extends Component {
 
@@ -67,7 +73,8 @@ class StorePage extends Component {
             //],
             searchQuery: "",
             //searchRef: props.searchRef //search field
-            usdValue: 1
+            usdValue: 1,
+            moreItems: ""
         }
 
         // This binding is necessary to make `this` work in the callback
@@ -91,7 +98,7 @@ class StorePage extends Component {
 
       console.log("STORE: componentDidMount");
 
-       UIHelper.showSpinning("loading ...");
+       UIHelper.showSpinning("loading items ...");
 
         const usdValue = await this.fetchUSDPrice();
         this.setState({usdValue: Number(usdValue)});
@@ -100,6 +107,12 @@ class StorePage extends Component {
         if(searchQuery && searchQuery.length > 0) {
           this.setState({searchQuery: searchQuery});
         }
+
+        const hasMoreItems = this.hasMoreItemsFilter();
+        if(hasMoreItems && hasMoreItems.length > 0) {
+          this.setState({moreItems: hasMoreItems});
+        }
+
         this.getNFTsData();
       
         //------------------------- Collapser hack -------------------------
@@ -160,6 +173,9 @@ class StorePage extends Component {
         //use search params?
         let queryString = this.state.searchQuery;
         const considerSearchQuery = (queryString && queryString.length > 0) ? true : false;
+
+        let moreItems = this.state.moreItems;
+        const considerMoreItems = (moreItems && moreItems.length > 0) ? true : false;
 
         const nftlist = [];
         // get info from marketplace NFT contract
@@ -829,9 +845,30 @@ class StorePage extends Component {
       return null;
     }
 
+    isValidItemType(itemType) {
+      return  itemType === MORE_ITEMS.CARSETUP || 
+              itemType === MORE_ITEMS.CARSKIN || 
+              itemType === MORE_ITEMS.OWNERSHIP || 
+              itemType === MORE_ITEMS.MOMENTNFTS;
+    }
+
+    hasMoreItemsFilter() {
+      const searchParams = new URLSearchParams(window.location.search);
+      if(searchParams) {
+        const query = searchParams.get('m');
+        //check if we have something valid
+        if(query && this.isValidItemType(query)) {
+          searchParams.delete("m");
+          return query;
+        }
+     
+      }
+      return null;
+    }
+
     changeActivePage(evt,pageNum) {
       evt.preventDefault();
-      console.log("PAGE NUM: " + pageNum);
+      //console.log("PAGE NUM: " + pageNum);
       let arrayPaginatedNFTS = this.paginate(this.state.latestNFTs, pageNum);
       let arrayPaginatedMomentNFTS = this.paginate(this.state.latestMomentNFTs, pageNum);
       let arrayPaginatedCars = this.paginate(this.state.latestCars, pageNum);
@@ -971,7 +1008,7 @@ class StorePage extends Component {
   
     }
 
-    getListWithResults = () => {
+    getFilteredListWithResults = () => {
       if(this.state.filteredNFTs.length > 0) {
         return "ownership";
       }
@@ -994,14 +1031,32 @@ class StorePage extends Component {
 
       let queryString = this.state.searchQuery;
       const considerSearchQuery = (queryString && queryString.length > 0);
+
+      let moreItems = this.state.moreItems;
+      const considerMoreItems = (moreItems && moreItems.length > 0);
+
       if(!considerSearchQuery) {
-        if(key === "ownership") {
-          return "nav-link active show";
+        
+        if(!considerMoreItems) {
+          //as usual
+          if(key === "ownership") {
+            return "nav-link active show";
+          } else {
+            return "nav-link";
+          }
         } else {
-          return "nav-link";
+
+          if(key === moreItems) {
+            return "nav-link active show";
+          } else {
+            return "nav-link";
+          }
         }
+        
+        
       } else {
-        let active = this.getListWithResults();
+        let active = this.getFilteredListWithResults();
+        
         //consider search
          if(key === active) {
             return "nav-link active show";
@@ -1015,14 +1070,31 @@ class StorePage extends Component {
 
       let queryString = this.state.searchQuery;
       const considerSearchQuery = (queryString && queryString.length > 0);
+
+      let moreItems = this.state.moreItems;
+      const considerMoreItems = (moreItems && moreItems.length > 0);
+     
+
       if(!considerSearchQuery) {
-        if(key === "ownership") {
-          return "tab-pane fade active show";
+
+        if(!considerMoreItems) {
+          //business as usual
+          if(key === "ownership") {
+            return "tab-pane fade active show";
+          } else {
+            return "tab-pane fade";
+          }
         } else {
-          return "tab-pane fade";
+          if(key === moreItems) {
+            return "tab-pane fade active show";
+          } else {
+            return "tab-pane fade";
+          }
         }
+
+        
       } else {
-        let active = this.getListWithResults();
+        let active = this.getFilteredListWithResults();
         //consider search
          if(key === active) {
             return "tab-pane fade active show";

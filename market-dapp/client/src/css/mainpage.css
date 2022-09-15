@@ -3,7 +3,7 @@
 }
 
 .scrolling-wrapper {
-    overflow-x: scroll;
+    overflow-x: auto;
     overflow-y: hidden;
     white-space: nowrap;
 }
@@ -28,4 +28,26 @@
 
 .switch-btn:hover {
     cursor: pointer!important;
+}
+
+.container.latest-items {
+    padding-left: 10px;
+    padding-right: 10px;
+    max-width: 90%;
+    width:90%;
+}
+
+.view-more {
+    color: white;
+    text-align: right;
+    margin-right: 10px;
+    float: right;
+    background-color:transparent;
+    border: none;
+    font-weight: 600;
+    
+}
+
+.view-more:hover {
+ cursor: pointer;
 }
