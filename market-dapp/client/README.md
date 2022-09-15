@@ -83,3 +83,6 @@ The following keys must be provided on the client .env file (taken from the proj
 REACT_APP_INFURA_IPFS_PROJECT_ID
 REACT_APP_INFURA_IPFS_API_SECRET
 
+### how many items to load on main page? (per category)
+REACT_APP_NUM_ITEMS_LOAD=4
+
