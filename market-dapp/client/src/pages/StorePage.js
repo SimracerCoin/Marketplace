@@ -17,6 +17,23 @@ const MORE_ITEMS = {
   MOMENTNFTS: 'momentnfts'
 }
 
+let response_cars = [];
+let response_skins = [];
+
+let filteredCarsList = []; 
+let filteredSkinsList = [];
+
+//moment nfts
+let momentNftslist = []; //not filtered list
+let filteredMomentNFTsList = []; //filtered list
+
+//ownership nfts
+let nftlist = []; //not filtered
+let filteredNFTsList = []; //filtered
+
+//aux max helpers
+let maxElems, maxElems2 = 0;
+
 class StorePage extends Component {
 
     constructor(props) {
@@ -160,11 +177,16 @@ class StorePage extends Component {
     //get all contracts data
     async getNFTsData() {
 
+        //market place
         const contract = await this.state.drizzle.contracts.STMarketplace;
+        //ownership nfts
         const contractNFTs = await this.state.drizzle.contracts.SimthunderOwner;
-        const response_cars = await contract.methods.getCarSetups().call();
-        const response_skins = await contract.methods.getSkins().call();
-
+        //simracing moment nfts
+        const contractMomentNFTs = await this.state.drizzle.contracts.SimracingMomentOwner;
+        //car setups
+        response_cars = await contract.methods.getCarSetups().call();
+        //car setups
+        response_skins = await contract.methods.getSkins().call();
         
         let simsList = [];
         let simulatorsFilter = [];
@@ -174,27 +196,17 @@ class StorePage extends Component {
         let queryString = this.state.searchQuery;
         const considerSearchQuery = (queryString && queryString.length > 0) ? true : false;
 
-        let moreItems = this.state.moreItems;
-        const considerMoreItems = (moreItems && moreItems.length > 0) ? true : false;
+        //let moreItems = this.state.moreItems;
+        //const considerMoreItems = this.isValidItemType(moreItems) ? true : false;
 
-        const nftlist = [];
-        // get info from marketplace NFT contract
-        const numNfts = await contractNFTs.methods.currentTokenId().call();
-        console.log('ownership nft count:' + numNfts);
-        //TODO this number can be misleading because we do not parse them all (only => if(ownerAddress === contractNFTs.address) )
-
-
-        //if there is a serach in place
-        //by default include all items
-        let filteredNFTsList = [];
-        let filteredCarsList = response_cars;
-        let filteredSkinsList = response_skins;
-
-        let maxElems, maxElems2 = 0;
-
+        //load them all, then filter them!
+        filteredCarsList = response_cars;
+        filteredSkinsList = response_skins;
 
         //by default on load, these filtered lists inlcude all the items, unless we are searching for somethign specific
         if(considerSearchQuery){
+  
+
           filteredCarsList = filteredCarsList.filter(value => {
             
             return this.shouldIncludeCarBySearchQuery(queryString.toLowerCase(), value);
@@ -204,7 +216,21 @@ class StorePage extends Component {
           filteredSkinsList = filteredSkinsList.filter(value => {
             return this.shouldIncludeSkinBySearchQuery(queryString.toLowerCase(), value);
           });
-        } 
+        } /**else if(considerMoreItems) {
+          //only load the active table, to be faster
+
+            if(moreItems === MORE_ITEMS.CARSETUP) {
+                //only load cars
+                filteredCarsList = response_cars;
+            } else if(moreItems === MORE_ITEMS.CARSKIN ) {
+                //only load skins
+                filteredSkinsList = response_skins;
+            } 
+        } else {
+            //just load them all
+            filteredCarsList = response_cars;
+            filteredSkinsList = response_skins;
+        }*/
 
     //--------------------------------------------------------------------------
 
@@ -213,196 +239,14 @@ class StorePage extends Component {
 
     //-------------------------- MOMENT NFTS -----------------------------------
     
-
-    const contractMomentNFTs = await this.state.drizzle.contracts.SimracingMomentOwner;
-
-    const momentNftslist = [];
-    // get info from marketplace NFT contract
-    const numMomentNfts = await contractMomentNFTs.methods.currentTokenId().call();
-    console.log('moment nft count:' + numMomentNfts);
-
-    let filteredMomentNFTsList = [];
-
-    let max = parseInt(numMomentNfts) + 1;
-
-
-    //--------------------------------------------------------------------------
-      
-      for (let i = 1; i < max; i++) {
-        try {
-            //TODO: change for different ids
-            let ownerAddress = await contractMomentNFTs.methods.ownerOf(i).call();
-            console.log('ID:'+i+'ownerAddress: '+ownerAddress.toString()+'nfts addr: '+contractMomentNFTs.address);
-            if(ownerAddress === contractMomentNFTs.address) {
-               
-                let uri = await contractMomentNFTs.methods.tokenURI(i).call();
-                console.log('uri: ', uri);
-                var xmlhttp = new XMLHttpRequest();
-                xmlhttp.onload = function(e) {
-                    if (xmlhttp.readyState === 4 && xmlhttp.status === 200) {
-                        var data = JSON.parse(xmlhttp.responseText);
-                        
-                        console.log('moment nft name:' + data.name);
-                        console.log('moment nft image:' + data.image);
-                        console.log('moment nft description:' + data.description);
-                        data.id=i;
-
-                        let metadata = this.extractMomentNFTTraitTypes(data.attributes);
-                        //global list of all
-                        momentNftslist.push(data);
-
-                        //update the max elements every time, as we will consider this as the 
-                        maxElems2 = momentNftslist.length;
-                        
-                        //only filtered list
-                        if(considerSearchQuery && (this.shouldIncludeMomentNFTBySearchQuery(queryString.toLowerCase(), data, metadata)) ){
-                          filteredMomentNFTsList.push(data);
-                        }//otherwise goes on the default list => nftlist
-                        
-
-                        //add simulator if not present already 
-                        let simulator = metadata.simulator;
-                        if(simulator && !simsList.includes(simulator)) {
-
-                          simsList.push(metadata.simulator);
-
-                          if(!considerSearchQuery ) {
-                              simulatorsFilter.push({simulator: simulator, checked: true});
-                          } else {
-
-                            //matches query, push and check it
-                            if(simulator.toLowerCase().indexOf(queryString.toLowerCase())>-1) {
-                              simulatorsFilter.push({simulator: simulator, checked: true});
-                            } else {
-                              //still push it but disabled
-                              simulatorsFilter.push({simulator: simulator, checked: false});
-                            }
-
-                            
-                          }
-                          
-                        }
-
-                        //this GET is assync, so we need to recalaculate the pagination after every grab
-                            this.recalculatePaginationAndNumPages(maxElems2, maxElems, filteredCarsList, filteredSkinsList, considerSearchQuery ? filteredMomentNFTsList : momentNftslist);
-                        
-                            //console.log('considerSearchQuery ' + considerSearchQuery + 'momentNftslist size: ' + momentNftslist.length + " filteredMomentNFTsList: " + filteredMomentNFTsList.length)
-
-                            this.setState({ 
-                                          latestMomentNFTs: momentNftslist, 
-                                          filteredMomentNFTs: considerSearchQuery ? this.paginate(filteredMomentNFTsList, this.state.currentPage): this.paginate(momentNftslist, this.state.currentPage), 
-                                          listSimulators: simsList, 
-                                          activeSimulatorsFilter: simulatorsFilter 
-                                        });
-
+        this.loadMomentNFTs(contractMomentNFTs, maxElems, simsList, simulatorsFilter, maxElems2, filteredCarsList, filteredSkinsList);
     
-                    }
-                }.bind(this);
-                xmlhttp.onerror = function (e) {
-                    console.error(xmlhttp.statusText);
-                };
-                xmlhttp.open("GET", uri, true);
-                xmlhttp.send(null);
-            }
-        } catch (e) {
-            console.error(e);
-        }
-        
-      }
       //--------------------------------------------------------------------------
   
         
         //------------------------ Car ownership nfts ------------------------------
         //--------------------------------------------------------------------------
-        for (let i = 1; i < parseInt(numNfts) + 1; i++) {
-            try {
-                //TODO: change for different ids
-                let ownerAddress = await contractNFTs.methods.ownerOf(i).call();
-                console.log('ID:'+i+'ownerAddress: '+ownerAddress.toString()+'nfts addr: '+contractNFTs.address);
-                if(ownerAddress === contractNFTs.address) {
-                    console.log('GOT MATCH');
-                    let uri = await contractNFTs.methods.tokenURI(i).call();
-                    console.log('uri: ', uri);
-                    var xmlhttp = new XMLHttpRequest();
-                    // eslint-disable-next-line no-loop-func
-                    xmlhttp.onload = function(e) {
-                        if (xmlhttp.readyState === 4 && xmlhttp.status === 200) {
-                            var data = JSON.parse(xmlhttp.responseText);
-                            /**  DATA example:
-                            {  
-                                "description": "Simthunder Car Ownership",
-                                "name": "Car",
-                                "image": "https://ipfs.io/ipfs/QmbM3fsbACwV887bMf73tvtY9iA5K1CSZ3kYdwj7G9bL7W",
-                                "series": "Simthunder Trophy",
-                                "seriesOwner": "0xA59DE47b6fa8911DF14F4524B853B742AF1F3a0c",
-                                "carNumber": "48",
-                                "simulator": "iRacing",
-                                "price": 1
-                            }
-                            */
-                            console.log('nft image:' + data.image);
-                            console.log('nft description:' + data.description);
-                            data.id=i;
-
-                            //global list of all
-                            nftlist.push(data);
-
-                            //update the max elements every time, as we will consider this as the 
-                            maxElems = nftlist.length;
-
-                            //only filtered list
-                            if(considerSearchQuery && (this.shouldIncludeNFTBySearchQuery(queryString.toLowerCase(), data)) ){
-                              filteredNFTsList.push(data);
-                            }//otherwise goes on the default list => nftlist
-                            
-
-                            //add simulator if not present already 
-                            let simulator = data.simulator;
-                            if(simulator && !simsList.includes(simulator)) {
-
-                              simsList.push(data.simulator);
-
-                              if(!considerSearchQuery ) {
-                                  simulatorsFilter.push({simulator: simulator, checked: true});
-                              } else {
-
-                                //matches query, push and check it
-                                if(simulator.toLowerCase().indexOf(queryString.toLowerCase())>-1) {
-                                  simulatorsFilter.push({simulator: simulator, checked: true});
-                                } else {
-                                  //still push it but disabled
-                                  simulatorsFilter.push({simulator: simulator, checked: false});
-                                }
-
-                                
-                              }
-
-                              
-                            }
-
-                            //this GET is assync, so we need to recalaculate the pagination after every grab
-                            this.recalculatePaginationAndNumPages(maxElems2, maxElems, filteredCarsList, filteredSkinsList, considerSearchQuery ? filteredMomentNFTsList : momentNftslist);
-                        
-
-                            this.setState({ 
-                                          latestNFTs: nftlist, 
-                                          filteredNFTs: considerSearchQuery ? this.paginate(filteredNFTsList, this.state.currentPage): this.paginate(nftlist, this.state.currentPage), 
-                                          listSimulators: simsList, 
-                                          activeSimulatorsFilter: simulatorsFilter 
-                                        });
-                        }
-                    }.bind(this);
-                    xmlhttp.onerror = function (e) {
-                        console.error(xmlhttp.statusText);
-                    };
-                    xmlhttp.open("GET", uri, true);
-                    xmlhttp.send(null);
-                }
-            } catch (e) {
-                console.error(e);
-            }
-            
-        }
+        this.loadCarOwnershipNFTs(contractNFTs, maxElems, simsList, simulatorsFilter, maxElems2, filteredCarsList, filteredSkinsList);
         //--------------------------------------------------------------------------
 
         
@@ -412,6 +256,7 @@ class StorePage extends Component {
         
 
         //get the number of elements of the bigger list, use it to define the number of pages, minimum 1
+        //it must be done after a lazy load as well, always
         //NOTE: we might reach this part before processing all NFTS, so we also call this inside the loop above
         this.recalculatePaginationAndNumPages(maxElems2, maxElems, filteredCarsList, filteredSkinsList, considerSearchQuery ? filteredMomentNFTsList: momentNftslist);
         //these won´t change, set only here
@@ -426,6 +271,194 @@ class StorePage extends Component {
         
         console.log("END getNFTSData");
         UIHelper.hiddeSpinning();
+    }
+
+    /**
+     * 
+     * @param {*} maxElems max elems i can load
+     * @param {*} simsList simulators list
+     * @param {*} simulatorsFilter simulators filter
+     * @param {*} maxElems2 max elemens on biggest list found
+     * @param {*} filteredCarsList list of possibly filtered cars
+     * @param {*} filteredSkinsList list of possibly filtered skins
+     */
+    loadCarOwnershipNFTs = async (contractNFTs, maxElems, simsList, simulatorsFilter, maxElems2, filteredCarsList, filteredSkinsList) => {
+
+     const numNfts = await contractNFTs.methods.currentTokenId().call();
+     console.log('ownership nft count:' + numNfts);
+
+     let max = parseInt(numNfts) + 1;
+
+     //use search params?
+     let queryString = this.state.searchQuery;
+     const considerSearchQuery = (queryString && queryString.length > 0) ? true : false;
+
+
+      for (let i = 1; i < max ; i++) {
+        try {
+            //TODO: change for different ids
+            let ownerAddress = await contractNFTs.methods.ownerOf(i).call();
+            console.log('ID:'+i+'ownerAddress: '+ownerAddress.toString()+'nfts addr: '+contractNFTs.address);
+            if(ownerAddress === contractNFTs.address) {
+                console.log('GOT MATCH');
+                let uri = await contractNFTs.methods.tokenURI(i).call();
+                console.log('uri: ', uri);
+                let response = await fetch(uri);
+                let data = await response.json();
+                
+                        /**  DATA example:
+                        {  
+                            "description": "Simthunder Car Ownership",
+                            "name": "Car",
+                            "image": "https://ipfs.io/ipfs/QmbM3fsbACwV887bMf73tvtY9iA5K1CSZ3kYdwj7G9bL7W",
+                            "series": "Simthunder Trophy",
+                            "seriesOwner": "0xA59DE47b6fa8911DF14F4524B853B742AF1F3a0c",
+                            "carNumber": "48",
+                            "simulator": "iRacing",
+                            "price": 1
+                        }
+                        */
+                       
+                    data.id=i;
+
+                    //global list of all
+                    nftlist.push(data);
+
+                    //update the max elements every time, as we will consider this as the 
+                    maxElems = nftlist.length;
+
+                    //only filtered list
+                    if(considerSearchQuery && (this.shouldIncludeNFTBySearchQuery(queryString.toLowerCase(), data)) ){
+                        filteredNFTsList.push(data);
+                    }//otherwise goes on the default list => nftlist
+                        
+
+                    //add simulator if not present already 
+                    let simulator = data.simulator;
+                    if(simulator && !simsList.includes(simulator)) {
+
+                        simsList.push(data.simulator);
+
+                        if(!considerSearchQuery ) {
+                              simulatorsFilter.push({simulator: simulator, checked: true});
+                        } else {
+
+                          //matches query, push and check it
+                          if(simulator.toLowerCase().indexOf(queryString.toLowerCase())>-1) {
+                            simulatorsFilter.push({simulator: simulator, checked: true});
+                          } else {
+                            //still push it but disabled
+                            simulatorsFilter.push({simulator: simulator, checked: false});
+                          }
+
+                            
+                        }
+
+                          
+                    }
+
+                    //this GET is assync, so we need to recalaculate the pagination after every grab
+                    this.recalculatePaginationAndNumPages(maxElems2, maxElems, filteredCarsList, filteredSkinsList, considerSearchQuery ? filteredMomentNFTsList : momentNftslist);
+                    
+
+                    this.setState({ 
+                                    latestNFTs: nftlist, 
+                                    filteredNFTs: considerSearchQuery ? this.paginate(filteredNFTsList, this.state.currentPage): this.paginate(nftlist, this.state.currentPage), 
+                                    listSimulators: simsList, 
+                                    activeSimulatorsFilter: simulatorsFilter 
+                                  });
+                
+            }
+        } catch (e) {
+            console.error(e);
+        }
+        
+    }
+
+    }
+
+
+    loadMomentNFTs = async (contractMomentNFTs, maxElems, simsList, simulatorsFilter, maxElems2, filteredCarsList, filteredSkinsList) => {
+      
+      // get info from marketplace NFT contract
+      const numMomentNfts = await contractMomentNFTs.methods.currentTokenId().call();
+      console.log('moment nft count:' + numMomentNfts);
+
+      let max = parseInt(numMomentNfts) + 1;
+
+    //--------------------------------------------------------------------------
+      
+      for (let i = 1; i < max; i++) {
+        try {
+            //TODO: change for different ids
+            let ownerAddress = await contractMomentNFTs.methods.ownerOf(i).call();
+            console.log('ID:'+i+'ownerAddress: '+ownerAddress.toString()+'nfts addr: '+contractMomentNFTs.address);
+            if(ownerAddress === contractMomentNFTs.address) {
+               
+                let uri = await contractMomentNFTs.methods.tokenURI(i).call();
+                console.log('uri: ', uri);
+                let response = await fetch(uri);
+                let data = await response.json();
+                        
+                console.log('moment nft name:' + data.name);
+                console.log('moment nft image:' + data.image);
+                console.log('moment nft description:' + data.description);
+                data.id=i;
+
+                let metadata = this.extractMomentNFTTraitTypes(data.attributes);
+                //global list of all
+                momentNftslist.push(data);
+
+                //update the max elements every time, as we will consider this as the 
+                maxElems2 = momentNftslist.length;
+                        
+                let queryString = this.state.searchQuery;
+                const considerSearchQuery = (queryString && queryString.length > 0) ? true : false;
+                //only filtered list?
+
+                if(considerSearchQuery && (this.shouldIncludeMomentNFTBySearchQuery(queryString.toLowerCase(), data, metadata)) ){
+                    filteredMomentNFTsList.push(data);
+                }//otherwise goes on the default list => nftlist
+                        
+                //add simulator if not present already 
+                let simulator = metadata.simulator;
+                if(simulator && !simsList.includes(simulator)) {
+
+                    simsList.push(metadata.simulator);
+
+                    if(!considerSearchQuery ) {
+                        simulatorsFilter.push({simulator: simulator, checked: true});
+                    } else {
+                      //matches query, push and check it
+                      if(simulator.toLowerCase().indexOf(queryString.toLowerCase())>-1) {
+                        simulatorsFilter.push({simulator: simulator, checked: true});
+                      } else {
+                        //still push it but disabled
+                        simulatorsFilter.push({simulator: simulator, checked: false});
+                      }
+
+                            
+                    }
+                          
+                }
+
+                //this GET is assync, so we need to recalaculate the pagination after every grab
+                this.recalculatePaginationAndNumPages(maxElems2, maxElems, filteredCarsList, filteredSkinsList, considerSearchQuery ? filteredMomentNFTsList : momentNftslist);
+                        
+                //console.log('considerSearchQuery ' + considerSearchQuery + 'momentNftslist size: ' + momentNftslist.length + " filteredMomentNFTsList: " + filteredMomentNFTsList.length)
+
+                this.setState({ 
+                                latestMomentNFTs: momentNftslist, 
+                                filteredMomentNFTs: considerSearchQuery ? this.paginate(filteredMomentNFTsList, this.state.currentPage): this.paginate(momentNftslist, this.state.currentPage), 
+                                listSimulators: simsList, 
+                                activeSimulatorsFilter: simulatorsFilter 
+                              });
+            }
+        } catch (e) {
+            console.error(e);
+        }
+        
+      }
     }
 
     //specific for moment NFTS
@@ -1104,6 +1137,11 @@ class StorePage extends Component {
      
     }
 
+    changeTab = async (event, tab) => {
+      console.log('tab clicked ',tab);
+      //TODO
+    }
+
     render() {
 
       //const name = this.props.location.;
@@ -1136,16 +1174,16 @@ class StorePage extends Component {
                 {/*<!-- nav tabs -->*/}
                 <ul className="spotlight-tabs spotlight-tabs-dark nav nav-tabs border-0 mb-5 position-relative flex-nowrap" id="most_popular_products-carousel-01" role="tablist">
                   <li key="ownership" className="nav-item text-fnwp position-relative">
-                    <a className={this.getActiveClasses('ownership')} id="mp-2-01-tab" data-toggle="tab" href="#mp-2-01-c" role="tab" aria-controls="mp-2-01-c" aria-selected="true">Car Ownership NFTs</a>
+                    <a className={this.getActiveClasses('ownership')} id="mp-2-01-tab" onClick={ (e) => this.changeTab(e,'ownership')} data-toggle="tab" href="#mp-2-01-c" role="tab" aria-controls="mp-2-01-c" aria-selected="true">Car Ownership NFTs</a>
                   </li>
                   <li key="momentnfts" className="nav-item text-fnwp position-relative"> 
-                    <a className={this.getActiveClasses('momentnfts')} id="mp-2-04-tab" data-toggle="tab" href="#mp-2-04-c" role="tab" aria-controls="mp-2-04-c" aria-selected="false">Simracing Moment NFTs</a>
+                    <a className={this.getActiveClasses('momentnfts')} id="mp-2-04-tab" onClick={(e) => this.changeTab(e,'momentnfts')} data-toggle="tab" href="#mp-2-04-c" role="tab" aria-controls="mp-2-04-c" aria-selected="false">Simracing Moment NFTs</a>
                   </li>
                   <li key="carsetup" className="nav-item text-fnwp position-relative"> 
-                    <a className={this.getActiveClasses('carsetup')} id="mp-2-02-tab" data-toggle="tab" href="#mp-2-02-c" role="tab" aria-controls="mp-2-02-c" aria-selected="false">Car Setups</a>
+                    <a className={this.getActiveClasses('carsetup')} id="mp-2-02-tab" onClick={(e) => this.changeTab(e,'carsetup')} data-toggle="tab" href="#mp-2-02-c" role="tab" aria-controls="mp-2-02-c" aria-selected="false">Car Setups</a>
                   </li>
                   <li key="carskins" className="nav-item text-fnwp position-relative"> 
-                    <a className={this.getActiveClasses('carskins')} id="mp-2-03-tab" data-toggle="tab" href="#mp-2-03-c" role="tab" aria-controls="mp-2-03-c" aria-selected="false">Car Skins</a>
+                    <a className={this.getActiveClasses('carskins')} id="mp-2-03-tab" onClick={(e) => this.changeTab(e,'carskins')} data-toggle="tab" href="#mp-2-03-c" role="tab" aria-controls="mp-2-03-c" aria-selected="false">Car Skins</a>
                   </li>
                 </ul>
                 {/*<!-- tab panes -->*/}
@@ -1154,47 +1192,6 @@ class StorePage extends Component {
                   <div className={this.getPanelActiveClasses('ownership')} id="mp-2-01-c" role="tabpanel" aria-labelledby="mp-2-01-tab">
                     <div className="row">
                       
-                  
-                      {/*<!-- item -->*/}
-                      {/*<div className="col-md-12 mb-4">
-                        <a href="store-product.html" className="product-item">
-                          <div className="row align-items-center no-gutters">
-                            <div className="item_img d-none d-sm-block">
-                              <img className="img bl-3 text-primary" src="assets/img/content/store/h-01.jpg" alt="Games Store"/>
-                            </div>
-                            <div className="item_content flex-1 flex-grow pl-0 pl-sm-6 pr-6">
-                              <h6 className="item_title ls-1 small-1 fw-600 text-uppercase mb-1">Creature 2020</h6>
-                              <div className="mb-0">
-                                <i className="mr-2 fab fa-windows"></i>
-                                <i className="mr-2 fab fa-steam"></i>
-                                <i className="fab fa-apple"></i>
-                              </div>
-                              <div className="position-relative">
-                                <span className="item_genre small fw-600">
-                                  Drama, Story Rich, Adventure
-                                </span>
-                              </div>
-                            </div>
-                            <div className="item_discount d-none d-sm-block">
-                              <div className="row align-items-center h-100 no-gutters">
-                                <div className="text-right text-secondary px-6">
-                                  <span className="fw-600 btn bg-warning">-22%</span>
-                                </div>
-                              </div>
-                            </div>
-                            <div className="item_price">
-                              <div className="row align-items-center h-100 no-gutters">
-                                <div className="text-right">
-                                  <span className="fw-600 td-lt">€99.99</span><br/>
-                                  <span className="fw-600">€84.99</span>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </a>
-                        </div>*/}
-                      {/*<!-- /.item -->*/}
-                      {/*<!-- item -->*/}
                             {this.state.filteredNFTs.length === 0 &&
                               <div className="col-md-12 mb-4"><span>No items found in this category</span></div>
                             }
@@ -1271,87 +1268,7 @@ class StorePage extends Component {
                            
                 
                             }, this)} {/*Obs: need to pass the context to the map function*/}
-                        
-                            
-                       
-
-                      {/*<div className="col-md-12 mb-4">
-                        <a href="store-product.html" className="product-item">
-                          <div className="row align-items-center no-gutters">
-                            <div className="item_img d-none d-sm-block">
-                              <img className="img bl-3 text-primary" src="assets/img/content/store/h-02.jpg" alt="Games Store"/>
-                            </div>
-                            <div className="item_content flex-1 flex-grow pl-0 pl-sm-6 pr-6">
-                              <h6 className="item_title ls-1 small-1 fw-600 text-uppercase mb-1">Shadow Leap</h6>
-                              <div className="mb-0">
-                                <i className="mr-2 fab fa-windows"></i>
-                                <i className="mr-2 fab fa-steam"></i>
-                                <i className="fab fa-apple"></i>
-                              </div>
-                              <div className="position-relative">
-                                <span className="item_genre small fw-600">
-                                  Action, Adventure
-                                </span>
-                              </div>
-                            </div>
-                            <div className="item_discount d-none d-sm-block">
-                              <div className="row align-items-center h-100 no-gutters">
-                                <div className="text-right text-secondary px-6">
-                                  <span className="fw-600 btn bg-warning">-43%</span>
-                                </div>
-                              </div>
-                            </div>
-                            <div className="item_price">
-                              <div className="row align-items-center h-100 no-gutters">
-                                <div className="text-right">
-                                  <span className="fw-600 td-lt">€72.99</span><br/>
-                                  <span className="fw-600">€34.99</span>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </a>
-                      </div>*/}
-                      {/*<!-- /.item -->*/}
-                      {/*<!-- item -->*/}
-                      {/*<div className="col-md-12 mb-4">
-                        <a href="store-product.html" className="product-item">
-                          <div className="row align-items-center no-gutters">
-                            <div className="item_img d-none d-sm-block">
-                              <img className="img bl-3 text-primary" src="assets/img/content/store/h-07.jpg" alt="Games Store"/>
-                            </div>
-                            <div className="item_content flex-1 flex-grow pl-0 pl-sm-6 pr-6">
-                              <h6 className="item_title ls-1 small-1 fw-600 text-uppercase mb-1">Haku RE</h6>
-                              <div className="mb-0">
-                                <i className="mr-2 fab fa-windows"></i>
-                                <i className="mr-2 fab fa-steam"></i>
-                                <i className="fab fa-apple"></i>
-                              </div>
-                              <div className="position-relative">
-                                <span className="item_genre small fw-600">
-                                  Action, RPG, Pixel Graphics
-                                </span>
-                              </div>
-                            </div>
-                            <div className="item_discount d-none d-sm-block">
-                              <div className="row align-items-center h-100 no-gutters">
-                                <div className="text-right text-secondary px-6">
-                                  <span className="fw-600 btn bg-warning">-10%</span>
-                                </div>
-                              </div>
-                            </div>
-                            <div className="item_price">
-                              <div className="row align-items-center h-100 no-gutters">
-                                <div className="text-right">
-                                  <span className="fw-600 td-lt">€10.99</span><br/>
-                                  <span className="fw-600">€3.29</span>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </a>
-                        </div>*/}
-                      {/*<!-- /.item -->*/}
+                  
                     </div>
                   </div>
                   {/*<!-- tab item -->*/}
@@ -1537,46 +1454,7 @@ class StorePage extends Component {
                   {/*<!-- tab item -->*/}
                   <div className={this.getPanelActiveClasses('carskins')} id="mp-2-03-c" role="tabpanel" aria-labelledby="mp-2-03-tab">
                     <div className="row">
-                      {/*<!-- item -->*/}
-                      {/*
-                      <div className="col-md-12 mb-4">
-                        <a href="store-product.html" className="product-item">
-                          <div className="row align-items-center no-gutters">
-                            <div className="item_img d-none d-sm-block">
-                              <img className="img bl-3 text-primary" src="assets/img/content/store/h-08.jpg" alt="Games Store"/>
-                            </div>
-                            <div className="item_content flex-1 flex-grow pl-0 pl-sm-6 pr-6">
-                              <h6 className="item_title ls-1 small-1 fw-600 text-uppercase mb-1">Journey of the Solarcity</h6> 
-                              <div className="mb-0">
-                                <i className="mr-2 fab fa-windows"></i>
-                                <i className="mr-2 fab fa-steam"></i>
-                                <i className="fab fa-apple"></i>
-                              </div>
-                              <div className="position-relative">
-                                <span className="item_genre small fw-600">
-                                  Action, Adventure
-                                </span>
-                              </div>
-                            </div>
-                            <div className="item_discount d-none d-sm-block">
-                              <div className="row align-items-center h-100 no-gutters">
-                                <div className="text-right text-secondary px-6">
-                                  <span className="fw-600 btn bg-warning">-10%</span>
-                                </div>
-                              </div>
-                            </div>
-                            <div className="item_price">
-                              <div className="row align-items-center h-100 no-gutters">
-                                <div className="text-right">
-                                  <span className="fw-600 td-lt">€27.99</span><br/>
-                                  <span className="fw-600">€23.99</span>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </a>
-                      </div>
-                      */}
+                     
                         {this.state.filteredSkins.length === 0 &&
                           <div className="col-md-12 mb-4"><span>No items found in this category</span></div>
                         }
@@ -1718,141 +1596,13 @@ class StorePage extends Component {
       {/*<!-- /.End Content Area -->*/}
 
     </main>
-
-   
-
-    {/*<!-- Sign Up -->*/}
-    {/*
-    <div className="modal fade" id="userLogin" tabindex="-1" role="dialog" aria-labelledby="userLoginTitle" aria-hidden="true">
-      <div className="modal-dialog modal-sm modal-dialog-centered" role="document">
-        <div className="modal-content bg-dark text-light">
-          <div className="modal-header border-secondary">
-            <h5 className="modal-title" id="userLoginTitle">Log in</h5>
-            <button type="button" className="close text-light" data-dismiss="modal" aria-label="Close">
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          <div className="modal-body">
-            <div>
-              <div className="text-center my-6"> 
-                <a className="btn btn-circle btn-sm btn-google mr-2" href=""><i className="fab fa-google"></i></a>
-                <a className="btn btn-circle btn-sm btn-facebook mr-2" href=""><i className="fab fa-facebook-f"></i></a>
-                <a className="btn btn-circle btn-sm btn-twitter" href=""><i className="fab fa-twitter"></i></a>
-              </div>
-              <span className="hr-text small my-6">Or</span>
-            </div>
-            <form className="input-transparent">
-              <div className="form-group">
-                <input type="text" className="form-control border-secondary" name="username" placeholder="Username">
-              </div>
-              <div className="form-group">
-                <input type="password" className="form-control border-secondary" name="password" placeholder="Password">
-              </div>
-              <div className="form-group d-flex justify-content-between">
-                <div className="custom-control custom-checkbox">
-                  <input type="checkbox" className="custom-control-input" checked="" id="rememberMeCheck">
-                  <label className="custom-control-label" htmlFor="rememberMeCheck">Remember me</label> 
-                </div>
-                <a className="small-3" href="store.html#">Forgot password?</a>
-              </div>
-              <div className="form-group mt-6">
-                <button className="btn btn-block btn-warning" type="submit">Login</button>
-              </div>
-            </form>
-            <span className="small">Don't have an account? <a href="store.html#">Create an account</a></span>
-          </div>
-        </div>
-      </div>
-    </div>*/}
-    {/*<!-- /.Sign Up -->*/}
-
-    {/*<!-- offcanvas-cart -->*/}
-    {/*
-    <div id="offcanvas-cart" className="offcanvas-cart offcanvas text-light h-100 r-0 l-auto d-flex flex-column" data-animation="slideRight">
-      <div>
-        <button type="button" data-toggle="offcanvas-close" className="close float-right ml-4 text-light o-1 fw-100" data-dismiss="offcanvas" aria-label="Close">
-          <span aria-hidden="true">×</span>
-        </button>
-        <hr className="border-light o-20 mt-8 mb-4">
-      </div>
-      <div className="offcanvas-cart-body flex-1">
-        <div className="offcanvas-cart-list row align-items-center no-gutters">
-          <div className="ocs-cart-item col-12">
-            <div className="row align-items-center no-gutters">
-              <div className="col-3 item_img d-none d-sm-block">
-                <a href="store-product.html"><img className="img bl-3 text-primary" src="assets/img/content/store/h-08.jpg" alt="Product"></a>
-              </div>
-              <div className="col-7 flex-1 flex-grow pl-0 pl-sm-4 pr-4">
-                <a href="store-product.html"><span className="d-block item_title text-lt ls-1 lh-1 small-1 fw-600 text-uppercase mb-2">Journey of the Solarcity</span></a>
-                <div className="position-relative lh-1">
-                  <div className="number-input">
-                    <button onclick="this.parentNode.querySelector('input[type=number]').stepDown()" ><i className="ti-minus"></i></button>
-                    <input className="quantity" min="0" name="quantity" value="1" type="number">
-                    <button onclick="this.parentNode.querySelector('input[type=number]').stepUp()"><i className="ti-plus"></i></button>
-                  </div>
-                </div>
-              </div>
-              <div className="col-2">
-                <div className="row align-items-center h-100 no-gutters">
-                  <div className="ml-auto text-center">
-                    <a href="store.html#"><i className="far fa-trash-alt"></i></a><br>
-                    <span className="fw-500 text-warning">€44.99</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="ocs-cart-item col-12">
-            <div className="row align-items-center no-gutters">
-              <div className="col-3 item_img d-none d-sm-block">
-                <a href="store-product.html"><img className="img bl-3 text-primary" src="assets/img/content/store/h-09.jpg" alt="Product"></a>
-              </div>
-              <div className="col-7 flex-1 flex-grow pl-0 pl-sm-4 pr-4">
-                <a href="store-product.html"><span className="d-block item_title text-lt ls-1 lh-1 small-1 fw-600 text-uppercase mb-2">Exploration Memories</span></a>
-                <div className="position-relative lh-1">
-                  <div className="number-input">
-                    <button onclick="this.parentNode.querySelector('input[type=number]').stepDown()" ><i className="ti-minus"></i></button>
-                    <input className="quantity" min="0" name="quantity" value="1" type="number">
-                    <button onclick="this.parentNode.querySelector('input[type=number]').stepUp()"><i className="ti-plus"></i></button>
-                  </div>
-                </div>
-              </div>
-              <div className="col-2">
-                <div className="row align-items-center h-100 no-gutters">
-                  <div className="ml-auto text-center">
-                    <a href="store.html#"><i className="far fa-trash-alt"></i></a><br>
-                    <span className="fw-500 text-warning">€27.59</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div>
-        <a href="checkout-order.html" className="btn btn-lg btn-block btn-outline-light">View cart</a>
-      </div>
-    </div>*/}
-
-    {/*
-    <!-- /.offcanvas-cart -->
-
-    <!-- jQuery -->
-    <script src="assets/js/jquery.min.js"></script>
-
-    <!-- Bootstrap -->
-    <script src="assets/js/bootstrap.min.js"></script>
-
-    <!-- User JS -->
-    <script src="assets/js/scripts.js"></script>
-
-    <!-- Main JS -->*/}
+    {/*<!-- Main JS -->*/}
     <script src="assets/js/main.js" id="_mainJS" data-plugins="load"></script>
     </div>
 
 
-        );
-    }
+   ); //end return statment on render()
+  } //end render()
 }
 
 
