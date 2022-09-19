@@ -1,10 +1,12 @@
 import React, { Component } from 'react';
 import { Button, Card, ListGroup } from 'react-bootstrap';
-import { Redirect, withRouter } from "react-router-dom";
+import { Redirect, withRouter, Link } from "react-router-dom";
 import UIHelper from "../utils/uihelper";
 import "../css/mainpage.css";
 
 const priceConversion = 10 ** 18;
+
+const NUM_ITEMS_LOAD = Number(process.env.REACT_APP_NUM_ITEMS_LOAD) || 4;
 
 class MainPage extends Component {
 
@@ -17,7 +19,9 @@ class MainPage extends Component {
             listCars: [],
             listSkins: [],
             latestNFTs: [],
+            shorterNFTsList: [],
             latestVideoNFTs: [],
+            shorterVideosNftsList: [],
             redirectBuyItem: false,
             selectedItemId: "",
             selectedTrack: "",
@@ -44,6 +48,8 @@ class MainPage extends Component {
 
     updateData = async () => {
 
+        UIHelper.showSpinning('loading items ...');
+
         const contract = await this.state.drizzle.contracts.STMarketplace;
         const contractNFTs = await this.state.drizzle.contracts.SimthunderOwner;
         const contractMomentNFTs = await this.state.drizzle.contracts.SimracingMomentOwner;
@@ -57,9 +63,12 @@ class MainPage extends Component {
 
         //const currentAccount = this.state.drizzleState.accounts[0];
         //car ownership nfts
-        const nftlist = [];
+        
+        const shorterNFTsList = []; //hold NUM_ITEMS_LOAD max
+
         //simracing moment nfts
-        const videoNftsList = [];
+        
+        const shorterVideosNftsList = []; //hold NUM_ITEMS_LOAD max
 
         // get info from marketplace NFT contract
       
@@ -69,60 +78,147 @@ class MainPage extends Component {
 
         console.log('car ownership nfts count:' + numNfts);
         console.log('car moment nfts count:' + numMomentNfts);
-        
-        //car ownership nfts
-        for (let i = 1; i < parseInt(numNfts) + 1; i++) {
+        console.log("MAX NUM ITEMS 2 TO LOAD: ", NUM_ITEMS_LOAD);
+
+        //laod only first NUM_ITEMS_LOAD items
+        const numNFTs2Load = Math.min( Number(numNfts), NUM_ITEMS_LOAD);
+        //---------------------------------------------
+        for (let i = 1; i <  numNFTs2Load + 1; i++) {
             try {
+                //TODO: change for different ids
+                let ownerAddress = await contractNFTs.methods.ownerOf(i).call();
+              
+                if(ownerAddress === contractNFTs.address) {
+                    
+                    let uri = await contractNFTs.methods.tokenURI(i).call();
+                    //console.log("contractNFTs loaded: " + i + " uri: " + uri);
+                    let response = await fetch(uri);
+                    let data = await response.json();
+                    data.id=i;
+                    //put on shorter list
+                    shorterNFTsList.push(data);  
+                    
+                }
+
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        const numMomentNFTs2Load = Math.min( Number(numMomentNfts), NUM_ITEMS_LOAD);
+        //moment nfts
+        for (let i = 1; i < numMomentNFTs2Load + 1; i++) {
+            try {
+                //TODO: change for different ids
+                let ownerAddress = await contractMomentNFTs.methods.ownerOf(i).call();
+                
+                if(ownerAddress === contractMomentNFTs.address) {
+                    
+                    let uri = await contractMomentNFTs.methods.tokenURI(i).call();
+                    //console.log("contractMomentNFTs loaded: " + i + " uri: " + uri);
+                    let response = await fetch(uri);
+                    let data = await response.json();
+                  
+                    data.id=i;
+                    shorterVideosNftsList.push(data);
+                    
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+        //----------------------------------------------------
+
+        console.log("STILL HERE? ");
+        //onwnership nfts
+        this.setState(
+            { 
+                shorterNFTsList: shorterNFTsList, 
+                shorterVideosNftsList: shorterVideosNftsList,
+                usdValue: usdValue, 
+                listCars: response_cars, 
+                listSkins: response_skins, 
+                contract: contract, 
+                contractNFTs: contractNFTs, 
+                contractMomentNFTs: contractMomentNFTs 
+            }); 
+        //simracing moment
+        //hide spinning as soon as we load the minimum
+        UIHelper.hiddeSpinning();
+
+        const totalNFTs = parseInt(numNfts);
+        //load all remaining car ownership nfts
+
+        const nftlist = await this.loadRemainingCardOwnershipNFTS(contractNFTs, numNFTs2Load, totalNFTs);
+
+        const totalMomentNFTs = parseInt(numMomentNfts);
+        //load all remaining simracing moment nfts
+        
+        const videoNftsList = await this.loadRemainingSimracingMomentNFTS(contractMomentNFTs, numMomentNFTs2Load, totalMomentNFTs);
+
+        console.log("loaded them all");
+        
+        this.setState({latestNFTs: nftlist, latestVideoNFTs: videoNftsList});
+    }
+
+    loadRemainingSimracingMomentNFTS = async (contractMomentNFTs, startIndex, totalMomentNFTs) => {
+
+        let videoNftsList = [];
+
+        for (let i = startIndex; i < totalMomentNFTs + 1; i++) {
+            try {
+                //TODO: change for different ids
+                console.log('loading remaining moment at idx: ',i);
+                let ownerAddress = await contractMomentNFTs.methods.ownerOf(i).call();
+                //console.log('ID:'+i+'ownerAddress: '+ownerAddress.toString()+'nfts addr: '+contractMomentNFTs.address);
+                if(ownerAddress === contractMomentNFTs.address) {
+                    
+                    let uri = await contractMomentNFTs.methods.tokenURI(i).call();
+                    console.log("loaded " + i + " uri: " + uri);
+
+                    let response = await fetch(uri);
+                    let data = await response.json();
+
+                    data.id=i;
+
+                    videoNftsList.push(data);
+                    
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        return videoNftsList;
+    }
+    loadRemainingCardOwnershipNFTS = async (contractNFTs, startIndex, totalNFTs) => {
+
+        let nftlist = [];
+        for (let i = startIndex; i <  totalNFTs + 1; i++) {
+            try {
+                console.log('loading remaining car at idx: ',i);
                 //TODO: change for different ids
                 let ownerAddress = await contractNFTs.methods.ownerOf(i).call();
                 //console.log('ID:'+i+'ownerAddress: '+ownerAddress.toString()+'nfts addr: '+contractNFTs.address);
                 if(ownerAddress === contractNFTs.address) {
                     
                     let uri = await contractNFTs.methods.tokenURI(i).call();
-
+                    console.log("loaded " + i + " uri: " + uri);
                     let response = await fetch(uri);
                     let data = await response.json();
-                    //console.log('ownership nftData:' + data.image);
-                    //console.log('ownership nftData:' + data.description);
+
                     data.id=i;
 
                     //always put on main list
                     nftlist.push(data);  
-                    this.setState({ latestNFTs: nftlist }); 
-                }
-
-            } catch (e) {
-                console.error(e);
-            }
-        }
-
-        //moment nfts
-        for (let i = 1; i < parseInt(numMomentNfts) + 1; i++) {
-            try {
-                //TODO: change for different ids
-                let ownerAddress = await contractMomentNFTs.methods.ownerOf(i).call();
-                //console.log('ID:'+i+'ownerAddress: '+ownerAddress.toString()+'nfts addr: '+contractMomentNFTs.address);
-                if(ownerAddress === contractMomentNFTs.address) {
                     
-                    let uri = await contractMomentNFTs.methods.tokenURI(i).call();
-                    //console.log('uri: ', uri);
-
-                    let response = await fetch(uri);
-                    let data = await response.json();
-
-                    //console.log('moment nftData:' + data.image);
-                    //console.log('moment nftData:' + data.description);
-                    data.id=i;
-
-                    videoNftsList.push(data);
-                    this.setState({ latestVideoNFTs: videoNftsList });
                 }
+
             } catch (e) {
                 console.error(e);
             }
         }
-        
-        this.setState({ usdValue: usdValue, listCars: response_cars, listSkins: response_skins, contract: contract, contractNFTs: contractNFTs, contractMomentNFTs: contractMomentNFTs });
+        return nftlist;
     }
 
     componentDidMount = async () => {
@@ -267,7 +363,7 @@ class MainPage extends Component {
             usdPrice = "$" + usdPrice;
 
             cars.push(
-                <ListGroup.Item key={itemId} className="bg-dark_A-20 col-3 mb-4" style={{minWidth: '275px'}}>
+                <ListGroup.Item key={itemId} className="bg-dark_A-20 col-3 mb-4" style={{minWidth: '265px'}}>
                     <Card className="card-block">
                         <Card.Header style={{height: '240px'}} className="d-flex flex-wrap align-items-center justify-content-center">
                             <Card.Img variant="top" src={thumb} style={{width: 'auto', maxHeight: '100%'}} />
@@ -311,7 +407,7 @@ class MainPage extends Component {
 
             
             skins.push(
-                <ListGroup.Item key={itemId} className="bg-dark_A-20 col-3 mb-4" style={{minWidth: '275px'}}>
+                <ListGroup.Item key={itemId} className="bg-dark_A-20 col-3 mb-4" style={{minWidth: '265px'}}>
                     <Card className="card-block">
                         <Card.Header style={{height: '240px'}} className="d-flex flex-wrap align-items-center justify-content-center">
                             <Card.Img variant="top" src={imagePath} style={{width: 'auto', maxHeight: '100%'}} />
@@ -332,7 +428,7 @@ class MainPage extends Component {
         if(skins) skins.reverse();
 
         //car ownership ones
-        for (const [index, value] of this.state.latestNFTs.entries()) {
+        for (const [index, value] of this.state.shorterNFTsList.entries()) {
             //console.log('ownership nft value is,',value);
             let series = value.series;
             let simulator = value.simulator;
@@ -354,7 +450,7 @@ class MainPage extends Component {
 
             
                 nfts.push(
-                    <ListGroup.Item key={itemId} className="bg-dark_A-20 col-3 mb-4" style={{minWidth: '275px'}}>
+                    <ListGroup.Item key={itemId} className="bg-dark_A-20 col-3 mb-4" style={{minWidth: '265px'}}>
                         <Card className="card-block">
                             <Card.Header style={{height: '240px'}} className="d-flex flex-wrap align-items-center justify-content-center">
                                 <Card.Img variant="top" src={imagePath} style={{width: 'auto', maxHeight: '100%'}} />
@@ -380,7 +476,7 @@ class MainPage extends Component {
 
 
         //TODO we can use already videoNftsList here
-        for (const [index, value] of this.state.latestVideoNFTs.entries()) {
+        for (const [index, value] of this.state.shorterVideosNftsList.entries()) {
             //console.log('moment nft value is,',value);
   
             let itemId = value.id;
@@ -418,7 +514,7 @@ class MainPage extends Component {
                 
             //console.log('attributes: ', value.attributes);
             momentNfts.push(
-                        <ListGroup.Item key={itemId} className="bg-dark_A-20 col-3 mb-4" style={{minWidth: '275px'}}>
+                        <ListGroup.Item key={itemId} className="bg-dark_A-20 col-3 mb-4" style={{minWidth: '265px'}}>
                     <Card className="card-block">
                         <Card.Header style={{height: '240px'}} className="d-flex flex-wrap align-items-center justify-content-center">
                             <Card.Img variant="top" src={imagePath} style={{width: 'auto', maxHeight: '100%'}} />
@@ -457,7 +553,7 @@ class MainPage extends Component {
             <header className="header">
                 <div className="overlay overflow-hidden pe-n"><img src="/assets/img/bg/bg_shape.png" alt="Background shape" /></div>
                 <section className="content-section text-light br-n bs-c bp-c pb-8">
-                    <div id="latest-container" className="container">
+                    <div id="latest-container" className="container latest-items">
                         <div className="center-text">
                             <h1>Welcome to Simthunder!</h1>
                             <h2>The largest marketplace for sim racing assets</h2>
@@ -471,6 +567,8 @@ class MainPage extends Component {
                             <ListGroup horizontal className="scrolling-wrapper">
                                 {nfts}
                             </ListGroup>
+                            <Link to="/store?m=ownership" className="view-more">View more &gt;&gt; </Link>
+                            
                         </div>
                         <br /><br />
                         <div>
@@ -480,6 +578,7 @@ class MainPage extends Component {
                             <ListGroup horizontal className="scrolling-wrapper">
                                 {cars}
                             </ListGroup>
+                            <Link to="/store?m=carsetup" className="view-more">View more &gt;&gt; </Link>
                         </div>
                         <br /><br />
                         <div>
@@ -489,6 +588,7 @@ class MainPage extends Component {
                             <ListGroup horizontal className="scrolling-wrapper">
                                 {skins}
                             </ListGroup>
+                            <Link to="/store?m=carskins" className="view-more">View more &gt;&gt; </Link>
                         </div>
                         <br /><br />
                         <div>
@@ -498,6 +598,7 @@ class MainPage extends Component {
                             <ListGroup horizontal className="scrolling-wrapper">
                                 {momentNfts}
                             </ListGroup>
+                            <Link to="/store?m=momentnfts" className="view-more">View more &gt;&gt; </Link>
                         </div>
                     </div>
                 </section>

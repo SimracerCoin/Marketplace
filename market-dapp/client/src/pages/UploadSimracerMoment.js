@@ -1,10 +1,8 @@
 import React, { Component } from 'react';
 import { Dropdown, Form, DropdownButton, Button, FormLabel } from 'react-bootstrap';
-import { Prompt } from 'react-st-modal';
 import ipfs from "../ipfs";
-import computeMerkleRootHash from "../utils/merkle"
 import UIHelper from "../utils/uihelper"
-import fetch from 'node-fetch';
+//import fetch from 'node-fetch';
 
 
 const priceConversion = 10 ** 18;
@@ -412,9 +410,15 @@ class UploadSimracerMoment extends Component {
 
                 const price = this.state.drizzle.web3.utils.toBN(this.state.currentFilePrice);
 
+
+                //some gas estimations
+                //estimate method gas consuption (units of gas)
+                let gasLimit = UIHelper.defaultGasLimit;
+                let paramsForCall = await UIHelper.calculateGasUsingStation(gasLimit, this.state.currentAccount);
+
                 //'https://gateway.pinata.cloud/ipfs/Qmboj3b42aW2nHGuQizdi2Zp35g6TBKmec6g77X9UiWQXg'
                 let tx = await this.state.contractNFTs.methods.awardItem(this.state.contractNFTs.address, this.state.currentAccount, price, 'https://ipfs.io/ipfs/' + this.state.jsonData_ipfsPath)
-                    .send({ from: this.state.currentAccount })
+                    .send( paramsForCall )
                     //.on('sent', UIHelper.transactionOnSent)
                     .on('confirmation', function (confNumber, receipt, latestBlockHash) {
                         window.localStorage.setItem('forceUpdate','yes');

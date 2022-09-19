@@ -183,8 +183,12 @@ class ItemPage extends Component {
               UIHelper.transactionOnError("ERROR ON APPROVAL");
             } else {
               //do it!
+
+              let gasLimit = UIHelper.defaultGasLimit;
+              let paramsForCall = await UIHelper.calculateGasUsingStation(gasLimit, this.state.currentAccount);
+
               await this.state.contractNFTs.methods.buyItem(this.state.itemId,price)
-              .send({from: this.state.currentAccount })
+              .send(paramsForCall)
               //.on('sent', UIHelper.transactionOnSent)
               .on('confirmation', function (confNumber, receipt, latestBlockHash) {
                   UIHelper.transactionOnConfirmation("Thank you for your purchase.", "/");
