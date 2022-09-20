@@ -132,6 +132,9 @@ class ItemPage extends Component {
         // TODO: buyer public key
         //const buyerPK = this.state.drizzle.web3.utils.hexToBytes(this.state.drizzle.web3.utils.randomHex(16));
         //console.log('Item price:' + this.state.price);
+
+        let gasLimit = UIHelper.defaultGasLimit;
+
         if (!this.state.isNFT) {
 
             let buyerKey = localStorage.getItem('ak');
@@ -149,8 +152,10 @@ class ItemPage extends Component {
             }
 
             //approve contract ot spend our SRC
+            let paramsForCall = await UIHelper.calculateGasUsingStation(gasLimit, this.state.currentAccount);
+
             let approval = await this.state.contractSimracerCoin.methods.approve(this.state.contract.address, price)
-            .send({from: this.state.currentAccount })
+            .send(paramsForCall)
             .catch(function (e) {
               UIHelper.transactionOnError(e);
              });
@@ -174,8 +179,9 @@ class ItemPage extends Component {
             
         } else {
 
+            let paramsForCall = await UIHelper.calculateGasUsingStation(gasLimit, this.state.currentAccount);
             let approval = await this.state.contractSimracerCoin.methods.approve(this.state.contractNFTs.address, price)
-            .send({from: this.state.currentAccount })
+            .send(paramsForCall)
             .catch(function (e) {
               UIHelper.transactionOnError(e);
              });
@@ -184,8 +190,8 @@ class ItemPage extends Component {
             } else {
               //do it!
 
-              let gasLimit = UIHelper.defaultGasLimit;
-              let paramsForCall = await UIHelper.calculateGasUsingStation(gasLimit, this.state.currentAccount);
+              //let gasLimit = UIHelper.defaultGasLimit;
+              //let paramsForCall = await UIHelper.calculateGasUsingStation(gasLimit, this.state.currentAccount);
 
               await this.state.contractNFTs.methods.buyItem(this.state.itemId,price)
               .send(paramsForCall)
