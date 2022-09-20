@@ -33,8 +33,8 @@
 .container.latest-items {
     padding-left: 10px;
     padding-right: 10px;
-    max-width: 90%;
-    width:90%;
+    max-width: 95%;
+    width:95%;
 }
 
 .view-more {
@@ -50,4 +50,14 @@
 
 .view-more:hover {
  cursor: pointer;
+}
+
+.col-3-24 {
+    flex: 0 0 25%;
+    max-width: 24%;
+}
+
+.owner_address {
+    font-size: 12px;
+    word-break: break-all!important;
 }
