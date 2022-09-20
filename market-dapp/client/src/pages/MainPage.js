@@ -168,13 +168,13 @@ class MainPage extends Component {
         for (let i = startIndex; i < totalMomentNFTs + 1; i++) {
             try {
                 //TODO: change for different ids
-                console.log('loading remaining moment at idx: ',i);
+                //console.log('loading remaining moment at idx: ',i);
                 let ownerAddress = await contractMomentNFTs.methods.ownerOf(i).call();
                 //console.log('ID:'+i+'ownerAddress: '+ownerAddress.toString()+'nfts addr: '+contractMomentNFTs.address);
                 if(ownerAddress === contractMomentNFTs.address) {
                     
                     let uri = await contractMomentNFTs.methods.tokenURI(i).call();
-                    console.log("loaded " + i + " uri: " + uri);
+                    //console.log("loaded " + i + " uri: " + uri);
 
                     let response = await fetch(uri);
                     let data = await response.json();
@@ -196,14 +196,14 @@ class MainPage extends Component {
         let nftlist = [];
         for (let i = startIndex; i <  totalNFTs + 1; i++) {
             try {
-                console.log('loading remaining car at idx: ',i);
+                //console.log('loading remaining car at idx: ',i);
                 //TODO: change for different ids
                 let ownerAddress = await contractNFTs.methods.ownerOf(i).call();
                 //console.log('ID:'+i+'ownerAddress: '+ownerAddress.toString()+'nfts addr: '+contractNFTs.address);
                 if(ownerAddress === contractNFTs.address) {
                     
                     let uri = await contractNFTs.methods.tokenURI(i).call();
-                    console.log("loaded " + i + " uri: " + uri);
+                    //console.log("loaded " + i + " uri: " + uri);
                     let response = await fetch(uri);
                     let data = await response.json();
 
@@ -363,7 +363,7 @@ class MainPage extends Component {
             usdPrice = "$" + usdPrice;
 
             cars.push(
-                <ListGroup.Item key={itemId} className="bg-dark_A-20 col-3 mb-4" style={{minWidth: '265px'}}>
+                <ListGroup.Item key={itemId} className="bg-dark_A-20 col-3-24 mb-4">
                     <Card className="card-block">
                         <Card.Header style={{height: '240px'}} className="d-flex flex-wrap align-items-center justify-content-center">
                             <Card.Img variant="top" src={thumb} style={{width: 'auto', maxHeight: '100%'}} />
@@ -407,7 +407,7 @@ class MainPage extends Component {
 
             
             skins.push(
-                <ListGroup.Item key={itemId} className="bg-dark_A-20 col-3 mb-4" style={{minWidth: '265px'}}>
+                <ListGroup.Item key={itemId} className="bg-dark_A-20 col-3-24 mb-4">
                     <Card className="card-block">
                         <Card.Header style={{height: '240px'}} className="d-flex flex-wrap align-items-center justify-content-center">
                             <Card.Img variant="top" src={imagePath} style={{width: 'auto', maxHeight: '100%'}} />
@@ -450,7 +450,7 @@ class MainPage extends Component {
 
             
                 nfts.push(
-                    <ListGroup.Item key={itemId} className="bg-dark_A-20 col-3 mb-4" style={{minWidth: '265px'}}>
+                    <ListGroup.Item key={itemId} className="bg-dark_A-20 col-3-24 mb-4">
                         <Card className="card-block">
                             <Card.Header style={{height: '240px'}} className="d-flex flex-wrap align-items-center justify-content-center">
                                 <Card.Img variant="top" src={imagePath} style={{width: 'auto', maxHeight: '100%'}} />
@@ -514,7 +514,7 @@ class MainPage extends Component {
                 
             //console.log('attributes: ', value.attributes);
             momentNfts.push(
-                        <ListGroup.Item key={itemId} className="bg-dark_A-20 col-3 mb-4" style={{minWidth: '265px'}}>
+                        <ListGroup.Item key={itemId} className="bg-dark_A-20 col-3-24 mb-4">
                     <Card className="card-block">
                         <Card.Header style={{height: '240px'}} className="d-flex flex-wrap align-items-center justify-content-center">
                             <Card.Img variant="top" src={imagePath} style={{width: 'auto', maxHeight: '100%'}} />
@@ -528,6 +528,12 @@ class MainPage extends Component {
                                         <div><b>{label}:</b> <strong>{price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/> <span className="secondary-price ahead27">{usdPrice}<sup className="secondary-sup">USD</sup></span></div>
                                    ) 
                                 } else {
+                                    if(label === 'SeriesOwner') {
+                                        return "";
+                                        //return(
+                                        //    <div><b>Owner: </b><span className='owner_address'>{att.value}</span></div> 
+                                        //)
+                                    }
                                     if(att.trait_type === 'video') {
                                        return (
                                          <div><b>{label}:</b><a href={att.value} rel="noreferrer" target="_blank">{att.value}</a></div> 

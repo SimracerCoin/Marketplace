@@ -524,7 +524,6 @@ pre {
       max-width: 1140px; } 
     }
 
-  
 
 .container-fluid {
   width: 100%;
@@ -20346,5 +20345,5 @@ ul.list-style-square {
 }
 #latest-container .list-group-item {
   margin-left: 0.5rem;
-  width: 320px;
+  width: 290px;
 }

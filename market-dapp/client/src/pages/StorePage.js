@@ -113,7 +113,9 @@ class StorePage extends Component {
     }
     componentDidMount = async () => {
 
-      console.log("STORE: componentDidMount");
+      //console.log("STORE: componentDidMount");
+      //scroll to top of page
+      window.scrollTo(0, 0);
 
        UIHelper.showSpinning("loading items ...");
 
@@ -298,11 +300,11 @@ class StorePage extends Component {
         try {
             //TODO: change for different ids
             let ownerAddress = await contractNFTs.methods.ownerOf(i).call();
-            console.log('ID:'+i+'ownerAddress: '+ownerAddress.toString()+'nfts addr: '+contractNFTs.address);
+            //console.log('ID:'+i+'ownerAddress: '+ownerAddress.toString()+'nfts addr: '+contractNFTs.address);
             if(ownerAddress === contractNFTs.address) {
                 console.log('GOT MATCH');
                 let uri = await contractNFTs.methods.tokenURI(i).call();
-                console.log('uri: ', uri);
+                //console.log('uri: ', uri);
                 let response = await fetch(uri);
                 let data = await response.json();
                 
@@ -392,17 +394,17 @@ class StorePage extends Component {
         try {
             //TODO: change for different ids
             let ownerAddress = await contractMomentNFTs.methods.ownerOf(i).call();
-            console.log('ID:'+i+'ownerAddress: '+ownerAddress.toString()+'nfts addr: '+contractMomentNFTs.address);
+            //console.log('ID:'+i+'ownerAddress: '+ownerAddress.toString()+'nfts addr: '+contractMomentNFTs.address);
             if(ownerAddress === contractMomentNFTs.address) {
                
                 let uri = await contractMomentNFTs.methods.tokenURI(i).call();
-                console.log('uri: ', uri);
+                //console.log('uri: ', uri);
                 let response = await fetch(uri);
                 let data = await response.json();
                         
-                console.log('moment nft name:' + data.name);
-                console.log('moment nft image:' + data.image);
-                console.log('moment nft description:' + data.description);
+                //console.log('moment nft name:' + data.name);
+                //console.log('moment nft image:' + data.image);
+                //console.log('moment nft description:' + data.description);
                 data.id=i;
 
                 let metadata = this.extractMomentNFTTraitTypes(data.attributes);
