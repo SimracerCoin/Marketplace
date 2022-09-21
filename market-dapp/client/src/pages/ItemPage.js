@@ -55,8 +55,9 @@ class ItemPage extends Component {
 
     componentDidMount = async (event) => {
         const contract = await this.state.drizzle.contracts.STMarketplace;
-        const contractNFTs = this.state.drizzle.contracts.SimthunderOwner;
-        const contractSimracerCoin = this.state.drizzle.contracts.SimracerCoin;
+        const contractNFTs = await this.state.drizzle.contracts.SimthunderOwner;
+        const contractSimracerCoin = await this.state.drizzle.contracts.SimracerCoin;
+        const contractMomentNFTs = await this.state.drizzle.contracts.SimracingMomentOwner;
 
         const currentAccount = this.state.drizzleState.accounts[0];
         console.log('isNFT:' + this.state.isNFT);
@@ -72,7 +73,7 @@ class ItemPage extends Component {
 
             this.setState({ currentAccount: currentAccount, contract: contract, contractSimracerCoin: contractSimracerCoin, listComments: comments, average_review: average_review, isSkin: isSkin });
         } else {
-            this.setState({ currentAccount: currentAccount, contract: contract, contractNFTs: contractNFTs, contractSimracerCoin: contractSimracerCoin, isSkin: isSkin });
+            this.setState({ currentAccount: currentAccount, contract: contract, contractMomentNFTs: contractMomentNFTs, contractNFTs: contractNFTs, contractSimracerCoin: contractSimracerCoin, isSkin: isSkin });
         }
 
         this.setState({isMuted: hasVideo});
@@ -135,7 +136,7 @@ class ItemPage extends Component {
 
         let gasLimit = UIHelper.defaultGasLimit;
 
-        if (!this.state.isNFT) {
+        if (!this.state.isNFT && !this.state.isMomentNFT) {
 
             let buyerKey = localStorage.getItem('ak');
             if (!buyerKey) {
@@ -167,7 +168,10 @@ class ItemPage extends Component {
               .send({from: this.state.currentAccount })
               //.on('sent', UIHelper.transactionOnSent)
               .on('confirmation', function (confNumber, receipt, latestBlockHash) {
+                if(confNumber > 9) {
                   UIHelper.transactionOnConfirmation("Thank you for your purchase request. Seller will contact you soon.", "/");
+                }
+                  
               })
               .on('error', UIHelper.transactionOnError)
               .catch(function (e) {
@@ -190,20 +194,48 @@ class ItemPage extends Component {
             } else {
               //do it!
 
-              //let gasLimit = UIHelper.defaultGasLimit;
-              //let paramsForCall = await UIHelper.calculateGasUsingStation(gasLimit, this.state.currentAccount);
+              //SimthunderOwner NFT
+              if(this.state.isNFT) {
+              
+                await this.state.contractNFTs.methods.buyItem(this.state.itemId,price)
+                .send(paramsForCall)
+                .on('confirmation', function (confNumber, receipt, latestBlockHash) {
+                  if(confNumber > 9) {
+                    UIHelper.transactionOnConfirmation("Thank you for your purchase.", "/");
+                  }
+                    
+                })
+                .on('error', UIHelper.transactionOnError)
+                .catch(function (e) {
+                  console.log(e);
+                });
 
-              await this.state.contractNFTs.methods.buyItem(this.state.itemId,price)
-              .send(paramsForCall)
-              //.on('sent', UIHelper.transactionOnSent)
-              .on('confirmation', function (confNumber, receipt, latestBlockHash) {
-                  UIHelper.transactionOnConfirmation("Thank you for your purchase.", "/");
-              })
-              .on('error', UIHelper.transactionOnError)
-              .catch(function (e) {
-                console.log(e);
-               });
+                //SimracingMomentOwner NFT
+              } else if(this.state.isMomentNFT) {
+
+                await this.state.contractMomentNFTs.methods.buyItem(this.state.itemId,price)
+                .send(paramsForCall)
+                .on('confirmation', function (confNumber, receipt, latestBlockHash) {
+                   if(confNumber > 9) {
+                    UIHelper.transactionOnConfirmation("Thank you for your purchase.", "/");
+                   }
+                    
+                })
+                .on('error', UIHelper.transactionOnError)
+                .catch(function (e) {
+                  console.log(e);
+                });
+              }
+
+              
             }
+
+            
+
+            
+
+            
+            
 
             
         }
