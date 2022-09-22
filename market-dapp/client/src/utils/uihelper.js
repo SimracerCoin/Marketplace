@@ -113,8 +113,8 @@ static calculateGasUsingStation = async function(gasLimit, fromAccount) {
       return { 
         gasLimit: Number(Math.trunc(gasLimit * 1.1)),
         from: fromAccount,
-        maxPriorityFeePerGas : Number(convertGwei2Wei( Math.trunc(data.fast.maxPriorityFee))),
-        maxFeePerGas : Number(convertGwei2Wei( Math.trunc(data.fast.maxFee)))
+        maxPriorityFeePerGas : Number(convertGwei2Wei( Math.trunc(data.fast.maxPriorityFee * 1.1))),
+        maxFeePerGas : Number(convertGwei2Wei( Math.trunc(data.fast.maxFee * 1.1)))
       }
 
   } catch (error) {

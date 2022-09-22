@@ -165,7 +165,7 @@ class ItemPage extends Component {
             } else {
               //approved
               await this.state.contract.methods.requestPurchase(price, this.state.itemId, buyerKey)
-              .send({from: this.state.currentAccount })
+              .send(paramsForCall)
               //.on('sent', UIHelper.transactionOnSent)
               .on('confirmation', function (confNumber, receipt, latestBlockHash) {
                 if(confNumber > 9) {
