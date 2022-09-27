@@ -56,8 +56,7 @@ class MainPage extends Component {
 
         const response_cars = await contract.methods.getCarSetups().call();
 
-        const usdValue = await this.fetchUSDPrice();
-        console.log('usdValue: ', usdValue);
+        let usdValue = await this.fetchUSDPrice()
         
         const response_skins = await contract.methods.getSkins().call();
 
@@ -72,18 +71,18 @@ class MainPage extends Component {
 
         // get info from marketplace NFT contract
       
-        const numNfts = await contractNFTs.methods.currentTokenId().call();
+        const numNfts = Number(await contractNFTs.methods.currentTokenId().call());
 
-        const numMomentNfts = await contractMomentNFTs.methods.currentTokenId().call();
+        const numMomentNfts = Number(await contractMomentNFTs.methods.currentTokenId().call());
 
         console.log('car ownership nfts count:' + numNfts);
         console.log('car moment nfts count:' + numMomentNfts);
         console.log("MAX NUM ITEMS 2 TO LOAD: ", NUM_ITEMS_LOAD);
 
         //laod only first NUM_ITEMS_LOAD items
-        const numNFTs2Load = Math.min( Number(numNfts), NUM_ITEMS_LOAD);
+        const numNFTs2Load = Math.min( numNfts, NUM_ITEMS_LOAD);
         //---------------------------------------------
-        for (let i = 1; i <  numNFTs2Load + 1; i++) {
+        for (let i = 1;  i < numNfts + 1; i++) {
             try {
                 //TODO: change for different ids
                 let ownerAddress = await contractNFTs.methods.ownerOf(i).call();
@@ -97,7 +96,9 @@ class MainPage extends Component {
                     data.id=i;
                     //put on shorter list
                     shorterNFTsList.push(data);  
-                    
+                    if(shorterNFTsList.length === numNFTs2Load) {
+                        break;
+                    }  
                 }
 
             } catch (e) {
@@ -105,9 +106,9 @@ class MainPage extends Component {
             }
         }
 
-        const numMomentNFTs2Load = Math.min( Number(numMomentNfts), NUM_ITEMS_LOAD);
+        const numMomentNFTs2Load = Math.min( numMomentNfts, NUM_ITEMS_LOAD);
         //moment nfts
-        for (let i = 1; i < numMomentNFTs2Load + 1; i++) {
+        for (let i = 1; i < numMomentNfts + 1; i++) {
             try {
                 //TODO: change for different ids
                 let ownerAddress = await contractMomentNFTs.methods.ownerOf(i).call();
@@ -121,6 +122,9 @@ class MainPage extends Component {
                   
                     data.id=i;
                     shorterVideosNftsList.push(data);
+                    if(shorterVideosNftsList.length === numMomentNFTs2Load) {
+                        break;
+                    }
                     
                 }
             } catch (e) {
@@ -129,7 +133,10 @@ class MainPage extends Component {
         }
         //----------------------------------------------------
 
-        console.log("STILL HERE? ");
+
+        //hide spinning as soon as we load the minimum
+        UIHelper.hiddeSpinning();
+
         //onwnership nfts
         this.setState(
             { 
@@ -143,8 +150,7 @@ class MainPage extends Component {
                 contractMomentNFTs: contractMomentNFTs 
             }); 
         //simracing moment
-        //hide spinning as soon as we load the minimum
-        UIHelper.hiddeSpinning();
+        
 
         const totalNFTs = parseInt(numNfts);
         //load all remaining car ownership nfts
@@ -293,14 +299,17 @@ class MainPage extends Component {
     }
 
     fetchUSDPrice = async () => {
-        try {
+       try {
             const priceUSD = await UIHelper.fetchSRCPriceVsUSD();
             const priceObj = await priceUSD.json();
             const key = Object.keys(priceObj);
             return priceObj[key]['usd']; 
-        } catch(err) {
-            return 1;
+
+        }catch(err) {
+           return 1;
         } 
+                
+            
     }
       
 
@@ -573,7 +582,10 @@ class MainPage extends Component {
                             <ListGroup horizontal className="scrolling-wrapper">
                                 {nfts}
                             </ListGroup>
+                            {this.state.latestNFTs.length > NUM_ITEMS_LOAD &&
                             <Link to="/store?m=ownership" className="view-more">View more &gt;&gt; </Link>
+                            }
+                            
                             
                         </div>
                         <br /><br />
@@ -584,7 +596,10 @@ class MainPage extends Component {
                             <ListGroup horizontal className="scrolling-wrapper">
                                 {cars}
                             </ListGroup>
+                            {this.state.listCars.length > NUM_ITEMS_LOAD &&
                             <Link to="/store?m=carsetup" className="view-more">View more &gt;&gt; </Link>
+                            }
+                            
                         </div>
                         <br /><br />
                         <div>
@@ -594,7 +609,10 @@ class MainPage extends Component {
                             <ListGroup horizontal className="scrolling-wrapper">
                                 {skins}
                             </ListGroup>
+                            {this.state.listSkins.length > NUM_ITEMS_LOAD &&
                             <Link to="/store?m=carskins" className="view-more">View more &gt;&gt; </Link>
+                            }
+                            
                         </div>
                         <br /><br />
                         <div>
@@ -604,7 +622,10 @@ class MainPage extends Component {
                             <ListGroup horizontal className="scrolling-wrapper">
                                 {momentNfts}
                             </ListGroup>
+                            {this.state.latestVideoNFTs.length > NUM_ITEMS_LOAD &&
                             <Link to="/store?m=momentnfts" className="view-more">View more &gt;&gt; </Link>
+                            }
+                            
                         </div>
                     </div>
                 </section>
