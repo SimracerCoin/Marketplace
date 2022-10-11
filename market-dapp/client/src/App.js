@@ -10,6 +10,12 @@ import Underconstruction from "./pages/Underconstruction";
 import RouterPage from "./pages/RouterPage";
 import Web3 from "web3";
 
+//web3 login stuff
+import Web3Modal from "web3modal";
+//wallet providers
+import WalletConnectProvider from "@walletconnect/web3-provider";
+import Torus from "@toruslabs/torus-embed";
+import WalletLink from "walletlink";
 
 import "./css/App.css";
 
@@ -17,6 +23,74 @@ import "./css/App.css";
 //var web3 = new Web3(Web3.givenProvider);
 
 var NETWORK_ID = Number(process.env.REACT_APP_NETWORK_ID) || 137;
+const INFURA_ID = "af8deeef6ddf41fb816e3403139f00b3";
+
+// Tell Web3modal what providers we have available.
+// Built-in web browser provider (only one can exist as a time)
+// like MetaMask, Brave or Opera is added automatically by Web3modal
+const providerOptions = {
+    /* See Provider Options Section */
+
+    walletconnect: {
+        package: WalletConnectProvider, // required
+        options: {
+          infuraId: INFURA_ID, // required
+          rpc:  { NETWORK_ID: process.env.NETWORK_URL },
+          chainId: NETWORK_ID
+        }
+      },
+      torus: {
+        package: Torus, // required
+        options: {
+          networkParams: {
+            host: process.env.NETWORK_URL,
+            chainId: NETWORK_ID, // optional
+            networkId: NETWORK_ID // optional
+          }
+        }
+      },
+      walletlink: {
+        package: WalletLink, // Required
+        options: {
+          appName: "Simthunder", // Required
+          infuraId: INFURA_ID, // Required unless you provide a JSON RPC url; see `rpc` below
+          rpc: process.env.NETWORK_URL, // Optional if `infuraId` is provided; otherwise it's required
+          chainId: NETWORK_ID, // Optional. It defaults to 1 if not provided
+          //appLogoUrl: null, // Optional. Application logo image URL. favicon is used if unspecified
+          //darkMode: false // Optional. Use dark theme, defaults to false
+        }
+      },
+      //venly: {
+      //  package: Venly, // required (previously Arkane network)
+      //  options: {
+      //  clientId: process.env.VENLY_CLIENT_ID // required VENLY_CLIENT_ID,"Testaccount" for their staging env
+      //  }
+     //}
+  };
+  
+const web3Modal = new Web3Modal({
+    //network: "mainnet", // optional
+    cacheProvider: false, // optional
+    providerOptions // required
+});
+
+
+//open web3Modal dialog to choose wallet provider
+async function connectWalletProvider() {
+    
+    let provider = null;
+    try {
+        //some weird bugs happen if we don´t clear the cache first (one is Metamask now opening if/when selected), other is not shwoing modal on Brave
+        web3Modal.clearCachedProvider()
+        provider = await web3Modal.connect();
+        console.log("got wallet provider.. " + provider);
+        return provider;
+    } catch(e) {
+        console.log("Could not get a wallet connection", e);
+        return null;
+    }
+
+}
 
 const allowAllWallets = (process.env.REACT_APP_ALLOW_ALL_WALLETS == "true" ? true : false);
 
@@ -56,7 +130,38 @@ class App extends React.Component {
     let isLoggedIn = false;
     let networkId = 0;
     if (typeof web3 !== 'undefined') {
-      window.web3 = new Web3(Web3.givenProvider);
+
+      let provider = await connectWalletProvider();
+
+      if(provider) {
+
+          // Subscribe to accounts change
+          provider.on("accountsChanged", (accounts) => {
+            console.log("accountsChanged", accounts);
+          });
+                            
+          // Subscribe to chainId change
+          provider.on("chainChanged", (chainId) => {
+              console.log("chainChanged",chainId);
+          });
+                            
+          // Subscribe to provider connection
+          provider.on("connect", (info) => { //{ chainId: number }
+              console.log("provider connect", info);
+              //return given provider to main initialization sequence
+          });
+                            
+          // Subscribe to provider disconnection
+          provider.on("disconnect", (error) => {//: { code: number; message: string }
+              console.log("disconnect", error);
+          });
+          window.web3 = new Web3(provider);
+      } else {
+        //defaukts to built-in Metamask
+        window.web3 = new Web3(Web3.givenProvider);
+      }
+
+      
 
 
       //set bigger timeouts (provided values according to the documentation examples)
