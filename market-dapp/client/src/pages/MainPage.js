@@ -75,9 +75,9 @@ class MainPage extends Component {
 
         const numMomentNfts = Number(await contractMomentNFTs.methods.currentTokenId().call());
 
-        console.log('car ownership nfts count:' + numNfts);
-        console.log('car moment nfts count:' + numMomentNfts);
-        console.log("MAX NUM ITEMS 2 TO LOAD: ", NUM_ITEMS_LOAD);
+        //console.log('car ownership nfts count:' + numNfts);
+        //console.log('car moment nfts count:' + numMomentNfts);
+        //console.log("MAX NUM ITEMS 2 TO LOAD: ", NUM_ITEMS_LOAD);
 
         //laod only first NUM_ITEMS_LOAD items
         const numNFTs2Load = Math.min( numNfts, NUM_ITEMS_LOAD);

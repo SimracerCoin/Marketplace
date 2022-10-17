@@ -86,3 +86,8 @@ REACT_APP_INFURA_IPFS_API_SECRET
 ### how many items to load on main page? (per category)
 REACT_APP_NUM_ITEMS_LOAD=4
 
+## main setup keys for provider
+REACT_APP_NETWORK_ID=137
+REACT_APP_NETWORK_URL=https://polygon-rpc.com/
+REACT_APP_INFURA_ID=[INFURA_ID]
+
