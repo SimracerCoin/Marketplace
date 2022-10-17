@@ -1013,7 +1013,8 @@ class StorePage extends Component {
                     vendorNickname: this.state.vendorNickname,
                     ipfsPath: this.state.ipfsPath,
                     isNFT: this.state.isNFT,
-                    similarItems: similarItems
+                    similarItems: similarItems,
+                    usdPrice : this.state.usdValue
                 }
             }}
         />)
@@ -1038,7 +1039,8 @@ class StorePage extends Component {
           vendorNickname: address ? await this.state.contract.methods.getNickname(address).call() : "",
           ipfsPath: ipfsPath,
           isNFT: isNFT,
-          isMomentNFT: isMomentNFT
+          isMomentNFT: isMomentNFT,
+          usdPrice : this.state.usdValue
       });
   
     }

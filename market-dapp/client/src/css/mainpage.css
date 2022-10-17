@@ -61,3 +61,7 @@
     font-size: 12px;
     word-break: break-all!important;
 }
+
+.card-block img:hover {
+    cursor: pointer!important;
+}

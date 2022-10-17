@@ -375,20 +375,20 @@ class MainPage extends Component {
                 <ListGroup.Item key={itemId} className="bg-dark_A-20 col-3-24 mb-4">
                     <Card className="card-block">
                         <Card.Header style={{height: '240px'}} className="d-flex flex-wrap align-items-center justify-content-center">
-                            <Card.Img variant="top" src={thumb} style={{width: 'auto', maxHeight: '100%'}} />
+                            <Card.Img onClick={(e) => this.buyItem(e, itemId, track, simulator, season, series, description, price, carBrand, address, ipfsPath, "", false, false,null)} variant="top" src={thumb} style={{width: 'auto', maxHeight: '100%'}} />
                         </Card.Header>
                         <Card.Body>
                             <Card.Title className="mt-5 font-weight-bold">{carBrand}</Card.Title>
                             <div className="text-left">
-                            <div><b>Track:</b> {track}</div>
-                            <div><b>Simulator:</b> {simulator}</div>
-                            <div><b>Season:</b> {season}</div>
+                            <div>{track}</div>
+                            <div>{simulator}</div>
+                            <div>{season}</div>
 
-                            <div><b>Price:</b> <strong>{price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/> <span className="secondary-price ahead27">{usdPrice}<sup className="secondary-sup">USD</sup></span></div>
+                            <div><strong>{price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/> <span className="secondary-price">{usdPrice}<sup className="secondary-sup">USD</sup></span></div>
 
                             {/* <div><b>Vendor address:</b> {address}</div> */}
                             </div>
-                            <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, track, simulator, season, series, description, price, carBrand, address, ipfsPath, "", false, false,null)}> View item</Button>
+                            <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, track, simulator, season, series, description, price, carBrand, address, ipfsPath, "", false, false,null)}> Buy item</Button>
                         </Card.Body>
                     </Card>
                 </ListGroup.Item>
@@ -419,15 +419,15 @@ class MainPage extends Component {
                 <ListGroup.Item key={itemId} className="bg-dark_A-20 col-3-24 mb-4">
                     <Card className="card-block">
                         <Card.Header style={{height: '240px'}} className="d-flex flex-wrap align-items-center justify-content-center">
-                            <Card.Img variant="top" src={imagePath} style={{width: 'auto', maxHeight: '100%'}} />
+                            <Card.Img onClick={(e) => this.buyItem(e, itemId, null, simulator, null, null, null, price, carBrand , address, ipfsPath, imagePath, false, false, null)} variant="top" src={imagePath} style={{width: 'auto', maxHeight: '100%'}} />
                         </Card.Header>
                         <Card.Body>
                             <Card.Title className="mt-5 font-weight-bold">{carBrand}</Card.Title>
                             <div className="text-left">
-                                <div><b>Simulator:</b>&nbsp;<img src={thumb} width="24" alt={simulator} /> {simulator}</div>
-                                <div><b>Price:</b> <strong>{price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/> <span className="secondary-price ahead27">{usdPrice}<sup className="secondary-sup">USD</sup></span></div>
+                                <div><img src={thumb} width="24" alt={simulator} /> {simulator}</div>
+                                <div><strong>{price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/> <span className="secondary-price">{usdPrice}<sup className="secondary-sup">USD</sup></span></div>
                             </div>
-                            <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, null, null, price, carBrand , address, ipfsPath, imagePath, false, false, null)}> View item</Button>
+                            <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, null, null, price, carBrand , address, ipfsPath, imagePath, false, false, null)}> Buy item</Button>
                         </Card.Body>
                     </Card>
                 </ListGroup.Item>
@@ -462,16 +462,16 @@ class MainPage extends Component {
                     <ListGroup.Item key={itemId} className="bg-dark_A-20 col-3-24 mb-4">
                         <Card className="card-block">
                             <Card.Header style={{height: '240px'}} className="d-flex flex-wrap align-items-center justify-content-center">
-                                <Card.Img variant="top" src={imagePath} style={{width: 'auto', maxHeight: '100%'}} />
+                                <Card.Img onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, carNumberOrDescription, price, null , address, null, imagePath, true, false, null)} variant="top" src={imagePath} style={{width: 'auto', maxHeight: '100%'}} />
                             </Card.Header>
                             <Card.Body>
                             <div className="text-left">
-                                <div><b>Series:</b> {series}</div>
-                                <div><b>Simulator:</b> {simulator}</div>
-                                <div><b>Car Number:</b> {carNumberOrDescription}</div>
-                                <div><b>Price:</b> <strong>{price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/> <span className="secondary-price ahead27">{usdPrice}<sup className="secondary-sup">USD</sup></span></div>
+                                <div>{series}</div>
+                                <div>{simulator}</div>
+                                <div>{carNumberOrDescription}</div>
+                                <div>s<strong>{price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/> <span className="secondary-price">{usdPrice}<sup className="secondary-sup">USD</sup></span></div>
                               </div>
-                                <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, carNumberOrDescription, price, null , address, null, imagePath, true, false, null)}> View item</Button>
+                                <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, carNumberOrDescription, price, null , address, null, imagePath, true, false, null)}> Buy item</Button>
                             </Card.Body>
                         </Card>
                     </ListGroup.Item>
@@ -526,7 +526,7 @@ class MainPage extends Component {
                         <ListGroup.Item key={itemId} className="bg-dark_A-20 col-3-24 mb-4">
                     <Card className="card-block">
                         <Card.Header style={{height: '240px'}} className="d-flex flex-wrap align-items-center justify-content-center">
-                            <Card.Img variant="top" src={imagePath} style={{width: 'auto', maxHeight: '100%'}} />
+                            <Card.Img onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, carNumberOrDescription, price, null , address, null, imagePath, false, true, video)} variant="top" src={imagePath} style={{width: 'auto', maxHeight: '100%'}} />
                         </Card.Header>
                         <Card.Body>
                             <div className="text-left">
@@ -534,7 +534,7 @@ class MainPage extends Component {
                                 let label = att.trait_type.charAt(0).toUpperCase() + att.trait_type.slice(1);
                                 if(att.trait_type === 'price') {
                                    return (
-                                        <div><b>{label}:</b> <strong>{price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/> <span className="secondary-price ahead27">{usdPrice}<sup className="secondary-sup">USD</sup></span></div>
+                                        <div><strong>{price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/> <span className="secondary-price">{usdPrice}<sup className="secondary-sup">USD</sup></span></div>
                                    ) 
                                 } else {
                                     if(label === 'SeriesOwner') {
@@ -545,16 +545,16 @@ class MainPage extends Component {
                                     }
                                     if(att.trait_type === 'video') {
                                        return (
-                                         <div><b>{label}:</b><a href={att.value} rel="noreferrer" target="_blank">{att.value}</a></div> 
+                                         <div><a href={att.value} rel="noreferrer" target="_blank">{att.value}</a></div> 
                                        )
                                     }
                                     return(
-                                        <div><b>{label}:</b> {att.value}</div> 
+                                        <div>{att.value}</div> 
                                     )
                                 }
                             }, this)}
                             </div>
-                        <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, carNumberOrDescription, price, null , address, null, imagePath, false, true, video)}> View item</Button>
+                        <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, carNumberOrDescription, price, null , address, null, imagePath, false, true, video)}> Buy item</Button>
                         </Card.Body>
                     </Card>
             </ListGroup.Item>
