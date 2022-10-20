@@ -1,7 +1,9 @@
 import React, { Component } from 'react';
-import { Dropdown, Form, DropdownButton, Button, FormLabel } from 'react-bootstrap';
+import { Dropdown, Form, DropdownButton, Button, FormCheck } from 'react-bootstrap';
 import ipfs from "../ipfs";
-import UIHelper from "../utils/uihelper"
+import UIHelper from "../utils/uihelper";
+import "../css/auction.css";
+
 //import fetch from 'node-fetch';
 
 
@@ -32,7 +34,8 @@ class UploadSimracerMoment extends Component {
             isSeller: false,
             videoBuffer: null,
             imageBuffer: null,
-            priceValue:0
+            priceValue:0,
+            auctionItem: false
         }
 
 
@@ -90,6 +93,12 @@ class UploadSimracerMoment extends Component {
         this.setState({ currentSeries: event.target.value });
         this.checkInput(event.target.value);
     };
+
+    handleAuction = (event) => {
+        console.log("Is auction: " + event.target.value);
+        let newState = this.state.isAuctionItem ? false : true;
+        this.setState({ auctionItem: newState });
+    }
 
     onSelectSimulator = async (event) => {
         console.log("Choosing Simulator: " + event);
@@ -546,6 +555,11 @@ class UploadSimracerMoment extends Component {
                                                 <DropdownButton id="dropdown-skin-button" title={this.state.currentSimulator} onSelect={this.onSelectSimulator}>
                                                     {sims}
                                                 </DropdownButton>
+                                                <br></br>
+                                                <div className="auction_item_input">
+                                                <FormCheck.Input type="checkbox" id='auction_item' value={this.state.auctionItem} onChange={this.handleAuction}/>
+                                                <FormCheck.Label className="auction_item_label">Is auction ?</FormCheck.Label>
+                                                </div>
                                             </Form.Group>
                                         </Form>
                                     </div>

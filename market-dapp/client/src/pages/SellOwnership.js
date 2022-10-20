@@ -4,6 +4,7 @@ import { Prompt } from 'react-st-modal';
 import ipfs from "../ipfs";
 import computeMerkleRootHash from "../utils/merkle";
 import UIHelper from "../utils/uihelper";
+import "../css/auction.css";
 
 const openpgp = require('openpgp');
 
