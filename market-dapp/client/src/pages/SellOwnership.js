@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Dropdown, Form, DropdownButton, Button } from 'react-bootstrap';
+import { Dropdown, Form, DropdownButton, Button, FormCheck } from 'react-bootstrap';
 import { Prompt } from 'react-st-modal';
 import ipfs from "../ipfs";
 import computeMerkleRootHash from "../utils/merkle";
@@ -30,6 +30,7 @@ class SellOwnership extends Component {
             receivedIPFS: "",
             isSeller: false,
             imageBuffer: null,
+            auctionItem: false
         }
 
 
@@ -73,6 +74,12 @@ class SellOwnership extends Component {
     handleSeries = (event) => {
         console.log("Series: " + event.target.value);
         this.setState({ currentSeries: event.target.value });
+    }
+
+    handleAuction = (event) => {
+        console.log("Is auction: " + event.target.value);
+        let newState = this.state.isAuctionItem ? false : true;
+        this.setState({ auctionItem: newState });
     }
 
     onSelectSim = async (event) => {
@@ -277,6 +284,12 @@ class SellOwnership extends Component {
                                                 <DropdownButton id="dropdown-skin-button" title={this.state.currentSimulator} onSelect={this.onSelectSim}>
                                                     {sims}
                                                 </DropdownButton>
+                                                <br></br>
+                                                <div className="auction_item_input">
+                                                <FormCheck.Input type="checkbox" id='auction_item' value={this.state.auctionItem} onChange={this.handleAuction}/>
+                                                <FormCheck.Label className="auction_item_label">Is auction ?</FormCheck.Label>
+                                                </div>
+                                                
                                             </Form.Group>
                                         </Form>
                                     </div>

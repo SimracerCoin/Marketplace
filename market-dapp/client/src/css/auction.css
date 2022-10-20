@@ -1,0 +1,11 @@
+.auction_item_input {
+    margin-left: 1.8rem;
+    display: flex;
+    flex-direction: column;
+
+    
+}
+
+.auction_item_input .auction_item_label {
+    vertical-align: middle!important;
+}

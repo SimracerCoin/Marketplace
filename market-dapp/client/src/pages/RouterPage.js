@@ -18,6 +18,7 @@ import SellerPage from "./SellerPage"
 import AboutPage from "./AboutPage"
 import FaqsPage from "./FaqsPage"
 import StorePage from "./StorePage"
+import AuctionPage from "./AuctionPage"
 
 class RouterPage extends Component {
 
@@ -69,6 +70,9 @@ class RouterPage extends Component {
                     </Route>
                     <Route path="/store">
                         <StorePage drizzle={this.state.drizzle} drizzleState={this.state.drizzleState}/>
+                    </Route>
+                    <Route path="/auction">
+                        <AuctionPage drizzle={this.state.drizzle} drizzleState={this.state.drizzleState}/>
                     </Route>
                     <Route exact path="/">
                         <MainPage drizzle={this.state.drizzle} drizzleState={this.state.drizzleState} />
