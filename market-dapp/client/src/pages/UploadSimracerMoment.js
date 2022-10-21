@@ -12,6 +12,10 @@ const priceConversion = 10 ** 18;
 
 const testingVideo = 'https://assets.json2video.com/sites/github/hello-world.mp4';
 
+
+const timingOpt = ["1 day", "3 days", "7 days", "1 month", "3 month", "6 month"];
+const timingOptions = [];
+
 class UploadSimracerMoment extends Component {
 
     constructor(props) {
@@ -35,7 +39,8 @@ class UploadSimracerMoment extends Component {
             videoBuffer: null,
             imageBuffer: null,
             priceValue:0,
-            auctionItem: false
+            auctionItem: false,
+            currentTimingOption: timingOpt[0]
         }
 
 
@@ -44,15 +49,22 @@ class UploadSimracerMoment extends Component {
         this.uploadVideo = this.uploadVideo.bind(this);
         this.saveVideo_toIPFS = this.saveVideo_toIPFS.bind(this);
         this.saveSimracingMomentNFT = this.saveSimracingMomentNFT.bind(this);
+        this.onSelectAuctionTiming = this.onSelectAuctionTiming.bind(this);
+        this.handleAuction = this.handleAuction.bind(this);
     }
 
 
     componentDidMount = async () => {
+        
+        for (const [index, value] of timingOpt.entries()) {
+            timingOptions.push(<Dropdown.Item eventKey={value} key={index}>{value}</Dropdown.Item>)
+        }
+
         const currentAccount = this.state.drizzleState.accounts[0];
         const contract = this.state.drizzle.contracts.STMarketplace;
         const contractNFTs = this.state.drizzle.contracts.SimracingMomentOwner;
         const isSeller = await contract.methods.isSeller(currentAccount).call();
-        this.setState({ currentAccount: currentAccount, contract: contract, contractNFTs: contractNFTs, isSeller: isSeller });
+        this.setState({ currentTimingOption: timingOpt[0], timingOptions: timingOptions, currentAccount: currentAccount, contract: contract, contractNFTs: contractNFTs, isSeller: isSeller });
     };
 
 
@@ -94,10 +106,14 @@ class UploadSimracerMoment extends Component {
         this.checkInput(event.target.value);
     };
 
-    handleAuction = (event) => {
-        console.log("Is auction: " + event.target.value);
-        let newState = this.state.isAuctionItem ? false : true;
-        this.setState({ auctionItem: newState });
+    handleAuction = (value) => {
+        console.log("Is auction: " + value);
+        this.setState({ auctionItem: !this.state.auctionItem });
+    }
+
+    onSelectAuctionTiming = async(value) => {
+        console.log("Choosing timing: " + value);
+        this.setState({ currentTimingOption: value });
     }
 
     onSelectSimulator = async (event) => {
@@ -557,8 +573,14 @@ class UploadSimracerMoment extends Component {
                                                 </DropdownButton>
                                                 <br></br>
                                                 <div className="auction_item_input">
-                                                <FormCheck.Input type="checkbox" id='auction_item' value={this.state.auctionItem} onChange={this.handleAuction}/>
-                                                <FormCheck.Label className="auction_item_label">Is auction ?</FormCheck.Label>
+                                                <div className="auction_item_checkbox_container">  
+                                                    <FormCheck.Input type="checkbox" id='auction_item' value={this.state.auctionItem} onChange={this.handleAuction}/>
+                                                    <FormCheck.Label className="auction_item_label">Timed auction ?</FormCheck.Label>
+                                                </div>    
+                                                <br></br>
+                                                <DropdownButton className={`banner ${this.state.auctionItem ? 'auction_item_visible' : 'auction_item_invisible'}`} id="dropdown-choose-timing" title={this.state.currentTimingOption} onSelect={this.onSelectAuctionTiming}>
+                                                    {this.state.timingOptions}
+                                                </DropdownButton>
                                                 </div>
                                             </Form.Group>
                                         </Form>
