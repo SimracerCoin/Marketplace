@@ -123,5 +123,38 @@ static calculateGasUsingStation = async function(gasLimit, fromAccount) {
   }
   
 }
+//PUT this on some other file in the future
+  static addDaysToDate = function (date, days) {
+    let result = new Date(date);
+    result.setDate(result.getDate() + days);
+    return result;
+  }
+
+  /**
+   * Extracts teh number of days from the string auction option
+   * @param {*} string one of ["1 day", "3 days", "7 days", "1 month", "3 month", "6 month"];
+   * @returns 
+   */
+  static extractDaysFromAuctionString = function (string) {
+    if(string === "1 day") {
+      return 1;
+      
+    } else if(string === "3 days") {
+       return 3;
+    }
+    else if(string === "7 days") {
+      return 7;
+    }
+    else if(string === "1 month") {
+      return 30;
+    }
+    else if(string === "3 month") {
+      return 90;
+    }
+    else if(string === "6 month") {
+      return 180;
+    }
+    return 1;
+  }
   
 }

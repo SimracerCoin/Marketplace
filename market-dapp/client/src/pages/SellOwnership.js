@@ -35,7 +35,9 @@ class SellOwnership extends Component {
             isSeller: false,
             imageBuffer: null,
             auctionItem: false,
-            currentTimingOption: timingOpt[0]
+            currentTimingOption: timingOpt[0], 
+            auctionStart: null,
+            auctionEnd: null
         }
 
 
@@ -91,11 +93,31 @@ class SellOwnership extends Component {
     handleAuction = (value) => {
         console.log("Is auction: " + value);
         this.setState({ auctionItem: !this.state.auctionItem });
+        if(this.state.auctionItem) {
+
+            let now = new Date();
+            //let daysForEnd = UIHelper.extractDaysFromAuctionString(this.state.currentTimingOption);
+            //let endDate = UIHelper.addDaysToDate(now, daysForEnd);
+            let endDate = this.getUpdatedEndDate(now, this.state.currentTimingOption);
+            this.setState({auctionStart: now, auctionEnd: endDate});
+        }
+    }
+
+    getUpdatedEndDate = (now, currentTimingOption) => {
+       
+        let daysForEnd = UIHelper.extractDaysFromAuctionString(currentTimingOption);
+        let endDate = UIHelper.addDaysToDate(now, daysForEnd);
+        return endDate;
     }
 
     onSelectAuctionTiming = async(value) => {
         console.log("Choosing timing: " + value);
         this.setState({ currentTimingOption: value });
+
+        let now = new Date();
+        let endDate = this.getUpdatedEndDate(now, value);
+        this.setState({auctionStart: now, auctionEnd: endDate});
+        console.log('START: ' + now + " END: " +  endDate);
     }
 
     onSelectSim = async (event) => {
