@@ -41,7 +41,7 @@ class UploadSimracerMoment extends Component {
             priceValue:0,
             auctionItem: false,
             currentTimingOption: timingOpt[0],
-            auctionStart: null,
+            auctionStart: new Date(),
             auctionEnd: null
         }
 
@@ -124,6 +124,14 @@ class UploadSimracerMoment extends Component {
         let daysForEnd = UIHelper.extractDaysFromAuctionString(currentTimingOption);
         let endDate = UIHelper.addDaysToDate(now, daysForEnd);
         return endDate;
+    }
+
+    setStartDate = async (value)=> {
+        this.setState({auctionStart: value});
+    }
+
+    setEndDate = async (value)=> {
+        this.setState({auctionEnd: value});
     }
 
     onSelectAuctionTiming = async(value) => {
@@ -592,14 +600,26 @@ class UploadSimracerMoment extends Component {
                                                 </DropdownButton>
                                                 <br></br>
                                                 <div className="auction_item_input">
-                                                <div className="auction_item_checkbox_container">  
-                                                    <FormCheck.Input type="checkbox" id='auction_item' value={this.state.auctionItem} onChange={this.handleAuction}/>
-                                                    <FormCheck.Label className="auction_item_label">Timed auction ?</FormCheck.Label>
-                                                </div>    
-                                                <br></br>
-                                                <DropdownButton className={`banner ${this.state.auctionItem ? 'auction_item_visible' : 'auction_item_invisible'}`} id="dropdown-choose-timing" title={this.state.currentTimingOption} onSelect={this.onSelectAuctionTiming}>
-                                                    {this.state.timingOptions}
-                                                </DropdownButton>
+                                                    <div className="auction_item_checkbox_container">  
+                                                        <FormCheck.Input type="checkbox" id='auction_item' value={this.state.auctionItem} onChange={this.handleAuction}/>
+                                                        <FormCheck.Label className="auction_item_label">Timed auction ?</FormCheck.Label>
+                                                    </div>
+                                                    <div className={`further_date_options ${this.state.auctionItem ? 'auction_item_visible' : 'auction_item_invisible'}`}> 
+                                                        <br></br>
+                                                        <div>Duration:</div>   
+                                                        <br></br>
+                                                        <DropdownButton className={`banner ${this.state.auctionItem ? 'auction_item_visible' : 'auction_item_invisible'}`} id="dropdown-choose-timing" title={this.state.currentTimingOption} onSelect={this.onSelectAuctionTiming}>
+                                                            {this.state.timingOptions}
+                                                        </DropdownButton>
+                                                        <br></br>
+                                                        <span>OR</span>
+                                                        <br></br>
+                                                        <div>
+                                                            Date range:
+                                                        </div>
+                                                        <Form.Control size="23" type="date" value={this.state.auctionStart} onChange={(e) => this.setStartDate(e.target.value)} name="startDate" placeholder="Start date" />
+                                                        <Form.Control type="date" value={this.state.auctionStart} onChange={(e) => this.setEndDate(e.target.value)} name="endDate" placeholder="End date" />
+                                                    </div>
                                                 </div>
                                             </Form.Group>
                                         </Form>
