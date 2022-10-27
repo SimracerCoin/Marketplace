@@ -19,3 +19,7 @@
 .auction_item_visible {
     display:inline;
 }
+
+.date_picker {
+    max-width: 150px;
+}

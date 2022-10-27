@@ -35,9 +35,10 @@ class SellOwnership extends Component {
             isSeller: false,
             imageBuffer: null,
             auctionItem: false,
+            auctionTimeRange: false,
             currentTimingOption: timingOpt[0], 
-            auctionStart: null,
-            auctionEnd: null
+            auctionStart: new Date(),
+            auctionEnd: new Date()
         }
 
 
@@ -46,7 +47,8 @@ class SellOwnership extends Component {
         this.uploadImageIPFS = this.uploadImageIPFS.bind(this);
         this.saveImage_toIPFS = this.saveImage_toIPFS.bind(this);
         this.onSelectAuctionTiming = this.onSelectAuctionTiming.bind(this);
-        this.handleAuction = this.handleAuction.bind(this)
+        this.handleAuction = this.handleAuction.bind(this);
+        this.handleAuctionRange = this.handleAuctionRange.bind(this);
     };
 
 
@@ -56,11 +58,14 @@ class SellOwnership extends Component {
             timingOptions.push(<Dropdown.Item eventKey={value} key={index}>{value}</Dropdown.Item>)
         }
 
+        let now = new Date();
+        let daysForEnd = UIHelper.extractDaysFromAuctionString(timingOpt[0]);
+        let endDate = this.getUpdatedEndDate(now,daysForEnd);
         const currentAccount = this.state.drizzleState.accounts[0];
         const contract = this.state.drizzle.contracts.STMarketplace;
         const contractNFTs = this.state.drizzle.contracts.SimthunderOwner;
         const isSeller = await contract.methods.isSeller(currentAccount).call();
-        this.setState({ currentTimingOption: timingOpt[0], timingOptions: timingOptions, currentAccount: currentAccount, contract: contract, contractNFTs: contractNFTs, isSeller: isSeller });
+        this.setState({ auctionStart: now, auctionEnd:endDate, currentTimingOption: timingOpt[0], timingOptions: timingOptions, currentAccount: currentAccount, contract: contract, contractNFTs: contractNFTs, isSeller: isSeller });
     };
 
 
@@ -103,6 +108,11 @@ class SellOwnership extends Component {
         }
     }
 
+    handleAuctionRange = (value) => {
+        console.log("Is range auction: " + value);
+        this.setState({ auctionTimeRange: !this.state.auctionTimeRange });
+    }
+
     getUpdatedEndDate = (now, currentTimingOption) => {
        
         let daysForEnd = UIHelper.extractDaysFromAuctionString(currentTimingOption);
@@ -111,7 +121,10 @@ class SellOwnership extends Component {
     }
 
     setStartDate = async (value)=> {
-        this.setState({auctionStart: value});
+        let daysForEnd = UIHelper.extractDaysFromAuctionString(this.state.currentTimingOption);
+        let endDate = UIHelper.addDaysToDate(value, daysForEnd);
+
+        this.setState({auctionStart: value, auctionEnd: endDate});
     }
 
     setEndDate = async (value)=> {
@@ -336,20 +349,25 @@ class SellOwnership extends Component {
                                                         <FormCheck.Label className="auction_item_label">Timed auction ?</FormCheck.Label>
                                                     </div>
                                                     <div className={`further_date_options ${this.state.auctionItem ? 'auction_item_visible' : 'auction_item_invisible'}`}>
-                                                        <br></br>
+                                                     
                                                         <div>Duration:</div>   
-                                                        <br></br>
+                                                      
                                                         <DropdownButton className={`banner ${this.state.auctionItem ? 'auction_item_visible' : 'auction_item_invisible'}`} id="dropdown-choose-timing" title={this.state.currentTimingOption} onSelect={this.onSelectAuctionTiming}>
                                                             {this.state.timingOptions}
                                                         </DropdownButton>
                                                         <br></br>
-                                                        <span>OR</span>
                                                         <br></br>
-                                                        <div>
-                                                            Date range:
+                                                        <div className="auction_item_checkbox_container">    
+                                                            <FormCheck.Input type="checkbox" id='timed_auction_item' value={this.state.c} onChange={this.handleAuctionRange}/>
+                                                            <FormCheck.Label className="auction_item_label">Set date range ?</FormCheck.Label>
                                                         </div>
-                                                        <Form.Control type="date" value={this.state.auctionStart} onChange={(e) => this.setStartDate(e.target.value)} name="startDate" placeholder="Start date" />
-                                                        <Form.Control type="date" value={this.state.auctionStart} onChange={(e) => this.setEndDate(e.target.value)} name="endDate" placeholder="End date" />
+                                                        
+                                                        <div className={`further_date_options ${this.state.auctionTimeRange ? 'auction_item_visible' : 'auction_item_invisible'}`}>
+                                                            
+                                                            <div>Date range:</div>
+                                                            <Form.Control className="date_picker" type="date" value={this.state.auctionStart} onChange={(e) => this.setStartDate(e.target.value)} name="startDate" placeholder="Start date" />
+                                                            <Form.Control className="date_picker" type="date" value={this.state.auctionEnd} onChange={(e) => this.setEndDate(e.target.value)} name="endDate" placeholder="End date" />
+                                                        </div>
                                                     </div>
                                                 </div>
                                                 
