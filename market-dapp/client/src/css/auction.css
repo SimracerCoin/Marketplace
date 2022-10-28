@@ -23,3 +23,11 @@
 .date_picker {
     max-width: 150px;
 }
+.averagePrice {
+    width:100%;
+    display: inline-flex;
+}
+
+.inner_average_price {
+    margin-left:10px;
+}

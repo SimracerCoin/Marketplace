@@ -91,3 +91,7 @@ REACT_APP_NETWORK_ID=137
 REACT_APP_NETWORK_URL=https://polygon-rpc.com/
 REACT_APP_INFURA_ID=[INFURA_ID]
 
+#set this key to true, so instead of going to buy item, goes to "auction" item page
+#for testing purposes only
+REACT_APP_TEST_AUCTION_PAGE=true
+

@@ -321,11 +321,13 @@ class MainPage extends Component {
         const momentNfts = [];
         let self = this;
 
-
         if (this.state.redirectBuyItem) {
+            //for easier testing
+            let path = process.env.REACT_APP_TEST_AUCTION_PAGE == "true" ? "/auction" : "item";
+
             return (<Redirect
                 to={{
-                    pathname: "/item",
+                    pathname: path,// "/item",
                     state: {
                         selectedItemId: this.state.selectedItemId,
                         selectedTrack: this.state.selectedTrack,

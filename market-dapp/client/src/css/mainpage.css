@@ -65,3 +65,7 @@
 .card-block img:hover {
     cursor: pointer!important;
 }
+
+.high_offer_title {
+    margin-top: -1rem;
+}
