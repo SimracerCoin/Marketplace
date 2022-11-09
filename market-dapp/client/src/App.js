@@ -26,6 +26,8 @@ const NETWORK_ID = Number(process.env.REACT_APP_NETWORK_ID) || 137;
 const NETWORK_URL = process.env.REACT_APP_NETWORK_URL;
 const INFURA_ID = process.env.REACT_APP_INFURA_ID;
 
+var allow_wallets = []; 
+
 //console.log('NETWORK_ID: ' + NETWORK_ID + ' NETWORK_URL: ' + NETWORK_URL + ' INFURA_ID: ' + INFURA_ID);
 /**
  * console.log("connectWallet...");
@@ -79,27 +81,10 @@ console.log('providerOptions:', providerOptions);
   
 const web3Modal = new Web3Modal({
     //network: "mainnet", // optional
-    //cacheProvider: false, // optional
+    cacheProvider: true, // optional
     providerOptions // required
 });
 
-
-//open web3Modal dialog to choose wallet provider
-async function connectWalletProvider() {
-    
-    let provider = null;
-    try {
-        //some weird bugs happen if we don´t clear the cache first (one is Metamask now opening if/when selected), other is not shwoing modal on Brave
-        //web3Modal.clearCachedProvider()
-        provider = await web3Modal.connect();
-        console.log("got wallet provider.. " + provider);
-        return provider;
-    } catch(e) {
-        console.log("Could not get a wallet connection", e);
-        return null;
-    }
-
-}
 
 const allowAllWallets = (process.env.REACT_APP_ALLOW_ALL_WALLETS == "true" ? true : false);
 
@@ -115,10 +100,11 @@ class App extends React.Component {
       provider: null
     }
 
-    //this.login = this.login.bind(this);
+    this.login = this.login.bind(this);
+    
   }
 
-  setWeb3Options() {
+  setWeb3Options = async () => {
     //set bigger timeouts (provided values according to the documentation examples)
     if(window.web3 && window.web3.eth) {
       // set the transaction block timeout (default is 50)
@@ -144,18 +130,34 @@ class App extends React.Component {
         isLoggedIn = true;
         currentAccount = accounts[0];
         console.log('Accounts found: ', accounts);
+        allow_wallets.push(currentAccount);
+        //window.localStorage.setItem("isLoggedIn","true");
       }
     });
+    
 
     this.setState({currentAccount: currentAccount, provider: provider, allow_wallets: allow_wallets, isLoggedIn: isLoggedIn, wrongNetwork: (networkId !== NETWORK_ID) });
   
   }
 
-  
+  //open web3Modal dialog to choose wallet provider
+  connectWalletProvider = async () => {
+      console.log("will login", this.state);
+    let provider = null;
+    try {
+        //some weird bugs happen if we don´t clear the cache first (one is Metamask now opening if/when selected), other is not shwoing modal on Brave
+        //web3Modal.clearCachedProvider()
+        provider = await web3Modal.connect();
+        console.log("got wallet provider.. " + provider);
+        return provider;
+    } catch(e) {
+        console.log("Could not get a wallet connection", e);
+        return null;
+    }
+
+  }
 
   componentDidMount = async () => {
-    var allow_wallets = [];
-
     //if not set or evaluates to false
     if(!allowAllWallets) {
 
@@ -169,55 +171,16 @@ class App extends React.Component {
       }).then(function (myJson) {
         allow_wallets = myJson;
       });
+    }  
+
+    if (localStorage.getItem('isWalletConnected') === 'true') {
+      this.login();
     }
+  }
 
-    
+  componentWillUnmount = async () => {
 
-    
-    let provider = this.state.provider;
-    if (typeof web3 !== 'undefined') {
-
-      if(!provider) {
-        provider = await connectWalletProvider();
-      }
-
-      if(provider) {
-
-          this.setState({provider: provider});
-
-          // Subscribe to accounts change
-          provider.on("accountsChanged", (accounts) => {
-            console.log("accountsChanged", accounts);
-          });
-                            
-          // Subscribe to chainId change
-          provider.on("chainChanged", (chainId) => {
-              console.log("chainChanged",chainId);
-          });
-                            
-          // Subscribe to provider connection
-          provider.on("connect", (info) => { //{ chainId: number }
-              console.log("provider connect", info);
-              //return given provider to main initialization sequence
-          });
-                            
-          // Subscribe to provider disconnection
-          provider.on("disconnect", (error) => {//: { code: number; message: string }
-              console.log("disconnect", error);
-          });
-          window.web3 = new Web3(provider);
-          this.setWeb3Options();
-          await this.getAccountInfo(allow_wallets, provider);
-      } else {
-        //defaukts to built-in Metamask
-        window.web3 = new Web3(Web3.givenProvider);
-        provider = Web3.givenProvider;
-        this.setWeb3Options();
-        await this.getAccountInfo(allow_wallets, provider);
-      } 
-    
-    }
-      
+    localStorage.setItem('isWalletConnected', false);
   }
 
   render() {
@@ -226,7 +189,6 @@ class App extends React.Component {
     if(state.allow_wallets.length === 0 && !allowAllWallets) {
       return (<div id="wait-div" className="spinner-outer"><div className="spinner"></div></div>)
     }
-
     if (state.isLoggedIn) {
       let web3 = window.web3;
       
@@ -296,6 +258,57 @@ class App extends React.Component {
     return (
       <Underconstruction isLoggedIn={state.isLoggedIn} wrongNetwork={state.wrongNetwork} login={this.login} />
     )
+  }
+  
+  login = async () => {
+
+
+    let provider = this.state.provider;
+    if (typeof web3 !== 'undefined') {
+
+    if(!provider) {
+    
+      provider = await this.connectWalletProvider();  
+        
+    }
+
+    if(provider) {
+
+        // Subscribe to accounts change
+        provider.on("accountsChanged", (accounts) => {
+          console.log("accountsChanged", accounts);
+        });
+                          
+        // Subscribe to chainId change
+        provider.on("chainChanged", (chainId) => {
+            console.log("chainChanged",chainId);
+        });
+                          
+        // Subscribe to provider connection
+        provider.on("connect", (info) => { //{ chainId: number }
+            console.log("provider connect", info);
+            //return given provider to main initialization sequence
+        });
+                          
+        // Subscribe to provider disconnection
+        provider.on("disconnect", (error) => {//: { code: number; message: string }
+            console.log("disconnect", error);
+        });
+        window.web3 = new Web3(provider);
+        await this.setWeb3Options();
+        await this.getAccountInfo(allow_wallets, provider);
+        localStorage.setItem('isWalletConnected', true);
+
+    } else {
+      //defaukts to built-in Metamask
+      window.web3 = new Web3(Web3.givenProvider);
+      provider = Web3.givenProvider;
+      await this.setWeb3Options();
+      await this.getAccountInfo(allow_wallets, provider);
+      localStorage.setItem('isWalletConnected', true)
+    } 
+  
+  }
   }
 }
 

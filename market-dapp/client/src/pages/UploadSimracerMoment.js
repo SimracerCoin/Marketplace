@@ -1,7 +1,9 @@
 import React, { Component } from 'react';
-import { Dropdown, Form, DropdownButton, Button, FormLabel } from 'react-bootstrap';
+import { Dropdown, Form, DropdownButton, Button, FormCheck } from 'react-bootstrap';
 import ipfs from "../ipfs";
-import UIHelper from "../utils/uihelper"
+import UIHelper from "../utils/uihelper";
+import "../css/auction.css";
+
 //import fetch from 'node-fetch';
 
 
@@ -9,6 +11,10 @@ const priceConversion = 10 ** 18;
 
 
 const testingVideo = 'https://assets.json2video.com/sites/github/hello-world.mp4';
+
+
+const timingOpt = ["1 day", "3 days", "7 days", "1 month", "3 month", "6 month"];
+const timingOptions = [];
 
 class UploadSimracerMoment extends Component {
 
@@ -32,7 +38,12 @@ class UploadSimracerMoment extends Component {
             isSeller: false,
             videoBuffer: null,
             imageBuffer: null,
-            priceValue:0
+            priceValue:0,
+            auctionItem: false,
+            auctionTimeRange: false,
+            currentTimingOption: timingOpt[0],
+            auctionStart: new Date(),
+            auctionEnd: new Date()
         }
 
 
@@ -41,15 +52,26 @@ class UploadSimracerMoment extends Component {
         this.uploadVideo = this.uploadVideo.bind(this);
         this.saveVideo_toIPFS = this.saveVideo_toIPFS.bind(this);
         this.saveSimracingMomentNFT = this.saveSimracingMomentNFT.bind(this);
+        this.onSelectAuctionTiming = this.onSelectAuctionTiming.bind(this);
+        this.handleAuction = this.handleAuction.bind(this);
+        this.handleAuctionRange = this.handleAuctionRange.bind(this);
     }
 
 
     componentDidMount = async () => {
+        
+        for (const [index, value] of timingOpt.entries()) {
+            timingOptions.push(<Dropdown.Item eventKey={value} key={index}>{value}</Dropdown.Item>)
+        }
+
+        let now = new Date();
+        let daysForEnd = UIHelper.extractDaysFromAuctionString(timingOpt[0]);
+        let endDate = this.getUpdatedEndDate(now,daysForEnd);
         const currentAccount = this.state.drizzleState.accounts[0];
         const contract = this.state.drizzle.contracts.STMarketplace;
         const contractNFTs = this.state.drizzle.contracts.SimracingMomentOwner;
         const isSeller = await contract.methods.isSeller(currentAccount).call();
-        this.setState({ currentAccount: currentAccount, contract: contract, contractNFTs: contractNFTs, isSeller: isSeller });
+        this.setState({ auctionStart: now, auctionEnd:endDate, currentTimingOption: timingOpt[0], timingOptions: timingOptions, currentAccount: currentAccount, contract: contract, contractNFTs: contractNFTs, isSeller: isSeller });
     };
 
 
@@ -90,6 +112,48 @@ class UploadSimracerMoment extends Component {
         this.setState({ currentSeries: event.target.value });
         this.checkInput(event.target.value);
     };
+
+    handleAuction = (value) => {
+        console.log("Is auction: " + value);
+        this.setState({ auctionItem: !this.state.auctionItem });
+        if(this.state.auctionItem) {
+
+            let now = new Date();
+            let endDate = this.getUpdatedEndDate(now, this.state.currentTimingOption);
+            this.setState({auctionStart: now, auctionEnd: endDate});
+        }
+    }
+
+    handleAuctionRange = (value) => {
+        console.log("Is range auction: " + value);
+        this.setState({ auctionTimeRange: !this.state.auctionTimeRange });
+    }
+
+    getUpdatedEndDate = (now, currentTimingOption) => {
+       
+        let daysForEnd = UIHelper.extractDaysFromAuctionString(currentTimingOption);
+        let endDate = UIHelper.addDaysToDate(now, daysForEnd);
+        return endDate;
+    }
+
+    setStartDate = async (value)=> {
+        let daysForEnd = UIHelper.extractDaysFromAuctionString(this.state.currentTimingOption);
+        let endDate = UIHelper.addDaysToDate(value, daysForEnd);
+        this.setState({auctionStart: value, auctionEnd: endDate});
+    }
+
+    setEndDate = async (value)=> {
+        this.setState({auctionEnd: value});
+    }
+
+    onSelectAuctionTiming = async(value) => {
+        console.log("Choosing timing: " + value);
+        this.setState({ currentTimingOption: value });
+        let now = new Date();
+        let endDate = this.getUpdatedEndDate(now, value);
+        this.setState({auctionStart: now, auctionEnd: endDate});
+        console.log('START: ' + now + " END: " +  endDate);
+    }
 
     onSelectSimulator = async (event) => {
         console.log("Choosing Simulator: " + event);
@@ -546,6 +610,35 @@ class UploadSimracerMoment extends Component {
                                                 <DropdownButton id="dropdown-skin-button" title={this.state.currentSimulator} onSelect={this.onSelectSimulator}>
                                                     {sims}
                                                 </DropdownButton>
+                                                <br></br>
+                                                <div className="auction_item_input">
+                                                    <div className="auction_item_checkbox_container">  
+                                                        <FormCheck.Input type="checkbox" id='auction_item' value={this.state.auctionItem} onChange={this.handleAuction}/>
+                                                        <FormCheck.Label className="auction_item_label">Timed auction ?</FormCheck.Label>
+                                                    </div>
+                                                    <div className={`further_date_options ${this.state.auctionItem ? 'auction_item_visible' : 'auction_item_invisible'}`}> 
+                                                      
+                                                        <div>Duration:</div>   
+                                                       
+                                                        <DropdownButton className={`banner ${this.state.auctionItem ? 'auction_item_visible' : 'auction_item_invisible'}`} id="dropdown-choose-timing" title={this.state.currentTimingOption} onSelect={this.onSelectAuctionTiming}>
+                                                            {this.state.timingOptions}
+                                                        </DropdownButton>
+                                                        <br></br>
+                                                        <br></br>
+                                                        <div className="auction_item_checkbox_container">    
+                                                            <FormCheck.Input type="checkbox" id='timed_auction_item' value={this.state.c} onChange={this.handleAuctionRange}/>
+                                                            <FormCheck.Label className="auction_item_label">Set date range ?</FormCheck.Label>
+                                                        </div>
+                                                       
+                                                        <div className={`further_date_options ${this.state.auctionTimeRange ? 'auction_item_visible' : 'auction_item_invisible'}`}>
+                                                           
+                                                            <div>Date range:</div>
+                    
+                                                            <Form.Control className="date_picker" type="date" value={this.state.auctionStart} onChange={(e) => this.setStartDate(e.target.value)} name="startDate" placeholder="Start date" />
+                                                            <Form.Control className="date_picker" type="date" value={this.state.auctionEnd} onChange={(e) => this.setEndDate(e.target.value)} name="endDate" placeholder="End date" />
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </Form.Group>
                                         </Form>
                                     </div>
