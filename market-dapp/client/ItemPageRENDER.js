@@ -84,7 +84,7 @@
                             <br /><br />
                             {toRender}
                             <br /><br />
-                            <Button onClick={this.buyItem}>Buy Item</Button>
+                            <Button onClick={this.buyItem}>Buy</Button>
                         </div>
                     </section>
 
@@ -146,7 +146,7 @@
                             <br></br>
                             {toRender}
                             <br></br>
-                            <Button onClick={this.buyItem}>Buy Item</Button>
+                            <Button onClick={this.buyItem}>Buy</Button>
                         </div>
                     </section>
                 </header>

@@ -750,7 +750,7 @@ class ItemPage extends Component {
                       </div>
                       <div className="price-box mb-4">
                          
-                        <div className="flex-1"><a href="" onClick={this.buyItem} className="btn btn-block btn-warning"><i className="fas fa-shopping-cart"></i> Buy Item</a></div>
+                        <div className="flex-1"><a href="" onClick={this.buyItem} className="btn btn-block btn-warning"><i className="fas fa-shopping-cart"></i> Buy</a></div>
                       </div>
                     </div>
                     <div>
