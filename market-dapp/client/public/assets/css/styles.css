@@ -1047,7 +1047,7 @@ h1 a, h2 a, h3 a, h4 a, h5 a, h6 a, .h1 a, .h2 a, .h3 a, .h4 a, .h5 a, .h6 a {
   .price-wrapper .price .price-current {
     font-size: 1.6rem;
     font-weight: 600;
-    color: #ffc107;
+    color: white! important;/*#ffc107;*/
     margin-bottom: .6rem; }
 
 /* Price */

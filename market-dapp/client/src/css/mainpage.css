@@ -69,3 +69,17 @@
 .high_offer_title {
     margin-top: -1rem;
 }
+
+.price_div {
+    color: white !important;
+}
+
+.price_div strong {
+    font-weight:900;
+}
+
+.price_div_strong {
+    font-size: 1rem;
+    font-weight: bolder!important;
+    color: white !important;
+}

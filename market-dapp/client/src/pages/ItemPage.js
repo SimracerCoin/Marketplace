@@ -742,7 +742,7 @@ class ItemPage extends Component {
                       <div className="mb-3">
                         <div className="price">
                             {/*<div className="price-prev">300$</div>*/}
-                            <div className="price-current"><strong>{this.state.price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/><span className="secondary-price"><span className="secondary-price">{this.renderUSDPrice(this.state.price)}<sup className="secondary-sup">USD</sup></span></span></div>
+                            <div className="price-current"><strong className="price_div_strong">{this.state.price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/><span className="secondary-price"><span className="secondary-price">{this.renderUSDPrice(this.state.price)}<sup className="secondary-sup">USD</sup></span></span></div>
                           </div>
                         {/*<div className="discount">
                             Save: $20.00 (33%)
