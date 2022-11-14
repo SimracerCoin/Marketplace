@@ -536,7 +536,7 @@ class MainPage extends Component {
                                 let label = att.trait_type.charAt(0).toUpperCase() + att.trait_type.slice(1);
                                 if(att.trait_type === 'price') {
                                    return (
-                                        <div><strong>{price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/> <span className="secondary-price">{usdPrice}<sup className="secondary-sup">USD</sup></span></div>
+                                        <div><strong  className="price_div_strong">{price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/> <span className="secondary-price">{usdPrice}<sup className="secondary-sup">USD</sup></span></div>
                                    ) 
                                 } else {
                                     if(label === 'SeriesOwner') {
