@@ -69,3 +69,23 @@
 .high_offer_title {
     margin-top: -1rem;
 }
+
+.price_div {
+    color: white !important;
+}
+
+.price_div strong {
+    font-weight:900!important;
+}
+
+.price_div_strong {
+    font-size: 1.2rem;
+    font-weight: 900!important;
+    color: white !important;
+}
+
+.secondary-price {
+    font-size: 13px;
+    font-weight: normal;
+    color: #757575;
+}
