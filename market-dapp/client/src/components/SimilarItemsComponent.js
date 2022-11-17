@@ -164,7 +164,7 @@ class SimilarItemsComponent extends React.Component {
 
         } else if(isSkin) {
 
-          payload.imagePath = "https://ipfs.io/ipfs/" + value.info.skinPic;
+          payload.imagePath = "https://simthunder.infura-ipfs.io/ipfs/" + value.info.skinPic;
           payload.price = value.ad.price;
           payload.carBrand = value.info.carBrand;
           payload.simulator = value.info.simulator;

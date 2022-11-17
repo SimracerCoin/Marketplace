@@ -406,7 +406,7 @@ class MainPage extends Component {
             let address = value.ad.seller
             let itemId = value.id
             let ipfsPath = value.ad.ipfsPath
-            let imagePath = "https://ipfs.io/ipfs/" + value.info.skinPic
+            let imagePath = "https://simthunder.infura-ipfs.io/ipfs/" + value.info.skinPic
             let thumb = "assets/img/sims/"+simulator+".png";
 
             let usdPrice = Number(Math.round((price / priceConversion) * this.state.usdValue * 100) / 100).toFixed(2);

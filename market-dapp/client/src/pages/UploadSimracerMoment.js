@@ -481,7 +481,7 @@ class UploadSimracerMoment extends Component {
                 let paramsForCall = await UIHelper.calculateGasUsingStation(gasLimit, this.state.currentAccount);
 
                 //'https://gateway.pinata.cloud/ipfs/Qmboj3b42aW2nHGuQizdi2Zp35g6TBKmec6g77X9UiWQXg'
-                let tx = await this.state.contractNFTs.methods.awardItem(this.state.contractNFTs.address, this.state.currentAccount, price, 'https://ipfs.io/ipfs/' + this.state.jsonData_ipfsPath)
+                let tx = await this.state.contractNFTs.methods.awardItem(this.state.contractNFTs.address, this.state.currentAccount, price, 'https://simthunder.infura-ipfs.io/ipfs/' + this.state.jsonData_ipfsPath)
                     .send( paramsForCall )
                     //.on('sent', UIHelper.transactionOnSent)
                     .on('confirmation', function (confNumber, receipt, latestBlockHash) {
@@ -533,8 +533,8 @@ class UploadSimracerMoment extends Component {
         */
         var jsonData = { 'description': this.state.currentDescription, 
                         'name': 'Simracing Moment NFT', 
-                        'image': 'https://ipfs.io/ipfs/' + imagePath, 
-                        'animation_url': 'https://ipfs.io/ipfs/' + videoPath,
+                        'image': 'https://simthunder.infura-ipfs.io/ipfs/' + imagePath, 
+                        'animation_url': 'https://simthunder.infura-ipfs.io/ipfs/' + videoPath,
                         'seriesOwner': this.state.currentAccount};
 
         jsonData.attributes = [];

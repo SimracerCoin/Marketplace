@@ -1472,7 +1472,7 @@ class StorePage extends Component {
                                     let itemId = value.id
                                     let key = itemId + "_" + index;
                                     let ipfsPath = value.ad.ipfsPath
-                                    let imagePath = "https://ipfs.io/ipfs/" + value.info.skinPic
+                                    let imagePath = "https://simthunder.infura-ipfs.io/ipfs/" + value.info.skinPic
                                     let thumb = "assets/img/sims/"+simulator+".png";
                                     
                                     return <div className="col-md-12 mb-4" key={key}>
