@@ -82,6 +82,7 @@ class MainPage extends Component {
         //laod only first NUM_ITEMS_LOAD items
         const numNFTs2Load = Math.min( numNfts, NUM_ITEMS_LOAD);
         //---------------------------------------------
+        //TODO start backwards
         for (let i = 1;  i < numNfts + 1; i++) {
             try {
                 //TODO: change for different ids
@@ -108,6 +109,7 @@ class MainPage extends Component {
 
         const numMomentNFTs2Load = Math.min( numMomentNfts, NUM_ITEMS_LOAD);
         //moment nfts
+        //TODO start backwards
         for (let i = 1; i < numMomentNfts + 1; i++) {
             try {
                 //TODO: change for different ids
@@ -156,7 +158,7 @@ class MainPage extends Component {
         //load all remaining car ownership nfts
 
         const nftlist = await this.loadRemainingCardOwnershipNFTS(contractNFTs, numNFTs2Load, totalNFTs);
-
+        
         const totalMomentNFTs = parseInt(numMomentNfts);
         //load all remaining simracing moment nfts
         
