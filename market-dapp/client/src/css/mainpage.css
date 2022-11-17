@@ -87,5 +87,13 @@
 .secondary-price {
     font-size: 13px;
     font-weight: normal;
-    color: #757575;
+    color: white;
+}
+
+.main-sup {
+    top: -0.21rem!important;
+}
+
+.secondary-sup {
+    top: -0.23rem!important;
 }
