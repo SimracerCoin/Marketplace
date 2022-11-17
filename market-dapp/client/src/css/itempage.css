@@ -1,6 +1,7 @@
 .secondary-price {
     font-size: 12px;
     font-weight: normal;
+    color: white;
 }
 
 .secondary-price.ahead27 {
@@ -60,4 +61,11 @@
 
 *:focus {
     outline: 0 !important;
+}
+
+.main-sup{
+    top: -0.21rem!important;
+}
+.secondary-sup {
+    top: -0.23rem!important;
 }
