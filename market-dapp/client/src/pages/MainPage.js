@@ -70,6 +70,19 @@ class MainPage extends Component {
         const shorterVideosNftsList = []; //hold NUM_ITEMS_LOAD max
 
         // get info from marketplace NFT contract
+
+
+        /*let balance = await contractNFTs.methods.balanceOf(contractNFTs.address).call();
+        console.log("balance: ", balance);
+        for(var i = 0; i < balance; i++) {
+
+            let uri = await contractNFTs.methods.tokenURI(i).call();
+            console.log("token uri: ", uri);
+            contractNFTs.methods.tokenOfOwnerByIndex(contractNFTs.address, i).call()
+            .then((id) => { 
+                console.log("LOADED NFT ID ID: ", id);
+            });       
+        }*/
       
         const numNfts = Number(await contractNFTs.methods.currentTokenId().call());
 
@@ -83,7 +96,7 @@ class MainPage extends Component {
         const numNFTs2Load = Math.min( numNfts, NUM_ITEMS_LOAD);
         //---------------------------------------------
         //TODO start backwards
-        for (let i = 1;  i < numNfts + 1; i++) {
+        for (let i = numNfts - 1 ;  i > 0 ; i--) {
             try {
                 //TODO: change for different ids
                 let ownerAddress = await contractNFTs.methods.ownerOf(i).call();
@@ -110,7 +123,7 @@ class MainPage extends Component {
         const numMomentNFTs2Load = Math.min( numMomentNfts, NUM_ITEMS_LOAD);
         //moment nfts
         //TODO start backwards
-        for (let i = 1; i < numMomentNfts + 1; i++) {
+        for (let i = numMomentNfts - 1; i > 0 ; i--) {
             try {
                 //TODO: change for different ids
                 let ownerAddress = await contractMomentNFTs.methods.ownerOf(i).call();
@@ -157,23 +170,25 @@ class MainPage extends Component {
         const totalNFTs = parseInt(numNfts);
         //load all remaining car ownership nfts
 
-        const nftlist = await this.loadRemainingCardOwnershipNFTS(contractNFTs, numNFTs2Load, totalNFTs);
+        const alreadyLoadedNFTS = shorterNFTsList.length;
+        const nftlist = await this.loadRemainingCardOwnershipNFTS(contractNFTs, alreadyLoadedNFTS, totalNFTs);
         
         const totalMomentNFTs = parseInt(numMomentNfts);
         //load all remaining simracing moment nfts
+        const alreadyLoadedMomentNFTS = shorterVideosNftsList.length;
         
-        const videoNftsList = await this.loadRemainingSimracingMomentNFTS(contractMomentNFTs, numMomentNFTs2Load, totalMomentNFTs);
+        const videoNftsList = await this.loadRemainingSimracingMomentNFTS(contractMomentNFTs, alreadyLoadedMomentNFTS, totalMomentNFTs);
 
         console.log("loaded them all");
         
         this.setState({latestNFTs: nftlist, latestVideoNFTs: videoNftsList});
     }
 
-    loadRemainingSimracingMomentNFTS = async (contractMomentNFTs, startIndex, totalMomentNFTs) => {
+    loadRemainingSimracingMomentNFTS = async (contractMomentNFTs, alreadyLoaded, totalMomentNFTs) => {
 
         let videoNftsList = [];
 
-        for (let i = startIndex; i < totalMomentNFTs + 1; i++) {
+        for (let i = 1; i < (totalMomentNFTs - alreadyLoaded) + 1; i++) {
             try {
                 //TODO: change for different ids
                 //console.log('loading remaining moment at idx: ',i);
@@ -199,10 +214,10 @@ class MainPage extends Component {
 
         return videoNftsList;
     }
-    loadRemainingCardOwnershipNFTS = async (contractNFTs, startIndex, totalNFTs) => {
+    loadRemainingCardOwnershipNFTS = async (contractNFTs, alreadyLoaded, totalNFTs) => {
 
         let nftlist = [];
-        for (let i = startIndex; i <  totalNFTs + 1; i++) {
+        for (let i = 1; i < (totalNFTs - alreadyLoaded ) + 1 ; i++) {
             try {
                 //console.log('loading remaining car at idx: ',i);
                 //TODO: change for different ids
@@ -211,7 +226,7 @@ class MainPage extends Component {
                 if(ownerAddress === contractNFTs.address) {
                     
                     let uri = await contractNFTs.methods.tokenURI(i).call();
-                    //console.log("loaded " + i + " uri: " + uri);
+                    console.log("NFT loaded " + i + " uri: " + uri);
                     let response = await fetch(uri);
                     let data = await response.json();
 
