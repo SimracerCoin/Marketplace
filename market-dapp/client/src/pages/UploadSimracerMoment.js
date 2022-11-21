@@ -16,6 +16,11 @@ const testingVideo = 'https://assets.json2video.com/sites/github/hello-world.mp4
 const timingOpt = ["1 day", "3 days", "7 days", "1 month", "3 month", "6 month"];
 const timingOptions = [];
 
+const FormatDate = (inputDate) => {
+    var formattedDate = inputDate.getFullYear() + '-' + (inputDate.getMonth() + 1) +'-'+ inputDate.getDate();
+    return formattedDate;
+ }
+
 class UploadSimracerMoment extends Component {
 
     constructor(props) {
@@ -42,9 +47,9 @@ class UploadSimracerMoment extends Component {
             auctionItem: false,
             auctionTimeRange: false,
             currentTimingOption: timingOpt[0],
-            auctionStart: new Date(),
-            auctionEnd: new Date()
-            recordingDate: new Date()
+            auctionStart: FormatDate(new Date()),
+            auctionEnd: FormatDate(new Date()),
+            recordingDate: FormatDate(new Date())
         }
 
 
@@ -663,6 +668,7 @@ class UploadSimracerMoment extends Component {
                                     <div>               
                                      <FormCheck.Label className="auction_item_label">Record date</FormCheck.Label>
                                      <Form.Control className="date_picker" type="date" value={this.state.recordingDate} onChange={(e) => this.setRecordingDate(e.target.value)} name="startDate" placeholder="Now" />
+                                    <div className="ontopdate">Now</div>
                                     </div>
                                     <div className="form-row mt-4">
                                         <Button onClick={this.saveSimracingMomentNFT}>Mint Simracing Moment NFT</Button>
