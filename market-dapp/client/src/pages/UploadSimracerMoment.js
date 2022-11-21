@@ -44,6 +44,7 @@ class UploadSimracerMoment extends Component {
             currentTimingOption: timingOpt[0],
             auctionStart: new Date(),
             auctionEnd: new Date()
+            recordingDate: new Date()
         }
 
 
@@ -144,6 +145,10 @@ class UploadSimracerMoment extends Component {
 
     setEndDate = async (value)=> {
         this.setState({auctionEnd: value});
+    }
+
+    setRecordingDate = async (value)=> {
+        this.setState({recordingDate: value});
     }
 
     onSelectAuctionTiming = async(value) => {
@@ -655,6 +660,10 @@ class UploadSimracerMoment extends Component {
 
                                         </Form>
                                     </div><br></br>
+                                    <div>               
+                                     <FormCheck.Label className="auction_item_label">Record date</FormCheck.Label>
+                                     <Form.Control className="date_picker" type="date" value={this.state.recordingDate} onChange={(e) => this.setRecordingDate(e.target.value)} name="startDate" placeholder="Now" />
+                                    </div>
                                     <div className="form-row mt-4">
                                         <Button onClick={this.saveSimracingMomentNFT}>Mint Simracing Moment NFT</Button>
                                     </div>
