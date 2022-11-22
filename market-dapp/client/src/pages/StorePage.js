@@ -364,7 +364,7 @@ class StorePage extends Component {
                     
 
                     this.setState({ 
-                                    latestNFTs: nftlist, 
+                                    latestNFTs: nftlist.reverse(), 
                                     filteredNFTs: considerSearchQuery ? this.paginate(filteredNFTsList, this.state.currentPage): this.paginate(nftlist, this.state.currentPage), 
                                     listSimulators: simsList, 
                                     activeSimulatorsFilter: simulatorsFilter 
@@ -450,7 +450,7 @@ class StorePage extends Component {
                 //console.log('considerSearchQuery ' + considerSearchQuery + 'momentNftslist size: ' + momentNftslist.length + " filteredMomentNFTsList: " + filteredMomentNFTsList.length)
 
                 this.setState({ 
-                                latestMomentNFTs: momentNftslist, 
+                                latestMomentNFTs: momentNftslist.reverse(), 
                                 filteredMomentNFTs: considerSearchQuery ? this.paginate(filteredMomentNFTsList, this.state.currentPage): this.paginate(momentNftslist, this.state.currentPage), 
                                 listSimulators: simsList, 
                                 activeSimulatorsFilter: simulatorsFilter 
