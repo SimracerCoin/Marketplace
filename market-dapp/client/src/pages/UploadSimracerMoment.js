@@ -153,6 +153,17 @@ class UploadSimracerMoment extends Component {
     }
 
     setRecordingDate = async (value)=> {
+        
+        let elem = document.getElementById('ontopdate');
+        if(elem) {
+            if(elem.classList.contains('is-visible')) {
+                elem.classList.remove('is-visible');
+                elem.classList.add('is-invisible');
+            } else {
+                elem.classList.add('is-visible');
+                elem.classList.remove('is-invisible');
+            }
+        }
         this.setState({recordingDate: value});
     }
 
@@ -489,6 +500,7 @@ class UploadSimracerMoment extends Component {
                 //estimate method gas consuption (units of gas)
                 let gasLimit = UIHelper.defaultGasLimit;
                 let paramsForCall = await UIHelper.calculateGasUsingStation(gasLimit, this.state.currentAccount);
+                //console.log("params for call ", paramsForCall);
 
                 //'https://gateway.pinata.cloud/ipfs/Qmboj3b42aW2nHGuQizdi2Zp35g6TBKmec6g77X9UiWQXg'
                 let tx = await this.state.contractNFTs.methods.awardItem(this.state.contractNFTs.address, this.state.currentAccount, price, 'https://simthunder.infura-ipfs.io/ipfs/' + this.state.jsonData_ipfsPath)
@@ -553,6 +565,10 @@ class UploadSimracerMoment extends Component {
             {
                 "trait_type": "series", 
                 "value": this.state.currentSeries
+            },
+            {
+                "trait_type": "date", 
+                "value": this.state.recordingDate, //yyyy-MM-DD
             },
             //{
             //    "trait_type": "seriesOwner", 
@@ -668,7 +684,7 @@ class UploadSimracerMoment extends Component {
                                     <div>               
                                      <FormCheck.Label className="auction_item_label">Record date</FormCheck.Label>
                                      <Form.Control className="date_picker" type="date" value={this.state.recordingDate} onChange={(e) => this.setRecordingDate(e.target.value)} name="startDate" placeholder="Now" />
-                                    <div className="ontopdate">Now</div>
+                                    <div id="ontopdate" className="ontopdate is-visible">Now</div>
                                     </div>
                                     <div className="form-row mt-4">
                                         <Button onClick={this.saveSimracingMomentNFT}>Mint Simracing Moment NFT</Button>
