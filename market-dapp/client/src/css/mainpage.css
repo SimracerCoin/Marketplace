@@ -97,3 +97,20 @@
 .secondary-sup {
     top: -0.23rem!important;
 }
+
+.ontopdate {
+    color: black;
+    background-color: white;
+    position: relative;
+    top: -2.3rem;
+    height: 30px;
+    width: 100px;
+    text-align: center;
+}
+
+.is-visible {
+    visibility: visible;
+}
+.is-invisible {
+    visibility: hidden;
+}

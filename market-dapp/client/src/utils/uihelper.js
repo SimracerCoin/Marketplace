@@ -1,6 +1,10 @@
 const ethers = require('ethers');
 const axios = require('axios');
 
+const monthNames = ["January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"
+];
+
 export default class UIHelper {
 
   static defaultGasLimit = 300000;
@@ -156,5 +160,17 @@ static calculateGasUsingStation = async function(gasLimit, fromAccount) {
     }
     return 1;
   }
-  
+
+  static formaDateAsString(date) {
+    let splited = date.split("-");
+    if(splited.length !== 3) {
+      return date; //not touch it
+    }
+    const year = splited[0];
+    const month = Number(splited[1]);
+    const day = splited[2];
+    return monthNames[month -1] + " " + day + ", " + year;
+  }  
+
+ 
 }

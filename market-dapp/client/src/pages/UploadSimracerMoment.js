@@ -16,6 +16,11 @@ const testingVideo = 'https://assets.json2video.com/sites/github/hello-world.mp4
 const timingOpt = ["1 day", "3 days", "7 days", "1 month", "3 month", "6 month"];
 const timingOptions = [];
 
+const FormatDate = (inputDate) => {
+    var formattedDate = inputDate.getFullYear() + '-' + (inputDate.getMonth() + 1) +'-'+ inputDate.getDate();
+    return formattedDate;
+ }
+
 class UploadSimracerMoment extends Component {
 
     constructor(props) {
@@ -42,8 +47,9 @@ class UploadSimracerMoment extends Component {
             auctionItem: false,
             auctionTimeRange: false,
             currentTimingOption: timingOpt[0],
-            auctionStart: new Date(),
-            auctionEnd: new Date()
+            auctionStart: FormatDate(new Date()),
+            auctionEnd: FormatDate(new Date()),
+            recordingDate: FormatDate(new Date())
         }
 
 
@@ -144,6 +150,21 @@ class UploadSimracerMoment extends Component {
 
     setEndDate = async (value)=> {
         this.setState({auctionEnd: value});
+    }
+
+    setRecordingDate = async (value)=> {
+        
+        let elem = document.getElementById('ontopdate');
+        if(elem) {
+            if(elem.classList.contains('is-visible')) {
+                elem.classList.remove('is-visible');
+                elem.classList.add('is-invisible');
+            } else {
+                elem.classList.add('is-visible');
+                elem.classList.remove('is-invisible');
+            }
+        }
+        this.setState({recordingDate: value});
     }
 
     onSelectAuctionTiming = async(value) => {
@@ -479,6 +500,7 @@ class UploadSimracerMoment extends Component {
                 //estimate method gas consuption (units of gas)
                 let gasLimit = UIHelper.defaultGasLimit;
                 let paramsForCall = await UIHelper.calculateGasUsingStation(gasLimit, this.state.currentAccount);
+                //console.log("params for call ", paramsForCall);
 
                 //'https://gateway.pinata.cloud/ipfs/Qmboj3b42aW2nHGuQizdi2Zp35g6TBKmec6g77X9UiWQXg'
                 let tx = await this.state.contractNFTs.methods.awardItem(this.state.contractNFTs.address, this.state.currentAccount, price, 'https://simthunder.infura-ipfs.io/ipfs/' + this.state.jsonData_ipfsPath)
@@ -543,6 +565,10 @@ class UploadSimracerMoment extends Component {
             {
                 "trait_type": "series", 
                 "value": this.state.currentSeries
+            },
+            {
+                "trait_type": "date", 
+                "value": this.state.recordingDate, //yyyy-MM-DD
             },
             //{
             //    "trait_type": "seriesOwner", 
@@ -655,6 +681,11 @@ class UploadSimracerMoment extends Component {
 
                                         </Form>
                                     </div><br></br>
+                                    <div>               
+                                     <FormCheck.Label className="auction_item_label">Record date</FormCheck.Label>
+                                     <Form.Control className="date_picker" type="date" value={this.state.recordingDate} onChange={(e) => this.setRecordingDate(e.target.value)} name="startDate" placeholder="Now" />
+                                    <div id="ontopdate" className="ontopdate is-visible">Now</div>
+                                    </div>
                                     <div className="form-row mt-4">
                                         <Button onClick={this.saveSimracingMomentNFT}>Mint Simracing Moment NFT</Button>
                                     </div>

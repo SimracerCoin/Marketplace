@@ -8,6 +8,18 @@ const priceConversion = 10 ** 18;
 
 const NUM_ITEMS_LOAD = Number(process.env.REACT_APP_NUM_ITEMS_LOAD) || 4;
 
+const getProperDate = (metadataDate) => {
+    let date = metadataDate;
+    if(!date) {
+        date="N/A";
+    } else {
+        date = UIHelper.formaDateAsString(date);
+    }
+    return (
+        <div>{date}</div> 
+    ) 
+} 
+
 class MainPage extends Component {
 
     constructor(props) {
@@ -96,7 +108,7 @@ class MainPage extends Component {
         const numNFTs2Load = Math.min( numNfts, NUM_ITEMS_LOAD);
         //---------------------------------------------
         //TODO start backwards
-        for (let i = numNfts - 1 ;  i > 0 ; i--) {
+        for (let i = numNfts ;  i > 0 ; i--) {
             try {
                 //TODO: change for different ids
                 let ownerAddress = await contractNFTs.methods.ownerOf(i).call();
@@ -111,6 +123,7 @@ class MainPage extends Component {
                     //put on shorter list
                     shorterNFTsList.push(data);  
                     if(shorterNFTsList.length === numNFTs2Load) {
+                        shorterNFTsList.reverse();
                         break;
                     }  
                 }
@@ -123,7 +136,7 @@ class MainPage extends Component {
         const numMomentNFTs2Load = Math.min( numMomentNfts, NUM_ITEMS_LOAD);
         //moment nfts
         //TODO start backwards
-        for (let i = numMomentNfts - 1; i > 0 ; i--) {
+        for (let i = numMomentNfts; i > 0 ; i--) {
             try {
                 //TODO: change for different ids
                 let ownerAddress = await contractMomentNFTs.methods.ownerOf(i).call();
@@ -138,6 +151,7 @@ class MainPage extends Component {
                     data.id=i;
                     shorterVideosNftsList.push(data);
                     if(shorterVideosNftsList.length === numMomentNFTs2Load) {
+                        shorterVideosNftsList.reverse();
                         break;
                     }
                     
@@ -257,7 +271,6 @@ class MainPage extends Component {
             this.updateData();
         }
     }
-
 
     buyItem = async (event, itemId, track, simulator, season, series, description, price, carBrand, address, ipfsPath, imagePath, isNFT, isMomentNFT, videoPath) => {
         event.preventDefault();
@@ -550,8 +563,13 @@ class MainPage extends Component {
                         <Card.Body>
                             <div className="text-left">
                             {value.attributes.map( function(att) {
-                                let label = att.trait_type.charAt(0).toUpperCase() + att.trait_type.slice(1);
-                                if(att.trait_type === 'price') {
+                               let label = att.trait_type.charAt(0).toUpperCase() + att.trait_type.slice(1);
+                               let value2Render = att.value;
+                               if(att.trait_type === 'date') {
+                                value2Render = getProperDate(value2Render);
+                               } 
+
+                               if(att.trait_type === 'price') {
                                    return (
                                         <div><strong  className="price_div_strong">{price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/> <span className="secondary-price">{usdPrice}<sup className="secondary-sup">USD</sup></span></div>
                                    ) 
@@ -564,11 +582,11 @@ class MainPage extends Component {
                                     }
                                     if(att.trait_type === 'video') {
                                        return (
-                                         <div><a href={att.value} rel="noreferrer" target="_blank">{att.value}</a></div> 
+                                         <div><a href={value2Render} rel="noreferrer" target="_blank">{value2Render}</a></div> 
                                        )
                                     }
                                     return(
-                                        <div>{att.value}</div> 
+                                        <div>{value2Render}</div> 
                                     )
                                 }
                             }, this)}
