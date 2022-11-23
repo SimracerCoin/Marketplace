@@ -46,7 +46,8 @@ class ItemPage extends Component {
             similarItems: props.location.state.similarItems,
             isMuted: true,
             messageOptions: {show: false, title:'', variant:'sucess',message:''},
-            usdValue : props.location.state.usdPrice
+            usdValue : props.location.state.usdPrice,
+            metadata: props.location.state.metadata,
         }
 
         this.mute = this.mute.bind(this);
@@ -451,26 +452,39 @@ class ItemPage extends Component {
             </div>
  
     }
+
+ 
     //NFT
     renderItemInformationForNFT = (isMomentNFT) => {
+
+      let date = "N/A";
+      if(isMomentNFT && this.state.metadata && this.state.metadata.date) {
+        date = UIHelper.formaDateAsString(this.state.metadata.date);
+      }
+     
 
       return <div className="row">
               <div className="col-xs-12 col-lg-6 mb-6 mb-lg-0">
                 <div className="row mb-4 mb-sm-0">
-                <div className="col-sm-4"><strong className="fw-500">Simulator:</strong></div>
-                <div className="col-sm-8">{this.state.simulator}</div>
+                  <div className="col-sm-4"><strong className="fw-500">Date:</strong></div>
+                  <div className="col-sm-8">{date}</div>
+                </div>
+
+                <div className="row mb-4 mb-sm-0">
+                  <div className="col-sm-4"><strong className="fw-500">Simulator:</strong></div>
+                  <div className="col-sm-8">{this.state.simulator}</div>
                 </div>
                 <div className="row mb-4 mb-sm-0">
-                <div className="col-sm-4"><strong className="fw-500">Series:</strong></div>
-                <div className="col-sm-8">{this.state.series}</div>
+                  <div className="col-sm-4"><strong className="fw-500">Series:</strong></div>
+                  <div className="col-sm-8">{this.state.series}</div>
                 </div>
                 <div className="row mb-4 mb-sm-0">
-                <div className="col-sm-4"><strong className="fw-500">{isMomentNFT ? 'Description' : 'Number'}</strong></div>
-                <div className="col-sm-8">{this.state.description}</div>
+                  <div className="col-sm-4"><strong className="fw-500">{isMomentNFT ? 'Description' : 'Number'}</strong></div>
+                  <div className="col-sm-8">{this.state.description}</div>
                 </div>
                 <div className="row mb-4 mb-sm-0">
-                <div className="col-sm-4"><strong className="fw-500">Price:</strong></div>
-                <div className="col-sm-8"><strong>{this.state.price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/><span className="secondary-price">{this.renderUSDPrice(this.state.price)}<sup className="secondary-sup">USD</sup></span></div>
+                  <div className="col-sm-4"><strong className="fw-500">Price:</strong></div>
+                  <div className="col-sm-8"><strong>{this.state.price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/><span className="secondary-price">{this.renderUSDPrice(this.state.price)}<sup className="secondary-sup">USD</sup></span></div>
                 </div>
               </div>
             </div>
