@@ -12,13 +12,13 @@ import UploadSimracerMoment from "./UploadSimracerMoment";
 import NavbarPage from "./NavbarPage";
 import RegisterVendor from "./RegisterVendor";
 import ItemPage from "./ItemPage";
-import ItemPageOld from "./ItemPageOld";
-import NotificationsPage from "./NotificationsPage"
-import SellerPage from "./SellerPage"
-import AboutPage from "./AboutPage"
-import FaqsPage from "./FaqsPage"
-import StorePage from "./StorePage"
-import AuctionPage from "./AuctionPage"
+//import ItemPageOld from "./ItemPageOld";
+import NotificationsPage from "./NotificationsPage";
+import SellerPage from "./SellerPage";
+import AboutPage from "./AboutPage";
+import FaqsPage from "./FaqsPage";
+import StorePage from "./StorePage";
+import AuctionPage from "./AuctionPage";
 
 class RouterPage extends Component {
 
@@ -75,7 +75,7 @@ class RouterPage extends Component {
                         <AuctionPage drizzle={this.state.drizzle} drizzleState={this.state.drizzleState}/>
                     </Route>
                     <Route exact path="/">
-                        <MainPage drizzle={this.state.drizzle} drizzleState={this.state.drizzleState} />
+                        <MainPage drizzle={this.state.drizzle} drizzleState={this.state.drizzleState}/>
                     </Route>
                 </Switch>
             </Router>
