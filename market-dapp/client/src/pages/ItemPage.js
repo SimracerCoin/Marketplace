@@ -422,7 +422,7 @@ class ItemPage extends Component {
                   <li>
 
                   <span className="platform">Price:</span> 
-                  <span className="developer-item text-lt"><strong>{this.state.price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/><span className="secondary-price">{this.renderUSDPrice(this.state.price)}<sup className="secondary-sup">USD</sup></span></span>
+                  <span className="developer-item text-lt"><strong>{this.state.price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/><span className="secondary-price ahead37">{this.renderUSDPrice(this.state.price)}<sup className="secondary-sup">USD</sup></span></span>
                   </li>
                   </ul>
       }
