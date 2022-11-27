@@ -272,7 +272,7 @@ class MainPage extends Component {
         }
     }
 
-    buyItem = async (event, itemId, track, simulator, season, series, description, price, carBrand, address, ipfsPath, imagePath, isNFT, isMomentNFT, videoPath) => {
+    buyItem = async (event, itemId, track, simulator, season, series, description, price, carBrand, address, ipfsPath, imagePath, isNFT, isMomentNFT, videoPath, videoNFTMetadata) => {
         event.preventDefault();
 
         let similarItems = [];
@@ -305,7 +305,8 @@ class MainPage extends Component {
             videoPath: videoPath,
             isNFT: isNFT,
             isMomentNFT: isMomentNFT,
-            similarItems: similarItems
+            similarItems: similarItems,
+            metadata: videoNFTMetadata
         });
     }
 
@@ -353,7 +354,7 @@ class MainPage extends Component {
 
         if (this.state.redirectBuyItem) {
             //for easier testing
-            let path = process.env.REACT_APP_TEST_AUCTION_PAGE == "true" ? "/auction" : "item";
+            let path = "/item";// process.env.REACT_APP_TEST_AUCTION_PAGE == "true" ? "/auction" : "/item";
 
             return (<Redirect
                 to={{
@@ -375,7 +376,8 @@ class MainPage extends Component {
                         videoPath: this.state.videoPath,
                         isNFT: this.state.isNFT,
                         isMomentNFT: this.state.isMomentNFT,
-                        similarItems: this.state.similarItems
+                        similarItems: this.state.similarItems,
+                        metadata: this.state.metadata
                     }
                 }}
             />)
@@ -407,7 +409,7 @@ class MainPage extends Component {
                 <ListGroup.Item key={itemId} className="bg-dark_A-20 col-3-24 mb-4">
                     <Card className="card-block">
                         <Card.Header style={{height: '240px'}} className="d-flex flex-wrap align-items-center justify-content-center">
-                            <Card.Img onClick={(e) => this.buyItem(e, itemId, track, simulator, season, series, description, price, carBrand, address, ipfsPath, "", false, false,null)} variant="top" src={thumb} style={{width: 'auto', maxHeight: '100%'}} />
+                            <Card.Img onClick={(e) => this.buyItem(e, itemId, track, simulator, season, series, description, price, carBrand, address, ipfsPath, "", false, false,null, null)} variant="top" src={thumb} style={{width: 'auto', maxHeight: '100%'}} />
                         </Card.Header>
                         <Card.Body>
                             <Card.Title className="mt-5 font-weight-bold">{carBrand}</Card.Title>
@@ -420,7 +422,7 @@ class MainPage extends Component {
 
                             {/* <div><b>Vendor address:</b> {address}</div> */}
                             </div>
-                            <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, track, simulator, season, series, description, price, carBrand, address, ipfsPath, "", false, false,null)}> Buy</Button>
+                            <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, track, simulator, season, series, description, price, carBrand, address, ipfsPath, "", false, false,null, null)}> Buy</Button>
                         </Card.Body>
                     </Card>
                 </ListGroup.Item>
@@ -451,7 +453,7 @@ class MainPage extends Component {
                 <ListGroup.Item key={itemId} className="bg-dark_A-20 col-3-24 mb-4">
                     <Card className="card-block">
                         <Card.Header style={{height: '240px'}} className="d-flex flex-wrap align-items-center justify-content-center">
-                            <Card.Img onClick={(e) => this.buyItem(e, itemId, null, simulator, null, null, null, price, carBrand , address, ipfsPath, imagePath, false, false, null)} variant="top" src={imagePath} style={{width: 'auto', maxHeight: '100%'}} />
+                            <Card.Img onClick={(e) => this.buyItem(e, itemId, null, simulator, null, null, null, price, carBrand , address, ipfsPath, imagePath, false, false, null, null)} variant="top" src={imagePath} style={{width: 'auto', maxHeight: '100%'}} />
                         </Card.Header>
                         <Card.Body>
                             <Card.Title className="mt-5 font-weight-bold">{carBrand}</Card.Title>
@@ -459,7 +461,7 @@ class MainPage extends Component {
                                 <div><img src={thumb} width="24" alt={simulator} /> {simulator}</div>
                                 <div className="price_div"><strong className="price_div_strong">{price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/> <span className="secondary-price">{usdPrice}<sup className="secondary-sup">USD</sup></span></div>
                             </div>
-                            <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, null, null, price, carBrand , address, ipfsPath, imagePath, false, false, null)}> Buy</Button>
+                            <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, null, null, price, carBrand , address, ipfsPath, imagePath, false, false, null, null)}> Buy</Button>
                         </Card.Body>
                     </Card>
                 </ListGroup.Item>
@@ -494,7 +496,7 @@ class MainPage extends Component {
                     <ListGroup.Item key={itemId} className="bg-dark_A-20 col-3-24 mb-4">
                         <Card className="card-block">
                             <Card.Header style={{height: '240px'}} className="d-flex flex-wrap align-items-center justify-content-center">
-                                <Card.Img onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, carNumberOrDescription, price, null , address, null, imagePath, true, false, null)} variant="top" src={imagePath} style={{width: 'auto', maxHeight: '100%'}} />
+                                <Card.Img onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, carNumberOrDescription, price, null , address, null, imagePath, true, false, null, null)} variant="top" src={imagePath} style={{width: 'auto', maxHeight: '100%'}} />
                             </Card.Header>
                             <Card.Body>
                             <div className="text-left">
@@ -503,7 +505,7 @@ class MainPage extends Component {
                                 <div>{carNumberOrDescription}</div>
                                 <div className="price_div"><strong className="price_div_strong">{price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/> <span className="secondary-price">{usdPrice}<sup className="secondary-sup">USD</sup></span></div>
                               </div>
-                                <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, carNumberOrDescription, price, null , address, null, imagePath, true, false, null)}> Buy</Button>
+                                <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, carNumberOrDescription, price, null , address, null, imagePath, true, false, null, null)}> Buy</Button>
                             </Card.Body>
                         </Card>
                     </ListGroup.Item>
@@ -558,7 +560,7 @@ class MainPage extends Component {
                         <ListGroup.Item key={itemId} className="bg-dark_A-20 col-3-24 mb-4">
                     <Card className="card-block">
                         <Card.Header style={{height: '240px'}} className="d-flex flex-wrap align-items-center justify-content-center">
-                            <Card.Img onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, carNumberOrDescription, price, null , address, null, imagePath, false, true, video)} variant="top" src={imagePath} style={{width: 'auto', maxHeight: '100%'}} />
+                            <Card.Img onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, carNumberOrDescription, price, null , address, null, imagePath, false, true, video, metadata)} variant="top" src={imagePath} style={{width: 'auto', maxHeight: '100%'}} />
                         </Card.Header>
                         <Card.Body>
                             <div className="text-left">
@@ -591,7 +593,7 @@ class MainPage extends Component {
                                 }
                             }, this)}
                             </div>
-                        <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, carNumberOrDescription, price, null , address, null, imagePath, false, true, video)}>Buy</Button>
+                        <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, carNumberOrDescription, price, null , address, null, imagePath, false, true, video, metadata)}>Buy</Button>
                         </Card.Body>
                     </Card>
             </ListGroup.Item>

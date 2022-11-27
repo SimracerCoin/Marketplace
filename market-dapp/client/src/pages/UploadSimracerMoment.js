@@ -682,7 +682,7 @@ class UploadSimracerMoment extends Component {
                                         </Form>
                                     </div><br></br>
                                     <div>               
-                                     <FormCheck.Label className="auction_item_label">Record date</FormCheck.Label>
+                                     <FormCheck.Label className="auction_item_label">Recording date</FormCheck.Label>
                                      <Form.Control className="date_picker" type="date" value={this.state.recordingDate} onChange={(e) => this.setRecordingDate(e.target.value)} name="startDate" placeholder="Now" />
                                     <div id="ontopdate" className="ontopdate is-visible">Now</div>
                                     </div>
