@@ -246,7 +246,7 @@ class App extends React.Component {
                 )
               } else {
                 return (
-                  <Underconstruction isLoggedIn={state.isLoggedIn} wrongNetwork={state.wrongNetwork} />
+                  <Underconstruction isLoggedIn={state.isLoggedIn} wrongNetwork={state.wrongNetwork} login={this.login}/>
                 )
               }
             }}
@@ -262,9 +262,9 @@ class App extends React.Component {
   
   login = async () => {
 
-
+   
     let provider = this.state.provider;
-    if (typeof web3 !== 'undefined') {
+    //if (typeof web3 !== 'undefined') {
 
     if(!provider) {
     
@@ -309,7 +309,7 @@ class App extends React.Component {
     } 
   
   }
-  }
+  //}
 }
 
 export default App;
