@@ -61,6 +61,8 @@ class UploadSimracerMoment extends Component {
         this.onSelectAuctionTiming = this.onSelectAuctionTiming.bind(this);
         this.handleAuction = this.handleAuction.bind(this);
         this.handleAuctionRange = this.handleAuctionRange.bind(this);
+        //upload img
+        this.uploadImageIPFS = this.uploadImageIPFS.bind(this);
     }
 
 
@@ -291,16 +293,43 @@ class UploadSimracerMoment extends Component {
         
         console.log('saveImage_toIPFS....');
 
-        const response = await ipfs.add(this.state.imageBuffer, (err, ipfsPath) => {
-            console.log(err, ipfsPath);
-            console.log("Response video path on ipfs: ", ipfsPath[0].hash);
-            this.setState({ image_ipfsPath: ipfsPath[0].hash });
-        })
+        if(this.state.imageBuffer === null) {
 
-        console.log('saveImage_toIPFS - response.path', response.path);
-        this.setState({ image_ipfsPath: response.path });
-        return true;
+            var fileName = document.getElementById('skin-image').value.toLowerCase();
 
+            console.log("Filename: " + fileName)
+
+            const valid_fileName = fileName.endsWith('.jpg') || fileName.endsWith('.png') || fileName.endsWith('.jpeg')
+            console.log("Valid filename: " + valid_fileName)
+            if (!valid_fileName) {
+                alert('You can upload .jpg, .png or .jpeg files only. Invalid file!');
+                return false;
+            }
+        } else {
+            const response = await ipfs.add(this.state.imageBuffer, (err, ipfsPath) => {
+                console.log(err, ipfsPath);
+                console.log("Response video path on ipfs: ", ipfsPath[0].hash);
+                this.setState({ image_ipfsPath: ipfsPath[0].hash });
+            })
+    
+            console.log('saveImage_toIPFS - response.path', response.path);
+            this.setState({ image_ipfsPath: response.path });
+            return true;
+        }
+
+
+    }
+
+    uploadImageIPFS = (event) => {
+        event.stopPropagation()
+        event.preventDefault()
+        const file = event.target.files[0]
+        const reader = new window.FileReader()
+        reader.readAsArrayBuffer(file)
+        reader.onloadend = () => {
+            this.setState({ imageBuffer: Buffer(reader.result) })
+            console.log('buffer', this.state.imageBuffer)
+        }
     }
 
     /**
@@ -439,8 +468,12 @@ class UploadSimracerMoment extends Component {
                     //just this one
                     this.setState({ videoBuffer: videoBuffer});
                 //}
+
+                //no image uploaded? than create a screenshot
+                if(self.state.imageBuffer == null) {
+                    self.captureScreenshotFromVideo(video, self);
+                }
                 
-                self.captureScreenshotFromVideo(video, self);
             }
         } 
 
@@ -469,7 +502,7 @@ class UploadSimracerMoment extends Component {
         event.preventDefault();
 
         if(this.state.videoBuffer === null || this.state.imageBuffer === null) {
-            alert('Video and/or screnshot are not ready to process. Please wait or try again!');
+            alert('Video and/or thumbnail are not ready to process. Please wait or try again!');
         }
         else if(!this.state.currentDescription || !this.state.currentSeries || this.state.currentDescription.length === 0 || this.state.currentSeries.length === 0) {
             alert('Series and Description must not be empty!');
@@ -668,7 +701,19 @@ class UploadSimracerMoment extends Component {
                                             </Form.Group>
                                         </Form>
                                     </div>
+                                    {/*  image field */}
+                                    
+                                    <div>
+                                        <div> Add Image for new Simracing Moment NFT </div>
+                                        <Form onSubmit={this.saveImage_toIPFS}>
+                                            <input id="skin-image"
+                                                type="file"
+                                                onChange={this.uploadImageIPFS}
+                                            />
+                                            <br></br>
 
+                                        </Form>
+                                    </div><br></br>
                                     <div>
                                       {/* Video file (max 30 secs) */}  
                                     <div> Add Video For Simracing Moment NFT</div>
@@ -681,7 +726,7 @@ class UploadSimracerMoment extends Component {
 
                                         </Form>
                                     </div><br></br>
-                                    <div>               
+                                    <div>                   
                                      <FormCheck.Label className="auction_item_label">Recording date</FormCheck.Label>
                                      <Form.Control className="date_picker" type="date" value={this.state.recordingDate} onChange={(e) => this.setRecordingDate(e.target.value)} name="startDate" placeholder="Now" />
                                     <div id="ontopdate" className="ontopdate is-visible">Now</div>
