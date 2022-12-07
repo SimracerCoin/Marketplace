@@ -615,62 +615,82 @@ class MainPage extends Component {
                             <h5>Buy, sell, discover, and trade sim racing goods</h5>
                         </div>
 
-                        <br /><br />
-                        <div>
-                            <h4>Latest Simracing Moment NFTs</h4>
-                        </div>
-                        <div>
-                            <ListGroup horizontal className="scrolling-wrapper">
-                                {momentNfts}
-                            </ListGroup>
-                            {this.state.latestVideoNFTs.length > NUM_ITEMS_LOAD &&
-                            <Link to="/store?m=momentnfts" className="view-more">View more &gt;&gt; </Link>
-                            }
-                            
-                        </div>
-                        <br /><br />
-                        <div>
-                            <h4>Latest Car Ownership NFTs</h4>
-                        </div>
-                        <div>
-                            <ListGroup horizontal className="scrolling-wrapper">
-                                {nfts}
-                            </ListGroup>
-                            {this.state.latestNFTs.length > NUM_ITEMS_LOAD &&
-                            <Link to="/store?m=ownership" className="view-more">View more &gt;&gt; </Link>
-                            }
-                            
-                            
-                        </div>
-                        <br /><br />
-                        <div>
-                            <h4>Latest Car Skins</h4>
-                        </div>
-                        <div>
-                        <ListGroup horizontal className="scrolling-wrapper">
-                                {skins}
-                            </ListGroup>
-                            {this.state.listSkins.length > NUM_ITEMS_LOAD &&
-                            <Link to="/store?m=carskins" className="view-more">View more &gt;&gt; </Link>
-                            }
-                            
-                        </div>
-                        <br /><br />
-                        <div>
-                            <h4>Latest Car Setups</h4>
-                        </div>
-                        <div>
+                        { momentNfts.length > 0 && 
+                        <div className="momentslist">
 
-                        <ListGroup horizontal className="scrolling-wrapper">
-                                {cars}
-                            </ListGroup>
-                            {this.state.listCars.length > NUM_ITEMS_LOAD &&
-                            <Link to="/store?m=carsetup" className="view-more">View more &gt;&gt; </Link>
-                            }
-                            
-                            
+                            <br /><br />
+                            <div>
+                                <h4>Latest Simracing Moment NFTs</h4>
+                            </div>
+                            <div>
+                                <ListGroup horizontal className="scrolling-wrapper">
+                                    {momentNfts}
+                                </ListGroup>
+                                {this.state.latestVideoNFTs.length > NUM_ITEMS_LOAD &&
+                                <Link to="/store?m=momentnfts" className="view-more">View more &gt;&gt; </Link>
+                                }
+                                
+                            </div>
+
                         </div>
-                        
+                        }
+
+                        { nfts.length > 0 &&
+                        <div className="nftslist">
+                            <br /><br />
+                            <div>
+                                <h4>Latest Car Ownership NFTs</h4>
+                            </div>
+                            <div>
+                                <ListGroup horizontal className="scrolling-wrapper">
+                                    {nfts}
+                                </ListGroup>
+                                {this.state.latestNFTs.length > NUM_ITEMS_LOAD &&
+                                <Link to="/store?m=ownership" className="view-more">View more &gt;&gt; </Link>
+                                }
+                                
+                                
+                            </div>
+                        </div>
+                        }
+
+                        { skins.length > 0 &&
+                        <div className="skinslist">
+                            <br /><br />
+                            <div>
+                                <h4>Latest Car Skins</h4>
+                            </div>
+                            <div>
+                            <ListGroup horizontal className="scrolling-wrapper">
+                                    {skins}
+                                </ListGroup>
+                                {this.state.listSkins.length > NUM_ITEMS_LOAD &&
+                                <Link to="/store?m=carskins" className="view-more">View more &gt;&gt; </Link>
+                                }
+                                
+                            </div>
+                        </div>    
+                        }
+
+                        { cars.length > 0 && 
+                        <div className="carslist">
+                            <br /><br />
+                            <div>
+                                <h4>Latest Car Setups</h4>
+                            </div>
+                            <div>
+
+                            <ListGroup horizontal className="scrolling-wrapper">
+                                    {cars}
+                                </ListGroup>
+                                {this.state.listCars.length > NUM_ITEMS_LOAD &&
+                                <Link to="/store?m=carsetup" className="view-more">View more &gt;&gt; </Link>
+                                }
+                                
+                                
+                            </div>
+                        </div>
+                        }
                     </div>
                 </section>
             </header>
