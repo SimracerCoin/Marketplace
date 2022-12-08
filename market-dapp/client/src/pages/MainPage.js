@@ -383,141 +383,7 @@ class MainPage extends Component {
             />)
         }
 
-        for (const [index, value] of this.state.listCars.entries()) {
-            //console.log('list cars value:');
-            //console.log(value);
-            let carBrand = value.info.carBrand
-            let track = value.info.track
-            let simulator = value.info.simulator
-            let season = value.info.season
-            let series = value.info.series
-            let description = value.info.description
-            let price = value.ad.price
-            let address = value.ad.seller
-            let itemId = value.id
-            let ipfsPath = value.ad.ipfsPath
-            let thumb = "assets/img/sims/"+simulator+".png";
-
-            let usdPrice = Number(Math.round((price / priceConversion) * this.state.usdValue * 100) / 100).toFixed(2);
-
-            if(usdPrice == 0.00) {
-                usdPrice = 0.01;
-            }
-            usdPrice = "$" + usdPrice;
-
-            cars.push(
-                <ListGroup.Item key={itemId} className="bg-dark_A-20 col-3-24 mb-4">
-                    <Card className="card-block">
-                        <Card.Header style={{height: '240px'}} className="d-flex flex-wrap align-items-center justify-content-center">
-                            <Card.Img onClick={(e) => this.buyItem(e, itemId, track, simulator, season, series, description, price, carBrand, address, ipfsPath, "", false, false,null, null)} variant="top" src={thumb} style={{width: 'auto', maxHeight: '100%'}} />
-                        </Card.Header>
-                        <Card.Body>
-                            <Card.Title className="mt-5 font-weight-bold">{carBrand}</Card.Title>
-                            <div className="text-left">
-                            <div>{track}</div>
-                            <div>{simulator}</div>
-                            <div>{season}</div>
-
-                            <div className="price_div"><strong className="price_div_strong">{price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/> <span className="secondary-price">{usdPrice}<sup className="secondary-sup">USD</sup></span></div>
-
-                            {/* <div><b>Vendor address:</b> {address}</div> */}
-                            </div>
-                            <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, track, simulator, season, series, description, price, carBrand, address, ipfsPath, "", false, false,null, null)}> Buy</Button>
-                        </Card.Body>
-                    </Card>
-                </ListGroup.Item>
-            )
-        }
-
-        if(cars) cars.reverse();
-
-        for (const [index, value] of this.state.listSkins.entries()) {
-            let carBrand = value.info.carBrand
-            let simulator = value.info.simulator
-            let price = value.ad.price
-            let address = value.ad.seller
-            let itemId = value.id
-            let ipfsPath = value.ad.ipfsPath
-            let imagePath = "https://simthunder.infura-ipfs.io/ipfs/" + value.info.skinPic
-            let thumb = "assets/img/sims/"+simulator+".png";
-
-            let usdPrice = Number(Math.round((price / priceConversion) * this.state.usdValue * 100) / 100).toFixed(2);
-
-            if(usdPrice == 0.00) {
-                usdPrice = 0.01;
-            }
-            usdPrice = "$" + usdPrice;
-
-            
-            skins.push(
-                <ListGroup.Item key={itemId} className="bg-dark_A-20 col-3-24 mb-4">
-                    <Card className="card-block">
-                        <Card.Header style={{height: '240px'}} className="d-flex flex-wrap align-items-center justify-content-center">
-                            <Card.Img onClick={(e) => this.buyItem(e, itemId, null, simulator, null, null, null, price, carBrand , address, ipfsPath, imagePath, false, false, null, null)} variant="top" src={imagePath} style={{width: 'auto', maxHeight: '100%'}} />
-                        </Card.Header>
-                        <Card.Body>
-                            <Card.Title className="mt-5 font-weight-bold">{carBrand}</Card.Title>
-                            <div className="text-left">
-                                <div><img src={thumb} width="24" alt={simulator} /> {simulator}</div>
-                                <div className="price_div"><strong className="price_div_strong">{price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/> <span className="secondary-price">{usdPrice}<sup className="secondary-sup">USD</sup></span></div>
-                            </div>
-                            <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, null, null, price, carBrand , address, ipfsPath, imagePath, false, false, null, null)}> Buy</Button>
-                        </Card.Body>
-                    </Card>
-                </ListGroup.Item>
-            )
-        }
-
-        if(skins) skins.reverse();
-
-        //car ownership ones
-        for (const [index, value] of this.state.shorterNFTsList.entries()) {
-            //console.log('ownership nft value is,',value);
-            let series = value.series;
-            let simulator = value.simulator;
-            let price = value.price*priceConversion;
-            //TODO: change hardcode
-            let address = value.seriesOwner;
-            let itemId = value.id;
-            let carNumberOrDescription = value.carNumber;
-            // let ipfsPath = value.ad.ipfsPath
-            //console.log(' ID NFT:'+value.id);
-            let imagePath = value.image;
-
-            let usdPrice = Number(Math.round((price / priceConversion) * this.state.usdValue * 100) / 100).toFixed(2);
-
-            if(usdPrice == 0.00) {
-                usdPrice = 0.01;
-            }
-            usdPrice = '$' + usdPrice;
-
-            
-                nfts.push(
-                    <ListGroup.Item key={itemId} className="bg-dark_A-20 col-3-24 mb-4">
-                        <Card className="card-block">
-                            <Card.Header style={{height: '240px'}} className="d-flex flex-wrap align-items-center justify-content-center">
-                                <Card.Img onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, carNumberOrDescription, price, null , address, null, imagePath, true, false, null, null)} variant="top" src={imagePath} style={{width: 'auto', maxHeight: '100%'}} />
-                            </Card.Header>
-                            <Card.Body>
-                            <div className="text-left">
-                                <div>{series}</div>
-                                <div>{simulator}</div>
-                                <div>{carNumberOrDescription}</div>
-                                <div className="price_div"><strong className="price_div_strong">{price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/> <span className="secondary-price">{usdPrice}<sup className="secondary-sup">USD</sup></span></div>
-                              </div>
-                                <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, carNumberOrDescription, price, null , address, null, imagePath, true, false, null, null)}> Buy</Button>
-                            </Card.Body>
-                        </Card>
-                    </ListGroup.Item>
-                )
-            
-        }
-
         //moment nfts
-
-        if(nfts) nfts.reverse();
-
-
         //TODO we can use already videoNftsList here
         for (const [index, value] of this.state.shorterVideosNftsList.entries()) {
             //console.log('moment nft value is,',value);
@@ -603,6 +469,141 @@ class MainPage extends Component {
 
         if(momentNfts) momentNfts.reverse();
 
+        //car ownership ones
+        for (const [index, value] of this.state.shorterNFTsList.entries()) {
+            //console.log('ownership nft value is,',value);
+            let series = value.series;
+            let simulator = value.simulator;
+            let price = value.price*priceConversion;
+            //TODO: change hardcode
+            let address = value.seriesOwner;
+            let itemId = value.id;
+            let carNumberOrDescription = value.carNumber;
+            // let ipfsPath = value.ad.ipfsPath
+            //console.log(' ID NFT:'+value.id);
+            let imagePath = value.image;
+
+            let usdPrice = Number(Math.round((price / priceConversion) * this.state.usdValue * 100) / 100).toFixed(2);
+
+            if(usdPrice == 0.00) {
+                usdPrice = 0.01;
+            }
+            usdPrice = '$' + usdPrice;
+
+            
+                nfts.push(
+                    <ListGroup.Item key={itemId} className="bg-dark_A-20 col-3-24 mb-4">
+                        <Card className="card-block">
+                            <Card.Header style={{height: '240px'}} className="d-flex flex-wrap align-items-center justify-content-center">
+                                <Card.Img onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, carNumberOrDescription, price, null , address, null, imagePath, true, false, null, null)} variant="top" src={imagePath} style={{width: 'auto', maxHeight: '100%'}} />
+                            </Card.Header>
+                            <Card.Body>
+                            <div className="text-left">
+                                <div>{series}</div>
+                                <div>{simulator}</div>
+                                <div>{carNumberOrDescription}</div>
+                                <div className="price_div"><strong className="price_div_strong">{price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/> <span className="secondary-price">{usdPrice}<sup className="secondary-sup">USD</sup></span></div>
+                              </div>
+                                <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, carNumberOrDescription, price, null , address, null, imagePath, true, false, null, null)}> Buy</Button>
+                            </Card.Body>
+                        </Card>
+                    </ListGroup.Item>
+                )
+            
+        }
+
+        if(nfts) nfts.reverse();
+
+        //skins
+        for (const [index, value] of this.state.listSkins.entries()) {
+            let carBrand = value.info.carBrand
+            let simulator = value.info.simulator
+            let price = value.ad.price
+            let address = value.ad.seller
+            let itemId = value.id
+            let ipfsPath = value.ad.ipfsPath
+            let imagePath = "https://simthunder.infura-ipfs.io/ipfs/" + value.info.skinPic
+            let thumb = "assets/img/sims/"+simulator+".png";
+
+            let usdPrice = Number(Math.round((price / priceConversion) * this.state.usdValue * 100) / 100).toFixed(2);
+
+            if(usdPrice == 0.00) {
+                usdPrice = 0.01;
+            }
+            usdPrice = "$" + usdPrice;
+
+            
+            skins.push(
+                <ListGroup.Item key={itemId} className="bg-dark_A-20 col-3-24 mb-4">
+                    <Card className="card-block">
+                        <Card.Header style={{height: '240px'}} className="d-flex flex-wrap align-items-center justify-content-center">
+                            <Card.Img onClick={(e) => this.buyItem(e, itemId, null, simulator, null, null, null, price, carBrand , address, ipfsPath, imagePath, false, false, null, null)} variant="top" src={imagePath} style={{width: 'auto', maxHeight: '100%'}} />
+                        </Card.Header>
+                        <Card.Body>
+                            <Card.Title className="mt-5 font-weight-bold">{carBrand}</Card.Title>
+                            <div className="text-left">
+                                <div><img src={thumb} width="24" alt={simulator} /> {simulator}</div>
+                                <div className="price_div"><strong className="price_div_strong">{price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/> <span className="secondary-price">{usdPrice}<sup className="secondary-sup">USD</sup></span></div>
+                            </div>
+                            <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, null, null, price, carBrand , address, ipfsPath, imagePath, false, false, null, null)}> Buy</Button>
+                        </Card.Body>
+                    </Card>
+                </ListGroup.Item>
+            )
+        }
+
+        if(skins) skins.reverse();
+
+        //car setups
+        for (const [index, value] of this.state.listCars.entries()) {
+            //console.log('list cars value:');
+            //console.log(value);
+            let carBrand = value.info.carBrand
+            let track = value.info.track
+            let simulator = value.info.simulator
+            let season = value.info.season
+            let series = value.info.series
+            let description = value.info.description
+            let price = value.ad.price
+            let address = value.ad.seller
+            let itemId = value.id
+            let ipfsPath = value.ad.ipfsPath
+            let thumb = "assets/img/sims/"+simulator+".png";
+
+            let usdPrice = Number(Math.round((price / priceConversion) * this.state.usdValue * 100) / 100).toFixed(2);
+
+            if(usdPrice == 0.00) {
+                usdPrice = 0.01;
+            }
+            usdPrice = "$" + usdPrice;
+
+            cars.push(
+                <ListGroup.Item key={itemId} className="bg-dark_A-20 col-3-24 mb-4">
+                    <Card className="card-block">
+                        <Card.Header style={{height: '240px'}} className="d-flex flex-wrap align-items-center justify-content-center">
+                            <Card.Img onClick={(e) => this.buyItem(e, itemId, track, simulator, season, series, description, price, carBrand, address, ipfsPath, "", false, false,null, null)} variant="top" src={thumb} style={{width: 'auto', maxHeight: '100%'}} />
+                        </Card.Header>
+                        <Card.Body>
+                            <Card.Title className="mt-5 font-weight-bold">{carBrand}</Card.Title>
+                            <div className="text-left">
+                            <div>{track}</div>
+                            <div>{simulator}</div>
+                            <div>{season}</div>
+
+                            <div className="price_div"><strong className="price_div_strong">{price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/> <span className="secondary-price">{usdPrice}<sup className="secondary-sup">USD</sup></span></div>
+
+                            {/* <div><b>Vendor address:</b> {address}</div> */}
+                            </div>
+                            <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, track, simulator, season, series, description, price, carBrand, address, ipfsPath, "", false, false,null, null)}> Buy</Button>
+                        </Card.Body>
+                    </Card>
+                </ListGroup.Item>
+            )
+        }
+
+        if(cars) cars.reverse();
+
+
         return (
             <header className="header">
                 <div className="overlay overflow-hidden pe-n"><img src="/assets/img/bg/bg_shape.png" alt="Background shape" /></div>
@@ -613,59 +614,83 @@ class MainPage extends Component {
                             <h2>The largest marketplace for sim racing assets</h2>
                             <h5>Buy, sell, discover, and trade sim racing goods</h5>
                         </div>
-                        <br /><br />
-                        <div>
-                            <h4>Latest Car Ownership NFTs</h4>
+
+                        { momentNfts.length > 0 && 
+                        <div className="momentslist">
+
+                            <br /><br />
+                            <div>
+                                <h4>Latest Simracing Moment NFTs</h4>
+                            </div>
+                            <div>
+                                <ListGroup horizontal className="scrolling-wrapper">
+                                    {momentNfts}
+                                </ListGroup>
+                                {this.state.latestVideoNFTs.length > NUM_ITEMS_LOAD &&
+                                <Link to="/store?m=momentnfts" className="view-more">View more &gt;&gt; </Link>
+                                }
+                                
+                            </div>
+
                         </div>
-                        <div>
+                        }
+
+                        { nfts.length > 0 &&
+                        <div className="nftslist">
+                            <br /><br />
+                            <div>
+                                <h4>Latest Car Ownership NFTs</h4>
+                            </div>
+                            <div>
+                                <ListGroup horizontal className="scrolling-wrapper">
+                                    {nfts}
+                                </ListGroup>
+                                {this.state.latestNFTs.length > NUM_ITEMS_LOAD &&
+                                <Link to="/store?m=ownership" className="view-more">View more &gt;&gt; </Link>
+                                }
+                                
+                                
+                            </div>
+                        </div>
+                        }
+
+                        { skins.length > 0 &&
+                        <div className="skinslist">
+                            <br /><br />
+                            <div>
+                                <h4>Latest Car Skins</h4>
+                            </div>
+                            <div>
                             <ListGroup horizontal className="scrolling-wrapper">
-                                {nfts}
-                            </ListGroup>
-                            {this.state.latestNFTs.length > NUM_ITEMS_LOAD &&
-                            <Link to="/store?m=ownership" className="view-more">View more &gt;&gt; </Link>
-                            }
-                            
-                            
-                        </div>
-                        <br /><br />
-                        <div>
-                            <h4>Latest Car Setups</h4>
-                        </div>
-                        <div>
+                                    {skins}
+                                </ListGroup>
+                                {this.state.listSkins.length > NUM_ITEMS_LOAD &&
+                                <Link to="/store?m=carskins" className="view-more">View more &gt;&gt; </Link>
+                                }
+                                
+                            </div>
+                        </div>    
+                        }
+
+                        { cars.length > 0 && 
+                        <div className="carslist">
+                            <br /><br />
+                            <div>
+                                <h4>Latest Car Setups</h4>
+                            </div>
+                            <div>
+
                             <ListGroup horizontal className="scrolling-wrapper">
-                                {cars}
-                            </ListGroup>
-                            {this.state.listCars.length > NUM_ITEMS_LOAD &&
-                            <Link to="/store?m=carsetup" className="view-more">View more &gt;&gt; </Link>
-                            }
-                            
+                                    {cars}
+                                </ListGroup>
+                                {this.state.listCars.length > NUM_ITEMS_LOAD &&
+                                <Link to="/store?m=carsetup" className="view-more">View more &gt;&gt; </Link>
+                                }
+                                
+                                
+                            </div>
                         </div>
-                        <br /><br />
-                        <div>
-                            <h4>Latest Car Skins</h4>
-                        </div>
-                        <div>
-                            <ListGroup horizontal className="scrolling-wrapper">
-                                {skins}
-                            </ListGroup>
-                            {this.state.listSkins.length > NUM_ITEMS_LOAD &&
-                            <Link to="/store?m=carskins" className="view-more">View more &gt;&gt; </Link>
-                            }
-                            
-                        </div>
-                        <br /><br />
-                        <div>
-                            <h4>Latest Simracing Moment NFTs</h4>
-                        </div>
-                        <div>
-                            <ListGroup horizontal className="scrolling-wrapper">
-                                {momentNfts}
-                            </ListGroup>
-                            {this.state.latestVideoNFTs.length > NUM_ITEMS_LOAD &&
-                            <Link to="/store?m=momentnfts" className="view-more">View more &gt;&gt; </Link>
-                            }
-                            
-                        </div>
+                        }
                     </div>
                 </section>
             </header>
