@@ -184,8 +184,10 @@ class ItemPage extends Component {
             
         } else {
 
+            let contractAddressToApprove = this.state.isNFT ? this.state.contractNFTs.address : this.state.contractMomentNFTs.address;
+
             let paramsForCall = await UIHelper.calculateGasUsingStation(gasLimit, this.state.currentAccount);
-            let approval = await this.state.contractSimracerCoin.methods.approve(this.state.contractNFTs.address, price)
+            let approval = await this.state.contractSimracerCoin.methods.approve(contractAddressToApprove, price)
             .send(paramsForCall)
             .catch(function (e) {
               UIHelper.transactionOnError(e);
@@ -194,6 +196,8 @@ class ItemPage extends Component {
               UIHelper.transactionOnError("ERROR ON APPROVAL");
             } else {
               //do it!
+
+              paramsForCall = await UIHelper.calculateGasUsingStation(gasLimit, this.state.currentAccount);
 
               //SimthunderOwner NFT
               if(this.state.isNFT) {
@@ -213,7 +217,7 @@ class ItemPage extends Component {
 
                 //SimracingMomentOwner NFT
               } else if(this.state.isMomentNFT) {
-
+                
                 await this.state.contractMomentNFTs.methods.buyItem(this.state.itemId,price)
                 .send(paramsForCall)
                 .on('confirmation', function (confNumber, receipt, latestBlockHash) {
