@@ -2937,6 +2937,7 @@ input[type="button"].btn-block {
 
 .navbar {
   position: relative;
+  top:0;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -14085,7 +14086,10 @@ button.close:focus {
 
 .footer {
   padding: 1.25rem 0;
-  border-top: 1px solid #f1f1f1; }
+  border-top: 1px solid #f1f1f1; 
+  position: relative;
+  bottom: 50px;
+}
   .footer .logo .logo-dark,
   .footer .logo .logo-light {
     width: auto;
@@ -20346,4 +20350,23 @@ ul.list-style-square {
 #latest-container .list-group-item {
   margin-left: 0.5rem;
   width: 290px;
+}
+
+.root-div {
+  min-height: 600px;
+}
+
+.fake-top-navbar {
+  z-index: 10000 !important;;
+  visibility: visible; 
+  position: absolute;
+  top: 12px;
+  width:100%;
+  pointer-events: none;
+}
+.top-menu-navbar {
+  z-index: 30000 !important;;
+  visibility: visible; 
+  position: relative;
+  top: 0;
 }
