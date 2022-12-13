@@ -1,4 +1,4 @@
-pragma solidity ^0.7.0;
+pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
 import "./ContentMarketplace.sol";
@@ -168,6 +168,35 @@ contract STMarketplace is ContentMarketplace {
         return id;
     }
 
+    function deleteItem(uint256 itemId, address _seller, bool isOwner) private returns(bool) {
+
+        bool deleted = deleteItemFromMarketplace(itemId, _seller, isOwner);
+        if(deleted) {
+            for(uint256 i = 0; i < carSkinIds.length; i++) {
+                if(carSkinIds[i] == itemId) {
+                    carSkinIds[i] = carSkinIds[carSkinIds.length - 1];
+                    carSkinIds.pop();
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    function deleteSkin(uint256 itemId) public returns(bool) {
+        require(isSkin(itemId),"Not a valid skin");
+        bool isOwner = (msg.sender == owner);
+        require(isOwner || isSeller(msg.sender),"caller is not a seller, neither the owner");
+        return deleteItem(itemId, msg.sender, isOwner);
+    }
+
+    function deleteCarSetup(uint256 itemId) public returns(bool) {
+        require(isCarSetup(itemId),"Not a valid car setup");
+        bool isOwner = (msg.sender == owner);
+        require(isOwner || isSeller(msg.sender),"caller is not a seller, neither the owner");
+        return deleteItem(itemId, msg.sender, isOwner);
+    }
+
      /// @notice Registers a new comment for item
     function newComment(
         uint256 _itemId,
@@ -275,7 +304,8 @@ contract STMarketplace is ContentMarketplace {
     /// @notice Utility method to return string from an address
     function addressToString(address _addr) public pure returns(string memory) 
     {
-        bytes32 value = bytes32(uint256(_addr));
+        //with 8.0 cannot convert anymore uint256(address)
+        bytes32 value = bytes32( convertSolidity8(_addr));
         bytes memory alphabet = "0123456789abcdef";
 
         bytes memory str = new bytes(51);
@@ -286,6 +316,10 @@ contract STMarketplace is ContentMarketplace {
             str[3+i*2] = alphabet[uint8(value[i + 12] & 0x0f)];
         }
         return string(str);
+    }
+
+    function convertSolidity8(address a) internal pure returns (uint256) {
+        return uint256(uint160(a));
     }
 
     /**

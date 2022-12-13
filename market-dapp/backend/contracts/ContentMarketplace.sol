@@ -1,4 +1,4 @@
-pragma solidity ^0.7.0;
+pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
@@ -12,6 +12,7 @@ contract ContentMarketplace {
 
     //DescartesInterface descartes;
     ERC20 SIMRACERCOIN;
+    address owner;
 
     /// @notice records necessary information for an advertisement
     struct Advertisement {
@@ -75,6 +76,7 @@ contract ContentMarketplace {
 
     constructor(address payable_token) {
         SIMRACERCOIN = ERC20(payable_token);
+        owner = msg.sender;
     }
 
     /// @notice creates a new advertisement for published and encrypted content
@@ -88,7 +90,7 @@ contract ContentMarketplace {
         returns (uint256 adId)          // returns ad identifier
     {
         Advertisement storage ad = ads[numAds];
-        ad.seller = msg.sender;
+        ad.seller = payable(msg.sender);
         ad.price = _price;
         ad.dataHash = _dataHash;
         ad.encryptedDataHash = _encryptedDataHash;
@@ -165,7 +167,7 @@ contract ContentMarketplace {
         // stores purchase info
         Purchase storage purchase = purchases[numPurchases];
         purchase.adId = _adId;
-        purchase.buyer = msg.sender;
+        purchase.buyer = payable(msg.sender);
         purchase.buyerKey = _buyerKey;
         purchase.date = block.timestamp;
 
@@ -288,6 +290,64 @@ contract ContentMarketplace {
 
     function archiveNotification(uint256 _notificationId) public {
         notifications[_notificationId].archive = true;
+    }
+
+    function deleteItemFromMarketplace(uint256 itemId, address _seller, bool isOwner) internal returns(bool) {
+
+        if(isOwner && itemId > 0) {
+            //contract owner
+            uint256 index = itemId - 1;
+            //the item id is always (index + 1)
+            //get corresponding ad
+            Advertisement memory adv = ads[index];
+            //get the seller address
+            address payable _theSeller = adv.seller;
+
+            uint256 _size = adsPerSeller[_theSeller].length;
+
+            for (uint256 i = 0; i < _size; i++) {
+                uint256 _adId = adsPerSeller[_theSeller][i];
+                //find by id on adsPerSeller[]
+                if(_adId == itemId) {
+
+                    //found the item, delete it
+                    adsPerSeller[_theSeller][i] = adsPerSeller[_theSeller][_size - 1];
+                    adsPerSeller[_theSeller].pop();
+
+                    //also remove from ads list
+                    delete ads[index];
+                    return true;
+                }
+            }
+                
+        
+
+        } else if(_seller == msg.sender) { //double check
+            //regular seller account
+            uint256 _size = adsPerSeller[_seller].length;
+            require(_size > 0,"Seller has no items for sale");
+            for (uint256 i = 0; i < _size; i++) {
+                uint256 _adId = adsPerSeller[_seller][i];
+                if(_adId == itemId) {
+
+                    //found the item, delete it
+                    adsPerSeller[_seller][i] = adsPerSeller[_seller][_size - 1];
+                    adsPerSeller[_seller].pop();
+                    //get the one from ads
+
+                    uint256 index = itemId - 1;
+                    //the item id is always (index + 1)
+                    //get corresponding ad
+                    Advertisement memory adv = ads[index];
+                    if( adv.seller == _seller  ) { //ex: item with id 3 is at position 2
+                        delete ads[index];
+                        return true;
+                    }
+                    
+                }
+            }
+        }
+        return false;
     }
 
 }
