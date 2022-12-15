@@ -15,7 +15,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 // import "@openzeppelin/contracts@3.1.0-solc-0.7/token/ERC20/ERC20.sol";
 //import "@openzeppelin/contracts@3.1.0-solc-0.7/access/Ownable.sol";
 
-contract SimracingMomentOwner is ERC721 {
+contract SimracingMomentOwner is ERC721, Ownable {
 
     ERC20 SIMRACERCOIN; //pay with simracercoin
     using Counters for Counters.Counter;
@@ -65,7 +65,9 @@ contract SimracingMomentOwner is ERC721 {
             approve(_seller, itemId);
         }
         delete seriesOwners[itemId];
-        return transferFrom(nftOwner, _seller, itemId);
+        if(nftOwner != _seller) {
+            return transferFrom(nftOwner, _seller, itemId);
+        }
 
     }
 

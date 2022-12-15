@@ -138,12 +138,10 @@ class ItemPage extends Component {
 
     deleteItem = async(event, itemId) => {
       event.preventDefault();
-      alert("got " + itemId + " can delete: " + this.state.canDelete);
       if(this.state.canDelete) {
         let id = Number(itemId);
         let gasLimit = UIHelper.defaultGasLimit;
         let paramsForCall = await UIHelper.calculateGasUsingStation(gasLimit, this.state.currentAccount);
-        alert("will delete : ", + id);
 
         UIHelper.showSpinning();
         let isSkin = this.state.isSkin;
@@ -186,7 +184,7 @@ class ItemPage extends Component {
       
       } else { alert("You have no permissions!")}
     }
-    
+
     deleteNFT = async (contract, paramsForCall, itemId) => {
       let tx = await contract.methods.deleteItem(itemId)
           .send(paramsForCall)

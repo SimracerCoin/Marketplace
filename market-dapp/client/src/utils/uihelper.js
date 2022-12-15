@@ -7,7 +7,7 @@ const monthNames = ["January", "February", "March", "April", "May", "June",
 
 export default class UIHelper {
 
-  static defaultGasLimit = 300000;
+  static defaultGasLimit = 500000;
 
 
   static getProvider = async function(rpc_uri) {
