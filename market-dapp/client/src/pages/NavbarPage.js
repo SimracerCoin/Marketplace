@@ -87,7 +87,7 @@ class NavbarPage extends React.Component {
 
     render() {
         return ([
-            <Navbar className="navbar navbar-expand-lg navbar-dark bg-dark border-nav zi-3">
+            <Navbar className="top-menu-navbar navbar navbar-expand-lg navbar-dark bg-dark border-nav zi-3">
                 <Container>
                     <div className="row">
                         <div className="col-4 col-sm-3 col-md-2 mr-auto ml-4">

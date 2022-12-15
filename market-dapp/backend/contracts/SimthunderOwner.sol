@@ -7,11 +7,13 @@ pragma solidity ^0.7.0;
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 // NOTE IF building on Remix use the same solidity version of openzeppelin, that is here on the package.json
 // 3.1.0-solc-0.7 this is to avoid issues with versions/deprecated/change functions, etc:
 // import "@openzeppelin/contracts@3.1.0-solc-0.7/utils/Counters.sol";
 // import "@openzeppelin/contracts@3.1.0-solc-0.7/token/ERC721/ERC721.sol";
 // import "@openzeppelin/contracts@3.1.0-solc-0.7/token/ERC20/ERC20.sol";
+//import "@openzeppelin/contracts@3.1.0-solc-0.7/access/Ownable.sol";
 
 contract SimthunderOwner is ERC721 {
 
@@ -48,6 +50,23 @@ contract SimthunderOwner is ERC721 {
         require(SIMRACERCOIN.allowance(msg.sender, address(this)) >= prices[itemId], "Check the token allowance");
         require(SIMRACERCOIN.transferFrom(msg.sender, accountAddress, prices[itemId]),"Cannot transfer NFT ownership");
         return _transfer(address(this), msg.sender, itemId);
+    }
+
+    function deleteItem(uint256 itemId) external {
+        //original seller
+        address _seller = seriesOwners[itemId];
+        //check if exists
+        require(_seller != address(0),"There is no seller for this item or the item does not exist");
+        //check if is either seller or contrct owner
+        address nftOwner = ownerOf(itemId);
+        bool isContractOwner = (msg.sender == owner());
+        bool isNFTOwner = (msg.sender == nftOwner);
+        require(isContractOwner || isNFTOwner, "Not authorized to delete this item");
+        if(!isNFTOwner) {
+            approve(_seller, itemId);
+        }
+        delete seriesOwners[itemId];
+        return transferFrom(nftOwner, _seller, itemId);
     }
 
     function currentTokenId() public returns (uint256) {

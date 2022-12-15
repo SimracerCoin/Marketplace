@@ -720,7 +720,10 @@
 
 .page-body {
   background-color: #0F131E;
-  color: #eaf8ff; }
+  color: #eaf8ff; 
+  min-height:600px;
+}
+
 
 .product_name {
   margin-bottom: 0; }
