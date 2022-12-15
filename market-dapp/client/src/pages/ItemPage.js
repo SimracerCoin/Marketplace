@@ -48,6 +48,9 @@ class ItemPage extends Component {
             messageOptions: {show: false, title:'', variant:'sucess',message:''},
             usdValue : props.location.state.usdPrice,
             metadata: props.location.state.metadata,
+            isSeller: false, 
+            isOwner: false,
+            canDelete: false
         }
 
         this.mute = this.mute.bind(this);
@@ -60,7 +63,17 @@ class ItemPage extends Component {
         const contractSimracerCoin = await this.state.drizzle.contracts.SimracerCoin;
         const contractMomentNFTs = await this.state.drizzle.contracts.SimracingMomentOwner;
 
-        const currentAccount = this.state.drizzleState.accounts[0];
+        const currentAccount = await this.state.drizzleState.accounts[0];
+        let marketplaceOwner = await contract.methods.getContractOwner().call();
+        console.log("market place owner is : ", marketplaceOwner);
+        let sellerAddress = this.state.vendorAddress;
+        console.log("item seller address ", sellerAddress);
+        let isSeller = (currentAccount == sellerAddress);
+        let isOwner = (currentAccount == marketplaceOwner);
+        console.log("is seller: " + isSeller + " is owner: " + isOwner);
+
+        const canDelete = isSeller || isOwner;
+        
         console.log('isNFT:' + this.state.isNFT);
         console.log('isMomentNFT:' + this.state.isMomentNFT);
         let isSkin = !this.state.isNFT && !this.state.isMomentNFT && (this.state.track == null || this.state.season == null);
@@ -72,9 +85,9 @@ class ItemPage extends Component {
             const comments = await contract.methods.getItemComments(this.state.itemId).call();
             const average_review = await this.average_rating(comments);
 
-            this.setState({ currentAccount: currentAccount, contract: contract, contractSimracerCoin: contractSimracerCoin, listComments: comments, average_review: average_review, isSkin: isSkin });
+            this.setState({ canDelete: canDelete, currentAccount: currentAccount, isSeller: isSeller, isOwner: isOwner, contract: contract, contractSimracerCoin: contractSimracerCoin, listComments: comments, average_review: average_review, isSkin: isSkin });
         } else {
-            this.setState({ currentAccount: currentAccount, contract: contract, contractMomentNFTs: contractMomentNFTs, contractNFTs: contractNFTs, contractSimracerCoin: contractSimracerCoin, isSkin: isSkin });
+            this.setState({ canDelete: canDelete, currentAccount: currentAccount, contract: contract, contractMomentNFTs: contractMomentNFTs, contractNFTs: contractNFTs, contractSimracerCoin: contractSimracerCoin, isSkin: isSkin });
         }
 
         this.setState({isMuted: hasVideo});
@@ -122,6 +135,72 @@ class ItemPage extends Component {
         alert('Seller will be notified.');
     }
     */
+
+    deleteItem = async(event, itemId) => {
+      event.preventDefault();
+      alert("got " + itemId + " can delete: " + this.state.canDelete);
+      if(this.state.canDelete) {
+        let id = Number(itemId);
+        let gasLimit = UIHelper.defaultGasLimit;
+        let paramsForCall = await UIHelper.calculateGasUsingStation(gasLimit, this.state.currentAccount);
+        alert("will delete : ", + id);
+
+        UIHelper.showSpinning();
+        let isSkin = this.state.isSkin;
+        let isCarSetup = !isSkin && !this.state.isNFT && !this.state.isMomentNFT;
+
+        if(isSkin) {
+          let tx = await this.state.contract.methods.deleteSkin(id)
+              .send(paramsForCall)
+              .on('confirmation', function (confNumber, receipt, latestBlockHash) {
+                    window.localStorage.setItem('forceUpdate','yes');
+                    if(confNumber > 9) {
+                        UIHelper.transactionOnConfirmation("The new car ownership NFT is available for sale!","/");
+                    }
+                })
+                .on('error', UIHelper.transactionOnError)
+                .catch(function (e) {
+                    UIHelper.hiddeSpinning();
+                });
+        } else if(isCarSetup) {
+          let tx = await this.state.contract.methods.deleteCarSetup(id)
+          .send(paramsForCall)
+          .on('confirmation', function (confNumber, receipt, latestBlockHash) {
+                window.localStorage.setItem('forceUpdate','yes');
+                if(confNumber > 9) {
+                    UIHelper.transactionOnConfirmation("The new car ownership NFT is available for sale!","/");
+                }
+            })
+            .on('error', UIHelper.transactionOnError)
+            .catch(function (e) {
+                UIHelper.hiddeSpinning();
+            });
+        } else if(this.state.isNFT) {
+          //normal nft
+          await this.deleteNFT(this.state.contractNFTs, paramsForCall, id);
+        } else  { 
+          //moment nft
+          await this.deleteNFT(this.state.contractMomentNFTs, paramsForCall, id);
+        }
+
+      
+      } else { alert("You have no permissions!")}
+    }
+    
+    deleteNFT = async (contract, paramsForCall, itemId) => {
+      let tx = await contract.methods.deleteItem(itemId)
+          .send(paramsForCall)
+          .on('confirmation', function (confNumber, receipt, latestBlockHash) {
+                window.localStorage.setItem('forceUpdate','yes');
+                if(confNumber > 9) {
+                    UIHelper.transactionOnConfirmation("The new car ownership NFT is available for sale!","/");
+                }
+            })
+            .on('error', UIHelper.transactionOnError)
+            .catch(function (e) {
+                UIHelper.hiddeSpinning();
+            });
+    }
 
     buyItem = async (event) => {
         event.preventDefault();
@@ -234,14 +313,6 @@ class ItemPage extends Component {
 
               
             }
-
-            
-
-            
-
-            
-            
-
             
         }
 
@@ -770,6 +841,12 @@ class ItemPage extends Component {
                          
                         <div className="flex-1"><a href="" onClick={this.buyItem} className="btn btn-block btn-warning"><i className="fas fa-shopping-cart"></i> Buy</a></div>
                       </div>
+                      { this.state.canDelete &&
+                      <div className="price-box mb-4">
+                        <div className="flex-1"><a href="" onClick={(e) => this.deleteItem(e, this.state.itemId)} className="btn btn-block btn-danger"><i className="fas fa-shopping-cart"></i>Delete</a></div>
+                      </div>
+                      }
+                      
                     </div>
                     <div>
                         
