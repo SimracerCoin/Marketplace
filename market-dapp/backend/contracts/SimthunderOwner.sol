@@ -23,6 +23,16 @@ contract SimthunderOwner is ERC721, Ownable {
     mapping(uint256 => uint256) prices;
     mapping(uint256 => address payable) seriesOwners;
 
+    event itemEntryDeleted (
+        uint256 itemId
+    );
+
+    event itemTransferred (
+        uint256 itemId,
+        address oldOwner,
+        address newOwner
+    );
+
     /**
      * @notice The constructor for the Simthunder Owner NFT contract.
      * @param payable_token Address of SRC ERC20 contract, the contract in wich we pay the transactions
@@ -61,13 +71,14 @@ contract SimthunderOwner is ERC721, Ownable {
         address nftOwner = ownerOf(itemId);
         bool isContractOwner = (msg.sender == owner());
         bool isNFTOwner = (msg.sender == nftOwner);
+
         require(isContractOwner || isNFTOwner, "Not authorized to delete this item");
-        if(!isNFTOwner) {
-            approve(_seller, itemId);
-        }
         delete seriesOwners[itemId];
+        emit itemEntryDeleted(itemId);
+
         if(nftOwner != _seller) {
-            return transferFrom(nftOwner, _seller, itemId);
+            _transfer(address(this), _seller, itemId);
+            emit itemTransferred(itemId, nftOwner, _seller);
         }
     }
 

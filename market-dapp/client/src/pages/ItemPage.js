@@ -153,7 +153,7 @@ class ItemPage extends Component {
               .on('confirmation', function (confNumber, receipt, latestBlockHash) {
                     window.localStorage.setItem('forceUpdate','yes');
                     if(confNumber > 9) {
-                        UIHelper.transactionOnConfirmation("The new car ownership NFT is available for sale!","/");
+                        UIHelper.transactionOnConfirmation("The item was removed from sale!","/");
                     }
                 })
                 .on('error', UIHelper.transactionOnError)
@@ -166,7 +166,7 @@ class ItemPage extends Component {
           .on('confirmation', function (confNumber, receipt, latestBlockHash) {
                 window.localStorage.setItem('forceUpdate','yes');
                 if(confNumber > 9) {
-                    UIHelper.transactionOnConfirmation("The new car ownership NFT is available for sale!","/");
+                    UIHelper.transactionOnConfirmation("The item was removed from sale!","/");
                 }
             })
             .on('error', UIHelper.transactionOnError)
@@ -175,29 +175,47 @@ class ItemPage extends Component {
             });
         } else if(this.state.isNFT) {
           //normal nft
-          await this.deleteNFT(this.state.contractNFTs, paramsForCall, id);
+          await this.deleteNFT(this.state.contractNFTs, id);
         } else  { 
           //moment nft
-          await this.deleteNFT(this.state.contractMomentNFTs, paramsForCall, id);
+          await this.deleteNFT(this.state.contractMomentNFTs, id);
         }
 
       
       } else { alert("You have no permissions!")}
     }
 
-    deleteNFT = async (contract, paramsForCall, itemId) => {
-      let tx = await contract.methods.deleteItem(itemId)
-          .send(paramsForCall)
-          .on('confirmation', function (confNumber, receipt, latestBlockHash) {
-                window.localStorage.setItem('forceUpdate','yes');
-                if(confNumber > 9) {
-                    UIHelper.transactionOnConfirmation("The new car ownership NFT is available for sale!","/");
-                }
-            })
-            .on('error', UIHelper.transactionOnError)
-            .catch(function (e) {
-                UIHelper.hiddeSpinning();
-            });
+    deleteNFT = async (contract, itemId) => {
+
+      let gasLimit = UIHelper.defaultGasLimit;
+      let paramsForApproval = await UIHelper.calculateGasUsingStation(gasLimit, this.state.currentAccount);
+
+      let approval = await contract.methods.approve(this.state.contract.address, itemId)
+          .send(paramsForApproval)
+          .catch(function (e) {
+            UIHelper.transactionOnError(e);
+          });
+          if(!approval) {
+            UIHelper.transactionOnError("ERROR ON APPROVAL");
+          } else {
+
+            let paramsForCall = await UIHelper.calculateGasUsingStation(gasLimit, this.state.currentAccount);
+            //delete itemId
+            let tx = await contract.methods.deleteItem(itemId)
+            .send(paramsForCall)
+            .on('confirmation', function (confNumber, receipt, latestBlockHash) {
+                  window.localStorage.setItem('forceUpdate','yes');
+                  if(confNumber > 9) {
+                      UIHelper.transactionOnConfirmation("The item was removed fro sale!","/");
+                  }
+              })
+              .on('error', UIHelper.transactionOnError)
+              .catch(function (e) {
+                  UIHelper.hiddeSpinning();
+              });
+          }
+
+      
     }
 
     buyItem = async (event) => {
