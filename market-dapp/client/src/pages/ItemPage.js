@@ -188,34 +188,21 @@ class ItemPage extends Component {
     deleteNFT = async (contract, itemId) => {
 
       let gasLimit = UIHelper.defaultGasLimit;
-      let paramsForApproval = await UIHelper.calculateGasUsingStation(gasLimit, this.state.currentAccount);
-
-      let approval = await contract.methods.approve(this.state.contract.address, itemId)
-          .send(paramsForApproval)
-          .catch(function (e) {
-            UIHelper.transactionOnError(e);
+      let paramsForCall = await UIHelper.calculateGasUsingStation(gasLimit, this.state.currentAccount);
+        //delete itemId
+        let tx = await contract.methods.deleteItem(itemId)
+          .send(paramsForCall)
+          .on('confirmation', function (confNumber, receipt, latestBlockHash) {
+              window.localStorage.setItem('forceUpdate','yes');
+              if(confNumber > 9) {
+                  UIHelper.transactionOnConfirmation("The item was removed fro sale!","/");
+              }
+          })
+          .on('error', UIHelper.transactionOnError)
+            .catch(function (e) {
+                UIHelper.hiddeSpinning();
           });
-          if(!approval) {
-            UIHelper.transactionOnError("ERROR ON APPROVAL");
-          } else {
 
-            let paramsForCall = await UIHelper.calculateGasUsingStation(gasLimit, this.state.currentAccount);
-            //delete itemId
-            let tx = await contract.methods.deleteItem(itemId)
-            .send(paramsForCall)
-            .on('confirmation', function (confNumber, receipt, latestBlockHash) {
-                  window.localStorage.setItem('forceUpdate','yes');
-                  if(confNumber > 9) {
-                      UIHelper.transactionOnConfirmation("The item was removed fro sale!","/");
-                  }
-              })
-              .on('error', UIHelper.transactionOnError)
-              .catch(function (e) {
-                  UIHelper.hiddeSpinning();
-              });
-          }
-
-      
     }
 
     buyItem = async (event) => {

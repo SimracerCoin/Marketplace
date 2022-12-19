@@ -48,6 +48,7 @@ contract SimthunderOwner is ERC721, Ownable {
         prices[newItemId] = itemPrice;
         seriesOwners[newItemId] = seriesOwner;
         _setTokenURI(newItemId, metadata);
+        //setApprovalForAll(address(this),true);
         return newItemId;
     }
 
