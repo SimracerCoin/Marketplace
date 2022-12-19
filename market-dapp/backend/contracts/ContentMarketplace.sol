@@ -294,12 +294,11 @@ contract ContentMarketplace {
 
     function deleteItemFromMarketplace(uint256 itemId, address _seller, bool isOwner) internal returns(bool) {
 
+        require(itemId >= 0,"Invalid item id");
         //is contract owner
-        if(isOwner && itemId > 0) {
-            uint256 index = itemId - 1;
-            //the item id is always (index + 1)
+        if(isOwner) {
             //get corresponding ad
-            Advertisement memory adv = ads[index];
+            Advertisement memory adv = ads[itemId];
             //get the seller address
             address payable _theSeller = adv.seller;
 
@@ -314,7 +313,7 @@ contract ContentMarketplace {
                     adsPerSeller[_theSeller][i] = adsPerSeller[_theSeller][_size - 1];
                     adsPerSeller[_theSeller].pop();
                     //also remove from ads list
-                    delete ads[index];
+                    delete ads[itemId];
                     return true;
                 }
             }
@@ -331,20 +330,17 @@ contract ContentMarketplace {
                     adsPerSeller[_seller][i] = adsPerSeller[_seller][_size - 1];
                     adsPerSeller[_seller].pop();
                     //get the one from ads
-
-                    uint256 index = itemId - 1;
-                    //the item id is always (index + 1)
+               
                     //get corresponding ad
-                    Advertisement memory adv = ads[index];
+                    Advertisement memory adv = ads[itemId];
                     if( adv.seller == _seller  ) { //ex: item with id 3 is at position 2
-                        delete ads[index];
+                        delete ads[itemId];
                         return true;
                     }
                 }
             }
-        } else {
-            return false;
         }
+        return false;
     }
 
     //get contract owner/deployer
