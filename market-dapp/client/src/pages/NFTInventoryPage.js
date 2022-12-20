@@ -80,7 +80,8 @@ class NFTInventoryPage extends Component {
             searchQuery: "",
             //searchRef: props.searchRef //search field
             usdValue: 1,
-            moreItems: ""
+            moreItems: "",
+            currentAccount: null
         }
 
         // This binding is necessary to make `this` work in the callback
@@ -102,14 +103,15 @@ class NFTInventoryPage extends Component {
     }
     componentDidMount = async () => {
 
-      //console.log("STORE: componentDidMount");
+      const currentAccount = await this.state.drizzleState.accounts[0];
+
       //scroll to top of page
       window.scrollTo(0, 0);
 
        UIHelper.showSpinning("loading items ...");
 
         const usdValue = await this.fetchUSDPrice();
-        this.setState({usdValue: Number(usdValue)});
+        this.setState({usdValue: Number(usdValue), currentAccount: currentAccount});
 
         const searchQuery = this.hasSearchFilter();
         if(searchQuery && searchQuery.length > 0) {
@@ -168,6 +170,14 @@ class NFTInventoryPage extends Component {
     //get all contracts data
     async getNFTsData() {
 
+        //double check
+        let currentAccount = this.state.currentAccount;
+        //but probably never happens anyway
+        if(!currentAccount) {
+            currentAccount = await this.state.drizzleState.accounts[0];
+            this.setState({currentAccount: currentAccount});
+        } 
+
         //market place
         const contract = await this.state.drizzle.contracts.STMarketplace;
         //ownership nfts
@@ -212,18 +222,15 @@ class NFTInventoryPage extends Component {
         //get the number of elements of the bigger list, use it to define the number of pages, minimum 1
         //it must be done after a lazy load as well, always
         //NOTE: we might reach this part before processing all NFTS, so we also call this inside the loop above
-        this.recalculatePaginationAndNumPages(maxElems2, maxElems, filteredCarsList, filteredSkinsList, considerSearchQuery ? filteredMomentNFTsList: momentNftslist);
+        this.recalculatePaginationAndNumPages(maxElems2, maxElems, considerSearchQuery ? filteredMomentNFTsList: momentNftslist);
         //these won´t change, set only here
         this.setState(
           { 
-          latestCars: response_cars, 
-          latestSkins: response_skins, 
           contract: contract, 
           contractNFTs: contractNFTs, 
           contractMomentNFTs: contractMomentNFTs
         });
         
-        console.log("END getNFTSData");
         UIHelper.hiddeSpinning();
     }
 
@@ -247,14 +254,17 @@ class NFTInventoryPage extends Component {
      let queryString = this.state.searchQuery;
      const considerSearchQuery = (queryString && queryString.length > 0) ? true : false;
 
+     const currentAccount = this.state.currentAccount;
+
+     nftlist = filteredNFTsList = [];
 
       for (let i = 1; i < max ; i++) {
         try {
             //TODO: change for different ids
             let ownerAddress = await contractNFTs.methods.ownerOf(i).call();
             //console.log('ID:'+i+'ownerAddress: '+ownerAddress.toString()+'nfts addr: '+contractNFTs.address);
-            if(ownerAddress === contractNFTs.address) {
-                console.log('GOT MATCH');
+            if(ownerAddress === currentAccount) {
+               
                 let uri = await contractNFTs.methods.tokenURI(i).call();
                 //console.log('uri: ', uri);
                 let response = await fetch(uri);
@@ -341,13 +351,17 @@ class NFTInventoryPage extends Component {
       let max = parseInt(numMomentNfts) + 1;
 
     //--------------------------------------------------------------------------
+
+      const currentAccount = this.state.currentAccount;
+      //clear the lists
+      momentNftslist = filteredMomentNFTsList = [];
       
       for (let i = 1; i < max; i++) {
         try {
             //TODO: change for different ids
             let ownerAddress = await contractMomentNFTs.methods.ownerOf(i).call();
             //console.log('ID:'+i+'ownerAddress: '+ownerAddress.toString()+'nfts addr: '+contractMomentNFTs.address);
-            if(ownerAddress === contractMomentNFTs.address) {
+            if(ownerAddress === currentAccount) {
                
                 let uri = await contractMomentNFTs.methods.tokenURI(i).call();
                 //console.log('uri: ', uri);
@@ -397,7 +411,7 @@ class NFTInventoryPage extends Component {
                 }
 
                 //this GET is assync, so we need to recalaculate the pagination after every grab
-                this.recalculatePaginationAndNumPages(maxElems2, maxElems, filteredCarsList, filteredSkinsList, considerSearchQuery ? filteredMomentNFTsList : momentNftslist);
+                this.recalculatePaginationAndNumPages(maxElems2, maxElems, considerSearchQuery ? filteredMomentNFTsList : momentNftslist);
                         
                 //console.log('considerSearchQuery ' + considerSearchQuery + 'momentNftslist size: ' + momentNftslist.length + " filteredMomentNFTsList: " + filteredMomentNFTsList.length)
 
@@ -442,7 +456,7 @@ class NFTInventoryPage extends Component {
         maxElems = maxNFTsElems;
       }
 
-      if(filteredMomentNFTsList.length > maxElems) {
+      if(filteredMomentNFTsList && filteredMomentNFTsList.length > maxElems) {
         maxElems = filteredMomentNFTsList.length;
       }
       
@@ -987,12 +1001,6 @@ class NFTInventoryPage extends Component {
                   <li key="momentnfts" className="nav-item text-fnwp position-relative"> 
                     <a className={this.getActiveClasses('momentnfts')} id="mp-2-04-tab" onClick={(e) => this.changeTab(e,'momentnfts')} data-toggle="tab" href="#mp-2-04-c" role="tab" aria-controls="mp-2-04-c" aria-selected="false">Simracing Moment NFTs</a>
                   </li>
-                  <li key="carsetup" className="nav-item text-fnwp position-relative"> 
-                    <a className={this.getActiveClasses('carsetup')} id="mp-2-02-tab" onClick={(e) => this.changeTab(e,'carsetup')} data-toggle="tab" href="#mp-2-02-c" role="tab" aria-controls="mp-2-02-c" aria-selected="false">Car Setups</a>
-                  </li>
-                  <li key="carskins" className="nav-item text-fnwp position-relative"> 
-                    <a className={this.getActiveClasses('carskins')} id="mp-2-03-tab" onClick={(e) => this.changeTab(e,'carskins')} data-toggle="tab" href="#mp-2-03-c" role="tab" aria-controls="mp-2-03-c" aria-selected="false">Car Skins</a>
-                  </li>
                 </ul>
                 {/*<!-- tab panes -->*/}
                 <div id="color_sel_Carousel-content_02" className="tab-content position-relative w-100">
@@ -1209,7 +1217,7 @@ class NFTInventoryPage extends Component {
                           </ul>
                       </div>
                     </li>
-                    <li key="collapseprice" className="nav-item text-light transition mb-2">
+                   {/*<!-- <li key="collapseprice" className="nav-item text-light transition mb-2">
                       <a href="/store" aria-expanded="false" data-toggle="collapse" className="nav-link py-2 px-3 text-uppercase collapsed collapser nav-link-border collapser-active">
                           <span className="p-collapsing-title">Price</span>
                       </a>
@@ -1235,7 +1243,7 @@ class NFTInventoryPage extends Component {
                             
                           </ul>
                       </div>
-                    </li>
+                        </li>-->*/}
                 
                     
                     <li key="resetfilter" className="nav-item text-light transition mt-4">

@@ -291,6 +291,8 @@ class StorePage extends Component {
 
      let max = parseInt(numNfts) + 1;
 
+     nftlist = filteredNFTsList = [];
+
      //use search params?
      let queryString = this.state.searchQuery;
      const considerSearchQuery = (queryString && queryString.length > 0) ? true : false;
@@ -387,6 +389,8 @@ class StorePage extends Component {
       console.log('moment nft count:' + numMomentNfts);
 
       let max = parseInt(numMomentNfts) + 1;
+
+      momentNftslist = filteredMomentNFTsList = [];
 
     //--------------------------------------------------------------------------
       

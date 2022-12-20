@@ -272,7 +272,7 @@ class MainPage extends Component {
         }
     }
 
-    buyItem = async (event, itemId, track, simulator, season, series, description, price, carBrand, address, ipfsPath, imagePath, isNFT, isMomentNFT, videoPath, videoNFTMetadata) => {
+    buyItem = async (event, itemId, track, simulator, season, series, description, price, carBrand, address, ipfsPath, imagePath, isNFT, isMomentNFT, videoPath, itemMetadata) => {
         event.preventDefault();
 
         let similarItems = [];
@@ -306,7 +306,7 @@ class MainPage extends Component {
             isNFT: isNFT,
             isMomentNFT: isMomentNFT,
             similarItems: similarItems,
-            metadata: videoNFTMetadata
+            metadata: itemMetadata
         });
     }
 
@@ -354,7 +354,12 @@ class MainPage extends Component {
 
         if (this.state.redirectBuyItem) {
             //for easier testing
+
             let path = "/item";// process.env.REACT_APP_TEST_AUCTION_PAGE == "true" ? "/auction" : "/item";
+            //if is auction we do a different redirect
+            if(this.state.metadata && this.state.metadata['auction_item']) {
+                path = "/auction";
+            }
 
             return (<Redirect
                 to={{
@@ -491,12 +496,15 @@ class MainPage extends Component {
             }
             usdPrice = '$' + usdPrice;
 
+            //could be empty for these nfts (if not auction data)
+            let metadata = this.extractMomentNFTTraitTypes(value.attributes);
+
             
                 nfts.push(
                     <ListGroup.Item key={itemId} className="bg-dark_A-20 col-3-24 mb-4">
                         <Card className="card-block">
                             <Card.Header style={{height: '240px'}} className="d-flex flex-wrap align-items-center justify-content-center">
-                                <Card.Img onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, carNumberOrDescription, price, null , address, null, imagePath, true, false, null, null)} variant="top" src={imagePath} style={{width: 'auto', maxHeight: '100%'}} />
+                                <Card.Img onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, carNumberOrDescription, price, null , address, null, imagePath, true, false, null, metadata)} variant="top" src={imagePath} style={{width: 'auto', maxHeight: '100%'}} />
                             </Card.Header>
                             <Card.Body>
                             <div className="text-left">
