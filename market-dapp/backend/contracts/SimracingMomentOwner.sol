@@ -78,8 +78,15 @@ contract SimracingMomentOwner is ERC721, Ownable {
         emit itemEntryDeleted(itemId);
 
         if(nftOwner != _seller) {
-            _transfer(address(this), _seller, itemId);
-            emit itemTransferred(itemId, nftOwner, _seller);
+            if(isContractOwner) {
+                _transfer(address(this), _seller, itemId);
+                emit itemTransferred(itemId, nftOwner, _seller);
+            }
+            else {
+                approve(address(this), itemId);
+                _transfer(nftOwner, _seller, itemId);
+                emit itemTransferred(itemId, nftOwner, _seller);
+            }
         }
 
     }
