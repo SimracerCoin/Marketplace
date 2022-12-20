@@ -614,6 +614,10 @@ class UploadSimracerMoment extends Component {
             {
                 "trait_type": "price", 
                 "value": this.state.currentFilePrice / priceConversion
+            },
+            {
+                "trait_type": "auction_item", 
+                "value": this.state.auctionItem,
             }
             //,
             //{
@@ -621,6 +625,27 @@ class UploadSimracerMoment extends Component {
             //    "value": 'https://ipfs.io/ipfs/' + videoPath
             //}
         );
+
+        if(this.state.auctionItem) {
+            jsonData.attributes.push(
+                {
+                    "trait_type": "auction_time_range", 
+                    "value": this.state.auctionTimeRange
+                },
+                {
+                    "trait_type": "auction_time_range", 
+                    "value": this.state.auctionTimeRange
+                },
+                {
+                    "trait_type": "auctionStart", 
+                    "value": this.state.auctionStart
+                },
+                {
+                    "trait_type": "auctionEnd", 
+                    "value": this.state.auctionEnd
+                }
+            )
+        }
 
         const jsonStr = JSON.stringify(jsonData);
         console.log('json str: ', jsonStr);

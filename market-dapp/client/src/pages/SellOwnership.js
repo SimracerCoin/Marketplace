@@ -198,6 +198,34 @@ class SellOwnership extends Component {
         jsonData['simulator'] = this.state.currentSimulator;
         jsonData['price'] = this.state.currentFilePrice / priceConversion;
 
+        jsonData.attributes = [];
+        jsonData.attributes.push(
+            {
+                "trait_type": "auction_item", 
+                "value": this.state.auctionItem
+            });
+
+        if(this.state.auctionItem) {
+            jsonData.attributes.push(
+                {
+                    "trait_type": "auction_time_range", 
+                    "value": this.state.auctionTimeRange
+                },
+                {
+                    "trait_type": "auction_time_range", 
+                    "value": this.state.auctionTimeRange
+                },
+                {
+                    "trait_type": "auctionStart", 
+                    "value": this.state.auctionStart
+                },
+                {
+                        "trait_type": "auctionEnd", 
+                        "value": this.state.auctionEnd
+                }
+            )
+        }    
+
         var jsonStr = JSON.stringify(jsonData);
 
         const response = await ipfs.add(Buffer.from(jsonStr), (err, ipfsPath) => {
