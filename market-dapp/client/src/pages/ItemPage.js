@@ -6,7 +6,7 @@ import StarRatings from 'react-star-ratings';
 import UIHelper from "../utils/uihelper";
 import ReviewsComponent from "../components/ReviewsComponent";
 import SimilarItemsComponent from '../components/SimilarItemsComponent';
-import AlertComponent from '../components/AlertComponent';
+import SimpleModal from '../components/SimpleModal';
 import "../css/itempage.css";
 
 const openpgp = require('openpgp');
@@ -50,7 +50,8 @@ class ItemPage extends Component {
             metadata: props.location.state.metadata,
             isSeller: false, 
             isOwner: false,
-            canDelete: false
+            canDelete: false,
+            sellFromWallet: false
         }
 
         this.mute = this.mute.bind(this);
@@ -205,6 +206,14 @@ class ItemPage extends Component {
 
     }
 
+    approveSellItem = async () => {
+      alert("hi there");
+    }
+
+    sellItem = async(event) => {
+      event.preventDefault();
+      this.setState({sellFromWallet: true});
+    }
     buyItem = async (event) => {
         event.preventDefault();
 
@@ -844,6 +853,10 @@ class ItemPage extends Component {
                          
                         <div className="flex-1"><a href="" onClick={this.buyItem} className="btn btn-block btn-warning"><i className="fas fa-shopping-cart"></i> Buy</a></div>
                       </div>
+                      <div className="price-box mb-4">
+                        <div className="flex-1"><a href="" onClick={this.sellItem} className="btn btn-block btn-warning"><i className="fas fa-shopping-cart"></i> Sell</a></div>
+                      </div>
+
                       { this.state.canDelete &&
                       <div className="price-box mb-4">
                         <div className="flex-1"><a href="" onClick={(e) => this.deleteItem(e, this.state.itemId)} className="btn btn-block btn-danger"><i className="fas fa-shopping-cart"></i>Delete</a></div>
@@ -917,6 +930,10 @@ class ItemPage extends Component {
           </section>
           </main>
           <script src="assets/js/main.js" id="_mainJS" data-plugins="load"></script>
+
+          {this.state.sellFromWallet && 
+            <SimpleModal onApproval={this.approveSellItem} open="true"></SimpleModal>
+          }
         </div>
         
         );
