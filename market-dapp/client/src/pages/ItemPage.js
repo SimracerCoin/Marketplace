@@ -49,9 +49,10 @@ class ItemPage extends Component {
             usdValue : props.location.state.usdPrice,
             metadata: props.location.state.metadata,
             isSeller: false, 
-            isOwner: false,
+            isContractOwner: false,
             canDelete: false,
-            sellFromWallet: false
+            sellFromWallet: false,
+            isNFTOwner: false
         }
 
         this.mute = this.mute.bind(this);
@@ -70,10 +71,10 @@ class ItemPage extends Component {
         let sellerAddress = this.state.vendorAddress;
         console.log("item seller address ", sellerAddress);
         let isSeller = (currentAccount == sellerAddress);
-        let isOwner = (currentAccount == marketplaceOwner);
-        console.log("is seller: " + isSeller + " is owner: " + isOwner);
+        let isContractOwner = (currentAccount == marketplaceOwner);
+        console.log("is seller: " + isSeller + " is owner: " + isContractOwner);
 
-        const canDelete = isSeller || isOwner;
+        const canDelete = isSeller || isContractOwner;
         
         console.log('isNFT:' + this.state.isNFT);
         console.log('isMomentNFT:' + this.state.isMomentNFT);
@@ -86,9 +87,16 @@ class ItemPage extends Component {
             const comments = await contract.methods.getItemComments(this.state.itemId).call();
             const average_review = await this.average_rating(comments);
 
-            this.setState({ canDelete: canDelete, currentAccount: currentAccount, isSeller: isSeller, isOwner: isOwner, contract: contract, contractSimracerCoin: contractSimracerCoin, listComments: comments, average_review: average_review, isSkin: isSkin });
+            this.setState({ canDelete: canDelete, currentAccount: currentAccount, isSeller: isSeller, isContractOwner: isContractOwner, contract: contract, contractSimracerCoin: contractSimracerCoin, listComments: comments, average_review: average_review, isSkin: isSkin });
         } else {
-            this.setState({ canDelete: canDelete, currentAccount: currentAccount, contract: contract, contractMomentNFTs: contractMomentNFTs, contractNFTs: contractNFTs, contractSimracerCoin: contractSimracerCoin, isSkin: isSkin });
+
+          let isNFTOwner = this.state.isNFTOwner;
+          if(this.state.isNFT) {
+            isNFTOwner = (await contractNFTs.methods.ownerOf(this.state.itemId).call() == currentAccount);
+          } else {
+            isNFTOwner = (await contractMomentNFTs.methods.ownerOf(this.state.itemId).call() == currentAccount);
+          }
+            this.setState({ isNFTOwner: isNFTOwner, canDelete: canDelete, currentAccount: currentAccount, contract: contract, contractMomentNFTs: contractMomentNFTs, contractNFTs: contractNFTs, contractSimracerCoin: contractSimracerCoin, isSkin: isSkin });
         }
 
         this.setState({isMuted: hasVideo});
@@ -206,8 +214,45 @@ class ItemPage extends Component {
 
     }
 
-    approveSellItem = async () => {
-      alert("hi there");
+    approveSellItem = async (itemPrice) => {
+      
+      //wrong type of item
+      if(isNaN(this.state.itemId) || isNaN(itemPrice) || (!this.state.isMomentNFT && !this.state.isNFT) ) {
+        return;
+      }
+      let itemId = Number(this.state.itemId);
+      itemPrice =  Number(itemPrice);
+      let isNFT = this.state.isNFT;
+      let contract = isNFT ? this.state.contractNFTs : this.state.contractMomentNFTs;
+
+      const price = this.state.drizzle.web3.utils.toBN( itemPrice * priceConversion);
+
+      //some gas estimations
+      //estimate method gas consuption (units of gas)
+      let gasLimit = UIHelper.defaultGasLimit;
+      let paramsForCall = await UIHelper.calculateGasUsingStation(gasLimit, this.state.currentAccount);
+
+      UIHelper.showSpinning();
+      await contract.methods.sellFromWallet(itemId, price)
+          .send( paramsForCall )
+          .on('confirmation', function (confNumber, receipt, latestBlockHash) {
+
+          
+            window.localStorage.setItem('forceUpdate','yes');
+            if(confNumber > 9) {
+                UIHelper.hiddeSpinning();
+                UIHelper.transactionOnConfirmation("The item is now available for sale!","/");                            
+            }
+                        
+          })
+          .on('error', ()=> {
+              UIHelper.hiddeSpinning();
+              UIHelper.transactionOnError("Unable to sell NFT!");
+            })
+            .catch(function (e) { 
+              UIHelper.hiddeSpinning();
+            });
+       
     }
 
     sellItem = async(event) => {
@@ -853,10 +898,12 @@ class ItemPage extends Component {
                          
                         <div className="flex-1"><a href="" onClick={this.buyItem} className="btn btn-block btn-warning"><i className="fas fa-shopping-cart"></i> Buy</a></div>
                       </div>
-                      <div className="price-box mb-4">
-                        <div className="flex-1"><a href="" onClick={this.sellItem} className="btn btn-block btn-warning"><i className="fas fa-shopping-cart"></i> Sell</a></div>
-                      </div>
-
+                      { this.state.isNFTOwner && 
+                        <div className="price-box mb-4">
+                          <div className="flex-1"><a href="" onClick={this.sellItem} className="btn btn-block btn-warning"><i className="fas fa-shopping-cart"></i> Sell</a></div>
+                        </div>
+                      }
+                      
                       { this.state.canDelete &&
                       <div className="price-box mb-4">
                         <div className="flex-1"><a href="" onClick={(e) => this.deleteItem(e, this.state.itemId)} className="btn btn-block btn-danger"><i className="fas fa-shopping-cart"></i>Delete</a></div>

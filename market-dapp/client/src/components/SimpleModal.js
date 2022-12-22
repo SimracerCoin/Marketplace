@@ -1,5 +1,6 @@
 import * as React from 'react';
 import Box from '@mui/material/Box';
+import { Form } from 'react-bootstrap';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import Modal from '@mui/material/Modal';
@@ -25,8 +26,13 @@ class SimpleModal extends React.Component {
 
         this.state = {
             open: props.open,
-            onApproval: props.onApproval
+            onApproval: props.onApproval,
+            price: 0.01,
+            quantity: 1
         }
+
+        this.handlePriceChange = this.handlePriceChange.bind(this);
+        this.handleQuantityChange = this.handleQuantityChange.bind(this);
   }
 
   handleOpen = async () => {
@@ -39,9 +45,24 @@ class SimpleModal extends React.Component {
   approveNFT = async(event) => {
     event.preventDefault();
     this.setState({open: false});
+    if(this.state.price > 0 && this.state.quantity === 1)
     if(this.state.onApproval && typeof this.state.onApproval == 'function') {
-        this.state.onApproval(); 
+        this.state.onApproval(this.state.price); 
     }
+  }
+
+  handlePriceChange = async(event) => {
+
+    if(!isNaN(event.target.value)) {
+      this.setState({price: Number(event.target.value)});
+    } else alert("Invalid price!");
+  }
+
+  handleQuantityChange = async(event) => {
+
+    if(!isNaN(event.target.value)) {
+      this.setState({quantity: Number(event.target.value)});
+    } else alert("Invalid quantity!");
   }
 
   render() {
@@ -57,12 +78,14 @@ class SimpleModal extends React.Component {
               >
                 <div className="main-container">
                     <Box className="simple-modal" sx={style}>
+                    <Form>   
                     <Typography id="modal-modal-title" className="simple-modal-title" variant="h6" component="h2">
                         List your NFT
                     </Typography>
                     <div className='div-modal-column'>
                     <label>Quantity:</label>
-                        <input type="text" size="20"></input>
+                    <Form.Control htmlSize="20" min="1" step="1" max="999999999" type="number" pattern="([0-9]*[.])?[0-9]+" value={this.state.quantity} onChange={this.handleQuantityChange} />
+                        {/*<!--<input type="number" size="20" onChange={this.handleQuantityChange}>{this.state.quantity}</input>-->*/}
                     </div>
                     <br/>
                     <label>Price per unit:</label>
@@ -71,16 +94,18 @@ class SimpleModal extends React.Component {
                         <select>
                             <option className='src-coin'>SRC</option>
                         </select>
-                        <input type="text" size="20"></input>
+                        <Form.Control htmlSize="20" min="0.01" step="0.01" max="999999999" type="number" pattern="([0-9]*[.])?[0-9]+" value={this.state.price} onChange={this.handlePriceChange} />
+                        {/*>!<--<input type="number" size="20" onChange={this.handlePriceChange}>{this.state.price}</input>-->*/}
                     </div>
                     <Typography id="modal-modal-description" sx={{ mt: 2 }}>
                         Advanced options
                     </Typography>
                     <div className="approve-container">
-                        <Button class="approve-nft" onClick={this.approveNFT}>Approve NFT</Button>
+                        <Button className="approve-nft" onClick={this.approveNFT}>Approve NFT</Button>
                     </div>
                     <br/>
                     <div className="service-fees">(i) Service fee<span className="fees-percentage">5%</span></div>
+                    </Form>
                     </Box>
                 </div>
               </Modal>
