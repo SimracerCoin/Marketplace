@@ -19,6 +19,7 @@ import AboutPage from "./AboutPage";
 import FaqsPage from "./FaqsPage";
 import StorePage from "./StorePage";
 import AuctionPage from "./AuctionPage";
+import NFTInventoryPage from "./NFTInventoryPage";
 
 class RouterPage extends Component {
 
@@ -70,6 +71,9 @@ class RouterPage extends Component {
                     </Route>
                     <Route path="/store">
                         <StorePage drizzle={this.state.drizzle} drizzleState={this.state.drizzleState}/>
+                    </Route>
+                    <Route path="/inventory">
+                        <NFTInventoryPage drizzle={this.state.drizzle} drizzleState={this.state.drizzleState}/>
                     </Route>
                     <Route path="/auction">
                         <AuctionPage drizzle={this.state.drizzle} drizzleState={this.state.drizzleState}/>

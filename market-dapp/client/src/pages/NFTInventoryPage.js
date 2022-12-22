@@ -11,17 +11,9 @@ const priceConversion = 10 ** 18;
 const MAX_ITEMS_PER_PAGE = 10;
 
 const MORE_ITEMS = {
-  CARSETUP: 'carsetup',
-  CARSKIN: 'carskins', 
   OWNERSHIP: 'ownership', 
   MOMENTNFTS: 'momentnfts'
 }
-
-let response_cars = [];
-let response_skins = [];
-
-let filteredCarsList = []; 
-let filteredSkinsList = [];
 
 //moment nfts
 let momentNftslist = []; //not filtered list
@@ -34,7 +26,7 @@ let filteredNFTsList = []; //filtered
 //aux max helpers
 let maxElems, maxElems2 = 0;
 
-class StorePage extends Component {
+class NFTInventoryPage extends Component {
 
     constructor(props) {
         super(props);
@@ -43,10 +35,7 @@ class StorePage extends Component {
             drizzle: props.drizzle,
             drizzleState: props.drizzleState,
             //-------------------- lists ----------
-            latestCars: [], //contains all the cars returned by the contracts
-            filteredCars:[], //list of cars but filtered
-            latestSkins: [], //contains all the skins returned by the contracts
-            filteredSkins: [], //list of skins but filtered
+           
             latestNFTs: [], //contains all the nfts returned by the contracts
             filteredNFTs: [], // list of nfst but filtered
             
@@ -91,7 +80,8 @@ class StorePage extends Component {
             searchQuery: "",
             //searchRef: props.searchRef //search field
             usdValue: 1,
-            moreItems: ""
+            moreItems: "",
+            currentAccount: null
         }
 
         // This binding is necessary to make `this` work in the callback
@@ -113,14 +103,15 @@ class StorePage extends Component {
     }
     componentDidMount = async () => {
 
-      //console.log("STORE: componentDidMount");
+      const currentAccount = await this.state.drizzleState.accounts[0];
+
       //scroll to top of page
       window.scrollTo(0, 0);
 
        UIHelper.showSpinning("loading items ...");
 
         const usdValue = await this.fetchUSDPrice();
-        this.setState({usdValue: Number(usdValue)});
+        this.setState({usdValue: Number(usdValue), currentAccount: currentAccount});
 
         const searchQuery = this.hasSearchFilter();
         if(searchQuery && searchQuery.length > 0) {
@@ -179,16 +170,20 @@ class StorePage extends Component {
     //get all contracts data
     async getNFTsData() {
 
+        //double check
+        let currentAccount = this.state.currentAccount;
+        //but probably never happens anyway
+        if(!currentAccount) {
+            currentAccount = await this.state.drizzleState.accounts[0];
+            this.setState({currentAccount: currentAccount});
+        } 
+
         //market place
         const contract = await this.state.drizzle.contracts.STMarketplace;
         //ownership nfts
         const contractNFTs = await this.state.drizzle.contracts.SimthunderOwner;
         //simracing moment nfts
         const contractMomentNFTs = await this.state.drizzle.contracts.SimracingMomentOwner;
-        //car setups
-        response_cars = await contract.methods.getCarSetups().call();
-        //car setups
-        response_skins = await contract.methods.getSkins().call();
         
         let simsList = [];
         let simulatorsFilter = [];
@@ -202,53 +197,20 @@ class StorePage extends Component {
         //const considerMoreItems = this.isValidItemType(moreItems) ? true : false;
 
         //load them all, then filter them!
-        filteredCarsList = response_cars;
-        filteredSkinsList = response_skins;
+
 
         //by default on load, these filtered lists inlcude all the items, unless we are searching for somethign specific
-        if(considerSearchQuery){
-  
-
-          filteredCarsList = filteredCarsList.filter(value => {
-            
-            return this.shouldIncludeCarBySearchQuery(queryString.toLowerCase(), value);
-
-          });
-
-          filteredSkinsList = filteredSkinsList.filter(value => {
-            return this.shouldIncludeSkinBySearchQuery(queryString.toLowerCase(), value);
-          });
-        } /**else if(considerMoreItems) {
-          //only load the active table, to be faster
-
-            if(moreItems === MORE_ITEMS.CARSETUP) {
-                //only load cars
-                filteredCarsList = response_cars;
-            } else if(moreItems === MORE_ITEMS.CARSKIN ) {
-                //only load skins
-                filteredSkinsList = response_skins;
-            } 
-        } else {
-            //just load them all
-            filteredCarsList = response_cars;
-            filteredSkinsList = response_skins;
-        }*/
-
-    //--------------------------------------------------------------------------
-
-
-       
 
     //-------------------------- MOMENT NFTS -----------------------------------
     
-        this.loadMomentNFTs(contractMomentNFTs, maxElems, simsList, simulatorsFilter, maxElems2, filteredCarsList, filteredSkinsList);
+        this.loadMomentNFTs(contractMomentNFTs, maxElems, simsList, simulatorsFilter, maxElems2);
     
       //--------------------------------------------------------------------------
   
         
         //------------------------ Car ownership nfts ------------------------------
         //--------------------------------------------------------------------------
-        this.loadCarOwnershipNFTs(contractNFTs, maxElems, simsList, simulatorsFilter, maxElems2, filteredCarsList, filteredSkinsList);
+        this.loadCarOwnershipNFTs(contractNFTs, maxElems, simsList, simulatorsFilter, maxElems2);
         //--------------------------------------------------------------------------
 
         
@@ -260,18 +222,15 @@ class StorePage extends Component {
         //get the number of elements of the bigger list, use it to define the number of pages, minimum 1
         //it must be done after a lazy load as well, always
         //NOTE: we might reach this part before processing all NFTS, so we also call this inside the loop above
-        this.recalculatePaginationAndNumPages(maxElems2, maxElems, filteredCarsList, filteredSkinsList, considerSearchQuery ? filteredMomentNFTsList: momentNftslist);
+        this.recalculatePaginationAndNumPages(maxElems2, maxElems, considerSearchQuery ? filteredMomentNFTsList: momentNftslist);
         //these won´t change, set only here
         this.setState(
           { 
-          latestCars: response_cars, 
-          latestSkins: response_skins, 
           contract: contract, 
           contractNFTs: contractNFTs, 
           contractMomentNFTs: contractMomentNFTs
         });
         
-        console.log("END getNFTSData");
         UIHelper.hiddeSpinning();
     }
 
@@ -284,27 +243,28 @@ class StorePage extends Component {
      * @param {*} filteredCarsList list of possibly filtered cars
      * @param {*} filteredSkinsList list of possibly filtered skins
      */
-    loadCarOwnershipNFTs = async (contractNFTs, maxElems, simsList, simulatorsFilter, maxElems2, filteredCarsList, filteredSkinsList) => {
+    loadCarOwnershipNFTs = async (contractNFTs, maxElems, simsList, simulatorsFilter, maxElems2) => {
 
      const numNfts = await contractNFTs.methods.currentTokenId().call();
      console.log('ownership nft count:' + numNfts);
 
      let max = parseInt(numNfts) + 1;
 
-     nftlist = filteredNFTsList = [];
-
      //use search params?
      let queryString = this.state.searchQuery;
      const considerSearchQuery = (queryString && queryString.length > 0) ? true : false;
 
+     const currentAccount = this.state.currentAccount;
+
+     nftlist = filteredNFTsList = [];
 
       for (let i = 1; i < max ; i++) {
         try {
             //TODO: change for different ids
             let ownerAddress = await contractNFTs.methods.ownerOf(i).call();
             //console.log('ID:'+i+'ownerAddress: '+ownerAddress.toString()+'nfts addr: '+contractNFTs.address);
-            if(ownerAddress === contractNFTs.address) {
-                console.log('GOT MATCH');
+            if(ownerAddress === currentAccount) {
+               
                 let uri = await contractNFTs.methods.tokenURI(i).call();
                 //console.log('uri: ', uri);
                 let response = await fetch(uri);
@@ -362,7 +322,7 @@ class StorePage extends Component {
                     }
 
                     //this GET is assync, so we need to recalaculate the pagination after every grab
-                    this.recalculatePaginationAndNumPages(maxElems2, maxElems, filteredCarsList, filteredSkinsList, considerSearchQuery ? filteredMomentNFTsList : momentNftslist);
+                    this.recalculatePaginationAndNumPages(maxElems2, maxElems, considerSearchQuery ? filteredMomentNFTsList : momentNftslist);
                     
 
                     this.setState({ 
@@ -390,16 +350,18 @@ class StorePage extends Component {
 
       let max = parseInt(numMomentNfts) + 1;
 
-      momentNftslist = filteredMomentNFTsList = [];
-
     //--------------------------------------------------------------------------
+
+      const currentAccount = this.state.currentAccount;
+      //clear the lists
+      momentNftslist = filteredMomentNFTsList = [];
       
       for (let i = 1; i < max; i++) {
         try {
             //TODO: change for different ids
             let ownerAddress = await contractMomentNFTs.methods.ownerOf(i).call();
             //console.log('ID:'+i+'ownerAddress: '+ownerAddress.toString()+'nfts addr: '+contractMomentNFTs.address);
-            if(ownerAddress === contractMomentNFTs.address) {
+            if(ownerAddress === currentAccount) {
                
                 let uri = await contractMomentNFTs.methods.tokenURI(i).call();
                 //console.log('uri: ', uri);
@@ -449,7 +411,7 @@ class StorePage extends Component {
                 }
 
                 //this GET is assync, so we need to recalaculate the pagination after every grab
-                this.recalculatePaginationAndNumPages(maxElems2, maxElems, filteredCarsList, filteredSkinsList, considerSearchQuery ? filteredMomentNFTsList : momentNftslist);
+                this.recalculatePaginationAndNumPages(maxElems2, maxElems, considerSearchQuery ? filteredMomentNFTsList : momentNftslist);
                         
                 //console.log('considerSearchQuery ' + considerSearchQuery + 'momentNftslist size: ' + momentNftslist.length + " filteredMomentNFTsList: " + filteredMomentNFTsList.length)
 
@@ -483,7 +445,7 @@ class StorePage extends Component {
      * @param {*} filteredCarsList 
      * @param {*} filteredSkinsList 
      */
-    recalculatePaginationAndNumPages(maxMomentNFTsElems, maxNFTsElems, filteredCarsList, filteredSkinsList,filteredMomentNFTsList) {
+    recalculatePaginationAndNumPages(maxMomentNFTsElems, maxNFTsElems,filteredMomentNFTsList) {
 
       let maxElems = 0;
       if(maxMomentNFTsElems > maxElems) {
@@ -493,15 +455,8 @@ class StorePage extends Component {
       if(maxNFTsElems > maxElems) {
         maxElems = maxNFTsElems;
       }
-      if(filteredCarsList.length > maxElems) {
-        maxElems = filteredCarsList.length;
-      }
 
-      if(filteredSkinsList.length > maxElems) {
-        maxElems = filteredSkinsList.length;
-      }
-
-      if(filteredMomentNFTsList.length > maxElems) {
+      if(filteredMomentNFTsList && filteredMomentNFTsList.length > maxElems) {
         maxElems = filteredMomentNFTsList.length;
       }
       
@@ -510,10 +465,7 @@ class StorePage extends Component {
       this.setState(
         { 
         numPages: ( Math.ceil((maxElems / MAX_ITEMS_PER_PAGE) ) || 1),
-        filteredCars: this.paginate(filteredCarsList, this.state.currentPage), 
-        filteredSkins: this.paginate(filteredSkinsList, this.state.currentPage), 
         filteredMomentNFTs: this.paginate(filteredMomentNFTsList, this.state.currentPage)
-        
       });
     }
 
@@ -555,48 +507,12 @@ class StorePage extends Component {
           this.setState({filteredNFTs : [], filteredSkins: [], filteredCars: [], currentPage: 1, numPages: 1 });
         } else {
 
-          this.filterSkinsBySimulator(enabledSimulators);
-          this.filterCarsBySimulator(enabledSimulators);
           this.filterNFTsBySimulator(enabledSimulators);
           this.filterMomentNFTsBySimulator(enabledSimulators);
         }
     }
 
-    //filter skins by simulator
-    filterSkinsBySimulator(enabledSimulators) {
-      
-      let filteredListBySimulator = this.state.latestSkins.filter( function(SKIN){
-      
-          for (let simulator of enabledSimulators) {
-               
-            let include = (SKIN.info.simulator === simulator.simulator) || simulator.simulator === "All";
-            
-            if(include) {
-              return true;
-            }
-                  
-          }
-          return false;
-            
-        });
   
-        
-        this.setState({filteredSkins: this.paginate(filteredListBySimulator, this.state.currentPage) })
-    }
-    
-
-    //filter skinn by price
-    filterSkinsByPrice(priceMin, priceMax) {
-     
-      let filteredListByPrice = this.state.latestSkins.filter( function(SKIN){
-      
-          let skinPrice = (SKIN.ad.price / priceConversion);
-          return ( skinPrice >= priceMin && skinPrice <= priceMax );
-            
-        });
-  
-        this.setState({filteredSkins: this.paginate(filteredListByPrice, this.state.currentPage)})
-    }
 
     //filter NFTs by simulator
     filterNFTsBySimulator(enabledSimulators) {
@@ -669,41 +585,6 @@ class StorePage extends Component {
       this.setState({filteredMomentNFTs: this.paginate(filteredListByPrice, this.state.currentPage)});
     }
 
-    //filter cars by price
-    filterCarsByPrice(priceMin, priceMax) {
-
-      let filteredListByPrice = this.state.latestCars.filter( function(Car){
-      
-        let carPrice = (Car.ad.price / priceConversion);
-        return ( carPrice >= priceMin && carPrice <= priceMax );
-          
-      });
-
-      this.setState({filteredCars: this.paginate(filteredListByPrice, this.state.currentPage)})
-   }
-
-   filterCarsBySimulator(enabledSimulators) {
-      
-    let filteredListBySimulator = this.state.latestCars.filter( function(Car){
-    
-        for (let simulator of enabledSimulators) {
-             
-          let include = (Car.info.simulator === simulator.simulator) || simulator.simulator === "All";
-          
-          if(include) {
-            return true;
-          }
-                
-        }
-        return false;
-          
-      });
-
-
-      this.setState({filteredCars: this.paginate(filteredListBySimulator, this.state.currentPage)})
-  }
-
-
     priceFilterChanged = (event, name) => {
 
       let { value, min, max } = event.target;
@@ -720,8 +601,6 @@ class StorePage extends Component {
 
       this.setState({priceMin: min, priceMax: max});
 
-        this.filterSkinsByPrice(min, max);
-        this.filterCarsByPrice(min, max);
         this.filterNFTsByPrice(min, max);
         this.filterMomentNFTsByPrice(min, max);
 
@@ -732,10 +611,8 @@ class StorePage extends Component {
 
       this.setState({priceMin: this.state.priceMinDefault, priceMax: this.state.priceMaxDefault});
   
-        this.filterSkinsByPrice(this.state.priceMinDefault, this.state.priceMaxDefault);
         this.filterNFTsByPrice(this.state.priceMinDefault, this.state.priceMaxDefault);
         this.filterMomentNFTsByPrice(this.state.priceMinDefault, this.state.priceMaxDefault);
-        this.filterCarsByPrice(this.state.priceMinDefault, this.state.priceMaxDefault);
       
     }
 
@@ -750,13 +627,11 @@ class StorePage extends Component {
       this.setState({activeSimulatorsFilter: filtersSimulators});
 
       if(filtersSimulators.length === 0) {
-        this.setState({filteredNFTs : [], filteredMomentNFTs: [], filteredSkins: [],filteredCars: [], numPages: 1, currentPage: 1});
+        this.setState({filteredNFTs : [], filteredMomentNFTs: [], numPages: 1, currentPage: 1});
       } else {
 
-        this.filterSkinsBySimulator(filtersSimulators);
         this.filterNFTsBySimulator(filtersSimulators);
         this.filterMomentNFTsBySimulator(filtersSimulators);
-        this.filterCarsBySimulator(filtersSimulators);
       }
     }
 
@@ -825,50 +700,6 @@ class StorePage extends Component {
 
   }
 
-    /**
-     * 
-     * @param {*} queryString 
-     * @param {*} CAR 
-     * @returns 
-     */
-    shouldIncludeCarBySearchQuery(queryString, CAR) {
-
-
-      let carBrand = CAR.info.carBrand
-      let simulator = CAR.info.simulator
-      let series = CAR.info.series
-      let description = CAR.info.description
-
-      if ( 
-        (series && series.toLowerCase().indexOf(queryString)>-1) ||
-          (simulator && simulator.toLowerCase().indexOf(queryString)>-1) || 
-          (carBrand && carBrand.toLowerCase().indexOf(queryString)>-1) ||
-          (description && description.toLowerCase().indexOf(queryString)>-1 )
-        ) {
-          return true;
-        }
-      return false;
-
-    }
-
-    /**
-     * 
-     * @param {*} queryString 
-     * @param {*} SKIN 
-     * @returns 
-     */
-    shouldIncludeSkinBySearchQuery(queryString, SKIN) {
-
-      let carBrand = SKIN.info.carBrand
-      let simulator = SKIN.info.simulator
-
-      if ( (simulator && simulator.toLowerCase().indexOf(queryString)>-1) ||  (carBrand && carBrand.toLowerCase().indexOf(queryString)>-1) ) {
-          return true;
-        }
-      return false;
-
-  }
-
     //if has filter, just filter by serach query, any other filtering wipes out 
     //https://stackoverflow.com/questions/24806772/how-to-skip-over-an-element-in-map
     hasSearchFilter() {
@@ -885,10 +716,7 @@ class StorePage extends Component {
     }
 
     isValidItemType(itemType) {
-      return  itemType === MORE_ITEMS.CARSETUP || 
-              itemType === MORE_ITEMS.CARSKIN || 
-              itemType === MORE_ITEMS.OWNERSHIP || 
-              itemType === MORE_ITEMS.MOMENTNFTS;
+      return  itemType === MORE_ITEMS.OWNERSHIP || itemType === MORE_ITEMS.MOMENTNFTS;
     }
 
     hasMoreItemsFilter() {
@@ -910,10 +738,8 @@ class StorePage extends Component {
       //console.log("PAGE NUM: " + pageNum);
       let arrayPaginatedNFTS = this.paginate(this.state.latestNFTs, pageNum);
       let arrayPaginatedMomentNFTS = this.paginate(this.state.latestMomentNFTs, pageNum);
-      let arrayPaginatedCars = this.paginate(this.state.latestCars, pageNum);
-      let arrayPaginatedSkins = this.paginate(this.state.latestSkins, pageNum);
       
-      this.setState({currentPage: pageNum, filteredNFTs: arrayPaginatedNFTS, filteredMomentNFTs: arrayPaginatedMomentNFTS, filteredCars: arrayPaginatedCars, filteredSkins: arrayPaginatedSkins});
+      this.setState({currentPage: pageNum, filteredNFTs: arrayPaginatedNFTS, filteredMomentNFTs: arrayPaginatedMomentNFTS});
     }
 
     moveNextPage(evt) {
@@ -928,10 +754,8 @@ class StorePage extends Component {
 
       let arrayPaginatedNFTS = this.paginate(this.state.latestNFTs, currPage);
       let arrayPaginatedMomentNFTS = this.paginate(this.state.latestMomentNFTs, currPage);
-      let arrayPaginatedCars = this.paginate(this.state.latestCars, currPage);
-      let arrayPaginatedSkins = this.paginate(this.state.latestSkins, currPage);
       
-      this.setState({currentPage: currPage, filteredNFTs: arrayPaginatedNFTS, filteredMomentNFTs: arrayPaginatedMomentNFTS, filteredCars: arrayPaginatedCars, filteredSkins: arrayPaginatedSkins});
+      this.setState({currentPage: currPage, filteredNFTs: arrayPaginatedNFTS, filteredMomentNFTs: arrayPaginatedMomentNFTS});
     }
 
     movePreviousPage(evt) {
@@ -946,10 +770,8 @@ class StorePage extends Component {
 
       let arrayPaginatedNFTS = this.paginate(this.state.latestNFTs, currPage);
       let arrayPaginatedMomentNFTS = this.paginate(this.state.latestMomentNFTs, currPage);
-      let arrayPaginatedCars = this.paginate(this.state.latestCars, currPage);
-      let arrayPaginatedSkins = this.paginate(this.state.latestSkins, currPage);
       
-      this.setState({currentPage: currPage, filteredNFTs: arrayPaginatedNFTS, filteredMomentNFTs: arrayPaginatedMomentNFTS, filteredCars: arrayPaginatedCars, filteredSkins: arrayPaginatedSkins});
+      this.setState({currentPage: currPage, filteredNFTs: arrayPaginatedNFTS, filteredMomentNFTs: arrayPaginatedMomentNFTS});
     }
 
     renderPagination = (suffix) => {
@@ -1053,15 +875,7 @@ class StorePage extends Component {
       if(this.state.filteredNFTs.length > 0) {
         return "ownership";
       }
-      if(this.state.filteredCars.length > 0) {
-        return "carsetup";
-      }
-
-      if(this.state.filteredSkins.length > 0) {
-        return "carskins";
-      }
-
-      if(this.state.filteredMomentNFTs.length > 0) {
+      else if(this.state.filteredMomentNFTs.length > 0) {
         return "momentnfts";
       }
 
@@ -1186,12 +1000,6 @@ class StorePage extends Component {
                   </li>
                   <li key="momentnfts" className="nav-item text-fnwp position-relative"> 
                     <a className={this.getActiveClasses('momentnfts')} id="mp-2-04-tab" onClick={(e) => this.changeTab(e,'momentnfts')} data-toggle="tab" href="#mp-2-04-c" role="tab" aria-controls="mp-2-04-c" aria-selected="false">Simracing Moment NFTs</a>
-                  </li>
-                  <li key="carsetup" className="nav-item text-fnwp position-relative"> 
-                    <a className={this.getActiveClasses('carsetup')} id="mp-2-02-tab" onClick={(e) => this.changeTab(e,'carsetup')} data-toggle="tab" href="#mp-2-02-c" role="tab" aria-controls="mp-2-02-c" aria-selected="false">Car Setups</a>
-                  </li>
-                  <li key="carskins" className="nav-item text-fnwp position-relative"> 
-                    <a className={this.getActiveClasses('carskins')} id="mp-2-03-tab" onClick={(e) => this.changeTab(e,'carskins')} data-toggle="tab" href="#mp-2-03-c" role="tab" aria-controls="mp-2-03-c" aria-selected="false">Car Skins</a>
                   </li>
                 </ul>
                 {/*<!-- tab panes -->*/}
@@ -1373,159 +1181,6 @@ class StorePage extends Component {
                   </div>
                   {/*end moment nfts */}
 
-                  {/*<!-- tab item -->*/}
-                  <div className={this.getPanelActiveClasses('carsetup')} id="mp-2-02-c" role="tabpanel" aria-labelledby="mp-2-02-tab">
-                    <div className="row">
-                      {/*<!-- item -->*/}
-
-                      {this.state.filteredCars.length === 0 &&
-                          <div className="col-md-12 mb-4"><span>No items found in this category</span></div>
-                      }
-                      {this.state.filteredCars.map(function(value, index){
-                                
-                            let carBrand = value.info.carBrand
-                            let track = value.info.track
-                            let simulator = value.info.simulator
-                            let season = value.info.season
-                            let series = value.info.series
-                            let description = value.info.description
-                            let price = value.ad.price
-                            let address = value.ad.seller
-                            let itemId = value.id
-                            let key = itemId + "_" + index;
-                            let ipfsPath = value.ad.ipfsPath
-                            let thumb = "assets/img/sims/"+simulator+".png";
-                            /*
-                            <div><b>Track:</b> {track}</div>
-                            <div><b>Simulator:</b> {simulator}</div>
-                            <div><b>Season:</b> {season}</div>
-                            <div><b>Price:</b> {price / priceConversion} ETH</div>
-                            */
-                           return <div className="col-md-12 mb-4" key={key}>
-                           <a href="#2" onClick={(e) => this.buyItem(e, itemId, track, simulator, season, series, description, price, carBrand, address, ipfsPath, "", false)} className="product-item">
-                             <div className="row align-items-center no-gutters">
-                               <div className="item_img d-none d-sm-block">
-                                 <img className="img bl-3 text-primary" src={thumb} alt=""/>
-                               </div>
-                               <div className="item_content flex-1 flex-grow pl-0 pl-sm-6 pr-6">
-                                 <h6 className="item_title ls-1 small-1 fw-600 text-uppercase mb-1">{carBrand}</h6> 
-                                 {/*<div className="mb-0">
-                                   <i className="mr-2 fab fa-windows"></i>
-                                   <i className="mr-2 fab fa-steam"></i>
-                                   <i className="fab fa-apple"></i>
-                                 </div>*/}
-                                 <div className="position-relative">
-                                   <span className="item_genre small fw-600">
-                                     Track: {track}
-                                   </span>
-                                 </div>
-                                 <div className="position-relative">
-                                   <span className="item_genre small fw-600">
-                                   Simulator: {simulator}
-                                   </span>
-                                 </div>
-                                 <div className="position-relative">
-                                   <span className="item_genre small fw-600">
-                                   Season: {season}
-                                   </span>
-                                 </div>
-                               </div>
-                               {/*<div className="item_discount d-none d-sm-block">
-                                 <div className="row align-items-center h-100 no-gutters">
-                                   <div className="text-right text-secondary px-6">
-                                     <span className="fw-600 btn bg-warning">-10%</span>
-                                   </div>
-                                 </div>
-                               </div>*/}
-                               <div className="item_price">
-                                 <div className="row align-items-center h-100 no-gutters">
-                                   <div className="text-right">
-                                     {/*<span className="fw-600 td-lt">{price / priceConversion} ETH</span><br/>*/}
-                                     <div className="store_price">
-                                     <span className="fw-600"><strong>{price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/><span className="secondary-price">{this.renderUSDPrice(price)}<sup className="secondary-sup">USD</sup></span></span>
-                                     </div>
-                                   </div>
-                                 </div>
-                               </div>
-                             </div>
-                           </a>
-                         </div> 
-                      },this)}
-
-                      
-                      {/*<!-- /.item -->*/}
-                      {/*<!-- item -->*/}
-                    
-                    </div>
-                  </div>
-
-                  {/*<!-- tab item -->*/}
-                  <div className={this.getPanelActiveClasses('carskins')} id="mp-2-03-c" role="tabpanel" aria-labelledby="mp-2-03-tab">
-                    <div className="row">
-                     
-                        {this.state.filteredSkins.length === 0 &&
-                          <div className="col-md-12 mb-4"><span>No items found in this category</span></div>
-                        }
-                        {this.state.filteredSkins.map(function(value, index) {
-
-                                    let carBrand = value.info.carBrand
-                                    let simulator = value.info.simulator
-                                    
-                                    let price = value.ad.price
-                                    let address = value.ad.seller
-                                    let itemId = value.id
-                                    let key = itemId + "_" + index;
-                                    let ipfsPath = value.ad.ipfsPath
-                                    let imagePath = "https://simthunder.infura-ipfs.io/ipfs/" + value.info.skinPic
-                                    let thumb = "assets/img/sims/"+simulator+".png";
-                                    
-                                    return <div className="col-md-12 mb-4" key={key}>
-                                        <a href="#3" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, null, null, price, carBrand , address, ipfsPath, imagePath, false)} className="product-item">
-                                        <div className="row align-items-center no-gutters">
-                                            <div className="item_img d-none d-sm-block">
-                                            <img className="img bl-3 text-primary" src={thumb} alt="Games Store"/>
-                                            </div>
-                                            <div className="item_content flex-1 flex-grow pl-0 pl-sm-6 pr-6">
-                                            <h6 className="item_title ls-1 small-1 fw-600 text-uppercase mb-1">{carBrand}</h6> 
-                                            {/*
-                                                <div className="mb-0">
-                                                <i className="mr-2 fab fa-windows"></i>
-                                                <i className="mr-2 fab fa-steam"></i>
-                                                <i className="fab fa-apple"></i>
-                                                </div>
-                                            */}
-                                            <div className="position-relative">
-                                                <span className="item_genre small fw-600">
-                                                {simulator}
-                                                </span>
-                                            </div>
-                                            </div>
-                                            {/*<div className="item_discount d-none d-sm-block">
-                                            <div className="row align-items-center h-100 no-gutters">
-                                                <div className="text-right text-secondary px-6">
-                                                <span className="fw-600 btn bg-warning">-10%</span>
-                                                </div>
-                                            </div>
-                                            </div>*/}
-                                            <div className="item_price">
-                                            <div className="row align-items-center h-100 no-gutters">
-                                                <div className="text-right">
-                                                {/*<span className="fw-600 td-lt">{price / priceConversion} ETH</span><br/>*/}
-                                                <div className="store_price">
-                                                <span className="fw-600"><strong>{price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/><span className="secondary-price">{this.renderUSDPrice(price)}<sup className="secondary-sup">USD</sup></span></span>
-                                                </div>
-                                                </div>
-                                            </div>
-                                            </div>
-                                        </div>
-                                        </a>
-                                    </div>
-                            },this)}
-                      {/*<!-- /.item -->*/}
-                      {/*<!-- item -->*/}
-                      
-                    </div>
-                  </div>
                 </div>
 
                 {/*<!-- pagination -->*/}
@@ -1562,7 +1217,7 @@ class StorePage extends Component {
                           </ul>
                       </div>
                     </li>
-                    <li key="collapseprice" className="nav-item text-light transition mb-2">
+                   {/*<!-- <li key="collapseprice" className="nav-item text-light transition mb-2">
                       <a href="/store" aria-expanded="false" data-toggle="collapse" className="nav-link py-2 px-3 text-uppercase collapsed collapser nav-link-border collapser-active">
                           <span className="p-collapsing-title">Price</span>
                       </a>
@@ -1588,7 +1243,7 @@ class StorePage extends Component {
                             
                           </ul>
                       </div>
-                    </li>
+                        </li>-->*/}
                 
                     
                     <li key="resetfilter" className="nav-item text-light transition mt-4">
@@ -1614,4 +1269,4 @@ class StorePage extends Component {
 }
 
 
-export default withRouter(StorePage);
+export default withRouter(NFTInventoryPage);

@@ -70,7 +70,7 @@ class AuctionPage extends Component {
         const contractSimracerCoin = await this.state.drizzle.contracts.SimracerCoin;
         const contractMomentNFTs = await this.state.drizzle.contracts.SimracingMomentOwner;
 
-        const currentAccount = this.state.drizzleState.accounts[0];
+        const currentAccount = await this.state.drizzleState.accounts[0];
         console.log('isNFT:' + this.state.isNFT);
         console.log('isMomentNFT:' + this.state.isMomentNFT);
         let isSkin = !this.state.isNFT && !this.state.isMomentNFT && (this.state.track == null || this.state.season == null);

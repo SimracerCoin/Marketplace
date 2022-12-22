@@ -161,7 +161,8 @@ class NavbarPage extends React.Component {
                             <NavLink className="nav-link mr-2" to="/about">About</NavLink>
                             <NavLink className="nav-link mr-2" to="/faqs">FAQs</NavLink>
                             <NavLink className="nav-link mr-2" to="/store">Store</NavLink>
-                            <NavLink className="nav-link mr-2" to="/auction">Auction</NavLink>
+                            {/*<!--<NavLink className="nav-link mr-2" to="/auction">Auction</NavLink>-->*/}
+                            <NavLink className="nav-link mr-2" to="/inventory">NFT Inventory</NavLink>
                         </Nav>
                     </Navbar.Collapse>
                 </Container>
