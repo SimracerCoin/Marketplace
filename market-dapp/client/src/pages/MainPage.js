@@ -397,10 +397,11 @@ class MainPage extends Component {
             let metadata = this.extractMomentNFTTraitTypes(value.attributes);
             let series = metadata.series;
             let simulator = metadata.simulator;
-            let address = metadata.seriesOwner;
+            let address = value.seriesOwner || metadata.seriesOwner;
             let price = metadata.price * priceConversion;
             let video = metadata.video || value.animation_url; 
             let carNumberOrDescription = value.description;
+            console.log("metadata.seriesOwner: ", metadata.seriesOwner);
 
 
             let usdPrice = Number(Math.round(metadata.price  * this.state.usdValue * 100) / 100).toFixed(2);

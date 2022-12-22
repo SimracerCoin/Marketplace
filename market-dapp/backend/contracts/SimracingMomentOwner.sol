@@ -13,15 +13,26 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 // import "@openzeppelin/contracts@3.1.0-solc-0.7/utils/Counters.sol";
 // import "@openzeppelin/contracts@3.1.0-solc-0.7/token/ERC721/ERC721.sol";
 // import "@openzeppelin/contracts@3.1.0-solc-0.7/token/ERC20/ERC20.sol";
-//import "@openzeppelin/contracts@3.1.0-solc-0.7/access/Ownable.sol";
+// import "@openzeppelin/contracts@3.1.0-solc-0.7/access/Ownable.sol";
 
-contract SimracingMomentOwner is ERC721 {
+contract SimracingMomentOwner is ERC721, Ownable {
 
     ERC20 SIMRACERCOIN; //pay with simracercoin
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
     mapping(uint256 => uint256) prices;
     mapping(uint256 => address payable) seriesOwners;
+
+    event itemEntryDeleted (
+        uint256 itemId
+    );
+
+    event itemTransferred (
+        uint256 itemId,
+        address oldOwner,
+        address newOwner
+    );
+
 
     /**
      * @notice The constructor for the Simthunder Owner NFT contract.
@@ -38,6 +49,7 @@ contract SimracingMomentOwner is ERC721 {
         prices[newItemId] = itemPrice;
         seriesOwners[newItemId] = seriesOwner;
         _setTokenURI(newItemId, metadata);
+        //setApprovalForAll(address(this),true);
         return newItemId;
     }
 
@@ -60,12 +72,22 @@ contract SimracingMomentOwner is ERC721 {
         address nftOwner = ownerOf(itemId);
         bool isContractOwner = (msg.sender == owner());
         bool isNFTOwner = (msg.sender == nftOwner);
+
         require(isContractOwner || isNFTOwner, "Not authorized to delete this item");
-        if(!isNFTOwner) {
-            approve(_seller, itemId);
-        }
         delete seriesOwners[itemId];
-        return transferFrom(nftOwner, _seller, itemId);
+        emit itemEntryDeleted(itemId);
+
+        if(nftOwner != _seller) {
+            if(isContractOwner) {
+                _transfer(address(this), _seller, itemId);
+                emit itemTransferred(itemId, nftOwner, _seller);
+            }
+            else {
+                approve(address(this), itemId);
+                _transfer(nftOwner, _seller, itemId);
+                emit itemTransferred(itemId, nftOwner, _seller);
+            }
+        }
 
     }
 

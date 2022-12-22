@@ -294,36 +294,32 @@ contract ContentMarketplace {
 
     function deleteItemFromMarketplace(uint256 itemId, address _seller, bool isOwner) internal returns(bool) {
 
-        if(isOwner && itemId > 0) {
-            //contract owner
-            uint256 index = itemId - 1;
-            //the item id is always (index + 1)
+        require(itemId >= 0,"Invalid item id");
+        //is contract owner
+        if(isOwner) {
             //get corresponding ad
-            Advertisement memory adv = ads[index];
+            Advertisement memory adv = ads[itemId];
             //get the seller address
             address payable _theSeller = adv.seller;
 
             uint256 _size = adsPerSeller[_theSeller].length;
+            require(_size > 0,"Seller has no items for sale");
 
             for (uint256 i = 0; i < _size; i++) {
                 uint256 _adId = adsPerSeller[_theSeller][i];
                 //find by id on adsPerSeller[]
                 if(_adId == itemId) {
-
                     //found the item, delete it
                     adsPerSeller[_theSeller][i] = adsPerSeller[_theSeller][_size - 1];
                     adsPerSeller[_theSeller].pop();
-
                     //also remove from ads list
-                    delete ads[index];
+                    delete ads[itemId];
                     return true;
                 }
             }
-                
-        
-
-        } else if(_seller == msg.sender) { //double check
             //regular seller account
+        } else if(_seller == msg.sender) {
+            //double check
             uint256 _size = adsPerSeller[_seller].length;
             require(_size > 0,"Seller has no items for sale");
             for (uint256 i = 0; i < _size; i++) {
@@ -334,19 +330,22 @@ contract ContentMarketplace {
                     adsPerSeller[_seller][i] = adsPerSeller[_seller][_size - 1];
                     adsPerSeller[_seller].pop();
                     //get the one from ads
-
-                    uint256 index = itemId - 1;
-                    //the item id is always (index + 1)
+               
                     //get corresponding ad
-                    Advertisement memory adv = ads[index];
+                    Advertisement memory adv = ads[itemId];
                     if( adv.seller == _seller  ) { //ex: item with id 3 is at position 2
-                        delete ads[index];
+                        delete ads[itemId];
                         return true;
                     }
                 }
             }
         }
         return false;
+    }
+
+    //get contract owner/deployer
+    function getContractOwner() public view returns(address) {
+        return owner;
     }
 
 }

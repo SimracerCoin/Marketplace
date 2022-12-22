@@ -84,6 +84,14 @@ contract STMarketplace is ContentMarketplace {
     /// @notice Events
     event carSetupSaved(address _address, bytes _ipfsPath, string _carBrand, string _track, string _simulator, string _season, uint256 _price);
     event skinSaved(address _address, bytes _ipfsPath, string _carBrand, string _simulator, uint256 _price);
+
+    event deletedMarketPlaceItem(
+        uint256 itemId
+    );
+
+    event deletedItemInfo(
+        uint256 itemId
+    );
     
     /**
     /// notice_ Creates an instance of the contract
@@ -168,15 +176,40 @@ contract STMarketplace is ContentMarketplace {
         return id;
     }
 
-    function deleteItem(uint256 itemId, address _seller, bool isOwner) private returns(bool) {
+    function deleteItem(uint256 itemId, address _seller, bool isOwner, bool isSkin) private returns(bool) {
 
         bool deleted = deleteItemFromMarketplace(itemId, _seller, isOwner);
         if(deleted) {
-            for(uint256 i = 0; i < carSkinIds.length; i++) {
-                if(carSkinIds[i] == itemId) {
-                    carSkinIds[i] = carSkinIds[carSkinIds.length - 1];
-                    carSkinIds.pop();
-                    return true;
+            emit deletedMarketPlaceItem(itemId);
+
+            //also delete comments
+            if(itemComments[itemId].length > 0) {
+                delete itemComments[itemId];
+            }
+
+            if(isSkin) {
+                //delete maping
+                delete carSkinInfos[itemId];
+                emit deletedItemInfo(itemId);
+
+                for(uint256 i = 0; i < carSkinIds.length; i++) {
+                    if(carSkinIds[i] == itemId) {
+                        carSkinIds[i] = carSkinIds[carSkinIds.length - 1];
+                        carSkinIds.pop();
+                        return true;
+                    }
+                }
+            } else {
+                //delete maping
+                delete carSetupInfos[itemId];
+                emit deletedItemInfo(itemId);
+
+                for(uint256 i = 0; i < carSetupIds.length; i++) {
+                    if(carSetupIds[i] == itemId) {
+                        carSetupIds[i] = carSetupIds[carSetupIds.length - 1];
+                        carSetupIds.pop();
+                        return true;
+                    }
                 }
             }
         }
@@ -187,14 +220,14 @@ contract STMarketplace is ContentMarketplace {
         require(isSkin(itemId),"Not a valid skin");
         bool isOwner = (msg.sender == owner);
         require(isOwner || isSeller(msg.sender),"caller is not a seller, neither the owner");
-        return deleteItem(itemId, msg.sender, isOwner);
+        return deleteItem(itemId, msg.sender, isOwner, true);
     }
 
     function deleteCarSetup(uint256 itemId) public returns(bool) {
         require(isCarSetup(itemId),"Not a valid car setup");
         bool isOwner = (msg.sender == owner);
         require(isOwner || isSeller(msg.sender),"caller is not a seller, neither the owner");
-        return deleteItem(itemId, msg.sender, isOwner);
+        return deleteItem(itemId, msg.sender, isOwner, false);
     }
 
      /// @notice Registers a new comment for item
@@ -301,8 +334,9 @@ contract STMarketplace is ContentMarketplace {
         return carSkinIds.length;
     }
     
+    
     /// @notice Utility method to return string from an address
-    function addressToString(address _addr) public pure returns(string memory) 
+    /*function addressToString(address _addr) public pure returns(string memory) 
     {
         //with 8.0 cannot convert anymore uint256(address)
         bytes32 value = bytes32( convertSolidity8(_addr));
@@ -320,7 +354,7 @@ contract STMarketplace is ContentMarketplace {
 
     function convertSolidity8(address a) internal pure returns (uint256) {
         return uint256(uint160(a));
-    }
+    }*/
 
     /**
     function instantiateCartesiVerification(address claimer, address challenger, uint256 _purchaseId, DescartesInterface.Drive[] memory drives) public returns (uint256 index) 
@@ -370,7 +404,7 @@ contract STMarketplace is ContentMarketplace {
         return (a, b, c, d);
     }*/
 
-    function utilCompareInternal(bytes memory a, bytes memory b) internal returns (bool) {
+    /*function utilCompareInternal(bytes memory a, bytes memory b) internal returns (bool) {
         if (a.length != b.length) {
             return false;
         }
@@ -380,5 +414,5 @@ contract STMarketplace is ContentMarketplace {
             }
         }
         return true;
-    }
+    }*/
 }
