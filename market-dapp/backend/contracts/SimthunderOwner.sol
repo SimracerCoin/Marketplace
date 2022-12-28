@@ -52,6 +52,32 @@ contract SimthunderOwner is ERC721, Ownable {
         return newItemId;
     }
 
+    /**
+     * Put an item for sale, directly from user wallet
+     */
+    function sellFromWallet(uint256 itemId, uint256 itemPrice) external {
+        //check if it was bought here first
+        require(prices[itemId] > 0, "The item does not exist on this marketplace");
+        //know if the item was on marketplace before
+        address nftOwner = ownerOf(itemId);
+        //make sure the sender is the current owner
+        require(nftOwner == msg.sender,"Sender is not the owner of the item, or the item does not exist");
+
+        address _seller = seriesOwners[itemId];
+        if(_seller == address(0)) {
+            seriesOwners[itemId] = msg.sender;
+        }
+        else {
+            require(seriesOwners[itemId] != msg.sender, "You already listed this item");
+        }
+
+        approve(address(this), itemId);
+        prices[itemId] = itemPrice;
+        seriesOwners[itemId] = msg.sender;
+        return _transfer(msg.sender, address(this), itemId);
+
+    }
+
     function buyItem(uint256 itemId, uint256 itemPrice) external {
         require(itemPrice == prices[itemId], "Check the item price");
         address accountAddress = seriesOwners[itemId];
