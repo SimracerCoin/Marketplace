@@ -839,6 +839,7 @@ class NFTInventoryPage extends Component {
                     vendorNickname: this.state.vendorNickname,
                     ipfsPath: this.state.ipfsPath,
                     isNFT: this.state.isNFT,
+                    isMomentNFT: this.state.isMomentNFT,
                     similarItems: similarItems,
                     usdPrice : this.state.usdValue
                 }
@@ -1099,7 +1100,7 @@ class NFTInventoryPage extends Component {
                           <div className="col-md-12 mb-4"><span>No items found in this category</span></div>
                       }
                       {this.state.filteredMomentNFTs.map(function(value, index){
-                                
+                         
                                 let metadata = this.extractMomentNFTTraitTypes(value.attributes);
 
                                 let series = metadata.series;

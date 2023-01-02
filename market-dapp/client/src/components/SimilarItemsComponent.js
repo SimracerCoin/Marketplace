@@ -35,14 +35,22 @@ class SimilarItemsComponent extends React.Component {
 
      filterSimilarItems = (referenceItem) => {
 
+        if(this.state.items.length > 0) {
+          let filteredItems = this.state.items.filter(function(value, index) {
+            //console.log("filtering items: value " + JSON.stringify(value));
+            if(value && value.id) {
+              let itemId = value.id;
+              //console.log("item id: " + itemId + " selected one " + referenceItem); 
+              return itemId!== referenceItem;
+            }
+            return false;
+            
+          });
+          this.setState({filteredItems: filteredItems});
+        } else {
+          this.setState({filteredItems: []});
+        }
         
-        let filteredItems = this.state.items.filter(function(value, index) {
-          //console.log("filtering items: value " + JSON.stringify(value));
-          let itemId = value.id;
-          //console.log("item id: " + itemId + " selected one " + referenceItem); 
-          return itemId!== referenceItem;
-        });
-        this.setState({filteredItems: filteredItems});
       }
 
     extractMomentNFTTraitTypes(attributes) {
