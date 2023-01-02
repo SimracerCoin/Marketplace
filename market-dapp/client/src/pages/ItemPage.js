@@ -161,6 +161,7 @@ class ItemPage extends Component {
               .send(paramsForCall)
               .on('confirmation', function (confNumber, receipt, latestBlockHash) {
                     window.localStorage.setItem('forceUpdate','yes');
+                    UIHelper.hiddeSpinning();
                     if(confNumber > 9) {
                         UIHelper.transactionOnConfirmation("The item was removed from sale!","/");
                     }
@@ -174,6 +175,7 @@ class ItemPage extends Component {
           .send(paramsForCall)
           .on('confirmation', function (confNumber, receipt, latestBlockHash) {
                 window.localStorage.setItem('forceUpdate','yes');
+                UIHelper.hiddeSpinning();
                 if(confNumber > 9) {
                     UIHelper.transactionOnConfirmation("The item was removed from sale!","/");
                 }
@@ -203,8 +205,9 @@ class ItemPage extends Component {
           .send(paramsForCall)
           .on('confirmation', function (confNumber, receipt, latestBlockHash) {
               window.localStorage.setItem('forceUpdate','yes');
+              UIHelper.hiddeSpinning();
               if(confNumber > 9) {
-                  UIHelper.transactionOnConfirmation("The item was removed fro sale!","/");
+                  UIHelper.transactionOnConfirmation("The item was removed from sale!","/");
               }
           })
           .on('error', UIHelper.transactionOnError)
