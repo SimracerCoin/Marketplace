@@ -101,7 +101,7 @@ class SimpleModal extends React.Component {
                         Advanced options
                     </Typography>
                     <div className="approve-container">
-                        <Button className="approve-nft" onClick={this.approveNFT}>Approve NFT</Button>
+                        <button className="approve-nft" onClick={this.approveNFT}>Approve NFT</button>
                     </div>
                     <br/>
                     <div className="service-fees">(i) Service fee<span className="fees-percentage">5%</span></div>

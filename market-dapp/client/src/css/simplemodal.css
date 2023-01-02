@@ -10,9 +10,9 @@
     border: 2px solid #000;
     color: white;
     box-shadow: 24;
-
     padding: 5px;
 }
+
 
 .simple-modal-title {
     width: 95%;
@@ -48,14 +48,14 @@
     text-align: center;
     margin: 0 auto;
 }
-.approve-container.approve-nft {
-    color: black;
-    background-color: greenyellow;
+.approve-container .approve-nft {
+    color: black!important;
+    background-color: greenyellow!important;
     border-radius: 5px;
-    border: 2px solid greenyellow;
+    border: 2px solid greenyellow!important;
     padding: 3px;
     margin: 0 auto;
-    width: 100%;
+    width: 70%;
 }
 .approve-nft:hover {
     cursor: pointer;
