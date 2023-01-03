@@ -21,7 +21,9 @@ class NavbarPage extends React.Component {
             selectedSeason: "",
             selectedPrice: "",
             selectedCarBrand: "",
-            searchQuery: ""
+            searchQuery: "",
+            isNFTOwner: false,
+            isMomentNFTOwner: false
         }
 
     }
@@ -38,12 +40,20 @@ class NavbarPage extends React.Component {
         const currentAccount = this.state.drizzleState.accounts[0];
         const haveNotifications = (await contract.methods.listNotificationsPerUser(currentAccount).call()).length != 0;
 
+        const contractNFTs = await this.state.drizzle.contracts.SimthunderOwner;
+        const contractMomentNFTs = await this.state.drizzle.contracts.SimracingMomentOwner;
+        const ownerNFT = await contractNFTs.methods.owner().call();
+        const ownerMomentNFT = await contractMomentNFTs.methods.owner().call();
+        //check if account is contract(s) owner
+        const isNFTOwner = (ownerNFT == currentAccount);
+        const isMomentNFTOwner = (ownerMomentNFT == currentAccount);
+
         let previousSearch = localStorage.getItem('searchQuery');
         let searchQuery = "";
         if(previousSearch && previousSearch.length>0) {
             searchQuery = previousSearch;
         }
-        this.setState({ currentAccount: currentAccount, haveNotifications: haveNotifications, searchQuery: searchQuery });
+        this.setState({ isNFTOwner: isNFTOwner, isMomentNFTOwner: isMomentNFTOwner, currentAccount: currentAccount, haveNotifications: haveNotifications, searchQuery: searchQuery });
     }
 
     componentWillUnmount = async (event) => {
@@ -137,16 +147,37 @@ class NavbarPage extends React.Component {
                     <Navbar.Collapse id="collapsingNavbar">
                         <Nav>
                             <NavDropdown title="Sell">
-                                <Link to="/sellownership">
+
+                                <Link to="/inventory">
                                     <NavDropdown.Item as="div">
-                                        Sell Car Ownership NFT
+                                        Sell Simracing Moment
                                     </NavDropdown.Item>
                                 </Link>
-                                <Link to="/sellmomentnft">
+
+                                <Link to="/inventory">
                                     <NavDropdown.Item as="div">
-                                        Sell Simracer Moment NFT
+                                        Sell Car Ownership
                                     </NavDropdown.Item>
                                 </Link>
+
+                                {
+                                    this.state.isNFTOwner &&
+                                    <Link to="/sellownership">
+                                        <NavDropdown.Item as="div">
+                                            Mint Car Ownership NFT
+                                        </NavDropdown.Item>
+                                    </Link>
+                                }
+                                {
+                                    this.state.isMomentNFTOwner &&
+
+                                    <Link to="/sellmomentnft">
+                                        <NavDropdown.Item as="div">
+                                            Mint Simracer Moment NFT
+                                        </NavDropdown.Item>
+                                    </Link>
+                                }
+                                
                                 <Link to="/uploadcar">
                                     <NavDropdown.Item as="div">
                                         Sell Car Setup
