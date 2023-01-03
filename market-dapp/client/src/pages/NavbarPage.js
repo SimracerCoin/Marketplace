@@ -148,13 +148,13 @@ class NavbarPage extends React.Component {
                         <Nav>
                             <NavDropdown title="Sell">
 
-                                <Link to="/inventory">
+                                <Link to="/inventory?view=momentnfts">
                                     <NavDropdown.Item as="div">
                                         Sell Simracing Moment
                                     </NavDropdown.Item>
                                 </Link>
 
-                                <Link to="/inventory">
+                                <Link to="/inventory?view=ownership">
                                     <NavDropdown.Item as="div">
                                         Sell Car Ownership
                                     </NavDropdown.Item>
