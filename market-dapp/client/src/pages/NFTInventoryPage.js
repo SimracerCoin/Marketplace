@@ -10,7 +10,7 @@ const priceConversion = 10 ** 18;
 //pagination is out of scope for now, also would require more items to test properly
 const MAX_ITEMS_PER_PAGE = 10;
 
-const MORE_ITEMS = {
+const VIEW_ITEMS = {
   OWNERSHIP: 'ownership', 
   MOMENTNFTS: 'momentnfts'
 }
@@ -80,7 +80,7 @@ class NFTInventoryPage extends Component {
             searchQuery: "",
             //searchRef: props.searchRef //search field
             usdValue: 1,
-            moreItems: "",
+            viewItems: "",
             currentAccount: null
         }
 
@@ -118,9 +118,9 @@ class NFTInventoryPage extends Component {
           this.setState({searchQuery: searchQuery});
         }
 
-        const hasMoreItems = this.hasMoreItemsFilter();
-        if(hasMoreItems && hasMoreItems.length > 0) {
-          this.setState({moreItems: hasMoreItems});
+        const viewItems = this.hasViewItemsFilter();
+        if(viewItems && viewItems.length > 0) {
+          this.setState({viewItems: viewItems});
         }
 
         this.getNFTsData();
@@ -716,16 +716,16 @@ class NFTInventoryPage extends Component {
     }
 
     isValidItemType(itemType) {
-      return  itemType === MORE_ITEMS.OWNERSHIP || itemType === MORE_ITEMS.MOMENTNFTS;
+      return  itemType === VIEW_ITEMS.OWNERSHIP || itemType === VIEW_ITEMS.MOMENTNFTS;
     }
 
-    hasMoreItemsFilter() {
+    hasViewItemsFilter() {
       const searchParams = new URLSearchParams(window.location.search);
       if(searchParams) {
-        const query = searchParams.get('m');
+        const query = searchParams.get('view');
         //check if we have something valid
         if(query && this.isValidItemType(query)) {
-          searchParams.delete("m");
+          searchParams.delete("view");
           return query;
         }
      
@@ -888,8 +888,8 @@ class NFTInventoryPage extends Component {
       let queryString = this.state.searchQuery;
       const considerSearchQuery = (queryString && queryString.length > 0);
 
-      let moreItems = this.state.moreItems;
-      const considerMoreItems = (moreItems && moreItems.length > 0);
+      let viewItems = this.state.viewItems;
+      const considerMoreItems = (viewItems && viewItems.length > 0);
 
       if(!considerSearchQuery) {
         
@@ -902,7 +902,7 @@ class NFTInventoryPage extends Component {
           }
         } else {
 
-          if(key === moreItems) {
+          if(key === viewItems) {
             return "nav-link active show";
           } else {
             return "nav-link";
@@ -927,8 +927,8 @@ class NFTInventoryPage extends Component {
       let queryString = this.state.searchQuery;
       const considerSearchQuery = (queryString && queryString.length > 0);
 
-      let moreItems = this.state.moreItems;
-      const considerMoreItems = (moreItems && moreItems.length > 0);
+      let viewItems = this.state.viewItems;
+      const considerMoreItems = (viewItems && viewItems.length > 0);
      
 
       if(!considerSearchQuery) {
@@ -941,7 +941,7 @@ class NFTInventoryPage extends Component {
             return "tab-pane fade";
           }
         } else {
-          if(key === moreItems) {
+          if(key === viewItems) {
             return "tab-pane fade active show";
           } else {
             return "tab-pane fade";
