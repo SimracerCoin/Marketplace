@@ -609,7 +609,6 @@ class MainPage extends Component {
                     <div id="latest-container" className="container latest-items">
                         <div className="center-text">
                             <h1>Welcome to Simthunder!</h1>
-                            <h2>The largest marketplace for sim racing assets</h2>
                             <h5>Buy, sell, discover, and trade sim racing goods</h5>
                         </div>
 
