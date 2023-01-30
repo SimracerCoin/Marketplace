@@ -20360,7 +20360,7 @@ ul.list-style-square {
   z-index: 10000 !important;;
   visibility: visible; 
   position: absolute;
-  top: 12px;
+  top: 0px;
   width:100%;
   pointer-events: none;
 }

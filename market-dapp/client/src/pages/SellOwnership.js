@@ -8,10 +8,10 @@ import "../css/auction.css";
 
 const openpgp = require('openpgp');
 
-const priceConversion = 10 ** 18;
-
+const priceConversion = 10**18;
 const timingOpt = ["1 day", "3 days", "7 days", "1 month", "3 month", "6 month"];
 const timingOptions = [];
+const NUMBER_CONFIRMATIONS_NEEDED = Number(process.env.REACT_APP_NUMBER_CONFIRMATIONS_NEEDED);
 
 class SellOwnership extends Component {
 
@@ -193,13 +193,13 @@ class SellOwnership extends Component {
         var jsonData = { 'description': 'Simthunder Car Ownership', 'name': 'Car', 'image': 'https://simthunder.infura-ipfs.io/ipfs/' + image };
         //TODO: Change to standard attributes, remove price
         jsonData['series'] = this.state.currentSeries;
-        jsonData['seriesOwner'] = this.state.currentAccount;
+        //jsonData['seriesOwner'] = this.state.currentAccount;
         jsonData['carNumber'] = this.state.currentCarNumber;
         jsonData['simulator'] = this.state.currentSimulator;
-        jsonData['price'] = this.state.currentFilePrice / priceConversion;
+        //jsonData['price'] = this.state.currentFilePrice / priceConversion;
 
         jsonData.attributes = [];
-        jsonData.attributes.push(
+/*        jsonData.attributes.push(
             {
                 "trait_type": "auction_item", 
                 "value": this.state.auctionItem
@@ -224,7 +224,7 @@ class SellOwnership extends Component {
                         "value": this.state.auctionEnd
                 }
             )
-        }    
+        }    */
 
         var jsonStr = JSON.stringify(jsonData);
 
@@ -322,7 +322,7 @@ class SellOwnership extends Component {
                     //.on('sent', UIHelper.transactionOnSent)
                     .on('confirmation', function (confNumber, receipt, latestBlockHash) {
                         window.localStorage.setItem('forceUpdate','yes');
-                        if(confNumber > 9) {
+                        if(confNumber >= NUMBER_CONFIRMATIONS_NEEDED) {
                             UIHelper.transactionOnConfirmation("The new car ownership NFT is available for sale!","/");
                         }
                     })
@@ -371,6 +371,7 @@ class SellOwnership extends Component {
                                                     {sims}
                                                 </DropdownButton>
                                                 <br></br>
+                                                {false &&
                                                 <div className="auction_item_input">
                                                     <div className="auction_item_checkbox_container">    
                                                         <FormCheck.Input type="checkbox" id='auction_item' value={this.state.auctionItem} onChange={this.handleAuction}/>
@@ -398,7 +399,7 @@ class SellOwnership extends Component {
                                                         </div>
                                                     </div>
                                                 </div>
-                                                
+                                                }
                                             </Form.Group>
                                         </Form>
                                     </div>

@@ -162,13 +162,13 @@ class SimilarItemsComponent extends React.Component {
 
           let metadata =  this.extractMomentNFTTraitTypes(value.attributes);
          
-          payload.price = metadata.price * priceConversion;
+          payload.price = value.price / priceConversion;
           payload.description =  (value.description || metadata.description);
 
           payload.simulator = metadata.simulator;
           payload.series = metadata.series;
-          payload.address = metadata.seriesOwner;
-          payload.video = value.animation_url || metadata.video;
+          payload.address = value.seriesOwner;
+          payload.video = value.animation_url;
 
         } else if(isSkin) {
 

@@ -118,8 +118,9 @@ class MainPage extends Component {
                     let uri = await contractNFTs.methods.tokenURI(i).call();
                     //console.log("contractNFTs loaded: " + i + " uri: " + uri);
                     let response = await fetch(uri);
-                    let data = await response.json();
-                    data.id=i;
+                    let info = await contractNFTs.methods.getItem(i).call();
+                    let data = {id: i, price: info[0], seriesOwner: info[1], ...await response.json()};
+
                     //put on shorter list
                     shorterNFTsList.push(data);  
                     if(shorterNFTsList.length === numNFTs2Load) {
@@ -146,9 +147,9 @@ class MainPage extends Component {
                     let uri = await contractMomentNFTs.methods.tokenURI(i).call();
                     //console.log("contractMomentNFTs loaded: " + i + " uri: " + uri);
                     let response = await fetch(uri);
-                    let data = await response.json();
-                  
-                    data.id=i;
+                    let info = await contractMomentNFTs.methods.getItem(i).call();
+                    let data = {id: i, price: info[0], seriesOwner: info[1], ...await response.json()};
+
                     shorterVideosNftsList.push(data);
                     if(shorterVideosNftsList.length === numMomentNFTs2Load) {
                         shorterVideosNftsList.reverse();
@@ -402,14 +403,12 @@ class MainPage extends Component {
             let metadata = this.extractMomentNFTTraitTypes(value.attributes);
             let series = metadata.series;
             let simulator = metadata.simulator;
-            let address = value.seriesOwner || metadata.seriesOwner;
-            let price = metadata.price * priceConversion;
-            let video = metadata.video || value.animation_url; 
+            let address = value.seriesOwner;
+            let price = value.price;
+            let video = value.animation_url; 
             let carNumberOrDescription = value.description;
-            console.log("metadata.seriesOwner: ", metadata.seriesOwner);
 
-
-            let usdPrice = Number(Math.round(metadata.price  * this.state.usdValue * 100) / 100).toFixed(2);
+            let usdPrice = Number(Math.round((value.price / priceConversion)  * this.state.usdValue * 100) / 100).toFixed(2);
           
             if(usdPrice == 0.00) {
                 usdPrice = 0.01;
@@ -421,9 +420,7 @@ class MainPage extends Component {
             //console.log('METADATA VIDEO ', video);
                 /**
                  *  attribute:  {trait_type: 'series', value: 'Cupra series'}
-                    attribute:  {trait_type: 'seriesOwner', value: '0xeDc2448E33cE4fE46597BCbb0e5281E6CF3e253C'}
                     attribute:  {trait_type: 'simulator', value: 'iRacing'}
-                    attribute:  {trait_type: 'price', value: 2.1}
                     attribute:  {trait_type: 'video', value: 'https://ipfs.io/ipfs/QmbNW26he9uk8R7FHEE5KUDbTfBaHDCKgPAkUUnpeoWdZH'}
                  */
                 
@@ -436,6 +433,7 @@ class MainPage extends Component {
                         </Card.Header>
                         <Card.Body>
                             <div className="text-left">
+                            <div><strong  className="price_div_strong">{price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/> <span className="secondary-price">{usdPrice}<sup className="secondary-sup">USD</sup></span></div>
                             {value.attributes.map( function(att) {
                                let label = att.trait_type.charAt(0).toUpperCase() + att.trait_type.slice(1);
                                let value2Render = att.value;
@@ -443,29 +441,20 @@ class MainPage extends Component {
                                 value2Render = getProperDate(value2Render);
                                } 
 
-                               if(att.trait_type === 'price') {
-                                   return (
-                                        <div><strong  className="price_div_strong">{price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/> <span className="secondary-price">{usdPrice}<sup className="secondary-sup">USD</sup></span></div>
-                                   ) 
-                                } else {
-                                    if(label === 'SeriesOwner') {
-                                        return "";
-                                        //return(
-                                        //    <div><b>Owner: </b><span className='owner_address'>{att.value}</span></div> 
-                                        //)
-                                    }
-                                    if(att.trait_type === 'video') {
-                                       return (
-                                         <div><a href={value2Render} rel="noreferrer" target="_blank">{value2Render}</a></div> 
-                                       )
-                                    }
-                                    return(
-                                        <div>{value2Render}</div> 
+                                if(label === 'SeriesOwner') {
+                                    return "";
+                                }
+                                if(att.trait_type === 'video') {
+                                    return (
+                                        <div><a href={value2Render} rel="noreferrer" target="_blank">{value2Render}</a></div> 
                                     )
                                 }
+                                return(
+                                    <div>{value2Render}</div> 
+                                )
                             }, this)}
                             </div>
-                        <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, carNumberOrDescription, price, null , address, null, imagePath, false, true, video, metadata)}>Buy</Button>
+                        <Button variant="warning" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, carNumberOrDescription, price, null , address, null, imagePath, false, true, video, metadata)}>Buy</Button>
                         </Card.Body>
                     </Card>
             </ListGroup.Item>
@@ -480,7 +469,7 @@ class MainPage extends Component {
             //console.log('ownership nft value is,',value);
             let series = value.series;
             let simulator = value.simulator;
-            let price = value.price*priceConversion;
+            let price = value.price;
             //TODO: change hardcode
             let address = value.seriesOwner;
             let itemId = value.id;
@@ -513,7 +502,7 @@ class MainPage extends Component {
                                 <div>{carNumberOrDescription}</div>
                                 <div className="price_div"><strong className="price_div_strong">{price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/> <span className="secondary-price">{usdPrice}<sup className="secondary-sup">USD</sup></span></div>
                               </div>
-                                <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, carNumberOrDescription, price, null , address, null, imagePath, true, false, null, null)}> Buy</Button>
+                                <Button variant="warning" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, carNumberOrDescription, price, null , address, null, imagePath, true, false, null, null)}> Buy</Button>
                             </Card.Body>
                         </Card>
                     </ListGroup.Item>
@@ -554,7 +543,7 @@ class MainPage extends Component {
                                 <div><img src={thumb} width="24" alt={simulator} /> {simulator}</div>
                                 <div className="price_div"><strong className="price_div_strong">{price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/> <span className="secondary-price">{usdPrice}<sup className="secondary-sup">USD</sup></span></div>
                             </div>
-                            <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, null, null, price, carBrand , address, ipfsPath, imagePath, false, false, null, null)}> Buy</Button>
+                            <Button variant="warning" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, null, null, price, carBrand , address, ipfsPath, imagePath, false, false, null, null)}> Buy</Button>
                         </Card.Body>
                     </Card>
                 </ListGroup.Item>

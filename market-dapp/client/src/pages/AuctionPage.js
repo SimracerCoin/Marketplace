@@ -180,7 +180,7 @@ class AuctionPage extends Component {
               UIHelper.transactionOnError("ERROR ON APPROVAL");
             } else {
               //approved
-              await this.state.contract.methods.requestPurchase(price, this.state.itemId, buyerKey)
+              await this.state.contract.methods.requestPurchase(price, this.state.itemId, buyerKey, true)
               .send(paramsForCall)
               //.on('sent', UIHelper.transactionOnSent)
               .on('confirmation', function (confNumber, receipt, latestBlockHash) {

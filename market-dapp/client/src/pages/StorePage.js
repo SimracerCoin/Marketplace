@@ -308,7 +308,8 @@ class StorePage extends Component {
                 let uri = await contractNFTs.methods.tokenURI(i).call();
                 //console.log('uri: ', uri);
                 let response = await fetch(uri);
-                let data = await response.json();
+                let info = await contractNFTs.methods.getItem(i).call();
+                let data = {id: i, price: info[0], seriesOwner: info[1], ...await response.json()};
                 
                         /**  DATA example:
                         {  
@@ -316,14 +317,12 @@ class StorePage extends Component {
                             "name": "Car",
                             "image": "https://ipfs.io/ipfs/QmbM3fsbACwV887bMf73tvtY9iA5K1CSZ3kYdwj7G9bL7W",
                             "series": "Simthunder Trophy",
-                            "seriesOwner": "0xA59DE47b6fa8911DF14F4524B853B742AF1F3a0c",
+                            "owner": "0xA59DE47b6fa8911DF14F4524B853B742AF1F3a0c",
                             "carNumber": "48",
                             "simulator": "iRacing",
                             "price": 1
                         }
                         */
-                       
-                    data.id=i;
 
                     //global list of all
                     nftlist.push(data);
@@ -404,12 +403,8 @@ class StorePage extends Component {
                 let uri = await contractMomentNFTs.methods.tokenURI(i).call();
                 //console.log('uri: ', uri);
                 let response = await fetch(uri);
-                let data = await response.json();
-                        
-                //console.log('moment nft name:' + data.name);
-                //console.log('moment nft image:' + data.image);
-                //console.log('moment nft description:' + data.description);
-                data.id=i;
+                let info = await contractMomentNFTs.methods.getItem(i).call();
+                let data = {id: i, price: info[0], seriesOwner: info[1], ...await response.json()};
 
                 let metadata = this.extractMomentNFTTraitTypes(data.attributes);
                 //global list of all
@@ -422,7 +417,7 @@ class StorePage extends Component {
                 const considerSearchQuery = (queryString && queryString.length > 0) ? true : false;
                 //only filtered list?
 
-                if(considerSearchQuery && (this.shouldIncludeMomentNFTBySearchQuery(queryString.toLowerCase(), data, metadata)) ){
+                if(considerSearchQuery && (this.shouldIncludeMomentNFTBySearchQuery(queryString.toLowerCase(), data)) ){
                     filteredMomentNFTsList.push(data);
                 }//otherwise goes on the default list => nftlist
                         
@@ -660,10 +655,7 @@ class StorePage extends Component {
 
        //get all the nfts available
       let filteredListByPrice = this.state.latestMomentNFTs.filter( function(NFT){
-
-          let metadata = this.extractMomentNFTTraitTypes(NFT.attributes);
-          return (metadata.price >= priceMin &&  metadata.price <= priceMax );
-          
+          return (NFT.price >= priceMin &&  NFT.price <= priceMax ); 
       }, this);
 
       this.setState({filteredMomentNFTs: this.paginate(filteredListByPrice, this.state.currentPage)});
@@ -805,7 +797,7 @@ class StorePage extends Component {
      * @param {*} NFT 
      * @returns 
      */
-     shouldIncludeMomentNFTBySearchQuery(queryString, NFT, metadata) {
+     shouldIncludeMomentNFTBySearchQuery(queryString, NFT) {
 
 
       let series = NFT.series;
@@ -1208,7 +1200,7 @@ class StorePage extends Component {
                                 
                                 let series = value.series;
                                 let simulator = value.simulator;
-                                let price = value.price * priceConversion;
+                                let price = value.price;
                                 //TODO: change hardcode
                                 let address = value.seriesOwner;
                                 let itemId = value.id;
@@ -1296,9 +1288,9 @@ class StorePage extends Component {
 
                                 let series = metadata.series;
                                 let simulator = metadata.simulator;
-                                let price = metadata.price * priceConversion;
+                                let price = value.price / priceConversion;
                                 //TODO: change hardcode
-                                let address = metadata.seriesOwner;
+                                let address = value.seriesOwner;
                                 let itemId = value.id;
                                 let key = itemId + "_" + index
                                 let image = value.image;

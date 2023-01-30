@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { Button, Form, Card, ListGroup, Row, Col } from 'react-bootstrap';
 import { withRouter } from "react-router";
+import { confirmAlert } from 'react-confirm-alert';
 import { Link } from 'react-router-dom';
 import StarRatings from 'react-star-ratings';
 import UIHelper from "../utils/uihelper";
@@ -8,12 +9,17 @@ import ReviewsComponent from "../components/ReviewsComponent";
 import SimilarItemsComponent from '../components/SimilarItemsComponent';
 import SimpleModal from '../components/SimpleModal';
 import "../css/itempage.css";
+import ipfs from "../ipfs";
+
+const BufferList = require('bl/BufferList');
 
 const openpgp = require('openpgp');
 
-const priceConversion = 10 ** 18;
-
-const passphrase = process.env.REACT_APP_PASSPHRASE;
+const priceConversion = 10**18;
+const PASSPHRASE = process.env.REACT_APP_PASSPHRASE;
+const NON_SECURE_SELL = process.env.REACT_APP_NON_SECURE_SELL === "true";
+const NON_SECURE_KEY= process.env.REACT_APP_NON_SECURE_KEY;
+const NUMBER_CONFIRMATIONS_NEEDED = Number(process.env.REACT_APP_NUMBER_CONFIRMATIONS_NEEDED);
 
 class ItemPage extends Component {
 
@@ -74,13 +80,14 @@ class ItemPage extends Component {
         let isContractOwner = (currentAccount == marketplaceOwner);
         console.log("is seller: " + isSeller + " is owner: " + isContractOwner);
 
-        const canDelete = isSeller || isContractOwner;
+        
         
         console.log('isNFT:' + this.state.isNFT);
         console.log('isMomentNFT:' + this.state.isMomentNFT);
         let isSkin = !this.state.isNFT && !this.state.isMomentNFT && (this.state.track == null || this.state.season == null);
         console.log('isSkin:' + isSkin);
 
+        const canDelete = isSeller || isContractOwner;
         const hasVideo = this.state.isMomentNFT;
 
         if (!this.state.isNFT && !this.state.isMomentNFT) {
@@ -89,14 +96,13 @@ class ItemPage extends Component {
 
             this.setState({ canDelete: canDelete, currentAccount: currentAccount, isSeller: isSeller, isContractOwner: isContractOwner, contract: contract, contractSimracerCoin: contractSimracerCoin, listComments: comments, average_review: average_review, isSkin: isSkin });
         } else {
-
           let isNFTOwner = this.state.isNFTOwner;
           if(this.state.isNFT) {
             isNFTOwner = (await contractNFTs.methods.ownerOf(this.state.itemId).call() == currentAccount);
           } else {
             isNFTOwner = (await contractMomentNFTs.methods.ownerOf(this.state.itemId).call() == currentAccount);
           }
-            this.setState({ isNFTOwner: isNFTOwner, canDelete: canDelete, currentAccount: currentAccount, contract: contract, contractMomentNFTs: contractMomentNFTs, contractNFTs: contractNFTs, contractSimracerCoin: contractSimracerCoin, isSkin: isSkin });
+          this.setState({ isNFTOwner: isNFTOwner, canDelete: canDelete, currentAccount: currentAccount, isSeller: isSeller, contract: contract, contractMomentNFTs: contractMomentNFTs, contractNFTs: contractNFTs, contractSimracerCoin: contractSimracerCoin, isSkin: isSkin });
         }
 
         this.setState({isMuted: hasVideo});
@@ -157,13 +163,12 @@ class ItemPage extends Component {
         let isCarSetup = !isSkin && !this.state.isNFT && !this.state.isMomentNFT;
 
         if(isSkin) {
-          let tx = await this.state.contract.methods.deleteSkin(id)
+          await this.state.contract.methods.deleteSkin(id)
               .send(paramsForCall)
               .on('confirmation', function (confNumber, receipt, latestBlockHash) {
                     window.localStorage.setItem('forceUpdate','yes');
-                    UIHelper.hiddeSpinning();
-                    if(confNumber > 9) {
-                        UIHelper.transactionOnConfirmation("The item was removed from sale!","/");
+                    if(confNumber >= NUMBER_CONFIRMATIONS_NEEDED) {  
+                      UIHelper.transactionOnConfirmation("The item was removed from sale!","/");
                     }
                 })
                 .on('error', UIHelper.transactionOnError)
@@ -171,13 +176,12 @@ class ItemPage extends Component {
                     UIHelper.hiddeSpinning();
                 });
         } else if(isCarSetup) {
-          let tx = await this.state.contract.methods.deleteCarSetup(id)
+          await this.state.contract.methods.deleteCarSetup(id)
           .send(paramsForCall)
           .on('confirmation', function (confNumber, receipt, latestBlockHash) {
                 window.localStorage.setItem('forceUpdate','yes');
-                UIHelper.hiddeSpinning();
-                if(confNumber > 9) {
-                    UIHelper.transactionOnConfirmation("The item was removed from sale!","/");
+                if(confNumber >= NUMBER_CONFIRMATIONS_NEEDED) {
+                  UIHelper.transactionOnConfirmation("The item was removed from sale!","/");
                 }
             })
             .on('error', UIHelper.transactionOnError)
@@ -201,20 +205,18 @@ class ItemPage extends Component {
       let gasLimit = UIHelper.defaultGasLimit;
       let paramsForCall = await UIHelper.calculateGasUsingStation(gasLimit, this.state.currentAccount);
         //delete itemId
-        let tx = await contract.methods.deleteItem(itemId)
+        await contract.methods.deleteItem(itemId)
           .send(paramsForCall)
           .on('confirmation', function (confNumber, receipt, latestBlockHash) {
               window.localStorage.setItem('forceUpdate','yes');
-              UIHelper.hiddeSpinning();
-              if(confNumber > 9) {
-                  UIHelper.transactionOnConfirmation("The item was removed from sale!","/");
+              if(confNumber >= NUMBER_CONFIRMATIONS_NEEDED) {
+                UIHelper.transactionOnConfirmation("The item was removed from sale!","/");
               }
           })
           .on('error', UIHelper.transactionOnError)
-            .catch(function (e) {
-                UIHelper.hiddeSpinning();
+          .catch(function (e) {
+              UIHelper.hiddeSpinning();
           });
-
     }
 
     approveSellItem = async (itemPrice) => {
@@ -239,23 +241,18 @@ class ItemPage extends Component {
       await contract.methods.sellFromWallet(itemId, price)
           .send( paramsForCall )
           .on('confirmation', function (confNumber, receipt, latestBlockHash) {
-
-          
             window.localStorage.setItem('forceUpdate','yes');
-            if(confNumber > 9) {
-                UIHelper.hiddeSpinning();
-                UIHelper.transactionOnConfirmation("The item is now available for sale!","/");                            
+            if(confNumber >= NUMBER_CONFIRMATIONS_NEEDED) {
+              UIHelper.transactionOnConfirmation("The item is now available for sale!","/");                            
             }
-                        
           })
           .on('error', ()=> {
               UIHelper.hiddeSpinning();
               UIHelper.transactionOnError("Unable to sell NFT!");
-            })
-            .catch(function (e) { 
-              UIHelper.hiddeSpinning();
-            });
-       
+          })
+          .catch(function (e) { 
+            UIHelper.hiddeSpinning();
+          });
     }
 
     sellItem = async(event) => {
@@ -268,7 +265,7 @@ class ItemPage extends Component {
         UIHelper.showSpinning();
 
         const price = this.state.drizzle.web3.utils.toBN(this.state.price);
-        console.log('item price =' + price);
+        //console.log('item price =' + price);
 
         // TODO: buyer public key
         //const buyerPK = this.state.drizzle.web3.utils.hexToBytes(this.state.drizzle.web3.utils.randomHex(16));
@@ -277,50 +274,78 @@ class ItemPage extends Component {
         let gasLimit = UIHelper.defaultGasLimit;
 
         if (!this.state.isNFT && !this.state.isMomentNFT) {
+          let buyerKey = localStorage.getItem('ak');
+          if (!buyerKey) {
+              const { privateKeyArmored, publicKeyArmored, revocationCertificate } = await openpgp.generateKey({
+                  userIds: [{ name: this.state.currentAccount }],             // you can pass multiple user IDs
+                  curve: 'p256',                                              // ECC curve name
+                  passphrase: PASSPHRASE                                      // protects the private key
+              });
 
-            let buyerKey = localStorage.getItem('ak');
-            if (!buyerKey) {
-                const { privateKeyArmored, publicKeyArmored, revocationCertificate } = await openpgp.generateKey({
-                    userIds: [{ name: this.state.currentAccount }],             // you can pass multiple user IDs
-                    curve: 'p256',                                              // ECC curve name
-                    passphrase: passphrase                                      // protects the private key
-                });
+              buyerKey = this.state.drizzle.web3.utils.asciiToHex(publicKeyArmored);
 
-                buyerKey = this.state.drizzle.web3.utils.asciiToHex(publicKeyArmored);
+              localStorage.setItem('ak', buyerKey);
+              localStorage.setItem('bk', this.state.drizzle.web3.utils.asciiToHex(privateKeyArmored));
+          }
 
-                localStorage.setItem('ak', buyerKey);
-                localStorage.setItem('bk', this.state.drizzle.web3.utils.asciiToHex(privateKeyArmored));
-            }
+          //approve contract ot spend our SRC
+          let paramsForCall = await UIHelper.calculateGasUsingStation(gasLimit, this.state.currentAccount);
 
-            //approve contract ot spend our SRC
-            let paramsForCall = await UIHelper.calculateGasUsingStation(gasLimit, this.state.currentAccount);
-
-            let approval = await this.state.contractSimracerCoin.methods.approve(this.state.contract.address, price)
+          let approval = await this.state.contractSimracerCoin.methods.approve(this.state.contract.address, price)
+          .send(paramsForCall)
+          .catch(function (e) {
+            UIHelper.transactionOnError(e);
+            });
+          if(!approval) {
+            UIHelper.transactionOnError("ERROR ON APPROVAL");
+          } else {
+            //approved
+            await this.state.contract.methods.requestPurchase(price, this.state.itemId, buyerKey, !NON_SECURE_SELL)
             .send(paramsForCall)
-            .catch(function (e) {
-              UIHelper.transactionOnError(e);
-             });
-            if(!approval) {
-              UIHelper.transactionOnError("ERROR ON APPROVAL");
-            } else {
-              //approved
-              await this.state.contract.methods.requestPurchase(price, this.state.itemId, buyerKey)
-              .send(paramsForCall)
-              //.on('sent', UIHelper.transactionOnSent)
-              .on('confirmation', function (confNumber, receipt, latestBlockHash) {
-                if(confNumber > 9) {
+            //.on('sent', UIHelper.transactionOnSent)
+            .on('confirmation', async (confNumber, receipt, latestBlockHash) => {
+              if(confNumber >= NUMBER_CONFIRMATIONS_NEEDED) {
+                if(!NON_SECURE_SELL) {
                   UIHelper.transactionOnConfirmation("Thank you for your purchase request. Seller will contact you soon.", "/");
+                } else {
+                  const content = new BufferList();
+                  const ipfsP = this.state.drizzle.web3.utils.hexToAscii(this.state.ipfsPath);
+
+                  try {
+                    for await (const file of ipfs.get(ipfsP)) {
+                        for await (const chunk of file.content) {
+                            content.append(chunk);
+                        }
+                    }
+
+                    const { data: decryptedFile } = await openpgp.decrypt({
+                      message: await openpgp.message.read(content),      // parse encrypted bytes
+                      passwords: [NON_SECURE_KEY],                       // decrypt with password
+                      format: 'binary'                                   // output as Uint8Array
+                    });
+
+                    const isCarSetup = await this.state.contract.methods.isCarSetup(this.state.itemId).call();
+
+                    var data = new Blob([decryptedFile]);
+                    var csvURL = window.URL.createObjectURL(data);
+                    var tempLink = document.createElement('a');
+                    tempLink.href = csvURL;
+                    tempLink.setAttribute('download', isCarSetup ? 'setup.sto' : 'skin.tga'); // has it isn't a car setup, it is a skin
+                    tempLink.click();
+
+                    UIHelper.transactionOnConfirmation("Thank you for your purchase!", false);
+
+                  } catch (e) {
+                    UIHelper.transactionOnError(e);
+                  }
                 }
-                  
-              })
-              .on('error', UIHelper.transactionOnError)
-              .catch(function (e) {
-                console.log(e);
-               });
-            }
-            
-            
-            
+              }
+            })
+            .on('error', UIHelper.transactionOnError)
+            .catch(function (e) {
+              console.log(e);
+              });
+          }
         } else {
 
             let contractAddressToApprove = this.state.isNFT ? this.state.contractNFTs.address : this.state.contractMomentNFTs.address;
@@ -344,7 +369,7 @@ class ItemPage extends Component {
                 await this.state.contractNFTs.methods.buyItem(this.state.itemId,price)
                 .send(paramsForCall)
                 .on('confirmation', function (confNumber, receipt, latestBlockHash) {
-                  if(confNumber > 9) {
+                  if(confNumber >= NUMBER_CONFIRMATIONS_NEEDED) {
                     UIHelper.transactionOnConfirmation("Thank you for your purchase.", "/");
                   }
                     
@@ -360,7 +385,7 @@ class ItemPage extends Component {
                 await this.state.contractMomentNFTs.methods.buyItem(this.state.itemId,price)
                 .send(paramsForCall)
                 .on('confirmation', function (confNumber, receipt, latestBlockHash) {
-                   if(confNumber > 9) {
+                   if(confNumber >= NUMBER_CONFIRMATIONS_NEEDED) {
                     UIHelper.transactionOnConfirmation("Thank you for your purchase.", "/");
                    }
                     
@@ -617,10 +642,12 @@ class ItemPage extends Component {
                   <div className="col-sm-4"><strong className="fw-500">{isMomentNFT ? 'Description' : 'Number'}</strong></div>
                   <div className="col-sm-8">{this.state.description}</div>
                 </div>
+                { !this.state.isNFTOwner && 
                 <div className="row mb-4 mb-sm-0">
                   <div className="col-sm-4"><strong className="fw-500">Price:</strong></div>
                   <div className="col-sm-8"><strong>{this.state.price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/><span className="secondary-price">{this.renderUSDPrice(this.state.price)}<sup className="secondary-sup">USD</sup></span></div>
                 </div>
+                }
               </div>
             </div>
     
@@ -897,10 +924,12 @@ class ItemPage extends Component {
                             Save: $20.00 (33%)
                         </div>*/}
                       </div>
+                      {
+                        (!this.state.isSeller && ((this.state.isNFT || this.state.isMomentNFT) && !this.state.isNFTOwner)) &&
                       <div className="price-box mb-4">
-                         
                         <div className="flex-1"><a href="" onClick={this.buyItem} className="btn btn-block btn-warning"><i className="fas fa-shopping-cart"></i> Buy</a></div>
                       </div>
+                      }
                       { this.state.isNFTOwner && 
                         <div className="price-box mb-4">
                           <div className="flex-1"><a href="" onClick={this.sellItem} className="btn btn-block btn-warning"><i className="fas fa-shopping-cart"></i> Sell</a></div>
@@ -909,7 +938,7 @@ class ItemPage extends Component {
                       
                       { this.state.canDelete &&
                       <div className="price-box mb-4">
-                        <div className="flex-1"><a href="" onClick={(e) => this.deleteItem(e, this.state.itemId)} className="btn btn-block btn-danger"><i className="fas fa-shopping-cart"></i>Delete</a></div>
+                        <div className="flex-1"><a href="" onClick={(e) => this.deleteItem(e, this.state.itemId)} className="btn btn-block btn-danger">{ (this.state.isNFT || this.state.isMomentNFT) ? "Return" : "Delete" }</a></div>
                       </div>
                       }
                       
@@ -918,12 +947,13 @@ class ItemPage extends Component {
                         
                     </div>
                   </div>
+                  { !this.state.isNFTOwner && 
                   <div className="bg-dark_A-20 p-4">
                     <h6 className="mb-3">Seller Info</h6>
                     <hr className="border-secondary mt-2 mb-4"/>
                     {this.renderSellerInfo()}
-                    
                   </div>
+                  }
                 </div>
               </div>
             </div>
@@ -982,7 +1012,7 @@ class ItemPage extends Component {
           <script src="assets/js/main.js" id="_mainJS" data-plugins="load"></script>
 
           {this.state.sellFromWallet && 
-            <SimpleModal onApproval={this.approveSellItem} open="true"></SimpleModal>
+            <SimpleModal onApproval={this.approveSellItem} open={true}></SimpleModal>
           }
         </div>
         

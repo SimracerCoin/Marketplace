@@ -7,7 +7,10 @@ import UIHelper from "../utils/uihelper"
 
 const openpgp = require('openpgp');
 
-const priceConversion = 10 ** 18;
+const priceConversion = 10**18;
+const NON_SECURE_SELL = process.env.REACT_APP_NON_SECURE_SELL === "true";
+const NON_SECURE_KEY= process.env.REACT_APP_NON_SECURE_KEY;
+const NUMBER_CONFIRMATIONS_NEEDED = Number(process.env.REACT_APP_NUMBER_CONFIRMATIONS_NEEDED);
 
 class UploadSkin extends Component {
 
@@ -141,8 +144,7 @@ class UploadSkin extends Component {
             return false;
         }
 
-        const password = await Prompt('Type the password to encrypt the file. Use different password for each item.');
-
+        const password = NON_SECURE_SELL ? NON_SECURE_KEY : await Prompt('Type the password to encrypt the file. Use different password for each item.');
         if (!password) return;
 
         const { message } = await openpgp.encrypt({
@@ -207,10 +209,9 @@ class UploadSkin extends Component {
                     //.on('sent', UIHelper.transactionOnSent)
                     .on('confirmation', function (confNumber, receipt, latestBlockHash) {
                         window.localStorage.setItem('forceUpdate','yes');
-                        if(confNumber > 9) {
+                        if(confNumber >= NUMBER_CONFIRMATIONS_NEEDED) {
                             UIHelper.transactionOnConfirmation("The new skin is available for sale!","/");
                         }
-                        
                     })
                     .on('error', UIHelper.transactionOnError)
                     .catch(function (e) { 

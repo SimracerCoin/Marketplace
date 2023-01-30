@@ -54,6 +54,15 @@ contract SimracingMomentOwner is ERC721, Ownable {
     }
 
     /**
+     * @notice Get price and owner of an item
+     * @param itemId Item id to get info
+     * @return array Price and owner
+     */
+    function getItem(uint256 itemId) external view returns (uint256, address) {
+        return (prices[itemId], seriesOwners[itemId]);
+    }
+
+    /**
      * Put an item for sale, directly from user wallet
      */
     function sellFromWallet(uint256 itemId, uint256 itemPrice) external {
@@ -63,20 +72,12 @@ contract SimracingMomentOwner is ERC721, Ownable {
         address nftOwner = ownerOf(itemId);
         //make sure the sender is the current owner
         require(nftOwner == msg.sender,"Sender is not the owner of the item, or the item does not exist");
-
-        address _seller = seriesOwners[itemId];
-        if(_seller == address(0)) {
-            seriesOwners[itemId] = msg.sender;
-        }
-        else {
-            require(seriesOwners[itemId] != msg.sender, "You already listed this item");
-        }
+        require(seriesOwners[itemId] != msg.sender, "You already listed this item");
 
         approve(address(this), itemId);
         prices[itemId] = itemPrice;
         seriesOwners[itemId] = msg.sender;
         return _transfer(msg.sender, address(this), itemId);
-
     }
 
     function buyItem(uint256 itemId, uint256 itemPrice) external {

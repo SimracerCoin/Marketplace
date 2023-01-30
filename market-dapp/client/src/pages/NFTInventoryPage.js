@@ -58,6 +58,7 @@ class NFTInventoryPage extends Component {
             vendorAddress: "",
             vendorNickname: "",
             ipfsPath: "",
+            videoPath: "",
             //-------------------- other stuff --------------
             contract: null,
             currentPage: 1, //for future filtering purposes
@@ -120,6 +121,7 @@ class NFTInventoryPage extends Component {
 
         const viewItems = this.hasViewItemsFilter();
         if(viewItems && viewItems.length > 0) {
+          console.log("viewItems: ", viewItems);
           this.setState({viewItems: viewItems});
         }
 
@@ -268,7 +270,8 @@ class NFTInventoryPage extends Component {
                 let uri = await contractNFTs.methods.tokenURI(i).call();
                 //console.log('uri: ', uri);
                 let response = await fetch(uri);
-                let data = await response.json();
+                let info = await contractNFTs.methods.getItem(i).call();
+                let data = {id: i, price: info[0], seriesOwner: info[1], ...await response.json()};
                 
                         /**  DATA example:
                         {  
@@ -276,14 +279,12 @@ class NFTInventoryPage extends Component {
                             "name": "Car",
                             "image": "https://ipfs.io/ipfs/QmbM3fsbACwV887bMf73tvtY9iA5K1CSZ3kYdwj7G9bL7W",
                             "series": "Simthunder Trophy",
-                            "seriesOwner": "0xA59DE47b6fa8911DF14F4524B853B742AF1F3a0c",
+                            "owner": "0xA59DE47b6fa8911DF14F4524B853B742AF1F3a0c",
                             "carNumber": "48",
                             "simulator": "iRacing",
                             "price": 1
                         }
                         */
-                       
-                    data.id=i;
 
                     //global list of all
                     nftlist.push(data);
@@ -366,12 +367,8 @@ class NFTInventoryPage extends Component {
                 let uri = await contractMomentNFTs.methods.tokenURI(i).call();
                 //console.log('uri: ', uri);
                 let response = await fetch(uri);
-                let data = await response.json();
-                        
-                //console.log('moment nft name:' + data.name);
-                //console.log('moment nft image:' + data.image);
-                //console.log('moment nft description:' + data.description);
-                data.id=i;
+                let info = await contractMomentNFTs.methods.getItem(i).call();
+                let data = {id: i, price: info[0], seriesOwner: info[1], ...await response.json()};
 
                 let metadata = this.extractMomentNFTTraitTypes(data.attributes);
                 //global list of all
@@ -384,7 +381,7 @@ class NFTInventoryPage extends Component {
                 const considerSearchQuery = (queryString && queryString.length > 0) ? true : false;
                 //only filtered list?
 
-                if(considerSearchQuery && (this.shouldIncludeMomentNFTBySearchQuery(queryString.toLowerCase(), data, metadata)) ){
+                if(considerSearchQuery && (this.shouldIncludeMomentNFTBySearchQuery(queryString.toLowerCase(), data)) ){
                     filteredMomentNFTsList.push(data);
                 }//otherwise goes on the default list => nftlist
                         
@@ -576,10 +573,7 @@ class NFTInventoryPage extends Component {
 
        //get all the nfts available
       let filteredListByPrice = this.state.latestMomentNFTs.filter( function(NFT){
-
-          let metadata = this.extractMomentNFTTraitTypes(NFT.attributes);
-          return (metadata.price >= priceMin &&  metadata.price <= priceMax );
-          
+          return (NFT.price >= priceMin &&  NFT.price <= priceMax );
       }, this);
 
       this.setState({filteredMomentNFTs: this.paginate(filteredListByPrice, this.state.currentPage)});
@@ -680,7 +674,7 @@ class NFTInventoryPage extends Component {
      * @param {*} NFT 
      * @returns 
      */
-     shouldIncludeMomentNFTBySearchQuery(queryString, NFT, metadata) {
+     shouldIncludeMomentNFTBySearchQuery(queryString, NFT) {
 
 
       let series = NFT.series;
@@ -720,12 +714,12 @@ class NFTInventoryPage extends Component {
     }
 
     hasViewItemsFilter() {
-      const searchParams = new URLSearchParams(window.location.search);
+      const searchParams = this.props.location.state;
       if(searchParams) {
-        const query = searchParams.get('view');
+        const query = searchParams.view;
         //check if we have something valid
         if(query && this.isValidItemType(query)) {
-          searchParams.delete("view");
+          //searchParams.delete("view");
           return query;
         }
      
@@ -838,6 +832,7 @@ class NFTInventoryPage extends Component {
                     vendorAddress: this.state.vendorAddress,
                     vendorNickname: this.state.vendorNickname,
                     ipfsPath: this.state.ipfsPath,
+                    videoPath: this.state.videoPath,
                     isNFT: this.state.isNFT,
                     isMomentNFT: this.state.isMomentNFT,
                     similarItems: similarItems,
@@ -848,7 +843,7 @@ class NFTInventoryPage extends Component {
     }
 
     //Obs: this function was way to many paramaters, bette make a JSON object/payload maybe?
-    buyItem = async (event, itemId, track, simulator, season, series, description, price, carBrand, address, ipfsPath, imagePath, isNFT, isMomentNFT) =>{
+    buyItem = async (event, itemId, track, simulator, season, series, description, price, carBrand, address, ipfsPath, imagePath, videoPath, isNFT, isMomentNFT) =>{
       event.preventDefault();
      
       this.setState({
@@ -865,6 +860,7 @@ class NFTInventoryPage extends Component {
           vendorAddress: address,
           vendorNickname: address ? await this.state.contract.methods.getNickname(address).call() : "",
           ipfsPath: ipfsPath,
+          videoPath: videoPath,
           isNFT: isNFT,
           isMomentNFT: isMomentNFT,
           usdPrice : this.state.usdValue
@@ -1017,7 +1013,7 @@ class NFTInventoryPage extends Component {
                                 
                                 let series = value.series;
                                 let simulator = value.simulator;
-                                let price = value.price * priceConversion;
+                                let price = value.price;
                                 //TODO: change hardcode
                                 let address = value.seriesOwner;
                                 let itemId = value.id;
@@ -1027,11 +1023,12 @@ class NFTInventoryPage extends Component {
                                 let name = value.name;
                                 let imagePath = value.image;
                                 let description = value.description;
+                                
                                 /*let payload = {
                                   itemId, null, simulator, null, series, carNumber, price, null , address, null, imagePath, true
                                 }*/
                                 return <div className="col-md-12 mb-4" key={key}>
-                                <a href="#1" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, carNumber, price, null , address, null, imagePath, true, false)} className="product-item">
+                                <a href="#1" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, carNumber, price, null , address, null, imagePath, null, true, false)} className="product-item">
                                   <div className="row align-items-center no-gutters">
                                     <div className="item_img d-none d-sm-block">
                                       <img className="img bl-3 text-primary" src={image} alt="Games Store"/>
@@ -1105,21 +1102,20 @@ class NFTInventoryPage extends Component {
 
                                 let series = metadata.series;
                                 let simulator = metadata.simulator;
-                                let price = metadata.price * priceConversion;
+                                let price = value.price / priceConversion;
                                 //TODO: change hardcode
-                                let address = metadata.seriesOwner;
+                                let address = value.seriesOwner;
                                 let itemId = value.id;
                                 let key = itemId + "_" + index
                                 let image = value.image;
+                                let video = value.animation_url; 
                                 //let carNumber = value.carNumber;
                                 let name = value.name;
                                 let imagePath = value.image;
                                 let description = value.description;
-                                /*let payload = {
-                                  itemId, null, simulator, null, series, carNumber, price, null , address, null, imagePath, true
-                                }*/
+
                                 return <div className="col-md-12 mb-4" key={key}>
-                                <a href="#1" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, description, price, null , address, null, imagePath, false, true)} className="product-item">
+                                <a href="#1" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, description, price, null , address, null, imagePath, video, false, true)} className="product-item">
                                   <div className="row align-items-center no-gutters">
                                     <div className="item_img d-none d-sm-block">
                                       <img className="img bl-3 text-primary" src={image} alt="Games Store"/>

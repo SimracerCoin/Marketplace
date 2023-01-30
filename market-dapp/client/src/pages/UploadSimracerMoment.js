@@ -7,14 +7,10 @@ import "../css/auction.css";
 //import fetch from 'node-fetch';
 
 
-const priceConversion = 10 ** 18;
-
-
-const testingVideo = 'https://assets.json2video.com/sites/github/hello-world.mp4';
-
-
+const priceConversion = 10**18;
 const timingOpt = ["1 day", "3 days", "7 days", "1 month", "3 month", "6 month"];
 const timingOptions = [];
+const NUMBER_CONFIRMATIONS_NEEDED = Number(process.env.REACT_APP_NUMBER_CONFIRMATIONS_NEEDED);
 
 const FormatDate = (inputDate) => {
     var formattedDate = inputDate.getFullYear() + '-' + (inputDate.getMonth() + 1) +'-'+ inputDate.getDate();
@@ -542,7 +538,7 @@ class UploadSimracerMoment extends Component {
                     .on('confirmation', function (confNumber, receipt, latestBlockHash) {
                         window.localStorage.setItem('forceUpdate','yes');
 
-                        if(confNumber > 9) {
+                        if(confNumber >= NUMBER_CONFIRMATIONS_NEEDED) {
                             UIHelper.transactionOnConfirmation("The new Simracing Moment NFT is available for sale!","/");     
                             //reset stuff
                             self.setState({videoBuffer: null, imageBuffer: null});                       
@@ -589,8 +585,9 @@ class UploadSimracerMoment extends Component {
         var jsonData = { 'description': this.state.currentDescription, 
                         'name': 'Simracing Moment NFT', 
                         'image': 'https://simthunder.infura-ipfs.io/ipfs/' + imagePath, 
-                        'animation_url': 'https://simthunder.infura-ipfs.io/ipfs/' + videoPath,
-                        'seriesOwner': this.state.currentAccount};
+                        'animation_url': 'https://simthunder.infura-ipfs.io/ipfs/' + videoPath
+                        //'seriesOwner': this.state.currentAccount
+                    };
 
         jsonData.attributes = [];
         //Opensea style attributes
@@ -611,14 +608,14 @@ class UploadSimracerMoment extends Component {
                 "trait_type": "simulator", 
                 "value": this.state.currentSimulator
             },
-            {
-                "trait_type": "price", 
-                "value": this.state.currentFilePrice / priceConversion
-            },
-            {
-                "trait_type": "auction_item", 
-                "value": this.state.auctionItem,
-            }
+            //{
+            //    "trait_type": "price", 
+            //    "value": this.state.currentFilePrice / priceConversion
+            //},
+            //{
+            //    "trait_type": "auction_item", 
+            //    "value": this.state.auctionItem,
+            //}
             //,
             //{
             //    "trait_type": "video", 
@@ -626,6 +623,7 @@ class UploadSimracerMoment extends Component {
             //}
         );
 
+        /*
         if(this.state.auctionItem) {
             jsonData.attributes.push(
                 {
@@ -645,7 +643,7 @@ class UploadSimracerMoment extends Component {
                     "value": this.state.auctionEnd
                 }
             )
-        }
+        }*/
 
         const jsonStr = JSON.stringify(jsonData);
         console.log('json str: ', jsonStr);
@@ -695,10 +693,11 @@ class UploadSimracerMoment extends Component {
                                                     {sims}
                                                 </DropdownButton>
                                                 <br></br>
+                                                {false &&
                                                 <div className="auction_item_input">
                                                     <div className="auction_item_checkbox_container">  
                                                         <FormCheck.Input type="checkbox" id='auction_item' value={this.state.auctionItem} onChange={this.handleAuction}/>
-                                                        <FormCheck.Label className="auction_item_label">Timed auction ?</FormCheck.Label>
+                                                         <FormCheck.Label className="auction_item_label">Timed auction ?</FormCheck.Label>
                                                     </div>
                                                     <div className={`further_date_options ${this.state.auctionItem ? 'auction_item_visible' : 'auction_item_invisible'}`}> 
                                                       
@@ -723,6 +722,7 @@ class UploadSimracerMoment extends Component {
                                                         </div>
                                                     </div>
                                                 </div>
+                                                }
                                             </Form.Group>
                                         </Form>
                                     </div>

@@ -151,8 +151,9 @@ contract ContentMarketplace {
     /// @notice requests purchase of a registered advertisement
     function requestPurchase(
         uint256 adPrice,                //price as arg, cannot use msg.value if not payable
-        uint256 _adId,                 // ad identifier
-        bytes memory _buyerKey         // buyer's public key used for encrypting messages so that only the buyer can see
+        uint256 _adId,                  // ad identifier
+        bytes memory _buyerKey,         // buyer's public key used for encrypting messages so that only the buyer can see
+        bool secure
     ) public
         // funds matching ad price, which will be locked until purchase is finalized
         returns (uint256 purchaseId)   // returns purchase request identifier
@@ -174,10 +175,14 @@ contract ContentMarketplace {
         purchaseId = numPurchases++;
         purchasesPerAd[purchase.adId].push(purchaseId);
 
-        //transfer SRC to the contract address
-        require(SIMRACERCOIN.transferFrom(msg.sender, address(this), ad.price),"Cannot transfer Item ownership");
-
-        newNotification(purchaseId, "Purchase was requested", msg.sender, ad.seller, NotificationType.Request);
+        if(secure) {
+            // transfer SRC to the contract address
+            require(SIMRACERCOIN.transferFrom(msg.sender, address(this), ad.price),"Cannot pay for item");
+            newNotification(purchaseId, "Purchase was requested", msg.sender, ad.seller, NotificationType.Request);
+        } else {
+            // transfer SRC to the seller
+            require(SIMRACERCOIN.transferFrom(msg.sender, ad.seller, ad.price), "Cannot pay for item");
+        }
 
         emit PurchaseRequested(purchase.adId, purchaseId, purchase.buyer, purchase.buyerKey);
         return purchaseId;

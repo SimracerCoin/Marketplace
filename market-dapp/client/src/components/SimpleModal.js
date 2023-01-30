@@ -27,7 +27,7 @@ class SimpleModal extends React.Component {
         this.state = {
             open: props.open,
             onApproval: props.onApproval,
-            price: 0.01,
+            price: '',
             quantity: 1
         }
 
@@ -51,18 +51,19 @@ class SimpleModal extends React.Component {
     }
   }
 
-  handlePriceChange = async(event) => {
-
-    if(!isNaN(event.target.value)) {
-      this.setState({price: Number(event.target.value)});
-    } else alert("Invalid price!");
+  handlePriceChange = (e) => {
+    console.log(e.target.value);
+    if(!isNaN(e.target.value)) {
+      e.target.value = Number(e.target.value).toString();
+      this.setState({price: e.target.value});
+    }
   }
 
-  handleQuantityChange = async(event) => {
-
-    if(!isNaN(event.target.value)) {
-      this.setState({quantity: Number(event.target.value)});
-    } else alert("Invalid quantity!");
+  handleQuantityChange = (e) => {
+    if(!isNaN(e.target.value)) {
+      e.target.value = Number(e.target.value).toString();
+      this.setState({quantity: e.target.value});
+    }
   }
 
   render() {
@@ -84,7 +85,7 @@ class SimpleModal extends React.Component {
                     </Typography>
                     <div className='div-modal-column'>
                     <label>Quantity:</label>
-                    <Form.Control htmlSize="20" min="1" step="1" max="999999999" type="number" pattern="([0-9]*[.])?[0-9]+" value={this.state.quantity} onChange={this.handleQuantityChange} />
+                    <Form.Control size="20" min="1" step="1" max="1" type="number" value={this.state.quantity} readOnly="true" onChange={this.handleQuantityChange} />
                         {/*<!--<input type="number" size="20" onChange={this.handleQuantityChange}>{this.state.quantity}</input>-->*/}
                     </div>
                     <br/>
@@ -94,17 +95,19 @@ class SimpleModal extends React.Component {
                         <select>
                             <option className='src-coin'>SRC</option>
                         </select>
-                        <Form.Control htmlSize="20" min="0.01" step="0.01" max="999999999" type="number" pattern="([0-9]*[.])?[0-9]+" value={this.state.price} onChange={this.handlePriceChange} />
+                        <Form.Control size="20" min="0" step="0.01" max="999999999" pattern="([0-9]*[.])?[0-9]+" type="number" placeholder="0.01" value={this.state.price} onChange={this.handlePriceChange} />
                         {/*>!<--<input type="number" size="20" onChange={this.handlePriceChange}>{this.state.price}</input>-->*/}
                     </div>
+                    {false &&
                     <Typography id="modal-modal-description" sx={{ mt: 2 }}>
                         Advanced options
-                    </Typography>
+                    </Typography>}
+                    <br />
                     <div className="approve-container">
                         <button className="approve-nft" onClick={this.approveNFT}>Approve NFT</button>
                     </div>
-                    <br/>
-                    <div className="service-fees">(i) Service fee<span className="fees-percentage">5%</span></div>
+                    <br />
+                    {false && <div className="service-fees">(i) Service fee<span className="fees-percentage">5%</span></div>}
                     </Form>
                     </Box>
                 </div>

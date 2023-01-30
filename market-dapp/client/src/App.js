@@ -86,7 +86,7 @@ const web3Modal = new Web3Modal({
 });
 
 
-const allowAllWallets = (process.env.REACT_APP_ALLOW_ALL_WALLETS == "true" ? true : false);
+const allowAllWallets = process.env.REACT_APP_ALLOW_ALL_WALLETS === "true";
 
 class App extends React.Component {
   constructor(props) {

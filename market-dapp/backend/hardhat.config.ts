@@ -40,8 +40,8 @@ const infuraNetwork = (
 const config: HardhatUserConfig = {
   networks: {
     hardhat: mnemonic
-      ? { accounts: { mnemonic }, chainId: 1337 }
-      : { chainId: 1337 },
+      ? { accounts: { mnemonic }, chainId: 31337 }
+      : { chainId: 31337 },
     localhost: {
       url: "http://localhost:8545",
       accounts: mnemonic ? { mnemonic } : undefined,
@@ -72,7 +72,7 @@ const config: HardhatUserConfig = {
     }
   },
   solidity: {
-    version: "0.7.4",
+    version: "0.7.6",
     settings: {
       optimizer: {
         runs: 110,

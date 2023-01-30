@@ -5,6 +5,8 @@ const monthNames = ["January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December"
 ];
 
+const use_eip_1559 = process.env.REACT_APP_USE_EIP_1559 === "true";
+
 export default class UIHelper {
 
   static defaultGasLimit = 7500000;
@@ -102,30 +104,28 @@ static calculateGasUsingStation = async function(gasLimit, fromAccount) {
 
   let gas = {
       gasLimit: Number(Math.trunc(gasLimit * 1.1)),   //this would add extra 10% if needed
-      from: fromAccount,
-      maxFeePerGas: Number(ethers.BigNumber.from(40000000000)), //40 gwei
-      maxPriorityFeePerGas: Number(ethers.BigNumber.from(40000000000))
+      from: fromAccount
   };
 
-  try {
-      const {data} = await axios({
-          method: 'get',
-          url: 'https://gasstation-mainnet.matic.network/v2'
-      });
-      console.log('gassatation data: ', data);
+  if(use_eip_1559) {
+    try {
+        const {data} = await axios({
+            method: 'get',
+            url: 'https://gasstation-mainnet.matic.network/v2'
+        });
+        console.log('gassatation data: ', data);
 
-      return { 
-        gasLimit: Number(Math.trunc(gasLimit * 1.1)),
-        from: fromAccount,
-        maxPriorityFeePerGas : Number(convertGwei2Wei( Math.trunc(data.fast.maxPriorityFee * 1.1))),
-        maxFeePerGas : Number(convertGwei2Wei( Math.trunc(data.fast.maxFee * 1.1)))
-      }
+        gas.maxFeePerGas = Number(convertGwei2Wei( Math.trunc(data.fast.maxPriorityFee * 1.1)));
+        gas.maxPriorityFeePerGas = Number(convertGwei2Wei( Math.trunc(data.fast.maxFee * 1.1)));
+    } catch (error) {
+      console.log("gasstation error: ", error);
 
-  } catch (error) {
-    
-    return gas;
+      gas.maxFeePerGas = Number(ethers.BigNumber.from(40000000000)); //40 gwei
+      gas.maxPriorityFeePerGas = Number(ethers.BigNumber.from(40000000000));
+    }
   }
-  
+
+  return gas;
 }
 //PUT this on some other file in the future
   static addDaysToDate = function (date, days) {

@@ -7,7 +7,10 @@ import UIHelper from "../utils/uihelper"
 
 const openpgp = require('openpgp');
 
-const priceConversion = 10 ** 18;
+const priceConversion = 10**18;
+const NON_SECURE_SELL = process.env.REACT_APP_NON_SECURE_SELL === "true";
+const NON_SECURE_KEY= process.env.REACT_APP_NON_SECURE_KEY;
+const NUMBER_CONFIRMATIONS_NEEDED = Number(process.env.REACT_APP_NUMBER_CONFIRMATIONS_NEEDED);
 
 class UploadCar extends Component {
 
@@ -60,41 +63,31 @@ class UploadCar extends Component {
         const re = /([0-9]*[.])?[0-9]+/;
         if (event.target.value === '' || re.test(event.target.value)) {
             this.setState({ priceValue: event.target.value });
-            console.log("File price: " + event.target.value);
             this.setState({ currentFilePrice: event.target.value * priceConversion });
         }
     }
 
     handleSeason = (event) => {
-        console.log("Season: " + event.target.value);
         this.setState({ currentSeason: event.target.value });
     }
 
     handleDescription = (event) => {
-        console.log("Description: " + event.target.value);
         this.setState({ currentDescription: event.target.value });
     }
 
     handleSeries = (event) => {
-        console.log("Series: " + event.target.value);
         this.setState({ currentSeries: event.target.value });
     }
 
     onSelectCar = async (event) => {
-        //event.preventDefault();
-        console.log("Choosing car: " + event.target.value);
         this.setState({ currentCar: event.target.value });
     }
 
     onSelectTrack = async (event) => {
-        //event.preventDefault();
-        console.log("Choosing track: " + event.target.value);
         this.setState({ currentTrack: event.target.value });
     }
 
     onSelectSim = async (event) => {
-        //event.preventDefault();
-        console.log("Choosing sim: " + event);
         this.setState({ currentSimulator: event });
     }
 
@@ -123,7 +116,7 @@ class UploadCar extends Component {
             return false;
         }
 
-        const password = await Prompt('Type the password to encrypt the file. Use different password for each item.');
+        const password = NON_SECURE_SELL ? NON_SECURE_KEY : await Prompt('Type the password to encrypt the file. Use different password for each item.');
         if (!password) return;
 
         const { message } = await openpgp.encrypt({
@@ -180,13 +173,13 @@ class UploadCar extends Component {
             let paramsForCall = await UIHelper.calculateGasUsingStation(gasLimit, this.state.currentAccount);
 
 
-            const response = await this.state.contract.methods.newCarSetup(ipfsPathBytes, this.state.currentCar, this.state.currentTrack,
+            await this.state.contract.methods.newCarSetup(ipfsPathBytes, this.state.currentCar, this.state.currentTrack,
                 this.state.currentSimulator, this.state.currentSeason, this.state.currentSeries, this.state.currentDescription, price, placeholder, this.state.encryptedDataHash, nickname)
                 .send(paramsForCall)
                 //.on('sent', UIHelper.transactionOnSent)
                 .on('confirmation', function (confNumber, receipt, latestBlockHash) {
                     window.localStorage.setItem('forceUpdate','yes');
-                    if(confNumber > 9) {
+                    if(confNumber >= NUMBER_CONFIRMATIONS_NEEDED) {
                         UIHelper.transactionOnConfirmation("The new car setup is available for sale!","/");
                     }
                     
