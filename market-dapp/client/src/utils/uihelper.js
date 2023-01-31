@@ -102,13 +102,13 @@ static calculateGasUsingStation = async function(fromAccount) {
 
   if(use_eip_1559) {
     try {
-        const {gasStationObj} = await axios({
+        const {data} = await axios({
             method: 'get',
             url: 'https://gasstation-mainnet.matic.network/v2'
         });
 
-        let base_fee = parseFloat(gasStationObj.estimatedBaseFee);
-        let max_priority_fee = gasStationObj.standard.maxPriorityFee;
+        let base_fee = parseFloat(data.estimatedBaseFee);
+        let max_priority_fee = data.standard.maxPriorityFee;
         let max_fee_per_gas = base_fee + max_priority_fee;
         //  In case the network gets (up to 25%) more congested
         max_fee_per_gas += (base_fee * 0.25);
