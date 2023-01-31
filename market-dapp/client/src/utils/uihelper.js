@@ -103,7 +103,7 @@ static calculateGasUsingStation = async function(fromAccount) {
   }
 
   let gas = {
-      gasLimit: Number(Math.trunc(UIHelper.defaultGasLimit * 1.1)),   //this would add extra 10% if needed
+      gasLimit: Number(Math.trunc(UIHelper.defaultGasLimit)),
       from: fromAccount
   };
 
@@ -115,8 +115,8 @@ static calculateGasUsingStation = async function(fromAccount) {
         });
         console.log('gassatation data: ', data);
 
-        gas.maxFeePerGas = Number(convertGwei2Wei( Math.trunc(data.fast.maxPriorityFee * 1.1)));
-        gas.maxPriorityFeePerGas = Number(convertGwei2Wei( Math.trunc(data.fast.maxFee * 1.1)));
+        gas.maxFeePerGas = Number(convertGwei2Wei( Math.trunc(data.fast.maxFee)));
+        gas.maxPriorityFeePerGas = Number(convertGwei2Wei( Math.trunc(data.fast.maxPriorityFee)));
     } catch (error) {
       console.log("gasstation error: ", error);
 
