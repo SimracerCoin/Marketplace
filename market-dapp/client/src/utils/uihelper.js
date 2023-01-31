@@ -11,7 +11,6 @@ export default class UIHelper {
 
   static defaultGasLimit = 7500000;
 
-
   static getProvider = async function(rpc_uri) {
     return new ethers.providers.JsonRpcProvider({url: rpc_uri });
   }
@@ -45,7 +44,7 @@ export default class UIHelper {
       });
   }
 
-  static hiddeSpinning = function() {
+  static hideSpinning = function() {
     const elem = document.getElementById("wait-div");
     if(elem) {
       elem.parentNode.removeChild(elem);
@@ -95,34 +94,39 @@ export default class UIHelper {
   //using gas station
 //https://github.com/ethers-io/ethers.js/issues/2828
 //workaround for "transaction underpriced" error
-static calculateGasUsingStation = async function(gasLimit, fromAccount) {
-
-   const convertGwei2Wei = (input) =>  {
-    console.log("convert " + input + " (gwei) to (wei) => " + ethers.BigNumber.from(input * 1000000000) );
-    return ethers.BigNumber.from(input * 1000000000);
-  }
+static calculateGasUsingStation = async function(fromAccount) {
 
   let gas = {
-      gasLimit: Number(Math.trunc(gasLimit * 1.1)),   //this would add extra 10% if needed
       from: fromAccount
   };
 
   if(use_eip_1559) {
     try {
-        const {data} = await axios({
+        const {gasStationObj} = await axios({
             method: 'get',
             url: 'https://gasstation-mainnet.matic.network/v2'
         });
-        console.log('gassatation data: ', data);
 
-        gas.maxFeePerGas = Number(convertGwei2Wei( Math.trunc(data.fast.maxPriorityFee * 1.1)));
-        gas.maxPriorityFeePerGas = Number(convertGwei2Wei( Math.trunc(data.fast.maxFee * 1.1)));
+        let base_fee = parseFloat(gasStationObj.estimatedBaseFee);
+        let max_priority_fee = gasStationObj.standard.maxPriorityFee;
+        let max_fee_per_gas = base_fee + max_priority_fee;
+        //  In case the network gets (up to 25%) more congested
+        max_fee_per_gas += (base_fee * 0.25);
+
+        //  cast gwei numbers to wei BigNumbers for ethers
+        const maxFeePerGas = ethers.utils.parseUnits(max_fee_per_gas.toFixed(9), 'gwei');
+        const maxPriorityFeePerGas = ethers.utils.parseUnits(max_priority_fee.toFixed(9), 'gwei');
+
+        gas.maxFeePerGas = maxFeePerGas;
+        gas.maxPriorityFeePerGas = maxPriorityFeePerGas;
     } catch (error) {
       console.log("gasstation error: ", error);
 
       gas.maxFeePerGas = Number(ethers.BigNumber.from(40000000000)); //40 gwei
       gas.maxPriorityFeePerGas = Number(ethers.BigNumber.from(40000000000));
     }
+  } else {
+    gas.gasLimit = Number(ethers.BigNumber.from(UIHelper.defaultGasLimit));   //this would add extra 10% if needed
   }
 
   return gas;

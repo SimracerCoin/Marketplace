@@ -165,7 +165,7 @@ class MainPage extends Component {
 
 
         //hide spinning as soon as we load the minimum
-        UIHelper.hiddeSpinning();
+        UIHelper.hideSpinning();
 
         //onwnership nfts
         this.setState(

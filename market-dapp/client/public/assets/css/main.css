@@ -14088,7 +14088,7 @@ button.close:focus {
   padding: 1.25rem 0;
   border-top: 1px solid #f1f1f1; 
   position: relative;
-  bottom: 50px;
+  bottom: 0px;
 }
   .footer .logo .logo-dark,
   .footer .logo .logo-light {

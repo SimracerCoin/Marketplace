@@ -150,8 +150,6 @@ class AuctionPage extends Component {
         //const buyerPK = this.state.drizzle.web3.utils.hexToBytes(this.state.drizzle.web3.utils.randomHex(16));
         //console.log('Item price:' + this.state.price);
 
-        let gasLimit = UIHelper.defaultGasLimit;
-
         if (!this.state.isNFT && !this.state.isMomentNFT) {
 
             let buyerKey = localStorage.getItem('ak');
@@ -169,7 +167,7 @@ class AuctionPage extends Component {
             }
 
             //approve contract ot spend our SRC
-            let paramsForCall = await UIHelper.calculateGasUsingStation(gasLimit, this.state.currentAccount);
+            let paramsForCall = await UIHelper.calculateGasUsingStation(this.state.currentAccount);
 
             let approval = await this.state.contractSimracerCoin.methods.approve(this.state.contract.address, price)
             .send(paramsForCall)
@@ -199,7 +197,7 @@ class AuctionPage extends Component {
             
         } else {
 
-            let paramsForCall = await UIHelper.calculateGasUsingStation(gasLimit, this.state.currentAccount);
+            let paramsForCall = await UIHelper.calculateGasUsingStation(this.state.currentAccount);
             let approval = await this.state.contractSimracerCoin.methods.approve(this.state.contractNFTs.address, price)
             .send(paramsForCall)
             .catch(function (e) {

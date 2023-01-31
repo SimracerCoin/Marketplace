@@ -22,9 +22,8 @@ class UploadSkin extends Component {
             drizzleState: props.drizzleState,
             currentAccount: null,
             currentSimulator: "Choose your simulator",
-            currentFilePrice: null,
             contract: null,
-            ipfsPath: null,
+            ipfsPath: "",
             image_ipfsPath: "",
             encryptedDataHash: null,
             formIPFS: "",
@@ -32,15 +31,14 @@ class UploadSkin extends Component {
             receivedIPFS: "",
             isSeller: false,
             imageBuffer: null,
+            priceValue: ""
         }
-
 
         this.handleChangeHash = this.handleChangeHash.bind(this);
         this.handleFilePrice = this.handleFilePrice.bind(this);
         this.uploadImageIPFS = this.uploadImageIPFS.bind(this);
         this.saveImage_toIPFS = this.saveImage_toIPFS.bind(this);
     };
-
 
     componentDidMount = async () => {
         const currentAccount = this.state.drizzleState.accounts[0];
@@ -49,21 +47,21 @@ class UploadSkin extends Component {
         this.setState({ currentAccount: currentAccount, contract: contract, isSeller: isSeller });
     };
 
-
     handleChangeHash = (event) => {
         console.log("IPFS Hash: " + event.target.value);
         this.setState({ ipfsPath: event.target.value });
     }
 
     handleFilePrice = (event) => {
-        const re = /([0-9]*[.])?[0-9]+/;
-        if (event.target.value === '' || re.test(event.target.value)) {
-            this.setState({ priceValue: event.target.value });
+        const re = new RegExp(event.target.pattern);
+        if (re.test(event.target.value)) {
             console.log("File price: " + event.target.value);
-            this.setState({ currentFilePrice: event.target.value * priceConversion });
+        } else {
+            event.target.value = '';
         }
-    }
 
+        this.setState({ priceValue: event.target.value })
+    }
 
     onSelectCar = async (event) => {
         //event.preventDefault();
@@ -71,13 +69,11 @@ class UploadSkin extends Component {
         this.setState({ currentCar: event.target.value });
     }
 
-
     onSelectSim = async (event) => {
         //event.preventDefault();
         console.log("Choosing sim: " + event);
         this.setState({ currentSimulator: event });
     }
-
 
     convertToBuffer = async (reader) => {
         //file is converted to a buffer for upload to IPFS
@@ -133,19 +129,19 @@ class UploadSkin extends Component {
         }
     }
 
-
-
     onIPFSSubmit = async (event) => {
         event.preventDefault();
 
         var fileName = document.getElementById('skin-file').value.toLowerCase();
         if (!fileName.endsWith('.tga')) {
-            alert('You can upload .tga files only.');
+            alert('You can only upload .tga files.');
             return false;
         }
 
         const password = NON_SECURE_SELL ? NON_SECURE_KEY : await Prompt('Type the password to encrypt the file. Use different password for each item.');
         if (!password) return;
+
+        UIHelper.showSpinning();
 
         const { message } = await openpgp.encrypt({
             message: openpgp.message.fromBinary(this.state.buffer), // input as Message object
@@ -161,16 +157,18 @@ class UploadSkin extends Component {
             console.log(err, ipfsPath);
             //setState by setting ipfsPath to ipfsPath[0].hash 
             this.setState({ ipfsPath: ipfsPath[0].hash });
-        })
+        });
+
+        UIHelper.hideSpinning();
         this.setState({ ipfsPath: response.path, encryptedDataHash: encryptedDataHash });
     };
 
     saveSkin = async (event) => {
         event.preventDefault();
 
-        if (this.state.currentFilePrice === null) {
-            alert('Item price must be an integer');
-        } else if(this.state.ipfsPath === null) {
+        if (!this.state.priceValue) {
+            alert('Item price is invalid');
+        } else if(!this.state.ipfsPath) {
             alert('File missing or invalid!');
         } else {
             let nickname = "";
@@ -179,46 +177,44 @@ class UploadSkin extends Component {
                 if (!nickname) return;
             }
 
-            const price = this.state.drizzle.web3.utils.toBN(this.state.currentFilePrice);
+            UIHelper.showSpinning();
+
+            const price = this.state.drizzle.web3.utils.toWei(this.state.priceValue);
 
             //document.getElementById('formInsertCar').reset()
             console.log("Current account: " + this.state.currentAccount);
             console.log("Current hash: " + this.state.ipfsPath);
             console.log("Current car: " + this.state.currentCar);
             console.log("Current simulator: " + this.state.currentSimulator);
-            console.log("Current price: " + this.state.currentFilePrice);
+            console.log("Current price: " + this.state.priceValue);
 
             const ipfsPathBytes = this.state.drizzle.web3.utils.fromAscii(this.state.ipfsPath);
 
             // TO DO: change placeholders for correct values
-            const placeholder = this.state.drizzle.web3.utils.fromAscii('some hash');
+            const placeholder = this.state.drizzle.web3.utils.fromAscii('');
             console.log(placeholder);
-
-            UIHelper.showSpinning();
 
             const response_saveImage = await this.saveImage_toIPFS();
 
             if (response_saveImage) {
 
-                let gasLimit = UIHelper.defaultGasLimit;
-                let paramsForCall = await UIHelper.calculateGasUsingStation(gasLimit, this.state.currentAccount);
+                let paramsForCall = await UIHelper.calculateGasUsingStation(this.state.currentAccount);
 
-                const response = await this.state.contract.methods.newSkin(ipfsPathBytes, this.state.currentCar,
+                await this.state.contract.methods.newSkin(ipfsPathBytes, this.state.currentCar,
                     this.state.currentSimulator, price, placeholder, this.state.encryptedDataHash, nickname, this.state.image_ipfsPath)
                     .send(paramsForCall)
-                    //.on('sent', UIHelper.transactionOnSent)
                     .on('confirmation', function (confNumber, receipt, latestBlockHash) {
                         window.localStorage.setItem('forceUpdate','yes');
                         if(confNumber >= NUMBER_CONFIRMATIONS_NEEDED) {
-                            UIHelper.transactionOnConfirmation("The new skin is available for sale!","/");
+                            UIHelper.transactionOnConfirmation("The new skin is available for sale!", "/");
                         }
                     })
                     .on('error', UIHelper.transactionOnError)
                     .catch(function (e) { 
-                        UIHelper.hiddeSpinning();
+                        UIHelper.hideSpinning();
                     });
             } else {
-                UIHelper.hiddeSpinning();
+                UIHelper.hideSpinning();
             }
         }
     }
@@ -260,7 +256,7 @@ class UploadSkin extends Component {
                                         <Form>
                                             <div className="form-row">
                                                 <div className="form-group col-6">
-                                                    <Form.Control type="text" pattern="([0-9]*[.])?[0-9]+" placeholder="Enter File price (SRC)" value={this.state.priceValue} onChange={this.handleFilePrice} />
+                                                    <Form.Control type="number" min="0" step="1" pattern="([0-9]*[.])?[0-9]+" placeholder="Enter File price (SRC)" value={this.state.priceValue} onChange={this.handleFilePrice} />
                                                 </div>
                                             </div>
                                             <div className="form-row">

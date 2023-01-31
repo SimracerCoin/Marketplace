@@ -27,7 +27,6 @@ class UploadSimracerMoment extends Component {
             drizzleState: props.drizzleState,
             currentAccount: null,
             currentSimulator: "Choose your simulator",
-            currentFilePrice: null,
             contract: null,
             ipfsPath: null,
             video_ipfsPath: "",
@@ -39,7 +38,7 @@ class UploadSimracerMoment extends Component {
             isSeller: false,
             videoBuffer: null,
             imageBuffer: null,
-            priceValue:0,
+            priceValue: "",
             auctionItem: false,
             auctionTimeRange: false,
             currentTimingOption: timingOpt[0],
@@ -85,12 +84,14 @@ class UploadSimracerMoment extends Component {
     //}
 
     handleFilePrice = (event) => {
-        const re = /([0-9]*[.])?[0-9]+/;
-        if (event.target.value === '' || re.test(event.target.value)) {
-            this.setState({ priceValue: event.target.value });
-            console.log("Handling File price: " + event.target.value);
-            this.setState({ currentFilePrice: event.target.value * priceConversion });
+        const re = new RegExp(event.target.pattern);
+        if (re.test(event.target.value)) {
+            console.log("File price: " + event.target.value);
+        } else {
+            event.target.value = '';
         }
+
+        this.setState({ priceValue: event.target.value })
     };
 
     checkInput = (value) => {
@@ -497,13 +498,13 @@ class UploadSimracerMoment extends Component {
     saveSimracingMomentNFT = async (event) => {
         event.preventDefault();
 
-        if(this.state.videoBuffer === null || this.state.imageBuffer === null) {
+        if(!this.state.videoBuffer || !this.state.imageBuffer) {
             alert('Video and/or thumbnail are not ready to process. Please wait or try again!');
         }
         else if(!this.state.currentDescription || !this.state.currentSeries || this.state.currentDescription.length === 0 || this.state.currentSeries.length === 0) {
             alert('Series and Description must not be empty!');
         }
-        else if (this.state.currentFilePrice === null) {
+        else if (!this.state.priceValue) {
             alert('Item price must be an integer');
         } else {
 
@@ -522,13 +523,11 @@ class UploadSimracerMoment extends Component {
             if(response_saveVideo && response_saveImage && response_saveJson) {
                 //all good!
 
-                const price = this.state.drizzle.web3.utils.toBN(this.state.currentFilePrice);
-
+                const price = this.state.drizzle.web3.utils.toWei(this.state.priceValue);
 
                 //some gas estimations
                 //estimate method gas consuption (units of gas)
-                let gasLimit = UIHelper.defaultGasLimit;
-                let paramsForCall = await UIHelper.calculateGasUsingStation(gasLimit, this.state.currentAccount);
+                let paramsForCall = await UIHelper.calculateGasUsingStation(this.state.currentAccount);
                 //console.log("params for call ", paramsForCall);
 
                 //'https://gateway.pinata.cloud/ipfs/Qmboj3b42aW2nHGuQizdi2Zp35g6TBKmec6g77X9UiWQXg'
@@ -547,13 +546,11 @@ class UploadSimracerMoment extends Component {
                     })
                     .on('error', UIHelper.transactionOnError)
                     .catch(function (e) { 
-                        UIHelper.hiddeSpinning();
+                        UIHelper.hideSpinning();
                     });
             } else {
-                UIHelper.hiddeSpinning();
+                UIHelper.hideSpinning();
             }
-
-            
         }
     }
 
@@ -687,7 +684,7 @@ class UploadSimracerMoment extends Component {
                                                 <br></br>
                                                 <Form.Control as="textarea" placeholder="Enter Description" onChange={this.handleDescription} />
                                                 <br></br>
-                                                <Form.Control htmlSize="50" min="0" step="0.001" max="999999999" type="number" pattern="([0-9]*[.])?[0-9]+" placeholder="Enter File price (SRC)" value={this.state.priceValue} onChange={this.handleFilePrice} />
+                                                <Form.Control htmlSize="50" min="0" step="1" type="number" pattern="([0-9]*[.])?[0-9]+" placeholder="Enter File price (SRC)" value={this.state.priceValue} onChange={this.handleFilePrice} />
                                                 <br></br>
                                                 <DropdownButton id="dropdown-skin-button" title={this.state.currentSimulator} onSelect={this.onSelectSimulator}>
                                                     {sims}

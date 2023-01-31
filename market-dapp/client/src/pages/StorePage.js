@@ -272,7 +272,7 @@ class StorePage extends Component {
         });
         
         console.log("END getNFTSData");
-        UIHelper.hiddeSpinning();
+        UIHelper.hideSpinning();
     }
 
     /**

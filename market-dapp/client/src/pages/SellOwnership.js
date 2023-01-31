@@ -23,11 +23,10 @@ class SellOwnership extends Component {
             drizzleState: props.drizzleState,
             currentAccount: null,
             currentSimulator: "Choose your simulator",
-            currentSeries: null,
-            currentCarNumber: null,
-            currentFilePrice: null,
+            currentSeries: "",
+            currentCarNumber: "",
             contract: null,
-            ipfsPath: null,
+            ipfsPath: "",
             image_ipfsPath: "",
             formIPFS: "",
             formAddress: "",
@@ -38,7 +37,8 @@ class SellOwnership extends Component {
             auctionTimeRange: false,
             currentTimingOption: timingOpt[0], 
             auctionStart: new Date(),
-            auctionEnd: new Date()
+            auctionEnd: new Date(),
+            priceValue: ""
         }
 
 
@@ -75,19 +75,25 @@ class SellOwnership extends Component {
     }
 
     handleFilePrice = (event) => {
-        const re = /([0-9]*[.])?[0-9]+/;
-        if (event.target.value === '' || re.test(event.target.value)) {
-            this.setState({ priceValue: event.target.value });
+        const re = new RegExp(event.target.pattern);
+        if (re.test(event.target.value)) {
             console.log("File price: " + event.target.value);
-            this.setState({ currentFilePrice: event.target.value * priceConversion });
+        } else {
+            event.target.value = '';
         }
-    }
+
+        this.setState({ priceValue: event.target.value })
+    };
 
     handleCarNumber = (event) => {
-        const re = /^[0-9\b]+$/;
-        if (event.target.value === '' || re.test(event.target.value)) {
-            this.setState({ currentCarNumber: event.target.value });
+        const re = new RegExp(event.target.pattern);
+        console.log("pattern:",event.target.pattern);
+        if (!re.test(event.target.value)) {
+            console.log("entrou");
+            event.target.value = "";
         }
+
+        this.setState({ currentCarNumber: event.target.value });
     }
 
     handleSeries = (event) => {
@@ -291,9 +297,9 @@ class SellOwnership extends Component {
     saveCarOwnershipNFT = async (event) => {
         event.preventDefault();
 
-        if (this.state.currentFilePrice === null) {
+        if (!this.state.priceValue) {
             alert('Item price must be an integer');
-        } else if(this.state.imageBuffer === null) {
+        } else if(!this.state.imageBuffer) {
             alert('Image file missing or invalid!');
         } else {
             // let nickname = "";
@@ -309,15 +315,14 @@ class SellOwnership extends Component {
 
             if(response_saveImage && response_saveJson) {
 
-                const price = this.state.drizzle.web3.utils.toBN(this.state.currentFilePrice);
+                const price = this.state.drizzle.web3.utils.toWei(this.state.priceValue);
 
                 //some gas estimations
                 //estimate method gas consuption (units of gas)
-                let gasLimit = UIHelper.defaultGasLimit;
-                let paramsForCall = await UIHelper.calculateGasUsingStation(gasLimit, this.state.currentAccount);
+                let paramsForCall = await UIHelper.calculateGasUsingStation(this.state.currentAccount);
 
                 //'https://gateway.pinata.cloud/ipfs/Qmboj3b42aW2nHGuQizdi2Zp35g6TBKmec6g77X9UiWQXg'
-                let tx = await this.state.contractNFTs.methods.awardItem(this.state.contractNFTs.address, this.state.currentAccount, price, 'https://simthunder.infura-ipfs.io/ipfs/' + this.state.jsonData_ipfsPath)
+                await this.state.contractNFTs.methods.awardItem(this.state.contractNFTs.address, this.state.currentAccount, price, 'https://simthunder.infura-ipfs.io/ipfs/' + this.state.jsonData_ipfsPath)
                     .send(paramsForCall)
                     //.on('sent', UIHelper.transactionOnSent)
                     .on('confirmation', function (confNumber, receipt, latestBlockHash) {
@@ -328,10 +333,10 @@ class SellOwnership extends Component {
                     })
                     .on('error', UIHelper.transactionOnError)
                     .catch(function (e) {
-                        UIHelper.hiddeSpinning();
+                        UIHelper.hideSpinning();
                      });
             } else {
-                UIHelper.hiddeSpinning();
+                UIHelper.hideSpinning();
             }
 
             
@@ -363,9 +368,9 @@ class SellOwnership extends Component {
                                             <Form.Group controlId="formInsertCar">
                                                 <Form.Control type="text" placeholder="Enter Series name" onChange={this.handleSeries} />
                                                 <br></br>
-                                                <Form.Control type="text" pattern="[0-9]*" placeholder="Enter Car number" value={this.state.currentCarNumber} onChange={this.handleCarNumber} />
+                                                <Form.Control type="text" pattern="\d+$" placeholder="Enter Car number" value={this.state.currentCarNumber} onChange={this.handleCarNumber} />
                                                 <br></br>
-                                                <Form.Control type="text" pattern="([0-9]*[.])?[0-9]+" placeholder="Enter File price (SRC)" value={this.state.priceValue} onChange={this.handleFilePrice} />
+                                                <Form.Control type="number" min="0" step="1" pattern="([0-9]*[.])?[0-9]+" placeholder="Enter File price (SRC)" value={this.state.priceValue} onChange={this.handleFilePrice} />
                                                 <br></br>
                                                 <DropdownButton id="dropdown-skin-button" title={this.state.currentSimulator} onSelect={this.onSelectSim}>
                                                     {sims}

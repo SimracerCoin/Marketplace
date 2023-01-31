@@ -26,23 +26,21 @@ class UploadCar extends Component {
             currentSeason: null,
             currentSeries: null,
             currentDescription: null,
-            currentFilePrice: null,
             contract: null,
             encryptedDataHash: null,
             ipfsPath: "",
             formIPFS: "",
             formAddress: "",
             receivedIPFS: "",
-            isSeller: false
+            isSeller: false,
+            priceValue: ""
         }
-
 
         this.handleChangeHash = this.handleChangeHash.bind(this);
         this.handleFilePrice = this.handleFilePrice.bind(this);
         this.handleSeason = this.handleSeason.bind(this);
         this.handleSeries = this.handleSeries.bind(this);
         this.handleDescription = this.handleDescription.bind(this);
-
     };
 
 
@@ -53,18 +51,20 @@ class UploadCar extends Component {
         this.setState({ currentAccount: currentAccount, contract: contract, isSeller: isSeller });
     };
 
-
     handleChangeHash = (event) => {
         console.log("IPFS Hash: " + event.target.value);
         this.setState({ ipfsPath: event.target.value });
     }
 
     handleFilePrice = (event) => {
-        const re = /([0-9]*[.])?[0-9]+/;
-        if (event.target.value === '' || re.test(event.target.value)) {
-            this.setState({ priceValue: event.target.value });
-            this.setState({ currentFilePrice: event.target.value * priceConversion });
+        const re = new RegExp(event.target.pattern);
+        if (re.test(event.target.value)) {
+            console.log("File price: " + event.target.value);
+        } else {
+            event.target.value = '';
         }
+
+        this.setState({ priceValue: event.target.value })
     }
 
     handleSeason = (event) => {
@@ -140,9 +140,9 @@ class UploadCar extends Component {
     saveCar = async (event) => {
         event.preventDefault();
 
-        if (this.state.currentFilePrice === null) {
+        if (!this.state.priceValue) {
             alert('Item price must be an integer');
-        } else if(this.state.ipfsPath === null) {
+        } else if(!this.state.ipfsPath) {
             alert('File missing or invalid!');
         } else {
             let nickname = "";
@@ -153,7 +153,7 @@ class UploadCar extends Component {
 
             UIHelper.showSpinning();
 
-            const price = this.state.drizzle.web3.utils.toBN(this.state.currentFilePrice);
+            const price = this.state.drizzle.web3.utils.toWei(this.state.priceValue);
 
             console.log("Current account: " + this.state.currentAccount);
             console.log("Current hash: " + this.state.ipfsPath);
@@ -161,7 +161,7 @@ class UploadCar extends Component {
             console.log("Current track: " + this.state.currentTrack);
             console.log("Current simulator: " + this.state.currentSimulator);
             console.log("Current season: " + this.state.currentSeason);
-            console.log("Current price: " + this.state.currentFilePrice);
+            console.log("Current price: " + this.state.priceValue);
 
             const ipfsPathBytes = this.state.drizzle.web3.utils.fromAscii(this.state.ipfsPath);
 
@@ -169,24 +169,20 @@ class UploadCar extends Component {
             const placeholder = this.state.drizzle.web3.utils.fromAscii('some hash');
             console.log(placeholder);
 
-            let gasLimit = UIHelper.defaultGasLimit;
-            let paramsForCall = await UIHelper.calculateGasUsingStation(gasLimit, this.state.currentAccount);
-
+            let paramsForCall = await UIHelper.calculateGasUsingStation(this.state.currentAccount);
 
             await this.state.contract.methods.newCarSetup(ipfsPathBytes, this.state.currentCar, this.state.currentTrack,
                 this.state.currentSimulator, this.state.currentSeason, this.state.currentSeries, this.state.currentDescription, price, placeholder, this.state.encryptedDataHash, nickname)
                 .send(paramsForCall)
-                //.on('sent', UIHelper.transactionOnSent)
                 .on('confirmation', function (confNumber, receipt, latestBlockHash) {
                     window.localStorage.setItem('forceUpdate','yes');
                     if(confNumber >= NUMBER_CONFIRMATIONS_NEEDED) {
-                        UIHelper.transactionOnConfirmation("The new car setup is available for sale!","/");
+                        UIHelper.transactionOnConfirmation("The new car setup is available for sale!", "/");
                     }
-                    
                 })
                 .on('error', UIHelper.transactionOnError)
                 .catch(function (e) {
-                    UIHelper.hiddeSpinning();
+                    UIHelper.hideSpinning();
                  });
         }
     }
@@ -197,7 +193,7 @@ class UploadCar extends Component {
 
         for (const [index, value] of simsElements.entries()) {
             let thumb = "/assets/img/sims/" + value + ".png";
-            sims.push(<Dropdown.Item eventKey={value} key={index}><img src={thumb} width="16" /> {value}</Dropdown.Item>)
+            sims.push(<Dropdown.Item eventKey={value} key={index}><img src={thumb} width="16" alt="thumbnail" /> {value}</Dropdown.Item>)
         }
 
         return (
@@ -227,7 +223,7 @@ class UploadCar extends Component {
                                     <Form>
                                         <div class="form-row">
                                             <div class="form-group col-6">
-                                                <Form.Control type="text" pattern="([0-9]*[.])?[0-9]+" placeholder="Enter File price (SRC)" value={this.state.priceValue} onChange={this.handleFilePrice} />
+                                                <Form.Control type="number" min="0" step="1" pattern="([0-9]*[.])?[0-9]+" placeholder="Enter File price (SRC)" value={this.state.priceValue} onChange={this.handleFilePrice} />
                                             </div>
                                         </div>
                                         <div class="form-row">

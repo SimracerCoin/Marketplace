@@ -1,8 +1,7 @@
 import React, { Component } from 'react';
-
 import "../css/mainpage.css";
 
-const allowAllWallets = (process.env.REACT_APP_ALLOW_ALL_WALLETS == "true" ? true : false);
+const allowAllWallets = (process.env.REACT_APP_ALLOW_ALL_WALLETS === "true" ? true : false);
 
 class Underconstruction extends Component {
 

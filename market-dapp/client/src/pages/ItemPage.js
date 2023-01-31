@@ -155,8 +155,7 @@ class ItemPage extends Component {
       event.preventDefault();
       if(this.state.canDelete) {
         let id = Number(itemId);
-        let gasLimit = UIHelper.defaultGasLimit;
-        let paramsForCall = await UIHelper.calculateGasUsingStation(gasLimit, this.state.currentAccount);
+        let paramsForCall = await UIHelper.calculateGasUsingStation(this.state.currentAccount);
 
         UIHelper.showSpinning();
         let isSkin = this.state.isSkin;
@@ -173,7 +172,7 @@ class ItemPage extends Component {
                 })
                 .on('error', UIHelper.transactionOnError)
                 .catch(function (e) {
-                    UIHelper.hiddeSpinning();
+                    UIHelper.hideSpinning();
                 });
         } else if(isCarSetup) {
           await this.state.contract.methods.deleteCarSetup(id)
@@ -186,7 +185,7 @@ class ItemPage extends Component {
             })
             .on('error', UIHelper.transactionOnError)
             .catch(function (e) {
-                UIHelper.hiddeSpinning();
+                UIHelper.hideSpinning();
             });
         } else if(this.state.isNFT) {
           //normal nft
@@ -202,8 +201,7 @@ class ItemPage extends Component {
 
     deleteNFT = async (contract, itemId) => {
 
-      let gasLimit = UIHelper.defaultGasLimit;
-      let paramsForCall = await UIHelper.calculateGasUsingStation(gasLimit, this.state.currentAccount);
+      let paramsForCall = await UIHelper.calculateGasUsingStation(this.state.currentAccount);
         //delete itemId
         await contract.methods.deleteItem(itemId)
           .send(paramsForCall)
@@ -215,7 +213,7 @@ class ItemPage extends Component {
           })
           .on('error', UIHelper.transactionOnError)
           .catch(function (e) {
-              UIHelper.hiddeSpinning();
+              UIHelper.hideSpinning();
           });
     }
 
@@ -226,16 +224,14 @@ class ItemPage extends Component {
         return;
       }
       let itemId = Number(this.state.itemId);
-      itemPrice =  Number(itemPrice);
       let isNFT = this.state.isNFT;
       let contract = isNFT ? this.state.contractNFTs : this.state.contractMomentNFTs;
 
-      const price = this.state.drizzle.web3.utils.toBN( itemPrice * priceConversion);
+      const price = this.state.drizzle.web3.utils.toWei(itemPrice);
 
       //some gas estimations
       //estimate method gas consuption (units of gas)
-      let gasLimit = UIHelper.defaultGasLimit;
-      let paramsForCall = await UIHelper.calculateGasUsingStation(gasLimit, this.state.currentAccount);
+      let paramsForCall = await UIHelper.calculateGasUsingStation(this.state.currentAccount);
 
       UIHelper.showSpinning();
       await contract.methods.sellFromWallet(itemId, price)
@@ -247,11 +243,11 @@ class ItemPage extends Component {
             }
           })
           .on('error', ()=> {
-              UIHelper.hiddeSpinning();
+              UIHelper.hideSpinning();
               UIHelper.transactionOnError("Unable to sell NFT!");
           })
           .catch(function (e) { 
-            UIHelper.hiddeSpinning();
+            UIHelper.hideSpinning();
           });
     }
 
@@ -271,8 +267,6 @@ class ItemPage extends Component {
         //const buyerPK = this.state.drizzle.web3.utils.hexToBytes(this.state.drizzle.web3.utils.randomHex(16));
         //console.log('Item price:' + this.state.price);
 
-        let gasLimit = UIHelper.defaultGasLimit;
-
         if (!this.state.isNFT && !this.state.isMomentNFT) {
           let buyerKey = localStorage.getItem('ak');
           if (!buyerKey) {
@@ -289,7 +283,7 @@ class ItemPage extends Component {
           }
 
           //approve contract ot spend our SRC
-          let paramsForCall = await UIHelper.calculateGasUsingStation(gasLimit, this.state.currentAccount);
+          let paramsForCall = await UIHelper.calculateGasUsingStation(this.state.currentAccount);
 
           let approval = await this.state.contractSimracerCoin.methods.approve(this.state.contract.address, price)
           .send(paramsForCall)
@@ -350,7 +344,7 @@ class ItemPage extends Component {
 
             let contractAddressToApprove = this.state.isNFT ? this.state.contractNFTs.address : this.state.contractMomentNFTs.address;
 
-            let paramsForCall = await UIHelper.calculateGasUsingStation(gasLimit, this.state.currentAccount);
+            let paramsForCall = await UIHelper.calculateGasUsingStation(this.state.currentAccount);
             let approval = await this.state.contractSimracerCoin.methods.approve(contractAddressToApprove, price)
             .send(paramsForCall)
             .catch(function (e) {
@@ -361,7 +355,7 @@ class ItemPage extends Component {
             } else {
               //do it!
 
-              paramsForCall = await UIHelper.calculateGasUsingStation(gasLimit, this.state.currentAccount);
+              paramsForCall = await UIHelper.calculateGasUsingStation(this.state.currentAccount);
 
               //SimthunderOwner NFT
               if(this.state.isNFT) {
@@ -925,7 +919,7 @@ class ItemPage extends Component {
                         </div>*/}
                       </div>
                       {
-                        (!this.state.isSeller && ((this.state.isNFT || this.state.isMomentNFT) && !this.state.isNFTOwner)) &&
+                        !this.state.isSeller && !this.state.isNFTOwner &&
                       <div className="price-box mb-4">
                         <div className="flex-1"><a href="" onClick={this.buyItem} className="btn btn-block btn-warning"><i className="fas fa-shopping-cart"></i> Buy</a></div>
                       </div>

@@ -233,7 +233,7 @@ class NFTInventoryPage extends Component {
           contractMomentNFTs: contractMomentNFTs
         });
         
-        UIHelper.hiddeSpinning();
+        UIHelper.hideSpinning();
     }
 
     /**
@@ -1102,7 +1102,7 @@ class NFTInventoryPage extends Component {
 
                                 let series = metadata.series;
                                 let simulator = metadata.simulator;
-                                let price = value.price / priceConversion;
+                                let price = value.price;
                                 //TODO: change hardcode
                                 let address = value.seriesOwner;
                                 let itemId = value.id;

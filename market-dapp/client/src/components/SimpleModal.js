@@ -95,7 +95,7 @@ class SimpleModal extends React.Component {
                         <select>
                             <option className='src-coin'>SRC</option>
                         </select>
-                        <Form.Control size="20" min="0" step="0.01" max="999999999" pattern="([0-9]*[.])?[0-9]+" type="number" placeholder="0.01" value={this.state.price} onChange={this.handlePriceChange} />
+                        <Form.Control size="20" min="0" step="0.01" pattern="([0-9]*[.])?[0-9]+" type="number" placeholder="0.01" value={this.state.price} onChange={this.handlePriceChange} />
                         {/*>!<--<input type="number" size="20" onChange={this.handlePriceChange}>{this.state.price}</input>-->*/}
                     </div>
                     {false &&
