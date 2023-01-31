@@ -108,7 +108,7 @@ static calculateGasUsingStation = async function(fromAccount) {
         });
 
         let base_fee = parseFloat(data.estimatedBaseFee);
-        let max_priority_fee = data.standard.maxPriorityFee;
+        let max_priority_fee = data.fast.maxPriorityFee;
         let max_fee_per_gas = base_fee + max_priority_fee;
         //  In case the network gets (up to 25%) more congested
         max_fee_per_gas += (base_fee * 0.25);
