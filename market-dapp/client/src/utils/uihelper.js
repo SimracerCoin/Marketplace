@@ -95,7 +95,7 @@ export default class UIHelper {
   //using gas station
 //https://github.com/ethers-io/ethers.js/issues/2828
 //workaround for "transaction underpriced" error
-static calculateGasUsingStation = async function(gasLimit, fromAccount) {
+static calculateGasUsingStation = async function(fromAccount) {
 
    const convertGwei2Wei = (input) =>  {
     console.log("convert " + input + " (gwei) to (wei) => " + ethers.BigNumber.from(input * 1000000000) );
@@ -103,7 +103,7 @@ static calculateGasUsingStation = async function(gasLimit, fromAccount) {
   }
 
   let gas = {
-      gasLimit: Number(Math.trunc(gasLimit * 1.1)),   //this would add extra 10% if needed
+      gasLimit: Number(Math.trunc(UIHelper.defaultGasLimit * 1.1)),   //this would add extra 10% if needed
       from: fromAccount
   };
 
