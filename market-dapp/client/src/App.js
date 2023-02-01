@@ -16,15 +16,21 @@ import Web3Modal from "web3modal";
 import WalletConnectProvider from "@walletconnect/web3-provider";
 import Torus from "@toruslabs/torus-embed";
 import WalletLink from "walletlink";
+import CookieConsent, { getCookieConsentValue } from "react-cookie-consent";
+import TagManager from 'react-gtm-module'
 
 import "./css/App.css";
 
 
 //var web3 = new Web3(Web3.givenProvider);
 
+const allowAllWallets = process.env.REACT_APP_ALLOW_ALL_WALLETS === "true";
 const NETWORK_ID = Number(process.env.REACT_APP_NETWORK_ID) || 137;
 const NETWORK_URL = process.env.REACT_APP_NETWORK_URL;
 const INFURA_ID = process.env.REACT_APP_INFURA_ID;
+const tagManagerArgs = {
+  gtmId: 'G-152H5MJ0P0'
+}
 
 var allow_wallets = []; 
 
@@ -85,9 +91,6 @@ const web3Modal = new Web3Modal({
     providerOptions // required
 });
 
-
-const allowAllWallets = process.env.REACT_APP_ALLOW_ALL_WALLETS === "true";
-
 class App extends React.Component {
   constructor(props) {
     super(props);
@@ -101,7 +104,13 @@ class App extends React.Component {
     }
 
     this.login = this.login.bind(this);
-    
+    this.checkCookiesAcceptance = this.checkCookiesAcceptance.bind(this);
+  }
+
+  checkCookiesAcceptance = () => {
+    if(getCookieConsentValue()) {
+      TagManager.initialize(tagManagerArgs);
+    }
   }
 
   setWeb3Options = async () => {
@@ -160,7 +169,6 @@ class App extends React.Component {
   componentDidMount = async () => {
     //if not set or evaluates to false
     if(!allowAllWallets) {
-
       await fetch('/allow.json', {
         headers: {
           'Content-Type': 'application/json',
@@ -176,6 +184,8 @@ class App extends React.Component {
     if (localStorage.getItem('isWalletConnected') === 'true') {
       this.login();
     }
+
+    this.checkCookiesAcceptance();
   }
 
   componentWillUnmount = async () => {
@@ -241,8 +251,16 @@ class App extends React.Component {
               }
 
               if ( (allowAllWallets || state.allow_wallets.includes(drizzleState.accounts[0]) ) && !state.wrongNetwork) {
-                return (
-                  <RouterPage drizzle={drizzle} drizzleState={drizzleState} />
+                return ([
+                  <RouterPage drizzle={drizzle} drizzleState={drizzleState} />,
+                  <CookieConsent 
+                    enableDeclineButton
+                    location="top"
+                    style={{zIndex: 40000}}
+                    buttonText="GOT IT!"
+                    acceptOnScroll="true"
+                    onAccept={this.checkCookiesAcceptance}>Our website uses cookies to ensure you get the best experience. By proceeding on our website you are consenting to the use of these cookies.</CookieConsent>
+                ]
                 )
               } else {
                 return (

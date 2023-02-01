@@ -68,8 +68,6 @@ class MainPage extends Component {
 
         const response_cars = await contract.methods.getCarSetups().call();
 
-        let usdValue = await this.fetchUSDPrice()
-        
         const response_skins = await contract.methods.getSkins().call();
 
         //const currentAccount = this.state.drizzleState.accounts[0];
@@ -108,7 +106,7 @@ class MainPage extends Component {
         const numNFTs2Load = Math.min( numNfts, NUM_ITEMS_LOAD);
         //---------------------------------------------
         //TODO start backwards
-        for (let i = numNfts ;  i > 0 ; i--) {
+        for (let i = numNfts;  i > 0; i--) {
             try {
                 //TODO: change for different ids
                 let ownerAddress = await contractNFTs.methods.ownerOf(i).call();
@@ -134,7 +132,7 @@ class MainPage extends Component {
             }
         }
 
-        const numMomentNFTs2Load = Math.min( numMomentNfts, NUM_ITEMS_LOAD);
+        const numMomentNFTs2Load = Math.min(numMomentNfts, NUM_ITEMS_LOAD);
         //moment nfts
         //TODO start backwards
         for (let i = numMomentNfts; i > 0 ; i--) {
@@ -172,7 +170,7 @@ class MainPage extends Component {
             { 
                 shorterNFTsList: shorterNFTsList, 
                 shorterVideosNftsList: shorterVideosNftsList,
-                usdValue: usdValue, 
+                usdValue: await this.fetchUSDPrice(), 
                 listCars: response_cars, 
                 listSkins: response_skins, 
                 contract: contract, 
@@ -391,7 +389,7 @@ class MainPage extends Component {
 
         //moment nfts
         //TODO we can use already videoNftsList here
-        for (const [index, value] of this.state.shorterVideosNftsList.entries()) {
+        for (const [index, value] of this.state.shorterVideosNftsList.reverse().entries()) {
             //console.log('moment nft value is,',value);
   
             let itemId = value.id;
@@ -462,10 +460,8 @@ class MainPage extends Component {
                 
         }
 
-        if(momentNfts) momentNfts.reverse();
-
         //car ownership ones
-        for (const [index, value] of this.state.shorterNFTsList.entries()) {
+        for (const [index, value] of this.state.shorterNFTsList.reverse().entries()) {
             //console.log('ownership nft value is,',value);
             let series = value.series;
             let simulator = value.simulator;
@@ -488,32 +484,29 @@ class MainPage extends Component {
             //could be empty for these nfts (if not auction data)
             let metadata = this.extractMomentNFTTraitTypes(value.attributes);
 
-            
-                nfts.push(
-                    <ListGroup.Item key={itemId} className="bg-dark_A-20 col-3-24 mb-4">
-                        <Card className="card-block">
-                            <Card.Header style={{height: '240px'}} className="d-flex flex-wrap align-items-center justify-content-center">
-                                <Card.Img onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, carNumberOrDescription, price, null , address, null, imagePath, true, false, null, metadata)} variant="top" src={imagePath} style={{width: 'auto', maxHeight: '100%'}} />
-                            </Card.Header>
-                            <Card.Body>
-                            <div className="text-left">
-                                <div>{series}</div>
-                                <div>{simulator}</div>
-                                <div>{carNumberOrDescription}</div>
-                                <div className="price_div"><strong className="price_div_strong">{price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/> <span className="secondary-price">{usdPrice}<sup className="secondary-sup">USD</sup></span></div>
-                              </div>
-                                <Button variant="warning" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, carNumberOrDescription, price, null , address, null, imagePath, true, false, null, null)}> Buy</Button>
-                            </Card.Body>
-                        </Card>
-                    </ListGroup.Item>
-                )
+            nfts.push(
+                <ListGroup.Item key={itemId} className="bg-dark_A-20 col-3-24 mb-4">
+                    <Card className="card-block">
+                        <Card.Header style={{height: '240px'}} className="d-flex flex-wrap align-items-center justify-content-center">
+                            <Card.Img onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, carNumberOrDescription, price, null , address, null, imagePath, true, false, null, metadata)} variant="top" src={imagePath} style={{width: 'auto', maxHeight: '100%'}} />
+                        </Card.Header>
+                        <Card.Body>
+                        <div className="text-left">
+                            <div>{series}</div>
+                            <div>{simulator}</div>
+                            <div>{carNumberOrDescription}</div>
+                            <div className="price_div"><strong className="price_div_strong">{price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/> <span className="secondary-price">{usdPrice}<sup className="secondary-sup">USD</sup></span></div>
+                            </div>
+                            <Button variant="warning" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, carNumberOrDescription, price, null , address, null, imagePath, true, false, null, null)}> Buy</Button>
+                        </Card.Body>
+                    </Card>
+                </ListGroup.Item>
+            )
             
         }
 
-        if(nfts) nfts.reverse();
-
         //skins
-        for (const [index, value] of this.state.listSkins.entries()) {
+        for (const [index, value] of this.state.listSkins.slice(-NUM_ITEMS_LOAD).reverse().entries()) {
             let carBrand = value.info.carBrand
             let simulator = value.info.simulator
             let price = value.ad.price
@@ -550,10 +543,8 @@ class MainPage extends Component {
             )
         }
 
-        if(skins) skins.reverse();
-
         //car setups
-        for (const [index, value] of this.state.listCars.entries()) {
+        for (const [index, value] of this.state.listCars.slice(-NUM_ITEMS_LOAD).reverse().entries()) {
             //console.log('list cars value:');
             //console.log(value);
             let carBrand = value.info.carBrand
@@ -598,9 +589,6 @@ class MainPage extends Component {
                 </ListGroup.Item>
             )
         }
-
-        if(cars) cars.reverse();
-
 
         return (
             <header className="header">
