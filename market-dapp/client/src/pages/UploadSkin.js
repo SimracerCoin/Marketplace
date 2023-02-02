@@ -129,17 +129,15 @@ class UploadSkin extends Component {
         }
     }
 
-    onIPFSSubmit = async (event) => {
-        event.preventDefault();
-
+    onIPFSSubmit = async () => {
         var fileName = document.getElementById('skin-file').value.toLowerCase();
-        if (!fileName.endsWith('.tga')) {
-            alert('You can only upload .tga files.');
+        if (!fileName.endsWith('.tga') && !fileName.endsWith('.zip')) {
+            alert('You can only upload .tga or .zip files.');
             return false;
         }
 
         const password = NON_SECURE_SELL ? NON_SECURE_KEY : await Prompt('Type the password to encrypt the file. Use different password for each item.');
-        if (!password) return;
+        if (!password) return false;
 
         UIHelper.showSpinning();
 
@@ -161,6 +159,8 @@ class UploadSkin extends Component {
 
         UIHelper.hideSpinning();
         this.setState({ ipfsPath: response.path, encryptedDataHash: encryptedDataHash });
+
+        return true;
     };
 
     saveSkin = async (event) => {
@@ -168,7 +168,7 @@ class UploadSkin extends Component {
 
         if (!this.state.priceValue) {
             alert('Item price is invalid');
-        } else if(!this.state.ipfsPath) {
+        } else if(!this.state.buffer) {
             alert('File missing or invalid!');
         } else {
             let nickname = "";
@@ -178,6 +178,10 @@ class UploadSkin extends Component {
             }
 
             UIHelper.showSpinning();
+
+            if(!(await this.onIPFSSubmit())) {
+                return;
+            }
 
             const price = this.state.drizzle.web3.utils.toWei(this.state.priceValue);
 
@@ -225,7 +229,7 @@ class UploadSkin extends Component {
 
         for (const [index, value] of simsElements.entries()) {
             let thumb = "/assets/img/sims/" + value + ".png";
-            sims.push(<Dropdown.Item eventKey={value} key={index}><img src={thumb} width="24" /> {value}</Dropdown.Item>)
+            sims.push(<Dropdown.Item eventKey={value} key={index}><img src={thumb} alt="tumb" width="24" /> {value}</Dropdown.Item>)
         }
 
         return (
@@ -238,22 +242,12 @@ class UploadSkin extends Component {
                                 <div>
                                     <h2 className="ls-1 text-center">Add new Car Skin for sale</h2>
                                     <hr className="w-10 border-warning border-top-2 o-90" />
-                                    <div>
-                                        <Form onSubmit={this.onIPFSSubmit}>
-                                            <div className="form-group">
-                                                <FormLabel htmlFor="skin-file" className="col-sm-3 mr-2 col-form-label font-weight-bold">Choose Skin file:</FormLabel>
-                                                <input id="skin-file"  
-                                                    type="file" accept=".tga"
-                                                    onChange={this.captureFile} />
-                                            </div>
-                                            <div className="form-row">
-                                                <Button className="col-3 mr-2" type="submit">Generate IPFS Hash</Button>
-                                                <Form.Control className="col-8" type="text" placeholder="Generate IPFS Hash" value={this.state.ipfsPath} onChange={this.handleChangeHash} readOnly />
-                                            </div>
-                                        </Form>
-                                    </div>
                                     <div className="mt-4">
                                         <Form>
+                                            <div className="form-group">
+                                                <FormLabel htmlFor="skin-file" className="col-sm-3 mr-2 col-form-label font-weight-bold">Choose Skin file:</FormLabel>
+                                                <input id="skin-file" type="file" accept=".tga, .zip" onChange={this.captureFile} />
+                                            </div>
                                             <div className="form-row">
                                                 <div className="form-group col-6">
                                                     <Form.Control type="number" min="0" step="1" pattern="([0-9]*[.])?[0-9]+" placeholder="Enter File price (SRC)" value={this.state.priceValue} onChange={this.handleFilePrice} />

@@ -671,8 +671,6 @@ class MainPage extends Component {
                                 {this.state.listCars.length > NUM_ITEMS_LOAD &&
                                 <Link to="/store?m=carsetup" className="view-more">View more &gt;&gt; </Link>
                                 }
-                                
-                                
                             </div>
                         </div>
                         }

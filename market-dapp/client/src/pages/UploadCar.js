@@ -107,17 +107,15 @@ class UploadCar extends Component {
         reader.onloadend = () => this.convertToBuffer(reader)
     };
 
-    onIPFSSubmit = async (event) => {
-        event.preventDefault();
-
+    onIPFSSubmit = async () => {
         var fileName = document.getElementById('car-file').value.toLowerCase();
-        if (!fileName.endsWith('.sto')) {
-            alert('You can upload .sto files only.');
+        if (!fileName.endsWith('.sto') && !fileName.endsWith('.zip')) {
+            alert('You can upload .sto or .zip files only.');
             return false;
         }
 
         const password = NON_SECURE_SELL ? NON_SECURE_KEY : await Prompt('Type the password to encrypt the file. Use different password for each item.');
-        if (!password) return;
+        if (!password) return false;
 
         const { message } = await openpgp.encrypt({
             message: openpgp.message.fromBinary(this.state.buffer), // input as Message object
@@ -135,6 +133,8 @@ class UploadCar extends Component {
             this.setState({ ipfsPath: ipfsPath[0].hash });
         })
         this.setState({ ipfsPath: response.path, encryptedDataHash: encryptedDataHash });
+
+        return true;
     };
 
     saveCar = async (event) => {
@@ -142,7 +142,7 @@ class UploadCar extends Component {
 
         if (!this.state.priceValue) {
             alert('Item price must be an integer');
-        } else if(!this.state.ipfsPath) {
+        } else if(!this.state.buffer) {
             alert('File missing or invalid!');
         } else {
             let nickname = "";
@@ -152,6 +152,10 @@ class UploadCar extends Component {
             }
 
             UIHelper.showSpinning();
+
+            if(!(await this.onIPFSSubmit())) {
+                return;
+            }
 
             const price = this.state.drizzle.web3.utils.toWei(this.state.priceValue);
 
@@ -166,7 +170,7 @@ class UploadCar extends Component {
             const ipfsPathBytes = this.state.drizzle.web3.utils.fromAscii(this.state.ipfsPath);
 
             // TO DO: change placeholders for correct values
-            const placeholder = this.state.drizzle.web3.utils.fromAscii('some hash');
+            const placeholder = this.state.drizzle.web3.utils.fromAscii('');
             console.log(placeholder);
 
             let paramsForCall = await UIHelper.calculateGasUsingStation(this.state.currentAccount);
@@ -198,57 +202,47 @@ class UploadCar extends Component {
 
         return (
             <header className="header">
-                <div class="overlay overflow-hidden pe-n"><img src="/assets/img/bg/bg_shape.png" alt="Background shape" /></div>
+                <div className="overlay overflow-hidden pe-n"><img src="/assets/img/bg/bg_shape.png" alt="Background shape" /></div>
                 <section className="content-section text-light br-n bs-c bp-c pb-8">
-                    <div class="container position-relative">
-                        <div class="row">
-                            <div class="col-lg-8 mx-auto">
-                                <h2 class="ls-1 text-center">Add new Car Setup for sale</h2>
-                                <hr class="w-10 border-warning border-top-2 o-90" />
-                                <div>
-                                    <Form onSubmit={this.onIPFSSubmit}>
-                                        <div class="form-group">
-                                            <FormLabel for="car-file" className="col-sm-3 mr-2 col-form-label font-weight-bold">Choose Setup file:</FormLabel>
-                                            <input id="car-file"
-                                                type="file" accept=".sto"
-                                                onChange={this.captureFile} />
-                                        </div>
-                                        <div class="form-row">
-                                            <Button className="col-3 mr-2" type="submit">Generate IPFS Hash</Button>
-                                            <Form.Control className="col-8" type="text" placeholder="Generate IPFS Hash" value={this.state.ipfsPath} onChange={this.handleChangeHash} readOnly />
-                                        </div>
-                                    </Form>
-                                </div>
-                                <div class="mt-4">
+                    <div className="container position-relative">
+                        <div className="row">
+                            <div className="col-lg-8 mx-auto">
+                                <h2 className="ls-1 text-center">Add new Car Setup for sale</h2>
+                                <hr className="w-10 border-warning border-top-2 o-90" />
+                                <div className="mt-4">
                                     <Form>
-                                        <div class="form-row">
-                                            <div class="form-group col-6">
+                                        <div className="form-group">
+                                            <FormLabel for="car-file" className="col-sm-3 mr-2 col-form-label font-weight-bold">Choose Setup file:</FormLabel>
+                                            <input id="car-file" type="file" accept=".sto, .zip" onChange={this.captureFile} />
+                                        </div>
+                                        <div className="form-row">
+                                            <div className="form-group col-6">
                                                 <Form.Control type="number" min="0" step="1" pattern="([0-9]*[.])?[0-9]+" placeholder="Enter File price (SRC)" value={this.state.priceValue} onChange={this.handleFilePrice} />
                                             </div>
                                         </div>
-                                        <div class="form-row">
-                                            <div class="form-group col-6">
+                                        <div className="form-row">
+                                            <div className="form-group col-6">
                                                 <Form.Control type="text" placeholder="Enter Season" onChange={this.handleSeason} />
                                             </div>
-                                            <div class="form-group col-6">
+                                            <div className="form-group col-6">
                                                 <Form.Control type="text" placeholder="Enter Series name" onChange={this.handleSeries} />
                                             </div>
                                         </div>
-                                        <div class="form-row">
-                                            <div class="form-group col-12">
+                                        <div className="form-row">
+                                            <div className="form-group col-12">
                                                 <Form.Control as="textarea" placeholder="Enter Description" onChange={this.handleDescription} />
                                             </div>
                                         </div>
-                                        <div class="form-row">
-                                            <div class="form-group col-6">
+                                        <div className="form-row">
+                                            <div className="form-group col-6">
                                                 <Form.Control type="text" placeholder="Enter Car brand" onChange={this.onSelectCar} />
                                             </div>
-                                            <div class="form-group col-6">
+                                            <div className="form-group col-6">
                                                 <Form.Control type="text" placeholder="Enter Track" onChange={this.onSelectTrack} />
                                             </div>
                                         </div>
-                                        <div class="form-row">
-                                            <div class="form-group col-6">
+                                        <div className="form-row">
+                                            <div className="form-group col-6">
                                                 <DropdownButton id="dropdown-skin-button" title={this.state.currentSimulator} onSelect={this.onSelectSim}>
                                                     {sims}
                                                 </DropdownButton>
@@ -256,7 +250,7 @@ class UploadCar extends Component {
                                         </div>
                                     </Form>
                                 </div>
-                                <div class="form-row mt-4">
+                                <div className="form-row mt-4">
                                     <Button onClick={this.saveCar}>Save Car</Button>
                                 </div>
                             </div>

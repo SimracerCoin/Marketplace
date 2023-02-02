@@ -206,19 +206,19 @@ class App extends React.Component {
         contracts: [
           {
             contractName: "STMarketplace",
-            web3Contract: new web3.eth.Contract(STMarketplace.abi, STMarketplace.address, { data: STMarketplace.deployedBytecode })
+            web3Contract: new web3.eth.Contract(STMarketplace.abi, STMarketplace.address)
           },
           {
             contractName: "SimracerCoin",
-            web3Contract: new web3.eth.Contract(SimracerCoin.abi, SimracerCoin.address, { data: SimracerCoin.deployedBytecode })
+            web3Contract: new web3.eth.Contract(SimracerCoin.abi, SimracerCoin.address)
           },
           {
             contractName: "SimthunderOwner",
-            web3Contract: new web3.eth.Contract(SimthunderOwner.abi, SimthunderOwner.address, { data: SimthunderOwner.deployedBytecode })
+            web3Contract: new web3.eth.Contract(SimthunderOwner.abi, SimthunderOwner.address)
           },
           {
             contractName: "SimracingMomentOwner",
-            web3Contract: new web3.eth.Contract(SimracingMomentOwner.abi, SimracingMomentOwner.address, { data: SimracingMomentOwner.deployedBytecode })
+            web3Contract: new web3.eth.Contract(SimracingMomentOwner.abi, SimracingMomentOwner.address)
           }
           //,
           //{
@@ -280,14 +280,11 @@ class App extends React.Component {
   
   login = async () => {
 
-   
     let provider = this.state.provider;
     //if (typeof web3 !== 'undefined') {
 
     if(!provider) {
-    
-      provider = await this.connectWalletProvider();  
-        
+      provider = await this.connectWalletProvider();
     }
 
     if(provider) {
@@ -313,19 +310,15 @@ class App extends React.Component {
             console.log("disconnect", error);
         });
         window.web3 = new Web3(provider);
-        await this.setWeb3Options();
-        await this.getAccountInfo(allow_wallets, provider);
-        localStorage.setItem('isWalletConnected', true);
-
     } else {
       //defaukts to built-in Metamask
       window.web3 = new Web3(Web3.givenProvider);
       provider = Web3.givenProvider;
-      await this.setWeb3Options();
-      await this.getAccountInfo(allow_wallets, provider);
-      localStorage.setItem('isWalletConnected', true)
     } 
-  
+
+    await this.setWeb3Options();
+    await this.getAccountInfo(allow_wallets, provider);
+    localStorage.setItem('isWalletConnected', true);
   }
   //}
 }
