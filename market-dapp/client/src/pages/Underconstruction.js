@@ -105,7 +105,7 @@ class Underconstruction extends Component {
                             <div className="col-lg-6 mx-auto">
                                 <div className="fadeIn ad-500ms">
                                     <img src="assets/img/logo-2.png" className="slideInLeft ad-400ms display-lg-2 fw-700 lh-2 mb-4" />
-                                    <h2 className="lead-2 ls-3 d-block slideInRight ad-500ms fw-300 text-uppercase mb-7">Beta 1.1</h2>
+                                    <h2 className="lead-2 ls-3 d-block slideInRight ad-500ms fw-300 text-uppercase mb-7">Beta 1.2</h2>
                                     <h3 className={`lead-2 ls-3 slideInRight ad-500ms fw-300 text-uppercase mb-7 ${hiddenErrorMsg}`}><strong>{error_msg}</strong></h3>
                                     {switchNeeded && 
                                         this.renderSwitchButton()
