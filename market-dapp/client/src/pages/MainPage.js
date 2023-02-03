@@ -408,6 +408,7 @@ class MainPage extends Component {
             
             usdPrice = "$" + usdPrice;
 
+            let thumb = "assets/img/sims/"+simulator+".png";
 
             //console.log('METADATA VIDEO ', video);
                 /**
@@ -424,6 +425,7 @@ class MainPage extends Component {
                             <Card.Img onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, carNumberOrDescription, price, null , address, null, imagePath, false, true, video, metadata)} variant="top" src={imagePath} style={{width: 'auto', maxHeight: '100%'}} />
                         </Card.Header>
                         <Card.Body>
+                            <Card.Title className="mt-5 font-weight-bold">{series}</Card.Title>
                             <div className="text-left">
                             <div><strong  className="price_div_strong">{price_src} <sup className="main-sup">SRC</sup></strong><br/> <span className="secondary-price">{usdPrice}<sup className="secondary-sup">USD</sup></span></div>
                             {value.attributes.map( function(att) {
@@ -436,14 +438,16 @@ class MainPage extends Component {
                                 if(label === 'SeriesOwner') {
                                     return "";
                                 }
-                                if(att.trait_type === 'video') {
-                                    return (
-                                        <div><a href={value2Render} rel="noreferrer" target="_blank">{value2Render}</a></div> 
-                                    )
+                                if(att.trait_type === 'series') {
+                                    return "";
                                 }
-                                return(
-                                    <div>{value2Render}</div> 
-                                )
+                                if(att.trait_type === 'video') {
+                                    return <div><a href={value2Render} rel="noreferrer" target="_blank">{value2Render}</a></div>
+                                }
+                                if(att.trait_type === 'simulator') {
+                                    return <div><img src={thumb} width="32" alt={value2Render} /> {value2Render}</div>
+                                }
+                                return <div>{value2Render}</div>
                             }, this)}
                             </div>
                         <Button variant="warning" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, carNumberOrDescription, price, null , address, null, imagePath, false, true, video, metadata)}>Buy</Button>
@@ -470,10 +474,12 @@ class MainPage extends Component {
             let price_src = Number((Math.round(price / priceConversion) * 100) / 100).toFixed(2);
             let usdPrice = Number(Math.round(price_src  * this.state.usdValue * 100) / 100).toFixed(2);
 
-            if(usdPrice == 0.00) {
+            if(usdPrice === 0.00) {
                 usdPrice = 0.01;
             }
             usdPrice = '$' + usdPrice;
+
+            let thumb = "assets/img/sims/"+simulator+".png";
 
             //could be empty for these nfts (if not auction data)
             let metadata = this.extractMomentNFTTraitTypes(value.attributes);
@@ -485,9 +491,9 @@ class MainPage extends Component {
                             <Card.Img onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, carNumberOrDescription, price, null , address, null, imagePath, true, false, null, metadata)} variant="top" src={imagePath} style={{width: 'auto', maxHeight: '100%'}} />
                         </Card.Header>
                         <Card.Body>
-                        <div className="text-left">
-                            <div>{series}</div>
-                            <div>{simulator}</div>
+                            <Card.Title className="mt-5 font-weight-bold">{series}</Card.Title>
+                            <div className="text-left">
+                            <div><img src={thumb} width="32" alt={simulator} /> {simulator}</div>
                             <div className="price_div"><strong className="price_div_strong">{price_src} <sup className="main-sup">SRC</sup></strong><br/> <span className="secondary-price">{usdPrice}<sup className="secondary-sup">USD</sup></span></div>
                             </div>
                             <Button variant="warning" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, carNumberOrDescription, price, null , address, null, imagePath, true, false, null, null)}> Buy</Button>
@@ -527,7 +533,7 @@ class MainPage extends Component {
                         <Card.Body>
                             <Card.Title className="mt-5 font-weight-bold">{carBrand}</Card.Title>
                             <div className="text-left">
-                                <div><img src={thumb} width="24" alt={simulator} /> {simulator}</div>
+                                <div><img src={thumb} width="32" alt={simulator} /> {simulator}</div>
                                 <div className="price_div"><strong className="price_div_strong">{price_src} <sup className="main-sup">SRC</sup></strong><br/> <span className="secondary-price">{usdPrice}<sup className="secondary-sup">USD</sup></span></div>
                             </div>
                             <Button variant="warning" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, null, null, price, carBrand , address, ipfsPath, imagePath, false, false, null, null)}> Buy</Button>
@@ -572,7 +578,7 @@ class MainPage extends Component {
                             <Card.Title className="mt-5 font-weight-bold">{carBrand}</Card.Title>
                             <div className="text-left">
                             <div>{track}</div>
-                            <div>{simulator}</div>
+                            <div><img src={thumb} width="32" alt={simulator} /> {simulator}</div>
                             <div>{season}</div>
 
                             <div className="price_div"><strong className="price_div_strong">{price_src} <sup className="main-sup">SRC</sup></strong><br/> <span className="secondary-price">{usdPrice}<sup className="secondary-sup">USD</sup></span></div>
