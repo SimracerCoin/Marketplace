@@ -255,7 +255,7 @@ class App extends React.Component {
                   <RouterPage drizzle={drizzle} drizzleState={drizzleState} />,
                   <CookieConsent 
                     enableDeclineButton
-                    location="top"
+                    location="bottom"
                     style={{zIndex: 40000}}
                     buttonText="GOT IT!"
                     onAccept={this.checkCookiesAcceptance}>Our website uses cookies to ensure you get the best experience. By proceeding on our website you are consenting to the use of these cookies.</CookieConsent>
