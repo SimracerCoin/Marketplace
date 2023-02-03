@@ -1,7 +1,6 @@
 import * as React from 'react';
 import Box from '@mui/material/Box';
-import { Form } from 'react-bootstrap';
-import Button from '@mui/material/Button';
+import { Form, Button } from 'react-bootstrap';
 import Typography from '@mui/material/Typography';
 import Modal from '@mui/material/Modal';
 import "../css/simplemodal.css";
@@ -104,7 +103,7 @@ class SimpleModal extends React.Component {
                     </Typography>}
                     <br />
                     <div className="approve-container">
-                        <button className="approve-nft" onClick={this.approveNFT}>Approve NFT</button>
+                        <Button variant="warning" onClick={this.approveNFT}>Approve NFT</Button>
                     </div>
                     <br />
                     {false && <div className="service-fees">(i) Service fee<span className="fees-percentage">5%</span></div>}

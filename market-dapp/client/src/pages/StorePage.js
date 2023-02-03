@@ -1236,7 +1236,7 @@ class StorePage extends Component {
                                      */}
                                      <div className="position-relative">
                                         <span className="item_genre small fw-600">
-                                        Car number: {carNumber}
+                                        Car Number: {carNumber}
                                         </span>
                                       </div>
                                       <div className="position-relative">

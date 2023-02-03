@@ -178,7 +178,7 @@ class SellOwnership extends Component {
         const valid_fileName = fileName.endsWith('.jpg') || fileName.endsWith('.png') || fileName.endsWith('.jpeg')
         console.log("Valid filename: " + valid_fileName)
         if (!valid_fileName) {
-            alert('You can upload .jpg, .png or .jpeg files only. Invalid file!');
+            alert('You can upload images files only. Invalid file!');
             return false;
         }
 
@@ -298,7 +298,7 @@ class SellOwnership extends Component {
         event.preventDefault();
 
         if (!this.state.priceValue) {
-            alert('Item price must be an integer');
+            alert('Item price must be a number');
         } else if(!this.state.imageBuffer) {
             alert('Image file missing or invalid!');
         } else {
@@ -310,36 +310,37 @@ class SellOwnership extends Component {
 
             UIHelper.showSpinning();
 
-            const response_saveImage = await this.saveImage_toIPFS();
-            const response_saveJson = await this.saveJSON_toIPFS(this.state.image_ipfsPath);
+            let response_saveImage = await this.saveImage_toIPFS();
 
-            if(response_saveImage && response_saveJson) {
+            if(response_saveImage) {
+                let response_saveJson = await this.saveJSON_toIPFS(this.state.image_ipfsPath);
 
-                const price = this.state.drizzle.web3.utils.toWei(this.state.priceValue);
+                if(response_saveJson) {
 
-                //some gas estimations
-                //estimate method gas consuption (units of gas)
-                let paramsForCall = await UIHelper.calculateGasUsingStation(this.state.currentAccount);
+                    const price = this.state.drizzle.web3.utils.toWei(this.state.priceValue);
 
-                //'https://gateway.pinata.cloud/ipfs/Qmboj3b42aW2nHGuQizdi2Zp35g6TBKmec6g77X9UiWQXg'
-                await this.state.contractNFTs.methods.awardItem(this.state.contractNFTs.address, this.state.currentAccount, price, 'https://simthunder.infura-ipfs.io/ipfs/' + this.state.jsonData_ipfsPath)
-                    .send(paramsForCall)
-                    //.on('sent', UIHelper.transactionOnSent)
-                    .on('confirmation', function (confNumber, receipt, latestBlockHash) {
-                        window.localStorage.setItem('forceUpdate','yes');
-                        if(confNumber >= NUMBER_CONFIRMATIONS_NEEDED) {
-                            UIHelper.transactionOnConfirmation("The new car ownership NFT is available for sale!","/");
-                        }
-                    })
-                    .on('error', UIHelper.transactionOnError)
-                    .catch(function (e) {
-                        UIHelper.hideSpinning();
-                     });
+                    //some gas estimations
+                    //estimate method gas consuption (units of gas)
+                    let paramsForCall = await UIHelper.calculateGasUsingStation(this.state.currentAccount);
+
+                    //'https://gateway.pinata.cloud/ipfs/Qmboj3b42aW2nHGuQizdi2Zp35g6TBKmec6g77X9UiWQXg'
+                    await this.state.contractNFTs.methods.awardItem(this.state.contractNFTs.address, this.state.currentAccount, price, 'https://simthunder.infura-ipfs.io/ipfs/' + this.state.jsonData_ipfsPath)
+                        .send(paramsForCall)
+                        //.on('sent', UIHelper.transactionOnSent)
+                        .on('confirmation', function (confNumber, receipt, latestBlockHash) {
+                            window.localStorage.setItem('forceUpdate','yes');
+                            if(confNumber >= NUMBER_CONFIRMATIONS_NEEDED) {
+                                UIHelper.transactionOnConfirmation("The new car ownership NFT is available for sale!", "/");
+                            }
+                        })
+                        .on('error', UIHelper.transactionOnError)
+                        .catch(function (e) {
+                            UIHelper.hideSpinning();
+                        });
+                }
             } else {
                 UIHelper.hideSpinning();
             }
-
-            
         }
     }
 
@@ -368,7 +369,7 @@ class SellOwnership extends Component {
                                             <Form.Group controlId="formInsertCar">
                                                 <Form.Control type="text" placeholder="Enter Series name" onChange={this.handleSeries} />
                                                 <br></br>
-                                                <Form.Control type="text" pattern="\d+$" placeholder="Enter Car number" value={this.state.currentCarNumber} onChange={this.handleCarNumber} />
+                                                <Form.Control type="text" pattern="\d+$" placeholder="Enter Car Number" value={this.state.currentCarNumber} onChange={this.handleCarNumber} />
                                                 <br></br>
                                                 <Form.Control type="number" min="0" step="1" pattern="([0-9]*[.])?[0-9]+" placeholder="Enter File price (SRC)" value={this.state.priceValue} onChange={this.handleFilePrice} />
                                                 <br></br>
@@ -413,6 +414,7 @@ class SellOwnership extends Component {
                                         <Form onSubmit={this.saveImage_toIPFS}>
                                             <input id="skin-image"
                                                 type="file"
+                                                accept="image/*"
                                                 onChange={this.uploadImageIPFS}
                                             />
                                             <br></br>

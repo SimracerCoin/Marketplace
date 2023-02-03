@@ -505,7 +505,7 @@ class UploadSimracerMoment extends Component {
             alert('Series and Description must not be empty!');
         }
         else if (!this.state.priceValue) {
-            alert('Item price must be an integer');
+            alert('Item price must be a number');
         } else {
 
             UIHelper.showSpinning();
@@ -730,6 +730,7 @@ class UploadSimracerMoment extends Component {
                                         <Form onSubmit={this.saveImage_toIPFS}>
                                             <input id="skin-image"
                                                 type="file"
+                                                accept='image/*'
                                                 onChange={this.uploadImageIPFS}
                                             />
                                             <br></br>

@@ -141,7 +141,7 @@ class UploadCar extends Component {
         event.preventDefault();
 
         if (!this.state.priceValue) {
-            alert('Item price must be an integer');
+            alert('Item price must be a number');
         } else if(!this.state.buffer) {
             alert('File missing or invalid!');
         } else {

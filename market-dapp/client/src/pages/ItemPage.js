@@ -547,8 +547,6 @@ class ItemPage extends Component {
 
     renderSellerInfo =() => {
 
-      
-
       if(this.state.vendorNickname) {
             return <ul className="list-unstyled mb-3">
                   <li>
@@ -560,23 +558,13 @@ class ItemPage extends Component {
                   <span className="platform">Address:</span> 
                   <span className="developer-item developer-item-smaller text-lt"><Link to={{ pathname: "/seller", state: { vendorAddress: this.state.vendorAddress, vendorNickname: this.state.vendorNickname } }}><u>{this.state.vendorAddress}</u></Link></span>
                   </li>
-                  <li>
-
-                  <span className="platform">Price:</span> 
-                  <span className="developer-item text-lt"><strong>{this.state.price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/><span className="secondary-price ahead37">{this.renderUSDPrice(this.state.price)}<sup className="secondary-sup">USD</sup></span></span>
-                  </li>
                   </ul>
       } else {
         return <ul className="list-unstyled mb-3">
                 
                   <li>
                   <span className="platform">Address:</span> 
-                  <span className="developer-item developer-item-smaller text-lt"><Link to={{ pathname: "/seller", state: { vendorAddress: this.state.vendorAddress, vendorNickname: this.state.vendorNickname } }}><u>{this.state.vendorAddress}</u></Link></span>
-                  </li>
-                  <li>
-
-                  <span className="platform">Price:</span> 
-                  <span className="developer-item text-lt"><strong>{this.state.price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/><span className="secondary-price ahead37">{this.renderUSDPrice(this.state.price)}<sup className="secondary-sup">USD</sup></span></span>
+                  <span className="developer-item developer-item-smaller text-lt"><Link to={{ pathname: "/seller", state: { vendorAddress: this.state.vendorAddress } }}><u>{this.state.vendorAddress}</u></Link></span>
                   </li>
                   </ul>
       }
@@ -585,6 +573,7 @@ class ItemPage extends Component {
 
     //Skin item information
     renderItemInformationForSkin = () => {
+      const price = Number((Math.round(this.state.price / priceConversion) * 100) / 100).toFixed(2);
 
       return <div className="row">
               <div className="col-xs-12 col-lg-6 mb-6 mb-lg-0">
@@ -600,7 +589,7 @@ class ItemPage extends Component {
                 
                 <div className="row mb-4 mb-sm-0">
                 <div className="col-sm-4"><strong className="fw-500">Price:</strong></div>
-                <div className="col-sm-8"><strong>{this.state.price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/><span className="secondary-price">{this.renderUSDPrice(this.state.price)}<sup className="secondary-sup">USD</sup></span></div>
+                <div className="col-sm-8"><strong>{price} <sup className="main-sup">SRC</sup></strong><br/><span className="secondary-price">{this.renderUSDPrice(this.state.price)}<sup className="secondary-sup">USD</sup></span></div>
                 </div>
               </div>
             </div>
@@ -616,6 +605,7 @@ class ItemPage extends Component {
         date = UIHelper.formaDateAsString(this.state.metadata.date);
       }
      
+      const price = Number((Math.round(this.state.price / priceConversion) * 100) / 100).toFixed(2);
 
       return <div className="row">
               <div className="col-xs-12 col-lg-6 mb-6 mb-lg-0">
@@ -633,13 +623,13 @@ class ItemPage extends Component {
                   <div className="col-sm-8">{this.state.series}</div>
                 </div>
                 <div className="row mb-4 mb-sm-0">
-                  <div className="col-sm-4"><strong className="fw-500">{isMomentNFT ? 'Description' : 'Number'}</strong></div>
+                  <div className="col-sm-4"><strong className="fw-500">{isMomentNFT ? 'Description:' : 'Car Number:'}</strong></div>
                   <div className="col-sm-8">{this.state.description}</div>
                 </div>
                 { !this.state.isNFTOwner && 
                 <div className="row mb-4 mb-sm-0">
                   <div className="col-sm-4"><strong className="fw-500">Price:</strong></div>
-                  <div className="col-sm-8"><strong>{this.state.price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/><span className="secondary-price">{this.renderUSDPrice(this.state.price)}<sup className="secondary-sup">USD</sup></span></div>
+                  <div className="col-sm-8"><strong>{price} <sup className="main-sup">SRC</sup></strong><br/><span className="secondary-price">{this.renderUSDPrice(this.state.price)}<sup className="secondary-sup">USD</sup></span></div>
                 </div>
                 }
               </div>
@@ -649,6 +639,8 @@ class ItemPage extends Component {
 
     //Car setup
     renderItemInformationForCarSetup = () => {
+
+      const price = Number((Math.round(this.state.price / priceConversion) * 100) / 100).toFixed(2);
 
       return <div className="row">
               <div className="col-xs-12 col-lg-6 mb-6 mb-lg-0">
@@ -674,7 +666,7 @@ class ItemPage extends Component {
                 </div>
                 <div className="row mb-4 mb-sm-0">
                 <div className="col-sm-4"><strong className="fw-500">Price:</strong></div>
-                <div className="col-sm-8"><strong>{this.state.price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/><span className="secondary-price">{this.renderUSDPrice(this.state.price)}<sup className="secondary-sup">USD</sup></span></div>
+                <div className="col-sm-8"><strong>{price} <sup className="main-sup">SRC</sup></strong><br/><span className="secondary-price">{this.renderUSDPrice(this.state.price)}<sup className="secondary-sup">USD</sup></span></div>
                 </div>
               </div>
             </div>
@@ -760,6 +752,7 @@ class ItemPage extends Component {
         let reviewsRating = this.getReviewsRating();
 
       const allowsReviews = !this.state.isNFT && !this.state.isMomentNFT;
+      const price = Number((Math.round(this.state.price / priceConversion) * 100) / 100).toFixed(2);
 
         return (
         <div className="page-body">     
@@ -905,14 +898,14 @@ class ItemPage extends Component {
                     }
                     <p>
                       {this.state.description && 
-                      <span>{this.state.description}</span>
+                      <span>{(this.state.isNFT ? "Car Number:": "Description:")} {this.state.description}</span>
                       }
                     </p>
                     <div className="price-wrapper">
                       <div className="mb-3">
                         <div className="price">
                             {/*<div className="price-prev">300$</div>*/}
-                            <div className="price-current"><strong className="price_div_strong">{this.state.price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/><span className="secondary-price"><span className="secondary-price">{this.renderUSDPrice(this.state.price)}<sup className="secondary-sup">USD</sup></span></span></div>
+                            <div className="price-current"><strong className="price_div_strong">{price} <sup className="main-sup">SRC</sup></strong><br/><span className="secondary-price"><span className="secondary-price">{this.renderUSDPrice(this.state.price)}<sup className="secondary-sup">USD</sup></span></span></div>
                           </div>
                         {/*<div className="discount">
                             Save: $20.00 (33%)

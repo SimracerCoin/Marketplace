@@ -258,7 +258,6 @@ class App extends React.Component {
                     location="top"
                     style={{zIndex: 40000}}
                     buttonText="GOT IT!"
-                    acceptOnScroll="true"
                     onAccept={this.checkCookiesAcceptance}>Our website uses cookies to ensure you get the best experience. By proceeding on our website you are consenting to the use of these cookies.</CookieConsent>
                 ]
                 )

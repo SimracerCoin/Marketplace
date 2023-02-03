@@ -149,7 +149,7 @@ class SimilarItemsComponent extends React.Component {
         if(isNFT) {
   
           payload.imagePath = value.image;
-          payload.price = value.price * priceConversion;
+          payload.price = value.price;
           payload.simulator = value.simulator;
           payload.series = value.series;
           payload.address = value.seriesOwner;
@@ -162,7 +162,7 @@ class SimilarItemsComponent extends React.Component {
 
           let metadata =  this.extractMomentNFTTraitTypes(value.attributes);
          
-          payload.price = value.price / priceConversion;
+          payload.price = value.price;
           payload.description =  (value.description || metadata.description);
 
           payload.simulator = metadata.simulator;

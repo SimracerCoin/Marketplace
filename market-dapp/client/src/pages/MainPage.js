@@ -4,7 +4,7 @@ import { Redirect, withRouter, Link } from "react-router-dom";
 import UIHelper from "../utils/uihelper";
 import "../css/mainpage.css";
 
-const priceConversion = 10 ** 18;
+const priceConversion = 10**18;
 
 const NUM_ITEMS_LOAD = Number(process.env.REACT_APP_NUM_ITEMS_LOAD) || 4;
 
@@ -67,7 +67,6 @@ class MainPage extends Component {
         const contractMomentNFTs = await this.state.drizzle.contracts.SimracingMomentOwner;
 
         const response_cars = await contract.methods.getCarSetups().call();
-
         const response_skins = await contract.methods.getSkins().call();
 
         //const currentAccount = this.state.drizzleState.accounts[0];
@@ -95,7 +94,6 @@ class MainPage extends Component {
         }*/
       
         const numNfts = Number(await contractNFTs.methods.currentTokenId().call());
-
         const numMomentNfts = Number(await contractMomentNFTs.methods.currentTokenId().call());
 
         //console.log('car ownership nfts count:' + numNfts);
@@ -103,7 +101,7 @@ class MainPage extends Component {
         //console.log("MAX NUM ITEMS 2 TO LOAD: ", NUM_ITEMS_LOAD);
 
         //laod only first NUM_ITEMS_LOAD items
-        const numNFTs2Load = Math.min( numNfts, NUM_ITEMS_LOAD);
+        const numNFTs2Load = Math.min(numNfts, NUM_ITEMS_LOAD);
         //---------------------------------------------
         //TODO start backwards
         for (let i = numNfts;  i > 0; i--) {
@@ -122,7 +120,6 @@ class MainPage extends Component {
                     //put on shorter list
                     shorterNFTsList.push(data);  
                     if(shorterNFTsList.length === numNFTs2Load) {
-                        shorterNFTsList.reverse();
                         break;
                     }  
                 }
@@ -150,7 +147,6 @@ class MainPage extends Component {
 
                     shorterVideosNftsList.push(data);
                     if(shorterVideosNftsList.length === numMomentNFTs2Load) {
-                        shorterVideosNftsList.reverse();
                         break;
                     }
                     
@@ -184,13 +180,13 @@ class MainPage extends Component {
         //load all remaining car ownership nfts
 
         const alreadyLoadedNFTS = shorterNFTsList.length;
-        const nftlist = await this.loadRemainingCardOwnershipNFTS(contractNFTs, alreadyLoadedNFTS, totalNFTs);
+        const nftlist = [...await this.loadRemainingCardOwnershipNFTS(contractNFTs, alreadyLoadedNFTS, totalNFTs), ...shorterNFTsList];
         
         const totalMomentNFTs = parseInt(numMomentNfts);
         //load all remaining simracing moment nfts
         const alreadyLoadedMomentNFTS = shorterVideosNftsList.length;
         
-        const videoNftsList = await this.loadRemainingSimracingMomentNFTS(contractMomentNFTs, alreadyLoadedMomentNFTS, totalMomentNFTs);
+        const videoNftsList = [...await this.loadRemainingSimracingMomentNFTS(contractMomentNFTs, alreadyLoadedMomentNFTS, totalMomentNFTs), ...shorterVideosNftsList];
 
         console.log("loaded them all");
         
@@ -337,9 +333,7 @@ class MainPage extends Component {
 
         }catch(err) {
            return 1;
-        } 
-                
-            
+        }
     }
       
 
@@ -349,7 +343,6 @@ class MainPage extends Component {
         const skins = [];
         const nfts = [];
         const momentNfts = [];
-        let self = this;
 
         if (this.state.redirectBuyItem) {
             //for easier testing
@@ -389,7 +382,7 @@ class MainPage extends Component {
 
         //moment nfts
         //TODO we can use already videoNftsList here
-        for (const [index, value] of this.state.shorterVideosNftsList.reverse().entries()) {
+        for (const [index, value] of this.state.shorterVideosNftsList.entries()) {
             //console.log('moment nft value is,',value);
   
             let itemId = value.id;
@@ -406,9 +399,10 @@ class MainPage extends Component {
             let video = value.animation_url; 
             let carNumberOrDescription = value.description;
 
-            let usdPrice = Number(Math.round((value.price / priceConversion)  * this.state.usdValue * 100) / 100).toFixed(2);
+            let price_src = Number((Math.round(price / priceConversion) * 100) / 100).toFixed(2);
+            let usdPrice = Number(Math.round(price_src  * this.state.usdValue * 100) / 100).toFixed(2);
           
-            if(usdPrice == 0.00) {
+            if(usdPrice === 0.00) {
                 usdPrice = 0.01;
             }
             
@@ -431,7 +425,7 @@ class MainPage extends Component {
                         </Card.Header>
                         <Card.Body>
                             <div className="text-left">
-                            <div><strong  className="price_div_strong">{price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/> <span className="secondary-price">{usdPrice}<sup className="secondary-sup">USD</sup></span></div>
+                            <div><strong  className="price_div_strong">{price_src} <sup className="main-sup">SRC</sup></strong><br/> <span className="secondary-price">{usdPrice}<sup className="secondary-sup">USD</sup></span></div>
                             {value.attributes.map( function(att) {
                                let label = att.trait_type.charAt(0).toUpperCase() + att.trait_type.slice(1);
                                let value2Render = att.value;
@@ -457,11 +451,10 @@ class MainPage extends Component {
                     </Card>
             </ListGroup.Item>
             )
-                
         }
 
         //car ownership ones
-        for (const [index, value] of this.state.shorterNFTsList.reverse().entries()) {
+        for (const [index, value] of this.state.shorterNFTsList.entries()) {
             //console.log('ownership nft value is,',value);
             let series = value.series;
             let simulator = value.simulator;
@@ -474,7 +467,8 @@ class MainPage extends Component {
             //console.log(' ID NFT:'+value.id);
             let imagePath = value.image;
 
-            let usdPrice = Number(Math.round((price / priceConversion) * this.state.usdValue * 100) / 100).toFixed(2);
+            let price_src = Number((Math.round(price / priceConversion) * 100) / 100).toFixed(2);
+            let usdPrice = Number(Math.round(price_src  * this.state.usdValue * 100) / 100).toFixed(2);
 
             if(usdPrice == 0.00) {
                 usdPrice = 0.01;
@@ -494,19 +488,19 @@ class MainPage extends Component {
                         <div className="text-left">
                             <div>{series}</div>
                             <div>{simulator}</div>
-                            <div>{carNumberOrDescription}</div>
-                            <div className="price_div"><strong className="price_div_strong">{price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/> <span className="secondary-price">{usdPrice}<sup className="secondary-sup">USD</sup></span></div>
+                            <div className="price_div"><strong className="price_div_strong">{price_src} <sup className="main-sup">SRC</sup></strong><br/> <span className="secondary-price">{usdPrice}<sup className="secondary-sup">USD</sup></span></div>
                             </div>
                             <Button variant="warning" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, carNumberOrDescription, price, null , address, null, imagePath, true, false, null, null)}> Buy</Button>
                         </Card.Body>
                     </Card>
                 </ListGroup.Item>
             )
-            
         }
 
         //skins
-        for (const [index, value] of this.state.listSkins.slice(-NUM_ITEMS_LOAD).reverse().entries()) {
+        for(let i = this.state.listSkins.length-1, j = 0; j < Math.min(this.state.listSkins.length, NUM_ITEMS_LOAD); --i, ++j) {
+            let value = this.state.listSkins[i];
+
             let carBrand = value.info.carBrand
             let simulator = value.info.simulator
             let price = value.ad.price
@@ -516,14 +510,14 @@ class MainPage extends Component {
             let imagePath = "https://simthunder.infura-ipfs.io/ipfs/" + value.info.skinPic
             let thumb = "assets/img/sims/"+simulator+".png";
 
-            let usdPrice = Number(Math.round((price / priceConversion) * this.state.usdValue * 100) / 100).toFixed(2);
+            let price_src = Number((Math.round(price / priceConversion) * 100) / 100).toFixed(2);
+            let usdPrice = Number(Math.round(price_src  * this.state.usdValue * 100) / 100).toFixed(2);
 
-            if(usdPrice == 0.00) {
+            if(usdPrice === 0.00) {
                 usdPrice = 0.01;
             }
             usdPrice = "$" + usdPrice;
 
-            
             skins.push(
                 <ListGroup.Item key={itemId} className="bg-dark_A-20 col-3-24 mb-4">
                     <Card className="card-block">
@@ -534,7 +528,7 @@ class MainPage extends Component {
                             <Card.Title className="mt-5 font-weight-bold">{carBrand}</Card.Title>
                             <div className="text-left">
                                 <div><img src={thumb} width="24" alt={simulator} /> {simulator}</div>
-                                <div className="price_div"><strong className="price_div_strong">{price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/> <span className="secondary-price">{usdPrice}<sup className="secondary-sup">USD</sup></span></div>
+                                <div className="price_div"><strong className="price_div_strong">{price_src} <sup className="main-sup">SRC</sup></strong><br/> <span className="secondary-price">{usdPrice}<sup className="secondary-sup">USD</sup></span></div>
                             </div>
                             <Button variant="warning" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, null, null, price, carBrand , address, ipfsPath, imagePath, false, false, null, null)}> Buy</Button>
                         </Card.Body>
@@ -544,7 +538,8 @@ class MainPage extends Component {
         }
 
         //car setups
-        for (const [index, value] of this.state.listCars.slice(-NUM_ITEMS_LOAD).reverse().entries()) {
+        for(let i = this.state.listCars.length-1, j = 0; j < Math.min(this.state.listCars.length, NUM_ITEMS_LOAD); --i, ++j) {
+            let value = this.state.listCars[i];
             //console.log('list cars value:');
             //console.log(value);
             let carBrand = value.info.carBrand
@@ -559,7 +554,8 @@ class MainPage extends Component {
             let ipfsPath = value.ad.ipfsPath
             let thumb = "assets/img/sims/"+simulator+".png";
 
-            let usdPrice = Number(Math.round((price / priceConversion) * this.state.usdValue * 100) / 100).toFixed(2);
+            let price_src = Number((Math.round(price / priceConversion) * 100) / 100).toFixed(2);
+            let usdPrice = Number(Math.round(price_src  * this.state.usdValue * 100) / 100).toFixed(2);
 
             if(usdPrice == 0.00) {
                 usdPrice = 0.01;
@@ -579,11 +575,11 @@ class MainPage extends Component {
                             <div>{simulator}</div>
                             <div>{season}</div>
 
-                            <div className="price_div"><strong className="price_div_strong">{price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/> <span className="secondary-price">{usdPrice}<sup className="secondary-sup">USD</sup></span></div>
+                            <div className="price_div"><strong className="price_div_strong">{price_src} <sup className="main-sup">SRC</sup></strong><br/> <span className="secondary-price">{usdPrice}<sup className="secondary-sup">USD</sup></span></div>
 
                             {/* <div><b>Vendor address:</b> {address}</div> */}
                             </div>
-                            <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, track, simulator, season, series, description, price, carBrand, address, ipfsPath, "", false, false,null, null)}> Buy</Button>
+                            <Button variant="warning" onClick={(e) => this.buyItem(e, itemId, track, simulator, season, series, description, price, carBrand, address, ipfsPath, "", false, false,null, null)}> Buy</Button>
                         </Card.Body>
                     </Card>
                 </ListGroup.Item>
