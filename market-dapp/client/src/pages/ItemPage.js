@@ -324,7 +324,7 @@ class ItemPage extends Component {
                     var csvURL = window.URL.createObjectURL(data);
                     var tempLink = document.createElement('a');
                     tempLink.href = csvURL;
-                    tempLink.setAttribute('download', isCarSetup ? 'setup.sto' : 'skin.tga'); // has it isn't a car setup, it is a skin
+                    tempLink.setAttribute('download', isCarSetup ? 'setup.zip' : 'skin.zip');  // has it isn't a car setup, it is a skin
                     tempLink.click();
 
                     UIHelper.transactionOnConfirmation("Thank you for your purchase!", false);
