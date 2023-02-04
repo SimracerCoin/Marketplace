@@ -1,13 +1,17 @@
 import React, { Component } from 'react';
-import { Dropdown, Form, DropdownButton, Button } from 'react-bootstrap';
+import { Dropdown, Form, DropdownButton, Button, FormCheck } from 'react-bootstrap';
 import { Prompt } from 'react-st-modal';
 import ipfs from "../ipfs";
-import computeMerkleRootHash from "../utils/merkle"
-import UIHelper from "../utils/uihelper"
+import computeMerkleRootHash from "../utils/merkle";
+import UIHelper from "../utils/uihelper";
+import "../css/auction.css";
 
 const openpgp = require('openpgp');
 
-const priceConversion = 10 ** 18;
+const priceConversion = 10**18;
+const timingOpt = ["1 day", "3 days", "7 days", "1 month", "3 month", "6 month"];
+const timingOptions = [];
+const NUMBER_CONFIRMATIONS_NEEDED = Number(process.env.REACT_APP_NUMBER_CONFIRMATIONS_NEEDED);
 
 class SellOwnership extends Component {
 
@@ -19,17 +23,22 @@ class SellOwnership extends Component {
             drizzleState: props.drizzleState,
             currentAccount: null,
             currentSimulator: "Choose your simulator",
-            currentSeries: null,
-            currentCarNumber: null,
-            currentFilePrice: null,
+            currentSeries: "",
+            currentCarNumber: "",
             contract: null,
-            ipfsPath: null,
+            ipfsPath: "",
             image_ipfsPath: "",
             formIPFS: "",
             formAddress: "",
             receivedIPFS: "",
             isSeller: false,
             imageBuffer: null,
+            auctionItem: false,
+            auctionTimeRange: false,
+            currentTimingOption: timingOpt[0], 
+            auctionStart: new Date(),
+            auctionEnd: new Date(),
+            priceValue: ""
         }
 
 
@@ -37,15 +46,26 @@ class SellOwnership extends Component {
         this.handleFilePrice = this.handleFilePrice.bind(this);
         this.uploadImageIPFS = this.uploadImageIPFS.bind(this);
         this.saveImage_toIPFS = this.saveImage_toIPFS.bind(this);
+        this.onSelectAuctionTiming = this.onSelectAuctionTiming.bind(this);
+        this.handleAuction = this.handleAuction.bind(this);
+        this.handleAuctionRange = this.handleAuctionRange.bind(this);
     };
 
 
     componentDidMount = async () => {
+
+        for (const [index, value] of timingOpt.entries()) {
+            timingOptions.push(<Dropdown.Item eventKey={value} key={index}>{value}</Dropdown.Item>)
+        }
+
+        let now = new Date();
+        let daysForEnd = UIHelper.extractDaysFromAuctionString(timingOpt[0]);
+        let endDate = this.getUpdatedEndDate(now,daysForEnd);
         const currentAccount = this.state.drizzleState.accounts[0];
         const contract = this.state.drizzle.contracts.STMarketplace;
         const contractNFTs = this.state.drizzle.contracts.SimthunderOwner;
         const isSeller = await contract.methods.isSeller(currentAccount).call();
-        this.setState({ currentAccount: currentAccount, contract: contract, contractNFTs: contractNFTs, isSeller: isSeller });
+        this.setState({ auctionStart: now, auctionEnd:endDate, currentTimingOption: timingOpt[0], timingOptions: timingOptions, currentAccount: currentAccount, contract: contract, contractNFTs: contractNFTs, isSeller: isSeller });
     };
 
 
@@ -55,19 +75,25 @@ class SellOwnership extends Component {
     }
 
     handleFilePrice = (event) => {
-        const re = /([0-9]*[.])?[0-9]+/;
-        if (event.target.value === '' || re.test(event.target.value)) {
-            this.setState({ priceValue: event.target.value });
+        const re = new RegExp(event.target.pattern);
+        if (re.test(event.target.value)) {
             console.log("File price: " + event.target.value);
-            this.setState({ currentFilePrice: event.target.value * priceConversion });
+        } else {
+            event.target.value = '';
         }
-    }
+
+        this.setState({ priceValue: event.target.value })
+    };
 
     handleCarNumber = (event) => {
-        const re = /^[0-9\b]+$/;
-        if (event.target.value === '' || re.test(event.target.value)) {
-            this.setState({ currentCarNumber: event.target.value });
+        const re = new RegExp(event.target.pattern);
+        console.log("pattern:",event.target.pattern);
+        if (!re.test(event.target.value)) {
+            console.log("entrou");
+            event.target.value = "";
         }
+
+        this.setState({ currentCarNumber: event.target.value });
     }
 
     handleSeries = (event) => {
@@ -75,12 +101,57 @@ class SellOwnership extends Component {
         this.setState({ currentSeries: event.target.value });
     }
 
+    handleAuction = (value) => {
+        console.log("Is auction: " + value);
+        this.setState({ auctionItem: !this.state.auctionItem });
+        if(this.state.auctionItem) {
+
+            let now = new Date();
+            //let daysForEnd = UIHelper.extractDaysFromAuctionString(this.state.currentTimingOption);
+            //let endDate = UIHelper.addDaysToDate(now, daysForEnd);
+            let endDate = this.getUpdatedEndDate(now, this.state.currentTimingOption);
+            this.setState({auctionStart: now, auctionEnd: endDate});
+        }
+    }
+
+    handleAuctionRange = (value) => {
+        console.log("Is range auction: " + value);
+        this.setState({ auctionTimeRange: !this.state.auctionTimeRange });
+    }
+
+    getUpdatedEndDate = (now, currentTimingOption) => {
+       
+        let daysForEnd = UIHelper.extractDaysFromAuctionString(currentTimingOption);
+        let endDate = UIHelper.addDaysToDate(now, daysForEnd);
+        return endDate;
+    }
+
+    setStartDate = async (value)=> {
+        let daysForEnd = UIHelper.extractDaysFromAuctionString(this.state.currentTimingOption);
+        let endDate = UIHelper.addDaysToDate(value, daysForEnd);
+
+        this.setState({auctionStart: value, auctionEnd: endDate});
+    }
+
+    setEndDate = async (value)=> {
+        this.setState({auctionEnd: value});
+    }
+
+    onSelectAuctionTiming = async(value) => {
+        console.log("Choosing timing: " + value);
+        this.setState({ currentTimingOption: value });
+
+        let now = new Date();
+        let endDate = this.getUpdatedEndDate(now, value);
+        this.setState({auctionStart: now, auctionEnd: endDate});
+        console.log('START: ' + now + " END: " +  endDate);
+    }
+
     onSelectSim = async (event) => {
         //event.preventDefault();
         console.log("Choosing sim: " + event);
         this.setState({ currentSimulator: event });
     }
-
 
     convertToBuffer = async (reader) => {
         //file is converted to a buffer for upload to IPFS
@@ -107,7 +178,7 @@ class SellOwnership extends Component {
         const valid_fileName = fileName.endsWith('.jpg') || fileName.endsWith('.png') || fileName.endsWith('.jpeg')
         console.log("Valid filename: " + valid_fileName)
         if (!valid_fileName) {
-            alert('You can upload .jpg, .png or .jpeg files only. Invalid file!');
+            alert('You can upload images files only. Invalid file!');
             return false;
         }
 
@@ -125,13 +196,41 @@ class SellOwnership extends Component {
 
     //Save JSON in ipfs 
     saveJSON_toIPFS = async (image) => {
-        var jsonData = { 'description': 'Simthunder Car Ownership', 'name': 'Car', 'image': 'https://ipfs.io/ipfs/' + image };
+        var jsonData = { 'description': 'Simthunder Car Ownership', 'name': 'Car', 'image': 'https://simthunder.infura-ipfs.io/ipfs/' + image };
         //TODO: Change to standard attributes, remove price
         jsonData['series'] = this.state.currentSeries;
-        jsonData['seriesOwner'] = this.state.currentAccount;
+        //jsonData['seriesOwner'] = this.state.currentAccount;
         jsonData['carNumber'] = this.state.currentCarNumber;
         jsonData['simulator'] = this.state.currentSimulator;
-        jsonData['price'] = this.state.currentFilePrice / priceConversion;
+        //jsonData['price'] = this.state.currentFilePrice / priceConversion;
+
+        jsonData.attributes = [];
+/*        jsonData.attributes.push(
+            {
+                "trait_type": "auction_item", 
+                "value": this.state.auctionItem
+            });
+
+        if(this.state.auctionItem) {
+            jsonData.attributes.push(
+                {
+                    "trait_type": "auction_time_range", 
+                    "value": this.state.auctionTimeRange
+                },
+                {
+                    "trait_type": "auction_time_range", 
+                    "value": this.state.auctionTimeRange
+                },
+                {
+                    "trait_type": "auctionStart", 
+                    "value": this.state.auctionStart
+                },
+                {
+                        "trait_type": "auctionEnd", 
+                        "value": this.state.auctionEnd
+                }
+            )
+        }    */
 
         var jsonStr = JSON.stringify(jsonData);
 
@@ -195,11 +294,13 @@ class SellOwnership extends Component {
         this.setState({ ipfsPath: response.path });
     };
 
-    saveSkin = async (event) => {
+    saveCarOwnershipNFT = async (event) => {
         event.preventDefault();
 
-        if (this.state.currentFilePrice === null) {
-            alert('Item price must be an integer');
+        if (!this.state.priceValue) {
+            alert('Item price must be a number');
+        } else if(!this.state.imageBuffer) {
+            alert('Image file missing or invalid!');
         } else {
             // let nickname = "";
             // if (!this.state.isSeller) {
@@ -209,20 +310,37 @@ class SellOwnership extends Component {
 
             UIHelper.showSpinning();
 
-            const response_saveImage = await this.saveImage_toIPFS();
-            const response_saveJson = await this.saveJSON_toIPFS(this.state.image_ipfsPath);
+            let response_saveImage = await this.saveImage_toIPFS();
 
-            const price = this.state.drizzle.web3.utils.toBN(this.state.currentFilePrice);
+            if(response_saveImage) {
+                let response_saveJson = await this.saveJSON_toIPFS(this.state.image_ipfsPath);
 
-            //'https://gateway.pinata.cloud/ipfs/Qmboj3b42aW2nHGuQizdi2Zp35g6TBKmec6g77X9UiWQXg'
-            let tx = await this.state.contractNFTs.methods.awardItem(this.state.contractNFTs.address, this.state.currentAccount, price, 'https://ipfs.io/ipfs/' + this.state.jsonData_ipfsPath)
-                .send({ from: this.state.currentAccount })
-                //.on('sent', UIHelper.transactionOnSent)
-                .on('confirmation', function (confNumber, receipt, latestBlockHash) {
-                    UIHelper.transactionOnConfirmation("The new car ownership NFT is available for sale!");
-                })
-                .on('error', UIHelper.transactionOnError)
-                .catch(function (e) { });
+                if(response_saveJson) {
+
+                    const price = this.state.drizzle.web3.utils.toWei(this.state.priceValue);
+
+                    //some gas estimations
+                    //estimate method gas consuption (units of gas)
+                    let paramsForCall = await UIHelper.calculateGasUsingStation(this.state.currentAccount);
+
+                    //'https://gateway.pinata.cloud/ipfs/Qmboj3b42aW2nHGuQizdi2Zp35g6TBKmec6g77X9UiWQXg'
+                    await this.state.contractNFTs.methods.awardItem(this.state.contractNFTs.address, this.state.currentAccount, price, 'https://simthunder.infura-ipfs.io/ipfs/' + this.state.jsonData_ipfsPath)
+                        .send(paramsForCall)
+                        //.on('sent', UIHelper.transactionOnSent)
+                        .on('confirmation', function (confNumber, receipt, latestBlockHash) {
+                            window.localStorage.setItem('forceUpdate','yes');
+                            if(confNumber === NUMBER_CONFIRMATIONS_NEEDED) {
+                                UIHelper.transactionOnConfirmation("The new car ownership NFT is available for sale!", "/");
+                            }
+                        })
+                        .on('error', UIHelper.transactionOnError)
+                        .catch(function (e) {
+                            UIHelper.hideSpinning();
+                        });
+                }
+            } else {
+                UIHelper.hideSpinning();
+            }
         }
     }
 
@@ -232,31 +350,62 @@ class SellOwnership extends Component {
         const sims = [];
 
         for (const [index, value] of simsElements.entries()) {
-            sims.push(<Dropdown.Item eventKey={value} key={index}>{value}</Dropdown.Item>)
+            let thumb = "/assets/img/sims/" + value + ".png";
+            sims.push(<Dropdown.Item eventKey={value} key={index}><img src={thumb} width="16" /> {value}</Dropdown.Item>)
         }
 
 
         return (
             <header className="header">
                 <section className="content-section text-light br-n bs-c bp-c pb-8" style={{ backgroundImage: 'url(\'/assets/img/bg/bg_shape.png\')' }}>
-                    <div class="container position-relative">
-                        <div class="row">
-                            <div class="col-lg-8 mx-auto">
+                    <div className="container position-relative">
+                        <div className="row">
+                            <div className="col-lg-8 mx-auto">
                                 <div>
-                                    <h2 class="ls-1 text-center"> Mint new Car Ownership NFT for sale </h2>
-                                    <hr class="w-10 border-warning border-top-2 o-90" />
+                                    <h2 className="ls-1 text-center"> Mint new Car Ownership NFT for sale </h2>
+                                    <hr className="w-10 border-warning border-top-2 o-90" />
                                     <div>
                                         <Form>
                                             <Form.Group controlId="formInsertCar">
                                                 <Form.Control type="text" placeholder="Enter Series name" onChange={this.handleSeries} />
                                                 <br></br>
-                                                <Form.Control type="text" pattern="[0-9]*" placeholder="Enter Car number" value={this.state.currentCarNumber} onChange={this.handleCarNumber} />
+                                                <Form.Control type="text" pattern="\d+$" placeholder="Enter Car Number" value={this.state.currentCarNumber} onChange={this.handleCarNumber} />
                                                 <br></br>
-                                                <Form.Control type="text" pattern="([0-9]*[.])?[0-9]+" placeholder="Enter File price (ETH)" value={this.state.priceValue} onChange={this.handleFilePrice} />
+                                                <Form.Control type="number" min="0" step="1" pattern="([0-9]*[.])?[0-9]+" placeholder="Enter File price (SRC)" value={this.state.priceValue} onChange={this.handleFilePrice} />
                                                 <br></br>
                                                 <DropdownButton id="dropdown-skin-button" title={this.state.currentSimulator} onSelect={this.onSelectSim}>
                                                     {sims}
                                                 </DropdownButton>
+                                                <br></br>
+                                                {false &&
+                                                <div className="auction_item_input">
+                                                    <div className="auction_item_checkbox_container">    
+                                                        <FormCheck.Input type="checkbox" id='auction_item' value={this.state.auctionItem} onChange={this.handleAuction}/>
+                                                        <FormCheck.Label className="auction_item_label">Timed auction ?</FormCheck.Label>
+                                                    </div>
+                                                    <div className={`further_date_options ${this.state.auctionItem ? 'auction_item_visible' : 'auction_item_invisible'}`}>
+                                                     
+                                                        <div>Duration:</div>   
+                                                      
+                                                        <DropdownButton className={`banner ${this.state.auctionItem ? 'auction_item_visible' : 'auction_item_invisible'}`} id="dropdown-choose-timing" title={this.state.currentTimingOption} onSelect={this.onSelectAuctionTiming}>
+                                                            {this.state.timingOptions}
+                                                        </DropdownButton>
+                                                        <br></br>
+                                                        <br></br>
+                                                        <div className="auction_item_checkbox_container">    
+                                                            <FormCheck.Input type="checkbox" id='timed_auction_item' value={this.state.c} onChange={this.handleAuctionRange}/>
+                                                            <FormCheck.Label className="auction_item_label">Set date range ?</FormCheck.Label>
+                                                        </div>
+                                                        
+                                                        <div className={`further_date_options ${this.state.auctionTimeRange ? 'auction_item_visible' : 'auction_item_invisible'}`}>
+                                                            
+                                                            <div>Date range:</div>
+                                                            <Form.Control className="date_picker" type="date" value={this.state.auctionStart} onChange={(e) => this.setStartDate(e.target.value)} name="startDate" placeholder="Start date" />
+                                                            <Form.Control className="date_picker" type="date" value={this.state.auctionEnd} onChange={(e) => this.setEndDate(e.target.value)} name="endDate" placeholder="End date" />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                }
                                             </Form.Group>
                                         </Form>
                                     </div>
@@ -265,6 +414,7 @@ class SellOwnership extends Component {
                                         <Form onSubmit={this.saveImage_toIPFS}>
                                             <input id="skin-image"
                                                 type="file"
+                                                accept="image/*"
                                                 onChange={this.uploadImageIPFS}
                                             />
                                             <br></br>
@@ -272,7 +422,7 @@ class SellOwnership extends Component {
                                         </Form>
                                     </div><br></br>
                                     <div>
-                                        <Button onClick={this.saveSkin}>Mint Car Ownership NFT</Button>
+                                        <Button onClick={this.saveCarOwnershipNFT}>Mint Car Ownership NFT</Button>
                                     </div>
                                 </div>
                             </div>

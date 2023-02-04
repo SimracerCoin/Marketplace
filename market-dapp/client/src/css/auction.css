@@ -1,0 +1,33 @@
+.auction_item_input {
+
+    display: flex;
+    flex-direction: column;
+}
+
+.auction_item_checkbox_container {
+    margin-left: 1.3rem;
+}
+
+.auction_item_input .auction_item_label {
+    vertical-align: middle;
+    margin-bottom: 1.1rem;
+}
+
+.auction_item_invisible {
+  display: none;
+}
+.auction_item_visible {
+    display:inline;
+}
+
+.date_picker {
+    max-width: 150px;
+}
+.averagePrice {
+    width:100%;
+    display: inline-flex;
+}
+
+.inner_average_price {
+    margin-left:10px;
+}

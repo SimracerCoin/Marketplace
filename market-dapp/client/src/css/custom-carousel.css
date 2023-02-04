@@ -3,19 +3,30 @@
     max-height: 500px;
 }
 
+.carousel-pointer {
+    display: flex;
+    justify-content: center;
+    align-items: end;
+}
+
+.carousel .control-dots {
+    bottom: -10px;
+}
+
 .carousel .slide .legend {
-    
     opacity: 0.75;
     color: #212529;
     background-color: #ffc107;
     border-color: #ffc107;
-    margin-left: -21%;
+    left: inherit;
+    margin-left: inherit;
+    width: 280px;
+    bottom: 10px;
 }
 /* MIGHT NOT LOOK GOOD BECAUSE IMAGES CAN BE DISTORTED*/
 .carousel-pointer img {
     max-height: 400px;
     max-width: 400px;
-    width: auto!important;
 }
 
 .legend {

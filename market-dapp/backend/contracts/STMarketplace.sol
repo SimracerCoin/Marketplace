@@ -84,11 +84,24 @@ contract STMarketplace is ContentMarketplace {
     /// @notice Events
     event carSetupSaved(address _address, bytes _ipfsPath, string _carBrand, string _track, string _simulator, string _season, uint256 _price);
     event skinSaved(address _address, bytes _ipfsPath, string _carBrand, string _simulator, uint256 _price);
+
+    event deletedMarketPlaceItem(
+        uint256 itemId
+    );
+
+    event deletedItemInfo(
+        uint256 itemId
+    );
     
-    /// @notice Creates an instance of the contract
-    /// @param descartesAddress address of the Descartes contract
-    constructor(address descartesAddress) ContentMarketplace(descartesAddress) {
-    }    
+    /**
+    /// notice_ Creates an instance of the contract
+    /// param_ descartesAddress address of the Descartes contract
+    /// constructor(address descartesAddress) ContentMarketplace(descartesAddress) {
+    }*/
+
+    // new constructor, without descartes address supplied
+    constructor(address payable_token) ContentMarketplace(payable_token) {
+    } 
     
     /// @notice Registers a new car setup for sale
     function newCarSetup(
@@ -161,6 +174,60 @@ contract STMarketplace is ContentMarketplace {
         emit skinSaved (msg.sender,_ipfsPath, _carBrand, _simulator, _price);
 
         return id;
+    }
+
+    function deleteItem(uint256 itemId, address _seller, bool isOwner, bool isSkin) private returns(bool) {
+
+        bool deleted = deleteItemFromMarketplace(itemId, _seller, isOwner);
+        if(deleted) {
+            emit deletedMarketPlaceItem(itemId);
+
+            //also delete comments
+            if(itemComments[itemId].length > 0) {
+                delete itemComments[itemId];
+            }
+
+            if(isSkin) {
+                //delete maping
+                delete carSkinInfos[itemId];
+                emit deletedItemInfo(itemId);
+
+                for(uint256 i = 0; i < carSkinIds.length; i++) {
+                    if(carSkinIds[i] == itemId) {
+                        carSkinIds[i] = carSkinIds[carSkinIds.length - 1];
+                        carSkinIds.pop();
+                        return true;
+                    }
+                }
+            } else {
+                //delete maping
+                delete carSetupInfos[itemId];
+                emit deletedItemInfo(itemId);
+
+                for(uint256 i = 0; i < carSetupIds.length; i++) {
+                    if(carSetupIds[i] == itemId) {
+                        carSetupIds[i] = carSetupIds[carSetupIds.length - 1];
+                        carSetupIds.pop();
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    function deleteSkin(uint256 itemId) public returns(bool) {
+        require(isSkin(itemId),"Not a valid skin");
+        bool isOwner = (msg.sender == owner);
+        require(isOwner || isSeller(msg.sender),"caller is not a seller, neither the owner");
+        return deleteItem(itemId, msg.sender, isOwner, true);
+    }
+
+    function deleteCarSetup(uint256 itemId) public returns(bool) {
+        require(isCarSetup(itemId),"Not a valid car setup");
+        bool isOwner = (msg.sender == owner);
+        require(isOwner || isSeller(msg.sender),"caller is not a seller, neither the owner");
+        return deleteItem(itemId, msg.sender, isOwner, false);
     }
 
      /// @notice Registers a new comment for item
@@ -267,10 +334,12 @@ contract STMarketplace is ContentMarketplace {
         return carSkinIds.length;
     }
     
+    
     /// @notice Utility method to return string from an address
-    function addressToString(address _addr) public pure returns(string memory) 
+    /*function addressToString(address _addr) public pure returns(string memory) 
     {
-        bytes32 value = bytes32(uint256(_addr));
+        //with 8.0 cannot convert anymore uint256(address)
+        bytes32 value = bytes32( convertSolidity8(_addr));
         bytes memory alphabet = "0123456789abcdef";
 
         bytes memory str = new bytes(51);
@@ -283,6 +352,11 @@ contract STMarketplace is ContentMarketplace {
         return string(str);
     }
 
+    function convertSolidity8(address a) internal pure returns (uint256) {
+        return uint256(uint160(a));
+    }*/
+
+    /**
     function instantiateCartesiVerification(address claimer, address challenger, uint256 _purchaseId, DescartesInterface.Drive[] memory drives) public returns (uint256 index) 
     {
         address[] memory actors = new address[](2);
@@ -308,8 +382,9 @@ contract STMarketplace is ContentMarketplace {
         newNotification(_purchaseId, "Challenged purchase. Check status.", address(0), msg.sender, NotificationType.Challenge);
 
         return index;
-    }
+    } */
 
+    /**
     function getResult(
         uint256 index,                  // cartesi machine result index
         uint256 _purchaseId             // purchase request identifier
@@ -327,9 +402,9 @@ contract STMarketplace is ContentMarketplace {
         }
 
         return (a, b, c, d);
-    }
+    }*/
 
-    function utilCompareInternal(bytes memory a, bytes memory b) internal returns (bool) {
+    /*function utilCompareInternal(bytes memory a, bytes memory b) internal returns (bool) {
         if (a.length != b.length) {
             return false;
         }
@@ -339,5 +414,5 @@ contract STMarketplace is ContentMarketplace {
             }
         }
         return true;
-    }
+    }*/
 }

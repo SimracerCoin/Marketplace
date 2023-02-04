@@ -117,7 +117,7 @@ class SellerPage extends Component {
                                 <div><b>Track:</b> {track}</div>
                                 <div><b>Simulator:</b> {simulator}</div>
                                 <div><b>Season:</b> {season}</div>
-                                <div><b>Price:</b> {price / priceConversion} ETH</div>
+                                <div><b>Price:</b> {price / priceConversion} SRC</div>
                                 {/* <div><b>Vendor address:</b> {address}</div> */}
                             </div>
                             <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, track, simulator, season, series, description, price, carBrand, address, nickname, ipfsPath)}> View item</Button>
@@ -139,7 +139,7 @@ class SellerPage extends Component {
             let address = value.ad.seller
             let itemId = value.id
             let ipfsPath = value.ad.ipfsPath
-            let imagePath = "https://ipfs.io/ipfs/" + value.info.skinPic
+            let imagePath = "https://simthunder.infura-ipfs.io/ipfs/" + value.info.skinPic
             skins.push(
                 <ListGroup.Item key={itemId}>
                     <Card className="card-block">
@@ -148,7 +148,7 @@ class SellerPage extends Component {
                             <Card.Title>{carBrand}</Card.Title>
                             <div className="text-left">
                                 <div><b>Simulator:</b> {simulator}</div>
-                                <div><b>Price:</b> {price / priceConversion} ETH</div>
+                                <div><b>Price:</b> {price / priceConversion} SRC</div>
                                 {/* <div><b>Vendor address:</b> {address}</div> */}
                             </div>
                             <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, null, null, price, carBrand , address, ipfsPath, imagePath)}> View item</Button>

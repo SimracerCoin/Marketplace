@@ -71,6 +71,35 @@
   padding-top: 100px;
 }
 
+.price small {
+  font-size: .6rem;
+  line-height: 1em;
+  font-weight: 500;
+  position: relative;
+  top: -3.5px;
+  margin-left: 3px;
+}
+
+.price small:first-of-type {
+  font-size: .65rem;
+  top: -2px;
+}
+
+.price-current span {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.price-current small:first-of-type {
+  font-size: .8rem;
+  top: -8px;
+}
+
+.price-current span small {
+  font-size: .7rem!important;
+  top: -4px!important;
+}
+
 @-webkit-keyframes rotation {
   from {-webkit-transform: rotate(0deg);}
   to {-webkit-transform: rotate(359deg);}

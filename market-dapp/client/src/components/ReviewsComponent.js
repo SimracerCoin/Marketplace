@@ -50,7 +50,6 @@ class ReviewsComponent extends Component {
         return (
             <div class="col-12 mb-7">
                         <div class="d-flex flex-wrap flex-sm-nowrap">
-                          <div><img src="assets/img/avatar/1.jpg" class="d-none d-sm-block avatar rounded" alt="Avatar"/></div>
                           <div class="review-item ml-sm-4">
                             <div class="small d-flex align-items-start">
                               {/*<!-- user -->*/}

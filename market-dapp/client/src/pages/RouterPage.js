@@ -8,15 +8,18 @@ import MainPage from "./MainPage";
 import UploadCar from "./UploadCar";
 import UploadSkin from "./UploadSkin";
 import SellOwnership from "./SellOwnership";
+import UploadSimracerMoment from "./UploadSimracerMoment";
 import NavbarPage from "./NavbarPage";
 import RegisterVendor from "./RegisterVendor";
 import ItemPage from "./ItemPage";
-import ItemPageOld from "./ItemPageOld";
-import NotificationsPage from "./NotificationsPage"
-import SellerPage from "./SellerPage"
-import AboutPage from "./AboutPage"
-import FaqsPage from "./FaqsPage"
-import StorePage from "./StorePage"
+//import ItemPageOld from "./ItemPageOld";
+import NotificationsPage from "./NotificationsPage";
+import SellerPage from "./SellerPage";
+import AboutPage from "./AboutPage";
+import FaqsPage from "./FaqsPage";
+import StorePage from "./StorePage";
+import AuctionPage from "./AuctionPage";
+import NFTInventoryPage from "./NFTInventoryPage";
 
 class RouterPage extends Component {
 
@@ -44,6 +47,9 @@ class RouterPage extends Component {
                     <Route exact path="/sellownership">
                         <SellOwnership drizzle={this.state.drizzle} drizzleState={this.state.drizzleState} />
                     </Route>
+                    <Route exact path="/sellmomentnft">
+                        <UploadSimracerMoment drizzle={this.state.drizzle} drizzleState={this.state.drizzleState} />
+                    </Route>
                     <Route exact path="/registorvendor">
                         <RegisterVendor drizzle={this.state.drizzle} drizzleState={this.state.drizzleState} />
                     </Route>
@@ -66,8 +72,14 @@ class RouterPage extends Component {
                     <Route path="/store">
                         <StorePage drizzle={this.state.drizzle} drizzleState={this.state.drizzleState}/>
                     </Route>
+                    <Route path="/inventory">
+                        <NFTInventoryPage drizzle={this.state.drizzle} drizzleState={this.state.drizzleState}/>
+                    </Route>
+                    <Route path="/auction">
+                        <AuctionPage drizzle={this.state.drizzle} drizzleState={this.state.drizzleState}/>
+                    </Route>
                     <Route exact path="/">
-                        <MainPage drizzle={this.state.drizzle} drizzleState={this.state.drizzleState} />
+                        <MainPage drizzle={this.state.drizzle} drizzleState={this.state.drizzleState}/>
                     </Route>
                 </Switch>
             </Router>

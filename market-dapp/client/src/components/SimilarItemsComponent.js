@@ -13,18 +13,20 @@ class SimilarItemsComponent extends React.Component {
         this.state = {
             isNFT: props.isNFT,
             isSkin: props.isSkin,
+            isMomentNFT: props.isMomentNFT,
             selectedItemId: props.selectedItemId,
             items: props.items,
             filteredItems: [],
             contextParent : props.contextParent,
-            callbackParent: props.callbackParent
+            callbackParent: props.callbackParent,
+            usdValue: props.usdValue
             //drizzle: props.drizzle,
             //drizzleState: props.drizzleState,
         }
     }
 
     componentDidMount = async (event) => {
-        console.log("SimilarItemsComponent did mount isSkin " + this.state.isSkin + " isNFT: " + this.state.isNFT + " id: " + this.state.selectedItemId );
+        console.log("SimilarItemsComponent did mount isSkin " + this.state.isSkin + " isNFT: " + this.state.isNFT + " isMomentNFT: " + this.state.isMomentNFT + " id: " + this.state.selectedItemId );
         let referenceItem = this.state.selectedItemId;
         this.filterSimilarItems(referenceItem);
       
@@ -33,38 +35,72 @@ class SimilarItemsComponent extends React.Component {
 
      filterSimilarItems = (referenceItem) => {
 
+        if(this.state.items.length > 0) {
+          let filteredItems = this.state.items.filter(function(value, index) {
+            //console.log("filtering items: value " + JSON.stringify(value));
+            if(value && value.id) {
+              let itemId = value.id;
+              //console.log("item id: " + itemId + " selected one " + referenceItem); 
+              return itemId!== referenceItem;
+            }
+            return false;
+            
+          });
+          this.setState({filteredItems: filteredItems});
+        } else {
+          this.setState({filteredItems: []});
+        }
         
-        let filteredItems = this.state.items.filter(function(value, index) {
-          console.log("filtering items: value " + JSON.stringify(value));
-          let itemId = value.id;
-          console.log("item id: " + itemId + " selected one " + referenceItem); 
-          return itemId!== referenceItem;
-        });
-        this.setState({filteredItems: filteredItems});
       }
+
+    extractMomentNFTTraitTypes(attributes) {
+
+      let data = {};
+      for(let attribute of attributes) {
+          data[attribute.trait_type] = attribute.value;
+      }
+      return data;
+    }
+
+    renderUSDPrice = (price) => {
+
+      let usdPrice = Number(Math.round((price / priceConversion) * this.state.usdValue * 100) / 100).toFixed(2);
+      //return "(" + usdPrice + "$) ";
+
+      //const usd = Number( ( Number(price) / priceConversion) * this.state.usdValue).toFixed(2);
+      return "$" + usdPrice + "USD";
+
+    }
 
     renderItemDetails = (payload, fullItem) => {
 
       if(this.state.isNFT) {
 
-        return <div id={payload.itemId} className="carousel-pointer" onClick={(e) => this.switchSimilarItem(e, true, false, payload, fullItem)} >
+        return <div id={payload.itemId} className="carousel-pointer" onClick={(e) => this.switchSimilarItem(e, true, false,false, payload, fullItem)} >
             <img className="carousel-pointer" alt={payload.description} src={payload.imagePath} />
-            <p className="legend">{payload.description} : {payload.price / priceConversion} ETH</p>
+            <p className="legend">{payload.description}</p>
+          </div>
+
+      } else if(this.state.isMomentNFT) {
+
+        return <div id={payload.itemId} className="carousel-pointer" onClick={(e) => this.switchSimilarItem(e, false, true, false, payload, fullItem)} >
+            <img className="carousel-pointer" alt={payload.description} src={payload.imagePath} />
+            <p className="legend">{payload.description}</p>
           </div>
 
       }
       else if(this.state.isSkin) {
         
-        return <div className="carousel-pointer" id={payload.itemId} onClick={(e) => this.switchSimilarItem(e, false, true, payload, fullItem )}>
+        return <div className="carousel-pointer" id={payload.itemId} onClick={(e) => this.switchSimilarItem(e, false, false, true, payload, fullItem )}>
             <img className="carousel-pointer" alt={payload.description} src={payload.imagePath}/>
-            <p className="legend">{payload.description} : {payload.price / priceConversion} ETH</p>
+            <p className="legend">{payload.description}</p>
           </div>
 
       } else {
         //car
-        return <div className="carousel-pointer" id={payload.itemId} onClick={(e) => this.switchSimilarItem(e, false, false, payload, fullItem)}>
+        return <div className="carousel-pointer" id={payload.itemId} onClick={(e) => this.switchSimilarItem(e, false, false, false, payload, fullItem)}>
             <img className="carousel-pointer" alt={payload.description} src={payload.imagePath} />
-            <p className="legend">{payload.description} : {payload.price / priceConversion} ETH</p>
+            <p className="legend">{payload.description}</p>
           </div>
 
       }
@@ -79,11 +115,11 @@ class SimilarItemsComponent extends React.Component {
      * @param {*} isSkin 
      * @param {*} item 
      */
-    switchSimilarItem = async (event, isNFT, isSkin, payload, item) =>{
+    switchSimilarItem = async (event, isNFT, isMomentNFT, isSkin, payload, item) =>{
 
       //console.log("set new selected on to " + item.id);
       //this will update parent
-      this.state.callbackParent(this.state.contextParent, isNFT, isSkin, payload, item); //payload is actually the entire item data
+      this.state.callbackParent(this.state.contextParent, isNFT, isMomentNFT, isSkin, payload, item); //payload is actually the entire item data
 
       let referenceItem = item.id;
       //this will update children
@@ -101,8 +137,9 @@ class SimilarItemsComponent extends React.Component {
       //exclude itself
       let isNFT = this.state.isNFT;
       let isSkin = this.state.isSkin;
+      let isMomentNFT = this.state.isMomentNFT;
 
-      
+
       //https://github.com/leandrowd/react-responsive-carousel/
       return <Carousel autoPlay>
       {this.state.filteredItems.map( function(value, index) {
@@ -112,16 +149,30 @@ class SimilarItemsComponent extends React.Component {
         if(isNFT) {
   
           payload.imagePath = value.image;
-          payload.price = value.price * priceConversion;
+          payload.price = value.price;
           payload.simulator = value.simulator;
           payload.series = value.series;
           payload.address = value.seriesOwner;
           payload.carNumber = value.carNumber;
           payload.description =  (value.description || value.carNumber);
 
+        }else if(isMomentNFT) {
+  
+          payload.imagePath = value.image;
+
+          let metadata =  this.extractMomentNFTTraitTypes(value.attributes);
+         
+          payload.price = value.price;
+          payload.description =  (value.description || metadata.description);
+
+          payload.simulator = metadata.simulator;
+          payload.series = metadata.series;
+          payload.address = value.seriesOwner;
+          payload.video = value.animation_url;
+
         } else if(isSkin) {
 
-          payload.imagePath = "https://ipfs.io/ipfs/" + value.info.skinPic;
+          payload.imagePath = "https://simthunder.infura-ipfs.io/ipfs/" + value.info.skinPic;
           payload.price = value.ad.price;
           payload.carBrand = value.info.carBrand;
           payload.simulator = value.info.simulator;

@@ -1,5 +1,5 @@
 import React from "react";
-import { Navbar, Nav, NavDropdown, Dropdown } from 'react-bootstrap'; // Check out drizzle's react components at @drizzle/react-components
+import { Navbar, Nav, NavDropdown, Container } from 'react-bootstrap'; // Check out drizzle's react components at @drizzle/react-components
 import { Link, NavLink, Redirect } from 'react-router-dom';
 
 class NavbarPage extends React.Component {
@@ -21,7 +21,9 @@ class NavbarPage extends React.Component {
             selectedSeason: "",
             selectedPrice: "",
             selectedCarBrand: "",
-            searchQuery: ""
+            searchQuery: "",
+            isNFTOwner: false,
+            isMomentNFTOwner: false
         }
 
     }
@@ -38,12 +40,20 @@ class NavbarPage extends React.Component {
         const currentAccount = this.state.drizzleState.accounts[0];
         const haveNotifications = (await contract.methods.listNotificationsPerUser(currentAccount).call()).length != 0;
 
+        const contractNFTs = await this.state.drizzle.contracts.SimthunderOwner;
+        const contractMomentNFTs = await this.state.drizzle.contracts.SimracingMomentOwner;
+        const ownerNFT = await contractNFTs.methods.owner().call();
+        const ownerMomentNFT = await contractMomentNFTs.methods.owner().call();
+        //check if account is contract(s) owner
+        const isNFTOwner = (ownerNFT == currentAccount);
+        const isMomentNFTOwner = (ownerMomentNFT == currentAccount);
+
         let previousSearch = localStorage.getItem('searchQuery');
         let searchQuery = "";
         if(previousSearch && previousSearch.length>0) {
             searchQuery = previousSearch;
         }
-        this.setState({ currentAccount: currentAccount, haveNotifications: haveNotifications, searchQuery: searchQuery });
+        this.setState({ isNFTOwner: isNFTOwner, isMomentNFTOwner: isMomentNFTOwner, currentAccount: currentAccount, haveNotifications: haveNotifications, searchQuery: searchQuery });
     }
 
     componentWillUnmount = async (event) => {
@@ -87,36 +97,8 @@ class NavbarPage extends React.Component {
 
     render() {
         return ([
-            // <Navbar className="navbar navbar-expand-lg navbar-dark bg-dark border-nav zi-3">
-            //     <Navbar.Brand href="/">Simthunder</Navbar.Brand>
-            //     <Navbar.Toggle aria-controls="basic-navbar-nav" />
-            //     <Navbar.Collapse id="basic-navbar-nav">
-            //         <Nav className="mr-auto">
-            //             <Nav>
-            //                 <Nav.Link as={NavLink} to='/'>Home</Nav.Link>
-            //             </Nav>
-            //             <NavDropdown title="Sell" id="basic-nav-dropdown">
-            //                 <Link to="/uploadcar">
-            //                     <NavDropdown.Item as="div">
-            //                         Car Setup
-            //                 </NavDropdown.Item>
-            //                 </Link>
-
-            //                 <Link to="/uploadskin">
-            //                     <NavDropdown.Item as="div">
-            //                         Skin
-            //                 </NavDropdown.Item>
-            //                 </Link>
-            //             </NavDropdown>
-            //             {/* <Nav>
-            //                 <Nav.Link as={NavLink} to='/registorvendor'>Register</Nav.Link>
-            //             </Nav> */}
-            //             <Navbar.Text>{this.state.currentAccount}</Navbar.Text>
-            //         </Nav>
-            //     </Navbar.Collapse>
-            // </Navbar>,
-            <Navbar className="navbar navbar-expand-lg navbar-dark bg-dark border-nav zi-3">
-                <div className="container">
+            <Navbar className="top-menu-navbar navbar navbar-expand-lg navbar-dark bg-dark border-nav zi-3">
+                <Container>
                     <div className="row">
                         <div className="col-4 col-sm-3 col-md-2 mr-auto ml-4">
                             <Navbar.Brand href="/" className="logo font-weight-bold" style={{alignItems: "first baseline"}}><img src="assets/img/logo-2-sm.png" alt="Simthunder" /> beta</Navbar.Brand>
@@ -157,25 +139,50 @@ class NavbarPage extends React.Component {
                             </ul>
                         </div>
                     </div>
-                </div>
+                </Container>
             </Navbar>,
             <Navbar className="navbar-expand-lg navbar-dark bg-dark">
-                <div className="container">
-                    <Navbar.Toggle aria-controls="collapsingNavbar" aria-label="Toggle navigation" aria-expanded="false" className="navbar-toggler navbar-toggler-fixed" />
+                <Container>
+                    <Navbar.Toggle aria-controls="collapsingNavbar" aria-label="Toggle navigation" aria-expanded="false" className="navbar-toggler-fixed" />
                     <Navbar.Collapse id="collapsingNavbar">
                         <Nav>
-                            <NavDropdown title="Sell" className="dropdown-hover" id="basic-nav-dropdown">
-                                <Link to="/sellownership">
+                            <NavDropdown title="Sell">
+
+                            <Link to={{ pathname:"/inventory", state:{view:"momentnfts"} }}>
                                     <NavDropdown.Item as="div">
-                                        Sell Car Ownership NFT
+                                        Sell Simracing Moment
                                     </NavDropdown.Item>
                                 </Link>
+
+                                <Link to={{ pathname:"/inventory", state:{view:"ownership"} }}>
+                                    <NavDropdown.Item as="div">
+                                        Sell Car Ownership
+                                    </NavDropdown.Item>
+                                </Link>
+
+                                {
+                                    this.state.isNFTOwner &&
+                                    <Link to="/sellownership">
+                                        <NavDropdown.Item as="div">
+                                            Mint Car Ownership NFT
+                                        </NavDropdown.Item>
+                                    </Link>
+                                }
+                                {
+                                    this.state.isMomentNFTOwner &&
+
+                                    <Link to="/sellmomentnft">
+                                        <NavDropdown.Item as="div">
+                                            Mint Simracer Moment NFT
+                                        </NavDropdown.Item>
+                                    </Link>
+                                }
+                                
                                 <Link to="/uploadcar">
                                     <NavDropdown.Item as="div">
                                         Sell Car Setup
                             </NavDropdown.Item>
                                 </Link>
-
                                 <Link to="/uploadskin">
                                     <NavDropdown.Item as="div">
                                         Sell Skin
@@ -185,9 +192,11 @@ class NavbarPage extends React.Component {
                             <NavLink className="nav-link mr-2" to="/about">About</NavLink>
                             <NavLink className="nav-link mr-2" to="/faqs">FAQs</NavLink>
                             <NavLink className="nav-link mr-2" to="/store">Store</NavLink>
+                            {/*<!--<NavLink className="nav-link mr-2" to="/auction">Auction</NavLink>-->*/}
+                            <NavLink className="nav-link mr-2" to="/inventory">NFT Inventory</NavLink>
                         </Nav>
                     </Navbar.Collapse>
-                </div>
+                </Container>
             </Navbar>
 
         ]);

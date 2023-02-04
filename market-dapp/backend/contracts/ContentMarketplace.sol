@@ -1,11 +1,18 @@
 pragma solidity ^0.7.0;
 pragma experimental ABIEncoderV2;
 
-import "@cartesi/descartes-sdk/contracts/DescartesInterface.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+//import "@cartesi/descartes-sdk/contracts/DescartesInterface.sol";
+
+// NOTE IF building on Remix use the same solidity version of openzeppelin, that is here on the package.json
+// 3.1.0-solc-0.7 this is to avoid issues with versions/deprecated/change functions, etc:;
+// import "@openzeppelin/contracts@3.1.0-solc-0.7/token/ERC20/ERC20.sol";
 
 contract ContentMarketplace {
 
-    DescartesInterface descartes;
+    //DescartesInterface descartes;
+    ERC20 SIMRACERCOIN;
+    address owner;
 
     /// @notice records necessary information for an advertisement
     struct Advertisement {
@@ -23,7 +30,7 @@ contract ContentMarketplace {
         address payable buyer;
         bytes buyerKey;
         bytes encryptedDataKey;
-        uint256 descartesIndex;  // descartes computation that will verify the challenge
+        //uint256 descartesIndex;  // descartes computation that will verify the challenge
         uint256 date;            // purchase date
     }
 
@@ -57,14 +64,19 @@ contract ContentMarketplace {
     // purchase events
     event PurchaseRequested(uint256 adId, uint256 purchaseId, address buyer, bytes buyerKey);
     event PurchaseAccepted(uint256 adId, uint256 purchaseId, bytes encryptedDataKey);
-    event PurchaseChallenged(uint256 adId, uint256 purchaseId, uint256 descartesIndex);
+    //event PurchaseChallenged(uint256 adId, uint256 purchaseId, uint256 descartesIndex);
     event PurchaseFinalized(uint256 adId, uint256 purchaseId, bool isSuccess);
 
 
-    /// @param descartesAddress address of the Descartes contract
+    /**
     constructor(address descartesAddress) {
         // TODO retrieve Descartes interface from the address
         descartes = DescartesInterface(descartesAddress);
+    } */
+
+    constructor(address payable_token) {
+        SIMRACERCOIN = ERC20(payable_token);
+        owner = msg.sender;
     }
 
     /// @notice creates a new advertisement for published and encrypted content
@@ -78,7 +90,7 @@ contract ContentMarketplace {
         returns (uint256 adId)          // returns ad identifier
     {
         Advertisement storage ad = ads[numAds];
-        ad.seller = msg.sender;
+        ad.seller = payable(msg.sender);
         ad.price = _price;
         ad.dataHash = _dataHash;
         ad.encryptedDataHash = _encryptedDataHash;
@@ -138,28 +150,39 @@ contract ContentMarketplace {
 
     /// @notice requests purchase of a registered advertisement
     function requestPurchase(
-        uint256 _adId,                 // ad identifier
-        bytes memory _buyerKey         // buyer's public key used for encrypting messages so that only the buyer can see
+        uint256 adPrice,                //price as arg, cannot use msg.value if not payable
+        uint256 _adId,                  // ad identifier
+        bytes memory _buyerKey,         // buyer's public key used for encrypting messages so that only the buyer can see
+        bool secure
     ) public
-        payable                        // funds matching ad price, which will be locked until purchase is finalized
+        // funds matching ad price, which will be locked until purchase is finalized
         returns (uint256 purchaseId)   // returns purchase request identifier
     {
         // TODO: ensure ad exists
         // TODO: ensure funds are adequade
         Advertisement memory ad = getAd(_adId);
-        require(msg.value == (ad.price),"Amount should be equal to the item price");
+        require(adPrice == (ad.price),"Amount should be equal to the item price");
+        //check if allowed to spend SRC
+        require(SIMRACERCOIN.allowance(msg.sender, address(this)) >= ad.price, "Check the token allowance");
 
         // stores purchase info
         Purchase storage purchase = purchases[numPurchases];
         purchase.adId = _adId;
-        purchase.buyer = msg.sender;
+        purchase.buyer = payable(msg.sender);
         purchase.buyerKey = _buyerKey;
         purchase.date = block.timestamp;
 
         purchaseId = numPurchases++;
         purchasesPerAd[purchase.adId].push(purchaseId);
 
-        newNotification(purchaseId, "Purchase was requested", msg.sender, ad.seller, NotificationType.Request);
+        if(secure) {
+            // transfer SRC to the contract address
+            require(SIMRACERCOIN.transferFrom(msg.sender, address(this), ad.price),"Cannot pay for item");
+            newNotification(purchaseId, "Purchase was requested", msg.sender, ad.seller, NotificationType.Request);
+        } else {
+            // transfer SRC to the seller
+            require(SIMRACERCOIN.transferFrom(msg.sender, ad.seller, ad.price), "Cannot pay for item");
+        }
 
         emit PurchaseRequested(purchase.adId, purchaseId, purchase.buyer, purchase.buyerKey);
         return purchaseId;
@@ -170,7 +193,7 @@ contract ContentMarketplace {
         uint256 _purchaseId,           // purchase request identifier
         bytes memory _encryptedDataKey // key for decrypting data, encrypted using buyer's public key
     ) public
-        payable                        // deposit sent by the seller that will be locked until purchase is finalized
+                                // deposit sent by the seller that will be locked until purchase is finalized
     {
         // TODO...
 
@@ -184,6 +207,7 @@ contract ContentMarketplace {
 
 
     /// @notice called by buyer to challenge a purchase, stating that content could not be retrieved
+    /**
     function challengePurchase(
         uint256 _purchaseId,           // purchase request identifier
         bytes memory _privateKey       // buyer's private key used to decrypt the data key
@@ -199,7 +223,7 @@ contract ContentMarketplace {
 
         emit PurchaseChallenged(purchase.adId, _purchaseId, descartesIndex);
         return descartesIndex;
-    }
+    }*/
 
     /// @notice finalizes purchase, unlocking buyer's funds and seller's deposit as appropriate
     function finalizePurchase(
@@ -209,8 +233,10 @@ contract ContentMarketplace {
         Purchase memory purchase = getPurchase(_purchaseId);
         Advertisement memory ad = getAd(purchase.adId);
 
-        address payable accountAddress = isSuccess ? ad.seller : purchase.buyer;
-        accountAddress.transfer(ad.price);
+        address accountAddress = isSuccess ? ad.seller : purchase.buyer;
+
+        require(SIMRACERCOIN.transferFrom(address(this), accountAddress, ad.price),"Cannot unlock funds to transfer ownership");
+        //accountAddress.transfer(ad.price);
 
         if(isSuccess) {
             newNotification(_purchaseId, "Purchase was accepted.", msg.sender, ad.seller, NotificationType.Accept_B);
@@ -269,6 +295,62 @@ contract ContentMarketplace {
 
     function archiveNotification(uint256 _notificationId) public {
         notifications[_notificationId].archive = true;
+    }
+
+    function deleteItemFromMarketplace(uint256 itemId, address _seller, bool isOwner) internal returns(bool) {
+
+        require(itemId >= 0,"Invalid item id");
+        //is contract owner
+        if(isOwner) {
+            //get corresponding ad
+            Advertisement memory adv = ads[itemId];
+            //get the seller address
+            address payable _theSeller = adv.seller;
+
+            uint256 _size = adsPerSeller[_theSeller].length;
+            require(_size > 0,"Seller has no items for sale");
+
+            for (uint256 i = 0; i < _size; i++) {
+                uint256 _adId = adsPerSeller[_theSeller][i];
+                //find by id on adsPerSeller[]
+                if(_adId == itemId) {
+                    //found the item, delete it
+                    adsPerSeller[_theSeller][i] = adsPerSeller[_theSeller][_size - 1];
+                    adsPerSeller[_theSeller].pop();
+                    //also remove from ads list
+                    delete ads[itemId];
+                    return true;
+                }
+            }
+            //regular seller account
+        } else if(_seller == msg.sender) {
+            //double check
+            uint256 _size = adsPerSeller[_seller].length;
+            require(_size > 0,"Seller has no items for sale");
+            for (uint256 i = 0; i < _size; i++) {
+                uint256 _adId = adsPerSeller[_seller][i];
+                if(_adId == itemId) {
+
+                    //found the item, delete it
+                    adsPerSeller[_seller][i] = adsPerSeller[_seller][_size - 1];
+                    adsPerSeller[_seller].pop();
+                    //get the one from ads
+               
+                    //get corresponding ad
+                    Advertisement memory adv = ads[itemId];
+                    if( adv.seller == _seller  ) { //ex: item with id 3 is at position 2
+                        delete ads[itemId];
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    //get contract owner/deployer
+    function getContractOwner() public view returns(address) {
+        return owner;
     }
 
 }

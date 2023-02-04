@@ -68,3 +68,30 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/d
 ### `yarn build` fails to minify
 
 This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+
+#### Dapp wallet access HOWTO
+use allow.json to have a whitelist of allowed wallets
+remove REACT_APP_ALLOW_ALL_WALLETS property, or set it to "false" on the .env file
+This way only whitelisted address will have access
+
+In order to allow all wallets and ignore the file (so no whitelist) set REACT_APP_ALLOW_ALL_WALLETS to "true"
+
+### Using Infura IPFS HOWTO
+In order to connect to IPFS, Infura requires Authorization HTTP header for all requests
+https://docs.infura.io/infura/networks/ipfs/how-to/authenticate-requests
+The following keys must be provided on the client .env file (taken from the project dashboard):
+REACT_APP_INFURA_IPFS_PROJECT_ID
+REACT_APP_INFURA_IPFS_API_SECRET
+
+### how many items to load on main page? (per category)
+REACT_APP_NUM_ITEMS_LOAD=4
+
+## main setup keys for provider
+REACT_APP_NETWORK_ID=137
+REACT_APP_NETWORK_URL=https://polygon-rpc.com/
+REACT_APP_INFURA_ID=[INFURA_ID]
+
+#set this key to true, so instead of going to buy item, goes to "auction" item page
+#for testing purposes only
+REACT_APP_TEST_AUCTION_PAGE=true
+

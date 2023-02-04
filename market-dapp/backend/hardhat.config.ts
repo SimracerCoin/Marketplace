@@ -9,6 +9,9 @@ import "hardhat-deploy";
 import "@nomiclabs/hardhat-solpp";
 // import "solidity-coverage"; @dev WIP this plugin is not updated to hardhat yet
 
+//npx hardhat deploy was not getting access to process.env
+require('dotenv').config({path:__dirname+'/.env'});
+
 // This is a sample hardhat task. To learn how to create your own go to
 // https://hardhat.dev/guides/create-task.html
 task("accounts", "Prints the list of accounts", async (taskArgs, bre) => {
@@ -37,8 +40,8 @@ const infuraNetwork = (
 const config: HardhatUserConfig = {
   networks: {
     hardhat: mnemonic
-      ? { accounts: { mnemonic }, chainId: 1337 }
-      : { chainId: 1337 },
+      ? { accounts: { mnemonic }, chainId: 31337 }
+      : { chainId: 31337 },
     localhost: {
       url: "http://localhost:8545",
       accounts: mnemonic ? { mnemonic } : undefined,
@@ -62,9 +65,14 @@ const config: HardhatUserConfig = {
       chainId: 97,
       accounts: mnemonic ? { mnemonic } : undefined,
     },
+    polygon: {
+      url: "https://polygon-rpc.com/",
+      chainId: 137,
+      accounts: mnemonic ? { mnemonic } : undefined, //[`0x${mnemonic}`]
+    }
   },
   solidity: {
-    version: "0.7.4",
+    version: "0.7.6",
     settings: {
       optimizer: {
         runs: 110,
@@ -76,68 +84,6 @@ const config: HardhatUserConfig = {
     artifacts: "artifacts",
     deploy: "deploy",
     deployments: "deployments",
-  },
-  external: {
-    contracts: [
-      {
-        artifacts: "node_modules/@cartesi/util/export/artifacts",
-        deploy: "node_modules/@cartesi/util/dist/deploy",
-      },
-      {
-        artifacts: "node_modules/@cartesi/arbitration/export/artifacts",
-        deploy: "node_modules/@cartesi/arbitration/dist/deploy",
-      },
-      {
-        artifacts: "node_modules/@cartesi/logger/export/artifacts",
-        deploy: "node_modules/@cartesi/logger/dist/deploy",
-      },
-      {
-        deploy: "node_modules/@cartesi/machine-solidity-step/dist/deploy",
-        artifacts:
-          "node_modules/@cartesi/machine-solidity-step/export/artifacts",
-      },
-      {
-        deploy: "node_modules/@cartesi/descartes-sdk/dist/deploy",
-        artifacts: "node_modules/@cartesi/descartes-sdk/export/artifacts",
-      },
-    ],
-    deployments: {
-      rinkeby: [
-        "node_modules/@cartesi/util/deployments/rinkeby",
-        "node_modules/@cartesi/arbitration/deployments/rinkeby",
-        "node_modules/@cartesi/logger/deployments/rinkeby",
-        "node_modules/@cartesi/machine-solidity-step/deployments/rinkeby",
-        "node_modules/@cartesi/descartes-sdk/deployments/rinkeby",
-      ],
-      kovan: [
-        "node_modules/@cartesi/util/deployments/kovan",
-        "node_modules/@cartesi/arbitration/deployments/kovan",
-        "node_modules/@cartesi/logger/deployments/kovan",
-        "node_modules/@cartesi/machine-solidity-step/deployments/kovan",
-        "node_modules/@cartesi/descartes-sdk/deployments/kovan",
-      ],
-      goerli: [
-        "node_modules/@cartesi/util/deployments/goerli",
-        "node_modules/@cartesi/arbitration/deployments/goerli",
-        "node_modules/@cartesi/logger/deployments/goerli",
-        "node_modules/@cartesi/machine-solidity-step/deployments/goerli",
-        "node_modules/@cartesi/descartes-sdk/deployments/goerli",
-      ],
-      matic_testnet: [
-        "node_modules/@cartesi/util/deployments/matic_testnet",
-        "node_modules/@cartesi/arbitration/deployments/matic_testnet",
-        "node_modules/@cartesi/logger/deployments/matic_testnet",
-        "node_modules/@cartesi/machine-solidity-step/deployments/matic_testnet",
-        "node_modules/@cartesi/descartes-sdk/deployments/matic_testnet",
-      ],
-      bsc_testnet: [
-        "node_modules/@cartesi/util/deployments/bsc_testnet",
-        "node_modules/@cartesi/arbitration/deployments/bsc_testnet",
-        "node_modules/@cartesi/logger/deployments/bsc_testnet",
-        "node_modules/@cartesi/machine-solidity-step/deployments/bsc_testnet",
-        "node_modules/@cartesi/descartes-sdk/deployments/bsc_testnet",
-      ],
-    },
   },
   solpp: {
     defs: {

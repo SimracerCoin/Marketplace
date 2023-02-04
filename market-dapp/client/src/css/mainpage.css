@@ -3,7 +3,7 @@
 }
 
 .scrolling-wrapper {
-    overflow-x: scroll;
+    overflow-x: auto;
     overflow-y: hidden;
     white-space: nowrap;
 }
@@ -15,4 +15,103 @@
 .nopadding {
     padding: 0 !important;
     margin: 2px !important;
+}
+
+.switch-btn {
+    background-color: #fff;
+    color: #000;
+    font-weight: bold;
+    padding: 7px;
+    border: 3px solid #f1cf12;
+    border-radius: 5px;
+}
+
+.switch-btn:hover {
+    cursor: pointer!important;
+}
+
+.container.latest-items {
+    padding-left: 10px;
+    padding-right: 10px;
+    max-width: 95%;
+    width:95%;
+}
+
+.view-more {
+    color: white;
+    text-align: right;
+    margin-right: 10px;
+    float: right;
+    background-color:transparent;
+    border: none;
+    font-weight: 600;
+    
+}
+
+.view-more:hover {
+ cursor: pointer;
+}
+
+.col-3-24 {
+    flex: 0 0 25%;
+    max-width: 24%;
+}
+
+.owner_address {
+    font-size: 12px;
+    word-break: break-all!important;
+}
+
+.card-block img:hover {
+    cursor: pointer!important;
+}
+
+.high_offer_title {
+    margin-top: -1rem;
+}
+
+.price_div {
+    color: white !important;
+}
+
+.price_div strong {
+    font-weight:900!important;
+}
+
+.price_div_strong {
+    font-size: 1.3rem;
+    font-weight: 900!important;
+    color: white !important;
+}
+
+.secondary-price {
+    font-size: 13px;
+    font-weight: normal;
+    color: white;
+}
+
+.main-sup {
+    top: -0.21rem!important;
+}
+
+.secondary-sup {
+    top: -0.13rem!important;
+    left: 0.12rem!important;
+}
+
+.ontopdate {
+    color: black;
+    background-color: white;
+    position: relative;
+    top: -2.3rem;
+    height: 30px;
+    width: 100px;
+    text-align: center;
+}
+
+.is-visible {
+    visibility: visible;
+}
+.is-invisible {
+    visibility: hidden;
 }

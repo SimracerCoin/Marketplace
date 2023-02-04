@@ -1,0 +1,71 @@
+.simple-modal {
+
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 500px;
+    min-height: 300px;
+    background-color: #000;
+    border: 2px solid #000;
+    color: white;
+    box-shadow: 24;
+    padding: 5px;
+}
+
+
+.simple-modal-title {
+    width: 95%;
+    margin: 0 auto;
+    text-align: center;
+    color: white;
+    font-weight: bold;
+}
+
+.div-modal-column{
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+}
+.div-modal-row{
+    display: flex;
+    flex-direction: row;
+    text-align: left;
+}
+
+.src-coin {
+    background-image: url('../imgs/SimRacer-500px.png');
+    background-position: left center;
+    background-repeat: no-repeat;
+    background-size: 30px;
+}
+.main_container {
+    width: 90%;
+    padding: 4px;
+}
+.approve-container {
+    width: 100%;
+    text-align: center;
+    margin: 0 auto;
+}
+.approve-container .approve-nft {
+    color: black!important;
+    background-color: greenyellow!important;
+    border-radius: 5px;
+    border: 2px solid greenyellow!important;
+    padding: 3px;
+    margin: 0 auto;
+    width: 70%;
+}
+.approve-nft:hover {
+    cursor: pointer;
+}
+
+.service-fees {
+    width: 100%;
+    display: inline;
+}
+.fees-percentage {
+    float: right;
+    margin-right: 10px;;
+}
