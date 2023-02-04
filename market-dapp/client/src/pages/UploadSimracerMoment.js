@@ -537,7 +537,7 @@ class UploadSimracerMoment extends Component {
                     .on('confirmation', function (confNumber, receipt, latestBlockHash) {
                         window.localStorage.setItem('forceUpdate','yes');
 
-                        if(confNumber >= NUMBER_CONFIRMATIONS_NEEDED) {
+                        if(confNumber === NUMBER_CONFIRMATIONS_NEEDED) {
                             UIHelper.transactionOnConfirmation("The new Simracing Moment NFT is available for sale!","/");     
                             //reset stuff
                             self.setState({videoBuffer: null, imageBuffer: null});                       

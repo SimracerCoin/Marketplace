@@ -329,7 +329,7 @@ class SellOwnership extends Component {
                         //.on('sent', UIHelper.transactionOnSent)
                         .on('confirmation', function (confNumber, receipt, latestBlockHash) {
                             window.localStorage.setItem('forceUpdate','yes');
-                            if(confNumber >= NUMBER_CONFIRMATIONS_NEEDED) {
+                            if(confNumber === NUMBER_CONFIRMATIONS_NEEDED) {
                                 UIHelper.transactionOnConfirmation("The new car ownership NFT is available for sale!", "/");
                             }
                         })

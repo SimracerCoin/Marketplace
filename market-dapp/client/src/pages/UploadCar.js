@@ -180,7 +180,7 @@ class UploadCar extends Component {
                 .send(paramsForCall)
                 .on('confirmation', function (confNumber, receipt, latestBlockHash) {
                     window.localStorage.setItem('forceUpdate','yes');
-                    if(confNumber >= NUMBER_CONFIRMATIONS_NEEDED) {
+                    if(confNumber === NUMBER_CONFIRMATIONS_NEEDED) {
                         UIHelper.transactionOnConfirmation("The new car setup is available for sale!", "/");
                     }
                 })

@@ -166,7 +166,7 @@ class ItemPage extends Component {
               .send(paramsForCall)
               .on('confirmation', function (confNumber, receipt, latestBlockHash) {
                     window.localStorage.setItem('forceUpdate','yes');
-                    if(confNumber >= NUMBER_CONFIRMATIONS_NEEDED) {  
+                    if(confNumber === NUMBER_CONFIRMATIONS_NEEDED) {  
                       UIHelper.transactionOnConfirmation("The item was removed from sale!","/");
                     }
                 })
@@ -179,7 +179,7 @@ class ItemPage extends Component {
           .send(paramsForCall)
           .on('confirmation', function (confNumber, receipt, latestBlockHash) {
                 window.localStorage.setItem('forceUpdate','yes');
-                if(confNumber >= NUMBER_CONFIRMATIONS_NEEDED) {
+                if(confNumber === NUMBER_CONFIRMATIONS_NEEDED) {
                   UIHelper.transactionOnConfirmation("The item was removed from sale!","/");
                 }
             })
@@ -207,7 +207,7 @@ class ItemPage extends Component {
           .send(paramsForCall)
           .on('confirmation', function (confNumber, receipt, latestBlockHash) {
               window.localStorage.setItem('forceUpdate','yes');
-              if(confNumber >= NUMBER_CONFIRMATIONS_NEEDED) {
+              if(confNumber === NUMBER_CONFIRMATIONS_NEEDED) {
                 UIHelper.transactionOnConfirmation("The item was removed from sale!","/");
               }
           })
@@ -238,7 +238,7 @@ class ItemPage extends Component {
           .send( paramsForCall )
           .on('confirmation', function (confNumber, receipt, latestBlockHash) {
             window.localStorage.setItem('forceUpdate','yes');
-            if(confNumber >= NUMBER_CONFIRMATIONS_NEEDED) {
+            if(confNumber === NUMBER_CONFIRMATIONS_NEEDED) {
               UIHelper.transactionOnConfirmation("The item is now available for sale!","/");                            
             }
           })
@@ -298,7 +298,7 @@ class ItemPage extends Component {
             .send(paramsForCall)
             //.on('sent', UIHelper.transactionOnSent)
             .on('confirmation', async (confNumber, receipt, latestBlockHash) => {
-              if(confNumber >= NUMBER_CONFIRMATIONS_NEEDED) {
+              if(confNumber === NUMBER_CONFIRMATIONS_NEEDED) {
                 if(!NON_SECURE_SELL) {
                   UIHelper.transactionOnConfirmation("Thank you for your purchase request. Seller will contact you soon.", "/");
                 } else {
@@ -363,7 +363,7 @@ class ItemPage extends Component {
                 await this.state.contractNFTs.methods.buyItem(this.state.itemId,price)
                 .send(paramsForCall)
                 .on('confirmation', function (confNumber, receipt, latestBlockHash) {
-                  if(confNumber >= NUMBER_CONFIRMATIONS_NEEDED) {
+                  if(confNumber === NUMBER_CONFIRMATIONS_NEEDED) {
                     UIHelper.transactionOnConfirmation("Thank you for your purchase.", "/");
                   }
                     
@@ -379,7 +379,7 @@ class ItemPage extends Component {
                 await this.state.contractMomentNFTs.methods.buyItem(this.state.itemId,price)
                 .send(paramsForCall)
                 .on('confirmation', function (confNumber, receipt, latestBlockHash) {
-                   if(confNumber >= NUMBER_CONFIRMATIONS_NEEDED) {
+                   if(confNumber === NUMBER_CONFIRMATIONS_NEEDED) {
                     UIHelper.transactionOnConfirmation("Thank you for your purchase.", "/");
                    }
                     
