@@ -109,8 +109,8 @@ class UploadCar extends Component {
 
     onIPFSSubmit = async () => {
         var fileName = document.getElementById('car-file').value.toLowerCase();
-        if (!fileName.endsWith('.sto') && !fileName.endsWith('.zip')) {
-            alert('You can upload .sto or .zip files only.');
+        if (!fileName.endsWith('.zip')) {
+            alert('You can upload .zip files only.');
             return false;
         }
 
@@ -212,8 +212,8 @@ class UploadCar extends Component {
                                 <div className="mt-4">
                                     <Form>
                                         <div className="form-group">
-                                            <FormLabel for="car-file" className="col-sm-3 mr-2 col-form-label font-weight-bold">Choose Setup file:</FormLabel>
-                                            <input id="car-file" type="file" accept=".sto, .zip" onChange={this.captureFile} />
+                                            <FormLabel for="car-file" className="col-sm-3 mr-2 col-form-label font-weight-bold">Choose Setup file (.zip):</FormLabel>
+                                            <input id="car-file" type="file" accept=".zip" onChange={this.captureFile} />
                                         </div>
                                         <div className="form-row">
                                             <div className="form-group col-6">

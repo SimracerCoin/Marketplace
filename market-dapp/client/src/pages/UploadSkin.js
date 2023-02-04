@@ -131,8 +131,8 @@ class UploadSkin extends Component {
 
     onIPFSSubmit = async () => {
         var fileName = document.getElementById('skin-file').value.toLowerCase();
-        if (!fileName.endsWith('.tga') && !fileName.endsWith('.zip')) {
-            alert('You can only upload .tga or .zip files.');
+        if (!fileName.endsWith('.zip')) {
+            alert('You can only upload .zip files.');
             return false;
         }
 
@@ -245,8 +245,8 @@ class UploadSkin extends Component {
                                     <div className="mt-4">
                                         <Form>
                                             <div className="form-group">
-                                                <FormLabel htmlFor="skin-file" className="col-sm-3 mr-2 col-form-label font-weight-bold">Choose Skin file:</FormLabel>
-                                                <input id="skin-file" type="file" accept=".tga, .zip" onChange={this.captureFile} />
+                                                <FormLabel htmlFor="skin-file" className="col-sm-3 mr-2 col-form-label font-weight-bold">Choose Skin file (.zip):</FormLabel>
+                                                <input id="skin-file" type="file" accept=".zip" onChange={this.captureFile} />
                                             </div>
                                             <div className="form-row">
                                                 <div className="form-group col-6">
