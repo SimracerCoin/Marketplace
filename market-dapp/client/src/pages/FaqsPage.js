@@ -18,7 +18,7 @@ class FaqsPage extends Component {
                                     <p class="lead-1">To buy items you need first to have Simracer Coin (SRC).</p>
 
                                     <h5>How can I buy Simracer Coin (SRC)?</h5>
-                                    <p class="lead-1">Simracer Coin is available in Catex exchange (https://catex.io).</p>
+                                    <p class="lead-1">Simracer Coin is available in Catex exchange (<a href="https://www.catex.io/trading/SRC/ETH" target="_blank" rel="noreferrer">https://catex.io</a>).</p>
 
                                     <h5>What are Ownership NFTs?</h5>
                                     <p class="lead-1">These are like entries for private league competitions. By having the NFT you are owner of that car entry and number and receive the prize if that car gets one.</p>

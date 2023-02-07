@@ -36,7 +36,7 @@ contract STMarketplace is ContentMarketplace {
     struct carSkinInfo {
         string carBrand;
         string simulator;
-        string skinPic;
+        string[] skinPic;
     }
        
     // full representation of an advertised car setup
@@ -152,7 +152,7 @@ contract STMarketplace is ContentMarketplace {
         bytes32 _dataHash,             // merkle hash of unencrypted data
         bytes32 _encryptedDataHash,    // merkle hash of encrypted data
         string memory _nickname,
-        string memory _imagePath       // ipfs path for image skin
+        string[] memory _imagePath       // ipfs path for image skin
     ) public
         returns (uint256 id)           // returns ad identifier
     {
