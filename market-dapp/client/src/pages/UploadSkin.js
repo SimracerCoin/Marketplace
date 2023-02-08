@@ -205,7 +205,7 @@ class UploadSkin extends Component {
                 let paramsForCall = await UIHelper.calculateGasUsingStation(this.state.currentAccount);
 
                 await this.state.contract.methods.newSkin(ipfsPathBytes, this.state.currentCar,
-                    this.state.currentSimulator, price, placeholder, this.state.encryptedDataHash, nickname, [this.state.image_ipfsPath])
+                    this.state.currentSimulator, price, placeholder, this.state.encryptedDataHash, nickname, [this.state.image_ipfsPath], "")
                     .send(paramsForCall)
                     .on('confirmation', function (confNumber, receipt, latestBlockHash) {
                         window.localStorage.setItem('forceUpdate','yes');

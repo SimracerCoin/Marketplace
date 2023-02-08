@@ -36,6 +36,7 @@ contract STMarketplace is ContentMarketplace {
     struct carSkinInfo {
         string carBrand;
         string simulator;
+        string description;
         string[] skinPic;
     }
        
@@ -148,11 +149,12 @@ contract STMarketplace is ContentMarketplace {
         bytes memory _ipfsPath,        // ipfs path of encrypted data
         string memory _carBrand,
         string memory _simulator,
-        uint256 _price,                // trade price
-        bytes32 _dataHash,             // merkle hash of unencrypted data
-        bytes32 _encryptedDataHash,    // merkle hash of encrypted data
+        uint256 _price,                   // trade price
+        bytes32 _dataHash,                // merkle hash of unencrypted data
+        bytes32 _encryptedDataHash,       // merkle hash of encrypted data
         string memory _nickname,
-        string[] memory _imagePath       // ipfs path for image skin
+        string[] memory _imagePath,       // ipfs path for image skin
+        string _description
     ) public
         returns (uint256 id)           // returns ad identifier
     {
@@ -168,6 +170,7 @@ contract STMarketplace is ContentMarketplace {
         info.carBrand = _carBrand;
         info.simulator = _simulator;
         info.skinPic = _imagePath;
+        info.description = _description;
 
         carSkinIds.push(id);
         saveSeller(msg.sender, _nickname);
