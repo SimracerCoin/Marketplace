@@ -154,7 +154,7 @@ contract STMarketplace is ContentMarketplace {
         bytes32 _encryptedDataHash,       // merkle hash of encrypted data
         string memory _nickname,
         string[] memory _imagePath,       // ipfs path for image skin
-        string _description
+        string memory _description
     ) public
         returns (uint256 id)           // returns ad identifier
     {
