@@ -139,7 +139,7 @@ class SellerPage extends Component {
             let address = value.ad.seller
             let itemId = value.id
             let ipfsPath = value.ad.ipfsPath
-            let imagePath = "https://simthunder.infura-ipfs.io/ipfs/" + value.info.skinPic[0]
+            let imagePath = "https://simthunder.infura-ipfs.io/ipfs/" + value.info.skinPic
             skins.push(
                 <ListGroup.Item key={itemId}>
                     <Card className="card-block">

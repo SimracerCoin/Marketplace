@@ -1463,7 +1463,7 @@ class StorePage extends Component {
                                     let itemId = value.id
                                     let key = itemId + "_" + index;
                                     let ipfsPath = value.ad.ipfsPath
-                                    let imagePath = "https://simthunder.infura-ipfs.io/ipfs/" + value.info.skinPic[0]
+                                    let imagePath = "https://simthunder.infura-ipfs.io/ipfs/" + value.info.skinPic
                                     
                                     return <div className="col-md-12 mb-4" key={key}>
                                         <a href="#3" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, null, null, price, carBrand , address, ipfsPath, imagePath, false)} className="product-item">
