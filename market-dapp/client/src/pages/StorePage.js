@@ -1205,9 +1205,7 @@ class StorePage extends Component {
                                 let address = value.seriesOwner;
                                 let itemId = value.id;
                                 let key = itemId + "_" + index
-                                let image = value.image;
                                 let carNumber = value.carNumber;
-                                let name = value.name;
                                 let imagePath = value.image;
                                 let description = value.description;
                                 /*let payload = {
@@ -1217,7 +1215,7 @@ class StorePage extends Component {
                                 <a href="#1" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, carNumber, price, null , address, null, imagePath, true, false)} className="product-item">
                                   <div className="row align-items-center no-gutters">
                                     <div className="item_img d-none d-sm-block">
-                                      <img className="img bl-3 text-primary" src={image} alt="Games Store"/>
+                                      <img className="img bl-3 text-primary" src={imagePath} alt="Games Store"/>
                                     </div>
                                     <div className="item_content flex-1 flex-grow pl-0 pl-sm-6 pr-6">
                                       <h6 className="item_title ls-1 small-1 fw-600 text-uppercase mb-1">Series: {series}</h6>
@@ -1293,9 +1291,6 @@ class StorePage extends Component {
                                 let address = value.seriesOwner;
                                 let itemId = value.id;
                                 let key = itemId + "_" + index
-                                let image = value.image;
-                                //let carNumber = value.carNumber;
-                                let name = value.name;
                                 let imagePath = value.image;
                                 let description = value.description;
                                 /*let payload = {
@@ -1305,7 +1300,7 @@ class StorePage extends Component {
                                 <a href="#1" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, description, price, null , address, null, imagePath, false, true)} className="product-item">
                                   <div className="row align-items-center no-gutters">
                                     <div className="item_img d-none d-sm-block">
-                                      <img className="img bl-3 text-primary" src={image} alt="Games Store"/>
+                                      <img className="img bl-3 text-primary" src={imagePath} alt="Games Store"/>
                                     </div>
                                     <div className="item_content flex-1 flex-grow pl-0 pl-sm-6 pr-6">
                                       <h6 className="item_title ls-1 small-1 fw-600 text-uppercase mb-1">Series: {series}</h6>
@@ -1469,13 +1464,12 @@ class StorePage extends Component {
                                     let key = itemId + "_" + index;
                                     let ipfsPath = value.ad.ipfsPath
                                     let imagePath = "https://simthunder.infura-ipfs.io/ipfs/" + value.info.skinPic
-                                    let thumb = "assets/img/sims/"+simulator+".png";
                                     
                                     return <div className="col-md-12 mb-4" key={key}>
                                         <a href="#3" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, null, null, price, carBrand , address, ipfsPath, imagePath, false)} className="product-item">
                                         <div className="row align-items-center no-gutters">
                                             <div className="item_img d-none d-sm-block">
-                                            <img className="img bl-3 text-primary" src={thumb} alt="Games Store"/>
+                                            <img className="img bl-3 text-primary" src={imagePath} alt="thumb"/>
                                             </div>
                                             <div className="item_content flex-1 flex-grow pl-0 pl-sm-6 pr-6">
                                             <h6 className="item_title ls-1 small-1 fw-600 text-uppercase mb-1">{carBrand}</h6> 

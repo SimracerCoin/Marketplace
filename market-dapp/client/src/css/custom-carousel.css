@@ -9,6 +9,11 @@
     align-items: end;
 }
 
+.carousel-slider .carousel-pointer {
+    height: 480px;
+    align-items: initial;
+}
+
 .carousel .control-dots {
     bottom: -10px;
 }
@@ -25,6 +30,7 @@
 }
 /* MIGHT NOT LOOK GOOD BECAUSE IMAGES CAN BE DISTORTED*/
 .carousel-pointer img {
+    width: auto!important;
     max-height: 400px;
     max-width: 400px;
 }

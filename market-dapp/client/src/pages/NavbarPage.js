@@ -1,6 +1,7 @@
 import React from "react";
 import { Navbar, Nav, NavDropdown, Container } from 'react-bootstrap'; // Check out drizzle's react components at @drizzle/react-components
 import { Link, NavLink, Redirect } from 'react-router-dom';
+import * as $ from 'jquery';
 
 class NavbarPage extends React.Component {
 
@@ -53,6 +54,7 @@ class NavbarPage extends React.Component {
         if(previousSearch && previousSearch.length>0) {
             searchQuery = previousSearch;
         }
+
         this.setState({ isNFTOwner: isNFTOwner, isMomentNFTOwner: isMomentNFTOwner, currentAccount: currentAccount, haveNotifications: haveNotifications, searchQuery: searchQuery });
     }
 
@@ -73,6 +75,20 @@ class NavbarPage extends React.Component {
                 }
             }}
         />)
+    }
+
+    changeInventory = (e) => {
+        if(/inventory/.test(window.location.href)) {
+            if(/Moment/.test(e.target.firstChild.data)) {
+                $("#mp-2-01-tab").removeClass(["active", "show"]);
+                $("#mp-2-04-tab").addClass(["active", "show"]);
+            }
+
+            if(/Ownership/.test(e.target.firstChild.data)) {
+                $("#mp-2-01-tab").addClass(["active", "show"]);
+                $("#mp-2-04-tab").removeClass(["active", "show"]);
+            }
+        }
     }
 
     searchOnClick = (event) => {
@@ -148,14 +164,14 @@ class NavbarPage extends React.Component {
                         <Nav>
                             <NavDropdown title="Sell">
 
-                            <Link to={{ pathname:"/inventory", state:{view:"momentnfts"} }}>
+                            <Link to={{ pathname:"/inventory", state:{view:"momentnfts"} }} onClick={this.changeInventory}>
                                     <NavDropdown.Item as="div">
                                         Sell Simracing Moment
                                     </NavDropdown.Item>
                                 </Link>
 
-                                <Link to={{ pathname:"/inventory", state:{view:"ownership"} }}>
-                                    <NavDropdown.Item as="div">
+                                <Link to={{ pathname:"/inventory", state:{view:"ownership"} }} onClick={this.changeInventory}>
+                                    <NavDropdown.Item as="div" name="ownership">
                                         Sell Car Ownership
                                     </NavDropdown.Item>
                                 </Link>
