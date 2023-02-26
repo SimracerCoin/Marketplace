@@ -9,13 +9,24 @@
     align-items: end;
 }
 
-.carousel-slider .carousel-pointer {
+.carousel-slider div.carousel-pointer {
     height: 480px;
-    align-items: initial;
+    align-items: center;
 }
 
 .carousel .control-dots {
     bottom: -10px;
+}
+
+.carousel .slide {
+    height: 500px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.carousel .slide img {
+    width: auto!important;
 }
 
 .carousel .slide .legend {
@@ -31,8 +42,8 @@
 /* MIGHT NOT LOOK GOOD BECAUSE IMAGES CAN BE DISTORTED*/
 .carousel-pointer img {
     width: auto!important;
-    max-height: 400px;
-    max-width: 400px;
+    max-height: 340px;
+    max-width: 800px;
 }
 
 .legend {

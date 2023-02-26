@@ -46,7 +46,7 @@ class SellerPage extends Component {
         document.documentElement.scrollTop = 0; // For Chrome, Firefox, IE and Opera
     }
 
-    buyItem = async (event, itemId, track, simulator, season, series, description, price, carBrand, address, ipfsPath, imagePath) => {
+    buyItem = async (event, itemId, track, simulator, season, series, description, price, carBrand, carNumber, address, ipfsPath, imagePath) => {
         event.preventDefault();
         
         this.setState({
@@ -59,6 +59,7 @@ class SellerPage extends Component {
             selectedDescription: description,
             selectedPrice: price,
             selectedCarBrand: carBrand,
+            selectedCarNumber: carNumber,
             selectedImagePath: imagePath,
             vendorAddress: address,
             ipfsPath: ipfsPath,
@@ -83,6 +84,7 @@ class SellerPage extends Component {
                         selectedDescription: this.state.selectedDescription,
                         selectedPrice: this.state.selectedPrice,
                         selectedCarBrand: this.state.selectedCarBrand,
+                        selectedCarNumber: this.state.selectedCarNumber,
                         imagePath: this.state.selectedImagePath,
                         vendorAddress: this.state.vendorAddress,
                         vendorNickname: this.state.vendorNickname,
@@ -99,6 +101,7 @@ class SellerPage extends Component {
             if(value.ad.seller != this.state.vendorAddress) continue;
 
             let carBrand = value.info.carBrand
+            let carNumber = value.info.carNumber
             let track = value.info.track
             let simulator = value.info.simulator
             let season = value.info.season
@@ -139,12 +142,12 @@ class SellerPage extends Component {
             let address = value.ad.seller
             let itemId = value.id
             let ipfsPath = value.ad.ipfsPath
-            let imagePath = "https://simthunder.infura-ipfs.io/ipfs/" + value.info.skinPic
+            let imagePath = value.info.skinPic
             skins.push(
                 <ListGroup.Item key={itemId}>
                     <Card className="card-block">
                         <Card.Body>
-                            <Card.Img variant="top" src={imagePath} />
+                            <Card.Img variant="top" src={"https://simthunder.infura-ipfs.io/ipfs/"+imagePath[0]} />
                             <Card.Title>{carBrand}</Card.Title>
                             <div className="text-left">
                                 <div><b>Simulator:</b> {simulator}</div>

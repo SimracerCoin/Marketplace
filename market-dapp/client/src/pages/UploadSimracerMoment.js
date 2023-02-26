@@ -94,22 +94,9 @@ class UploadSimracerMoment extends Component {
         this.setState({ priceValue: event.target.value })
     };
 
-    checkInput = (value) => {
-        let element = document.getElementById('skin-video');
-        if(value === null || value.length <=0) {
-            element.disabled=true;  
-        }
-        else if(this.state.currentSeries && this.state.currentDescription && this.state.currentSeries.length > 0 && this.state.currentDescription.length > 0 ) {
-            element.disabled=false;
-        } else {
-            element.disabled=true;
-        }
-    }
-
     handleDescription = (event) => {
         console.log("Handling Description: " + event.target.value);
         this.setState({ currentDescription: event.target.value });
-        this.checkInput(event.target.value);
     };
 
     handleSeries = (event) => {
@@ -269,8 +256,6 @@ class UploadSimracerMoment extends Component {
 
     //Guarda o video no ipfs 
     saveVideo_toIPFS = async () => {
-        
-
         console.log('saveVideo_toIPFS....');
 
         const response = await ipfs.add(this.state.videoBuffer, (err, ipfsPath) => {
@@ -282,7 +267,6 @@ class UploadSimracerMoment extends Component {
         console.log('saveVideo_toIPFS - response.path', response.path);
         this.setState({ video_ipfsPath: response.path });
         return true;
-
     }
 
     //Guarda o screenshot no ipfs 
@@ -413,11 +397,6 @@ class UploadSimracerMoment extends Component {
 
         event.stopPropagation();
         event.preventDefault();
-
-        if(!this.state.currentDescription || !this.state.currentSeries || this.state.currentDescription.length === 0 || this.state.currentSeries.length === 0) {
-            alert('Series and Description must not be empty!');
-            return;
-        }
        
         console.log('uploadVideo started...');
 
@@ -463,7 +442,7 @@ class UploadSimracerMoment extends Component {
                     
                 //} else {
                     //just this one
-                    this.setState({ videoBuffer: videoBuffer});
+                    this.setState({videoBuffer: videoBuffer});
                 //}
 
                 //no image uploaded? than create a screenshot
@@ -500,57 +479,60 @@ class UploadSimracerMoment extends Component {
 
         if(!this.state.videoBuffer || !this.state.imageBuffer) {
             alert('Video and/or thumbnail are not ready to process. Please wait or try again!');
+            return;
         }
-        else if(!this.state.currentDescription || !this.state.currentSeries || this.state.currentDescription.length === 0 || this.state.currentSeries.length === 0) {
+        if(!this.state.currentDescription || !this.state.currentSeries || this.state.currentDescription.length === 0 || this.state.currentSeries.length === 0) {
             alert('Series and Description must not be empty!');
+            return;
         }
-        else if (!this.state.priceValue) {
+
+        if (!this.state.priceValue) {
             alert('Item price must be a number');
+            return;
+        }
+    
+        UIHelper.showSpinning();
+
+        let self = this;
+
+        const response_saveVideo = await this.saveVideo_toIPFS();
+        console.log('response_saveVideo: ', response_saveVideo);
+        const response_saveImage = await this.saveImage_toIPFS();
+        console.log('response_saveImage: ', response_saveImage);
+        const response_saveJson = await this.saveJSON_toIPFS(this.state.image_ipfsPath, this.state.video_ipfsPath);
+
+        console.log('response_saveJson: ', response_saveJson);
+
+        if(response_saveVideo && response_saveImage && response_saveJson) {
+            //all good!
+
+            const price = this.state.drizzle.web3.utils.toWei(this.state.priceValue);
+
+            //some gas estimations
+            //estimate method gas consuption (units of gas)
+            let paramsForCall = await UIHelper.calculateGasUsingStation(this.state.currentAccount);
+            //console.log("params for call ", paramsForCall);
+
+            //'https://gateway.pinata.cloud/ipfs/Qmboj3b42aW2nHGuQizdi2Zp35g6TBKmec6g77X9UiWQXg'
+            let tx = await this.state.contractNFTs.methods.awardItem(this.state.contractNFTs.address, this.state.currentAccount, price, 'https://simthunder.infura-ipfs.io/ipfs/' + this.state.jsonData_ipfsPath)
+                .send( paramsForCall )
+                //.on('sent', UIHelper.transactionOnSent)
+                .on('confirmation', function (confNumber, receipt, latestBlockHash) {
+                    window.localStorage.setItem('forceUpdate','yes');
+
+                    if(confNumber === NUMBER_CONFIRMATIONS_NEEDED) {
+                        UIHelper.transactionOnConfirmation("The new Simracing Moment NFT is available for sale!","/");     
+                        //reset stuff
+                        self.setState({videoBuffer: null, imageBuffer: null});                       
+                    }
+                    
+                })
+                .on('error', UIHelper.transactionOnError)
+                .catch(function (e) { 
+                    UIHelper.hideSpinning();
+                });
         } else {
-
-            UIHelper.showSpinning();
-
-            let self = this;
-
-            const response_saveVideo = await this.saveVideo_toIPFS();
-            console.log('response_saveVideo: ', response_saveVideo);
-            const response_saveImage = await this.saveImage_toIPFS();
-            console.log('response_saveImage: ', response_saveImage);
-            const response_saveJson = await this.saveJSON_toIPFS(this.state.image_ipfsPath, this.state.video_ipfsPath);
-
-            console.log('response_saveJson: ', response_saveJson);
-
-            if(response_saveVideo && response_saveImage && response_saveJson) {
-                //all good!
-
-                const price = this.state.drizzle.web3.utils.toWei(this.state.priceValue);
-
-                //some gas estimations
-                //estimate method gas consuption (units of gas)
-                let paramsForCall = await UIHelper.calculateGasUsingStation(this.state.currentAccount);
-                //console.log("params for call ", paramsForCall);
-
-                //'https://gateway.pinata.cloud/ipfs/Qmboj3b42aW2nHGuQizdi2Zp35g6TBKmec6g77X9UiWQXg'
-                let tx = await this.state.contractNFTs.methods.awardItem(this.state.contractNFTs.address, this.state.currentAccount, price, 'https://simthunder.infura-ipfs.io/ipfs/' + this.state.jsonData_ipfsPath)
-                    .send( paramsForCall )
-                    //.on('sent', UIHelper.transactionOnSent)
-                    .on('confirmation', function (confNumber, receipt, latestBlockHash) {
-                        window.localStorage.setItem('forceUpdate','yes');
-
-                        if(confNumber === NUMBER_CONFIRMATIONS_NEEDED) {
-                            UIHelper.transactionOnConfirmation("The new Simracing Moment NFT is available for sale!","/");     
-                            //reset stuff
-                            self.setState({videoBuffer: null, imageBuffer: null});                       
-                        }
-                        
-                    })
-                    .on('error', UIHelper.transactionOnError)
-                    .catch(function (e) { 
-                        UIHelper.hideSpinning();
-                    });
-            } else {
-                UIHelper.hideSpinning();
-            }
+            UIHelper.hideSpinning();
         }
     }
 
@@ -741,12 +723,11 @@ class UploadSimracerMoment extends Component {
                                       {/* Video file (max 30 secs) */}  
                                     <div> Add Video For Simracing Moment NFT</div>
                                         <Form onSubmit={this.saveVideo_toIPFS}>
-                                            <input id="skin-video" disabled
+                                            <input id="skin-video"
                                                 type="file" accept="video/*"
                                                 onChange={this.uploadVideo}
                                             />
                                             <br></br>
-
                                         </Form>
                                     </div><br></br>
                                     <div>                   

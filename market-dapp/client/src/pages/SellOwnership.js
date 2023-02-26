@@ -24,6 +24,7 @@ class SellOwnership extends Component {
             currentAccount: null,
             currentSimulator: "Choose your simulator",
             currentSeries: "",
+            currentDescription: "",
             currentCarNumber: "",
             contract: null,
             ipfsPath: "",
@@ -87,9 +88,7 @@ class SellOwnership extends Component {
 
     handleCarNumber = (event) => {
         const re = new RegExp(event.target.pattern);
-        console.log("pattern:",event.target.pattern);
         if (!re.test(event.target.value)) {
-            console.log("entrou");
             event.target.value = "";
         }
 
@@ -118,6 +117,11 @@ class SellOwnership extends Component {
         console.log("Is range auction: " + value);
         this.setState({ auctionTimeRange: !this.state.auctionTimeRange });
     }
+
+    handleDescription = (event) => {
+        console.log("Handling Description: " + event.target.value);
+        this.setState({ currentDescription: event.target.value });
+    };
 
     getUpdatedEndDate = (now, currentTimingOption) => {
        
@@ -196,7 +200,7 @@ class SellOwnership extends Component {
 
     //Save JSON in ipfs 
     saveJSON_toIPFS = async (image) => {
-        var jsonData = { 'description': 'Simthunder Car Ownership', 'name': 'Car', 'image': 'https://simthunder.infura-ipfs.io/ipfs/' + image };
+        var jsonData = { 'description': this.state.currentDescription, 'name': 'Car', 'image': 'https://simthunder.infura-ipfs.io/ipfs/' + image };
         //TODO: Change to standard attributes, remove price
         jsonData['series'] = this.state.currentSeries;
         //jsonData['seriesOwner'] = this.state.currentAccount;
@@ -299,48 +303,51 @@ class SellOwnership extends Component {
 
         if (!this.state.priceValue) {
             alert('Item price must be a number');
-        } else if(!this.state.imageBuffer) {
+            return;
+        }
+        
+        if(!this.state.imageBuffer) {
             alert('Image file missing or invalid!');
-        } else {
-            // let nickname = "";
-            // if (!this.state.isSeller) {
-            //     nickname = await Prompt('You are adding your first item for sale, please choose your seller nickname.');
-            //     if (!nickname) return;
-            // }
+            return;
+        }
 
-            UIHelper.showSpinning();
+        if(!this.state.currentDescription) {
+            alert('Description must not be empty!');
+            return;
+        }
 
-            let response_saveImage = await this.saveImage_toIPFS();
+        UIHelper.showSpinning();
 
-            if(response_saveImage) {
-                let response_saveJson = await this.saveJSON_toIPFS(this.state.image_ipfsPath);
+        let response_saveImage = await this.saveImage_toIPFS();
 
-                if(response_saveJson) {
+        if(response_saveImage) {
+            let response_saveJson = await this.saveJSON_toIPFS(this.state.image_ipfsPath);
 
-                    const price = this.state.drizzle.web3.utils.toWei(this.state.priceValue);
+            if(response_saveJson) {
 
-                    //some gas estimations
-                    //estimate method gas consuption (units of gas)
-                    let paramsForCall = await UIHelper.calculateGasUsingStation(this.state.currentAccount);
+                const price = this.state.drizzle.web3.utils.toWei(this.state.priceValue);
 
-                    //'https://gateway.pinata.cloud/ipfs/Qmboj3b42aW2nHGuQizdi2Zp35g6TBKmec6g77X9UiWQXg'
-                    await this.state.contractNFTs.methods.awardItem(this.state.contractNFTs.address, this.state.currentAccount, price, 'https://simthunder.infura-ipfs.io/ipfs/' + this.state.jsonData_ipfsPath)
-                        .send(paramsForCall)
-                        //.on('sent', UIHelper.transactionOnSent)
-                        .on('confirmation', function (confNumber, receipt, latestBlockHash) {
-                            window.localStorage.setItem('forceUpdate','yes');
-                            if(confNumber === NUMBER_CONFIRMATIONS_NEEDED) {
-                                UIHelper.transactionOnConfirmation("The new car ownership NFT is available for sale!", "/");
-                            }
-                        })
-                        .on('error', UIHelper.transactionOnError)
-                        .catch(function (e) {
-                            UIHelper.hideSpinning();
-                        });
-                }
-            } else {
-                UIHelper.hideSpinning();
+                //some gas estimations
+                //estimate method gas consuption (units of gas)
+                let paramsForCall = await UIHelper.calculateGasUsingStation(this.state.currentAccount);
+
+                //'https://gateway.pinata.cloud/ipfs/Qmboj3b42aW2nHGuQizdi2Zp35g6TBKmec6g77X9UiWQXg'
+                await this.state.contractNFTs.methods.awardItem(this.state.contractNFTs.address, this.state.currentAccount, price, 'https://simthunder.infura-ipfs.io/ipfs/' + this.state.jsonData_ipfsPath)
+                    .send(paramsForCall)
+                    //.on('sent', UIHelper.transactionOnSent)
+                    .on('confirmation', function (confNumber, receipt, latestBlockHash) {
+                        window.localStorage.setItem('forceUpdate','yes');
+                        if(confNumber === NUMBER_CONFIRMATIONS_NEEDED) {
+                            UIHelper.transactionOnConfirmation("The new car ownership NFT is available for sale!", "/");
+                        }
+                    })
+                    .on('error', UIHelper.transactionOnError)
+                    .catch(function (e) {
+                        UIHelper.hideSpinning();
+                    });
             }
+        } else {
+            UIHelper.hideSpinning();
         }
     }
 
@@ -368,15 +375,17 @@ class SellOwnership extends Component {
                                         <Form>
                                             <Form.Group controlId="formInsertCar">
                                                 <Form.Control type="text" placeholder="Enter Series name" onChange={this.handleSeries} />
-                                                <br></br>
+                                                <br />
+                                                <Form.Control as="textarea" placeholder="Enter Description" onChange={this.handleDescription} />
+                                                <br />
                                                 <Form.Control type="text" pattern="\d+$" placeholder="Enter Car Number" value={this.state.currentCarNumber} onChange={this.handleCarNumber} />
-                                                <br></br>
+                                                <br />
                                                 <Form.Control type="number" min="0" step="1" pattern="([0-9]*[.])?[0-9]+" placeholder="Enter File price (SRC)" value={this.state.priceValue} onChange={this.handleFilePrice} />
-                                                <br></br>
+                                                <br />
                                                 <DropdownButton id="dropdown-skin-button" title={this.state.currentSimulator} onSelect={this.onSelectSim}>
                                                     {sims}
                                                 </DropdownButton>
-                                                <br></br>
+                                                <br />
                                                 {false &&
                                                 <div className="auction_item_input">
                                                     <div className="auction_item_checkbox_container">    
@@ -390,8 +399,8 @@ class SellOwnership extends Component {
                                                         <DropdownButton className={`banner ${this.state.auctionItem ? 'auction_item_visible' : 'auction_item_invisible'}`} id="dropdown-choose-timing" title={this.state.currentTimingOption} onSelect={this.onSelectAuctionTiming}>
                                                             {this.state.timingOptions}
                                                         </DropdownButton>
-                                                        <br></br>
-                                                        <br></br>
+                                                        <br />
+                                                        <br />
                                                         <div className="auction_item_checkbox_container">    
                                                             <FormCheck.Input type="checkbox" id='timed_auction_item' value={this.state.c} onChange={this.handleAuctionRange}/>
                                                             <FormCheck.Label className="auction_item_label">Set date range ?</FormCheck.Label>

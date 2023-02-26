@@ -1,8 +1,5 @@
-import React, {Component } from 'react';
-import { Redirect } from "react-router-dom";
+import React from 'react';
 import { Carousel } from 'react-responsive-carousel';
-import 'react-responsive-carousel/lib/styles/carousel.min.css';
-import '../css/custom-carousel.css';
 
 const priceConversion = 10 ** 18;
 
@@ -92,7 +89,7 @@ class SimilarItemsComponent extends React.Component {
       else if(this.state.isSkin) {
         
         return <div className="carousel-pointer" id={payload.itemId} onClick={(e) => this.switchSimilarItem(e, false, false, true, payload, fullItem )}>
-            <img className="carousel-pointer" alt={payload.description} src={payload.imagePath}/>
+            <img className="carousel-pointer" alt={payload.description} src={"https://simthunder.infura-ipfs.io/ipfs/"+payload.imagePath[0]}/>
             <p className="legend">{payload.description}</p>
           </div>
 
@@ -147,6 +144,8 @@ class SimilarItemsComponent extends React.Component {
         let payload = {};
 
         if(isNFT) {
+
+          let metadata =  this.extractMomentNFTTraitTypes(value.attributes);
   
           payload.imagePath = value.image;
           payload.price = value.price;
@@ -154,7 +153,7 @@ class SimilarItemsComponent extends React.Component {
           payload.series = value.series;
           payload.address = value.seriesOwner;
           payload.carNumber = value.carNumber;
-          payload.description =  (value.description || value.carNumber);
+          payload.description =  (value.description || metadata.description);
 
         }else if(isMomentNFT) {
   
@@ -172,7 +171,7 @@ class SimilarItemsComponent extends React.Component {
 
         } else if(isSkin) {
 
-          payload.imagePath = "https://simthunder.infura-ipfs.io/ipfs/" + value.info.skinPic;
+          payload.imagePath = value.info.skinPic;
           payload.price = value.ad.price;
           payload.carBrand = value.info.carBrand;
           payload.simulator = value.info.simulator;

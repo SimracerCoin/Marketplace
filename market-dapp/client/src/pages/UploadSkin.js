@@ -24,20 +24,22 @@ class UploadSkin extends Component {
             currentSimulator: "Choose your simulator",
             contract: null,
             ipfsPath: "",
-            image_ipfsPath: "",
+            image_ipfsPath: [],
             encryptedDataHash: null,
             formIPFS: "",
             formAddress: "",
             receivedIPFS: "",
             isSeller: false,
-            imageBuffer: null,
-            priceValue: ""
+            imageBuffer: [],
+            priceValue: "",
+            currentDescription: null
         }
 
         this.handleChangeHash = this.handleChangeHash.bind(this);
         this.handleFilePrice = this.handleFilePrice.bind(this);
         this.uploadImageIPFS = this.uploadImageIPFS.bind(this);
         this.saveImage_toIPFS = this.saveImage_toIPFS.bind(this);
+        this.handleDescription = this.handleDescription.bind(this);
     };
 
     componentDidMount = async () => {
@@ -61,6 +63,10 @@ class UploadSkin extends Component {
         }
 
         this.setState({ priceValue: event.target.value })
+    }
+
+    handleDescription = (event) => {
+        this.setState({ currentDescription: event.target.value });
     }
 
     onSelectCar = async (event) => {
@@ -93,39 +99,43 @@ class UploadSkin extends Component {
 
     //Guarda a imagem no ipfs 
     saveImage_toIPFS = async () => {
-        var fileName = document.getElementById('skin-image').value.toLowerCase();
-
-        console.log("Filename: " + fileName)
-
-        const valid_fileName = fileName.endsWith('.jpg') || fileName.endsWith('.png') || fileName.endsWith('.jpeg')
-        console.log("Valid filename: " + valid_fileName)
-        if (!valid_fileName) {
-            alert('You can upload .jpg, .png or .jpeg files only. Invalid file!');
-            return false;
+        let paths = [];
+        for(let i = 0; i < this.state.imageBuffer.length; ++i) {
+            const path = (await ipfs.add(this.state.imageBuffer[i])).path;
+            if(path) paths.push(path);
+            else return false;
         }
 
-        const response = await ipfs.add(this.state.imageBuffer, (err, ipfsPath) => {
-            console.log(err, ipfsPath);
-            console.log("Response image: ", ipfsPath[0].hash)
-            //setState by setting ipfsPath to ipfsPath[0].hash 
-            this.setState({ image_ipfsPath: ipfsPath[0].hash });
-        })
-
-        this.setState({ image_ipfsPath: response.path });
+        this.setState({ image_ipfsPath: paths });
         return true;
-
     }
 
     //Transforma a imagem num buffer e guarda como estado
     uploadImageIPFS = (event) => {
-        event.stopPropagation()
-        event.preventDefault()
-        const file = event.target.files[0]
-        const reader = new window.FileReader()
-        reader.readAsArrayBuffer(file)
-        reader.onloadend = () => {
-            this.setState({ imageBuffer: Buffer(reader.result) })
-            console.log('buffer', this.state.imageBuffer)
+        event.stopPropagation();
+        event.preventDefault();
+
+        var filePath = event.target.value;
+         
+        // Allowing file type
+        var allowedExtensions =
+                /(\.jpg|\.jpeg|\.png|\.gif|\.bmp)$/i;
+            
+        if (!allowedExtensions.exec(filePath)) {
+            alert('Invalid file type');
+            event.target.value = '';
+            return false;
+        }
+
+        this.setState({imageBuffer: []});
+
+        for (let i = 0; i < event.target.files.length; i++) {
+            const file = event.target.files[i];
+            const reader = new window.FileReader();
+            reader.readAsArrayBuffer(file);
+            reader.onloadend = () => {
+                this.state.imageBuffer.push(Buffer(reader.result));
+            }
         }
     }
 
@@ -196,16 +206,12 @@ class UploadSkin extends Component {
 
             // TO DO: change placeholders for correct values
             const placeholder = this.state.drizzle.web3.utils.fromAscii('');
-            console.log(placeholder);
 
-            const response_saveImage = await this.saveImage_toIPFS();
-
-            if (response_saveImage) {
-
+            if (await this.saveImage_toIPFS()) {
                 let paramsForCall = await UIHelper.calculateGasUsingStation(this.state.currentAccount);
 
                 await this.state.contract.methods.newSkin(ipfsPathBytes, this.state.currentCar,
-                    this.state.currentSimulator, price, placeholder, this.state.encryptedDataHash, nickname, this.state.image_ipfsPath)
+                    this.state.currentSimulator, price, placeholder, this.state.encryptedDataHash, nickname, this.state.image_ipfsPath, this.state.currentDescription)
                     .send(paramsForCall)
                     .on('confirmation', function (confNumber, receipt, latestBlockHash) {
                         window.localStorage.setItem('forceUpdate','yes');
@@ -218,6 +224,7 @@ class UploadSkin extends Component {
                         UIHelper.hideSpinning();
                     });
             } else {
+                alert("Error on upload images. Please try again later.");
                 UIHelper.hideSpinning();
             }
         }
@@ -265,20 +272,21 @@ class UploadSkin extends Component {
                                                     </DropdownButton>
                                                 </div>
                                             </div>
-                                        </Form>
-                                    </div>
-                                    <div>
-                                        <Form onSubmit={this.saveImage_toIPFS}>
                                             <div className="form-group">
                                                 <FormLabel htmlFor="skin-image" className="col-sm-3 mr-2 col-form-label font-weight-bold">Choose Skin image:</FormLabel>
                                                 <input id="skin-image"  
-                                                    type="file" accept=".png,.jpg,.jpeg"
-                                                    onChange={this.uploadImageIPFS} />
+                                                    type="file" accept="image/*"
+                                                    onChange={this.uploadImageIPFS} multiple />
+                                            </div>
+                                            <div className="form-row">
+                                                <div className="form-group col-12">
+                                                    <Form.Control as="textarea" placeholder="Enter Description" onChange={this.handleDescription} />
+                                                </div>
+                                            </div>
+                                            <div className="form-row mt-4">
+                                                <Button onClick={this.saveSkin}>Save Skin</Button>
                                             </div>
                                         </Form>
-                                    </div>
-                                    <div className="form-row mt-4">
-                                        <Button onClick={this.saveSkin}>Save Skin</Button>
                                     </div>
                                 </div>
                             </div>

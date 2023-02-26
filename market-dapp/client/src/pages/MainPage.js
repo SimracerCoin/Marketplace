@@ -43,6 +43,7 @@ class MainPage extends Component {
             selectedDescription: "",
             selectedPrice: "",
             selectedCarBrand: "",
+            selectedCarNumber: "",
             selectedImagePath: "",
             vendorAddress: "",
             vendorNickname: "",
@@ -267,7 +268,7 @@ class MainPage extends Component {
         }
     }
 
-    buyItem = async (event, itemId, track, simulator, season, series, description, price, carBrand, address, ipfsPath, imagePath, isNFT, isMomentNFT, videoPath, itemMetadata) => {
+    buyItem = async (event, itemId, track, simulator, season, series, description, price, carBrand, carNumber, address, ipfsPath, imagePath, isNFT, isMomentNFT, videoPath, itemMetadata) => {
         event.preventDefault();
 
         let similarItems = [];
@@ -293,6 +294,7 @@ class MainPage extends Component {
             selectedPrice: price,
             usdPrice : this.state.usdValue,
             selectedCarBrand: carBrand,
+            selectedCarNumber: carNumber,
             selectedImagePath: imagePath,
             vendorAddress: address,
             vendorNickname: address ? await this.state.contract.methods.getNickname(address).call() : "",
@@ -366,6 +368,7 @@ class MainPage extends Component {
                         selectedPrice: this.state.selectedPrice,
                         usdPrice : this.state.usdValue,
                         selectedCarBrand: this.state.selectedCarBrand,
+                        selectedCarNumber: this.state.selectedCarNumber,
                         imagePath: this.state.selectedImagePath,
                         vendorAddress: this.state.vendorAddress,
                         vendorNickname: this.state.vendorNickname,
@@ -397,7 +400,7 @@ class MainPage extends Component {
             let address = value.seriesOwner;
             let price = value.price;
             let video = value.animation_url; 
-            let carNumberOrDescription = value.description;
+            let description = value.description;
 
             let price_src = Number((Math.round(price / priceConversion) * 100) / 100).toFixed(2);
             let usdPrice = Number(Math.round(price_src  * this.state.usdValue * 100) / 100).toFixed(2);
@@ -420,9 +423,9 @@ class MainPage extends Component {
             //console.log('attributes: ', value.attributes);
             momentNfts.push(
                         <ListGroup.Item key={itemId} className="bg-dark_A-20 col-3-24 mb-4">
-                    <Card className="card-block">
+                    <Card className="card-block" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, description, price, null, null, address, null, imagePath, false, true, video, metadata)}>
                         <Card.Header style={{height: '240px'}} className="d-flex flex-wrap align-items-center justify-content-center">
-                            <Card.Img onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, carNumberOrDescription, price, null , address, null, imagePath, false, true, video, metadata)} variant="top" src={imagePath} style={{width: 'auto', maxHeight: '100%'}} />
+                            <Card.Img variant="top" src={imagePath} style={{width: 'auto', maxHeight: '100%'}} />
                         </Card.Header>
                         <Card.Body>
                             <Card.Title className="mt-5 font-weight-bold">{series}</Card.Title>
@@ -450,7 +453,7 @@ class MainPage extends Component {
                                 return <div>{value2Render}</div>
                             }, this)}
                             </div>
-                        <Button variant="warning" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, carNumberOrDescription, price, null , address, null, imagePath, false, true, video, metadata)}>Buy</Button>
+                        <Button variant="warning">Buy</Button>
                         </Card.Body>
                     </Card>
             </ListGroup.Item>
@@ -459,14 +462,18 @@ class MainPage extends Component {
 
         //car ownership ones
         for (const [index, value] of this.state.shorterNFTsList.entries()) {
+
             //console.log('ownership nft value is,',value);
+            let metadata = this.extractMomentNFTTraitTypes(value.attributes);
+
             let series = value.series;
             let simulator = value.simulator;
             let price = value.price;
             //TODO: change hardcode
             let address = value.seriesOwner;
             let itemId = value.id;
-            let carNumberOrDescription = value.carNumber;
+            let description = value.description;
+            let carNumber = value.carNumber;
             // let ipfsPath = value.ad.ipfsPath
             //console.log(' ID NFT:'+value.id);
             let imagePath = value.image;
@@ -482,13 +489,13 @@ class MainPage extends Component {
             let thumb = "assets/img/sims/"+simulator+".png";
 
             //could be empty for these nfts (if not auction data)
-            let metadata = this.extractMomentNFTTraitTypes(value.attributes);
+            
 
             nfts.push(
                 <ListGroup.Item key={itemId} className="bg-dark_A-20 col-3-24 mb-4">
-                    <Card className="card-block">
+                    <Card className="card-block" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, description, price, null, carNumber, address, null, imagePath, true, false, null, metadata)}>
                         <Card.Header style={{height: '240px'}} className="d-flex flex-wrap align-items-center justify-content-center">
-                            <Card.Img onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, carNumberOrDescription, price, null , address, null, imagePath, true, false, null, metadata)} variant="top" src={imagePath} style={{width: 'auto', maxHeight: '100%'}} />
+                            <Card.Img variant="top" src={imagePath} style={{width: 'auto', maxHeight: '100%'}} />
                         </Card.Header>
                         <Card.Body>
                             <Card.Title className="mt-5 font-weight-bold">{series}</Card.Title>
@@ -496,7 +503,7 @@ class MainPage extends Component {
                             <div><img src={thumb} width="32" alt={simulator} /> {simulator}</div>
                             <div className="price_div"><strong className="price_div_strong">{price_src} <sup className="main-sup">SRC</sup></strong><br/> <span className="secondary-price">{usdPrice}<sup className="secondary-sup">USD</sup></span></div>
                             </div>
-                            <Button variant="warning" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, carNumberOrDescription, price, null , address, null, imagePath, true, false, null, null)}> Buy</Button>
+                            <Button variant="warning">Buy</Button>
                         </Card.Body>
                     </Card>
                 </ListGroup.Item>
@@ -513,7 +520,7 @@ class MainPage extends Component {
             let address = value.ad.seller
             let itemId = value.id
             let ipfsPath = value.ad.ipfsPath
-            let imagePath = "https://simthunder.infura-ipfs.io/ipfs/" + value.info.skinPic
+            let imagePath = value.info.skinPic
             let thumb = "assets/img/sims/"+simulator+".png";
 
             let price_src = Number((Math.round(price / priceConversion) * 100) / 100).toFixed(2);
@@ -526,9 +533,9 @@ class MainPage extends Component {
 
             skins.push(
                 <ListGroup.Item key={itemId} className="bg-dark_A-20 col-3-24 mb-4">
-                    <Card className="card-block">
+                    <Card className="card-block" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, null, null, price, carBrand, null, address, ipfsPath, imagePath, false, false, null, null)}>
                         <Card.Header style={{height: '240px'}} className="d-flex flex-wrap align-items-center justify-content-center">
-                            <Card.Img onClick={(e) => this.buyItem(e, itemId, null, simulator, null, null, null, price, carBrand , address, ipfsPath, imagePath, false, false, null, null)} variant="top" src={imagePath} style={{width: 'auto', maxHeight: '100%'}} />
+                            <Card.Img variant="top" src={"https://simthunder.infura-ipfs.io/ipfs/"+imagePath[0]} style={{width: 'auto', maxHeight: '100%'}} />
                         </Card.Header>
                         <Card.Body>
                             <Card.Title className="mt-5 font-weight-bold">{carBrand}</Card.Title>
@@ -536,7 +543,7 @@ class MainPage extends Component {
                                 <div><img src={thumb} width="32" alt={simulator} /> {simulator}</div>
                                 <div className="price_div"><strong className="price_div_strong">{price_src} <sup className="main-sup">SRC</sup></strong><br/> <span className="secondary-price">{usdPrice}<sup className="secondary-sup">USD</sup></span></div>
                             </div>
-                            <Button variant="warning" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, null, null, price, carBrand , address, ipfsPath, imagePath, false, false, null, null)}> Buy</Button>
+                            <Button variant="warning">Buy</Button>
                         </Card.Body>
                     </Card>
                 </ListGroup.Item>
@@ -570,9 +577,9 @@ class MainPage extends Component {
 
             cars.push(
                 <ListGroup.Item key={itemId} className="bg-dark_A-20 col-3-24 mb-4">
-                    <Card className="card-block">
+                    <Card className="card-block" onClick={(e) => this.buyItem(e, itemId, track, simulator, season, series, description, price, carBrand, null, address, ipfsPath, "", false, false,null, null)}>
                         <Card.Header style={{height: '240px'}} className="d-flex flex-wrap align-items-center justify-content-center">
-                            <Card.Img onClick={(e) => this.buyItem(e, itemId, track, simulator, season, series, description, price, carBrand, address, ipfsPath, "", false, false,null, null)} variant="top" src={thumb} style={{width: 'auto', maxHeight: '100%'}} />
+                            <Card.Img variant="top" src={thumb} style={{width: 'auto', maxHeight: '100%'}} />
                         </Card.Header>
                         <Card.Body>
                             <Card.Title className="mt-5 font-weight-bold">{carBrand}</Card.Title>
@@ -585,7 +592,7 @@ class MainPage extends Component {
 
                             {/* <div><b>Vendor address:</b> {address}</div> */}
                             </div>
-                            <Button variant="warning" onClick={(e) => this.buyItem(e, itemId, track, simulator, season, series, description, price, carBrand, address, ipfsPath, "", false, false,null, null)}> Buy</Button>
+                            <Button variant="warning">Buy</Button>
                         </Card.Body>
                     </Card>
                 </ListGroup.Item>

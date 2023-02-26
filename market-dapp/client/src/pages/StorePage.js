@@ -1004,6 +1004,7 @@ class StorePage extends Component {
                     selectedDescription: this.state.selectedDescription,
                     selectedPrice: this.state.selectedPrice,
                     selectedCarBrand: this.state.selectedCarBrand,
+                    selectedCarNumber: this.state.selectedCarNumber,
                     imagePath: this.state.selectedImagePath,
                     vendorAddress: this.state.vendorAddress,
                     vendorNickname: this.state.vendorNickname,
@@ -1017,7 +1018,7 @@ class StorePage extends Component {
     }
 
     //Obs: this function was way to many paramaters, bette make a JSON object/payload maybe?
-    buyItem = async (event, itemId, track, simulator, season, series, description, price, carBrand, address, ipfsPath, imagePath, isNFT, isMomentNFT) =>{
+    buyItem = async (event, itemId, track, simulator, season, series, description, price, carBrand, carNumber, address, ipfsPath, imagePath, isNFT, isMomentNFT) =>{
       event.preventDefault();
      
       this.setState({
@@ -1030,6 +1031,7 @@ class StorePage extends Component {
           selectedDescription: description,
           selectedPrice: price,
           selectedCarBrand: carBrand,
+          selectedCarNumber: carNumber,
           selectedImagePath: imagePath,
           vendorAddress: address,
           vendorNickname: address ? await this.state.contract.methods.getNickname(address).call() : "",
@@ -1212,7 +1214,7 @@ class StorePage extends Component {
                                   itemId, null, simulator, null, series, carNumber, price, null , address, null, imagePath, true
                                 }*/
                                 return <div className="col-md-12 mb-4" key={key}>
-                                <a href="#1" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, carNumber, price, null , address, null, imagePath, true, false)} className="product-item">
+                                <a onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, description, price, null, carNumber, address, null, imagePath, true, false)} className="product-item">
                                   <div className="row align-items-center no-gutters">
                                     <div className="item_img d-none d-sm-block">
                                       <img className="img bl-3 text-primary" src={imagePath} alt="Games Store"/>
@@ -1297,7 +1299,7 @@ class StorePage extends Component {
                                   itemId, null, simulator, null, series, carNumber, price, null , address, null, imagePath, true
                                 }*/
                                 return <div className="col-md-12 mb-4" key={key}>
-                                <a href="#1" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, description, price, null , address, null, imagePath, false, true)} className="product-item">
+                                <a onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, description, price, null, null, address, null, imagePath, false, true)} className="product-item">
                                   <div className="row align-items-center no-gutters">
                                     <div className="item_img d-none d-sm-block">
                                       <img className="img bl-3 text-primary" src={imagePath} alt="Games Store"/>
@@ -1389,7 +1391,7 @@ class StorePage extends Component {
                             <div><b>Price:</b> {price / priceConversion} ETH</div>
                             */
                            return <div className="col-md-12 mb-4" key={key}>
-                           <a href="#2" onClick={(e) => this.buyItem(e, itemId, track, simulator, season, series, description, price, carBrand, address, ipfsPath, "", false)} className="product-item">
+                           <a onClick={(e) => this.buyItem(e, itemId, track, simulator, season, series, description, price, carBrand, null, address, ipfsPath, "", false)} className="product-item">
                              <div className="row align-items-center no-gutters">
                                <div className="item_img d-none d-sm-block">
                                  <img className="img bl-3 text-primary" src={thumb} alt=""/>
@@ -1463,13 +1465,13 @@ class StorePage extends Component {
                                     let itemId = value.id
                                     let key = itemId + "_" + index;
                                     let ipfsPath = value.ad.ipfsPath
-                                    let imagePath = "https://simthunder.infura-ipfs.io/ipfs/" + value.info.skinPic
+                                    let imagePath = value.info.skinPic
                                     
                                     return <div className="col-md-12 mb-4" key={key}>
-                                        <a href="#3" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, null, null, price, carBrand , address, ipfsPath, imagePath, false)} className="product-item">
+                                        <a onClick={(e) => this.buyItem(e, itemId, null, simulator, null, null, null, price, carBrand, null, address, ipfsPath, imagePath, false)} className="product-item">
                                         <div className="row align-items-center no-gutters">
                                             <div className="item_img d-none d-sm-block">
-                                            <img className="img bl-3 text-primary" src={imagePath} alt="thumb"/>
+                                            <img className="img bl-3 text-primary" src={"https://simthunder.infura-ipfs.io/ipfs/"+imagePath[0]} alt="thumb"/>
                                             </div>
                                             <div className="item_content flex-1 flex-grow pl-0 pl-sm-6 pr-6">
                                             <h6 className="item_title ls-1 small-1 fw-600 text-uppercase mb-1">{carBrand}</h6> 
