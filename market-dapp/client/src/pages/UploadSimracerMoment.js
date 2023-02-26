@@ -102,7 +102,6 @@ class UploadSimracerMoment extends Component {
     handleSeries = (event) => {
         console.log("Handling Series: " + event.target.value);
         this.setState({ currentSeries: event.target.value });
-        this.checkInput(event.target.value);
     };
 
     handleAuction = (value) => {

@@ -724,7 +724,7 @@ class ItemPage extends Component {
 
     renderCarousel = (hasVideo, hasImage) => {
 
-      if(hasImage) {
+      if(hasImage && !hasVideo) {
         if(this.state.imagePath.length > 1) {
           return <Carousel>
             {
