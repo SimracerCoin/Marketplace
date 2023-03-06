@@ -596,7 +596,7 @@ class AuctionPage extends Component {
         return (
         <div className="page-body">     
         <main className="main-content">
-          <div className="overlay overflow-hidden pe-n"><img src="assets/img/bg/bg_shape.png" alt="Background shape"/></div>
+          <div className="overlay overflow-hidden pe-n"><img src="/assets/img/bg/bg_shape.png" alt="Background shape"/></div>
           {/*<!-- Start Content Area -->*/}
           <div className="content-section text-light pt-8">
             <div className="container">

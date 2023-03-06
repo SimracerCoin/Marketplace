@@ -29,6 +29,7 @@ class ItemPage extends Component {
 
     constructor(props) {
         super(props);
+
         this.state = {
             drizzle: props.drizzle,
             drizzleState: props.drizzleState,
@@ -63,8 +64,11 @@ class ItemPage extends Component {
             isContractOwner: false,
             canDelete: false,
             sellFromWallet: false,
-            isNFTOwner: false
+            isNFTOwner: false,
+            id: props.match.params.id
         }
+
+        console.log("ID: ", this.state.id);
 
         this.state.imagePath.forEach((v, idx) => {
           if(/(?:https?):\/\/(\w+:?\w*)?(\S+)(:\d+)?(\/|\/([\w#!:.?+=&%!\-\/]))?/.test(v))
@@ -596,6 +600,11 @@ class ItemPage extends Component {
                 <div className="col-sm-4"><strong className="fw-500">Car Brand:</strong></div>
                 <div className="col-sm-8">{this.state.car}</div>
                 </div>
+
+                <div className="row mb-4 mb-sm-0">
+                  <div className="col-sm-4"><strong className="fw-500">Description:</strong></div>
+                  <div className="col-sm-8">{this.state.description}</div>
+                </div>
                 
                 <div className="row mb-4 mb-sm-0">
                 <div className="col-sm-4"><strong className="fw-500">Price:</strong></div>
@@ -790,7 +799,7 @@ class ItemPage extends Component {
         return (
         <div className="page-body">     
         <main className="main-content">
-          <div className="overlay overflow-hidden pe-n"><img src="assets/img/bg/bg_shape.png" alt="Background shape"/></div>
+          <div className="overlay overflow-hidden pe-n"><img src="/assets/img/bg/bg_shape.png" alt="Background shape"/></div>
           {/*<!-- Start Content Area -->*/}
           <div className="content-section text-light pt-8">
             <div className="container">

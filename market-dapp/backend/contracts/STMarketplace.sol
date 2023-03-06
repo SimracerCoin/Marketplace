@@ -276,6 +276,13 @@ contract STMarketplace is ContentMarketplace {
         }
         return setups;
     }
+
+    /// @notice Get car setup by Id
+    function getCarSetup(uint256 _itemId) public view returns(carSetup memory) {
+        require(isCarSetup(_itemId), "Item not found");
+
+        return carSetup(_itemId, ads[_itemId], carSetupInfos[_itemId]);
+    }
     
     /// @notice Gets the list of all skin files
     function getSkins() public view returns(carSkin[] memory skins){
@@ -287,6 +294,13 @@ contract STMarketplace is ContentMarketplace {
             skins[i].info = carSkinInfos[id];
         }
         return skins;
+    }
+
+    /// @notice Get skin by Id
+    function getSkin(uint256 _itemId) public view returns(carSkin memory) {
+        require(isSkin(_itemId), "Item not found");
+
+        return carSkin(_itemId, ads[_itemId], carSkinInfos[_itemId]);
     }
 
     /// @notice Gets the list of comments from item

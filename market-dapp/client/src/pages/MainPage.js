@@ -357,7 +357,7 @@ class MainPage extends Component {
 
             return (<Redirect
                 to={{
-                    pathname: path,// "/item",
+                    pathname: path+"/"+this.state.selectedItemId,// "/item",
                     state: {
                         selectedItemId: this.state.selectedItemId,
                         selectedTrack: this.state.selectedTrack,
@@ -411,7 +411,7 @@ class MainPage extends Component {
             
             usdPrice = "$" + usdPrice;
 
-            let thumb = "assets/img/sims/"+simulator+".png";
+            let thumb = "/assets/img/sims/"+simulator+".png";
 
             //console.log('METADATA VIDEO ', video);
                 /**
@@ -486,7 +486,7 @@ class MainPage extends Component {
             }
             usdPrice = '$' + usdPrice;
 
-            let thumb = "assets/img/sims/"+simulator+".png";
+            let thumb = "/assets/img/sims/"+simulator+".png";
 
             //could be empty for these nfts (if not auction data)
             
@@ -521,7 +521,8 @@ class MainPage extends Component {
             let itemId = value.id
             let ipfsPath = value.ad.ipfsPath
             let imagePath = value.info.skinPic
-            let thumb = "assets/img/sims/"+simulator+".png";
+            let description = value.info.description
+            let thumb = "/assets/img/sims/"+simulator+".png"
 
             let price_src = Number((Math.round(price / priceConversion) * 100) / 100).toFixed(2);
             let usdPrice = Number(Math.round(price_src  * this.state.usdValue * 100) / 100).toFixed(2);
@@ -533,7 +534,7 @@ class MainPage extends Component {
 
             skins.push(
                 <ListGroup.Item key={itemId} className="bg-dark_A-20 col-3-24 mb-4">
-                    <Card className="card-block" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, null, null, price, carBrand, null, address, ipfsPath, imagePath, false, false, null, null)}>
+                    <Card className="card-block" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, null, description, price, carBrand, null, address, ipfsPath, imagePath, false, false, null, null)}>
                         <Card.Header style={{height: '240px'}} className="d-flex flex-wrap align-items-center justify-content-center">
                             <Card.Img variant="top" src={"https://simthunder.infura-ipfs.io/ipfs/"+imagePath[0]} style={{width: 'auto', maxHeight: '100%'}} />
                         </Card.Header>
@@ -565,7 +566,7 @@ class MainPage extends Component {
             let address = value.ad.seller
             let itemId = value.id
             let ipfsPath = value.ad.ipfsPath
-            let thumb = "assets/img/sims/"+simulator+".png";
+            let thumb = "/assets/img/sims/"+simulator+".png";
 
             let price_src = Number((Math.round(price / priceConversion) * 100) / 100).toFixed(2);
             let usdPrice = Number(Math.round(price_src  * this.state.usdValue * 100) / 100).toFixed(2);

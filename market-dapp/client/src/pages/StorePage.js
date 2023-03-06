@@ -1383,7 +1383,7 @@ class StorePage extends Component {
                             let itemId = value.id
                             let key = itemId + "_" + index;
                             let ipfsPath = value.ad.ipfsPath
-                            let thumb = "assets/img/sims/"+simulator+".png";
+                            let thumb = "/assets/img/sims/"+simulator+".png";
                             /*
                             <div><b>Track:</b> {track}</div>
                             <div><b>Simulator:</b> {simulator}</div>
