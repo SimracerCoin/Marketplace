@@ -4,6 +4,10 @@ import { Prompt } from 'react-st-modal';
 import ipfs from "../ipfs";
 import computeMerkleRootHash from "../utils/merkle"
 import UIHelper from "../utils/uihelper"
+import Dropzone from 'react-dropzone-uploader'
+import { getDroppedOrSelectedFiles } from 'html5-file-selector'
+
+import 'react-dropzone-uploader/dist/styles.css'
 
 const openpgp = require('openpgp');
 
@@ -100,8 +104,9 @@ class UploadSkin extends Component {
     //Guarda a imagem no ipfs 
     saveImage_toIPFS = async () => {
         let paths = [];
-        for(let i = 0; i < this.state.imageBuffer.length; ++i) {
-            const path = (await ipfs.add(this.state.imageBuffer[i])).path;
+        let imageBuffer = Object.values(this.state.imageBuffer.sort((a,b) => {return a.pos - b.pos}));
+        for(let i = 0; i < imageBuffer.length; ++i) {
+            const path = (await ipfs.add(imageBuffer[i].buffer)).path;
             if(path) paths.push(path);
             else return false;
         }
@@ -110,6 +115,7 @@ class UploadSkin extends Component {
         return true;
     }
 
+    /** @deprecated */
     //Transforma a imagem num buffer e guarda como estado
     uploadImageIPFS = (event) => {
         event.stopPropagation();
@@ -149,8 +155,6 @@ class UploadSkin extends Component {
         const password = NON_SECURE_SELL ? NON_SECURE_KEY : await Prompt('Type the password to encrypt the file. Use different password for each item.');
         if (!password) return false;
 
-        UIHelper.showSpinning();
-
         const { message } = await openpgp.encrypt({
             message: openpgp.message.fromBinary(this.state.buffer), // input as Message object
             passwords: [password],                                  // multiple passwords possible
@@ -167,7 +171,6 @@ class UploadSkin extends Component {
             this.setState({ ipfsPath: ipfsPath[0].hash });
         });
 
-        UIHelper.hideSpinning();
         this.setState({ ipfsPath: response.path, encryptedDataHash: encryptedDataHash });
 
         return true;
@@ -189,8 +192,9 @@ class UploadSkin extends Component {
 
             UIHelper.showSpinning();
 
-            if(!(await this.onIPFSSubmit())) {
-                return;
+            if(!(await Promise.all([this.onIPFSSubmit(), this.saveImage_toIPFS()])).every(e => e === true)) {
+                alert("Error on upload files. Please try again later.");
+                UIHelper.hideSpinning();
             }
 
             const price = this.state.drizzle.web3.utils.toWei(this.state.priceValue);
@@ -207,27 +211,68 @@ class UploadSkin extends Component {
             // TO DO: change placeholders for correct values
             const placeholder = this.state.drizzle.web3.utils.fromAscii('');
 
-            if (await this.saveImage_toIPFS()) {
-                let paramsForCall = await UIHelper.calculateGasUsingStation(this.state.currentAccount);
+            let paramsForCall = await UIHelper.calculateGasUsingStation(this.state.currentAccount);
 
-                await this.state.contract.methods.newSkin(ipfsPathBytes, this.state.currentCar,
-                    this.state.currentSimulator, price, placeholder, this.state.encryptedDataHash, nickname, this.state.image_ipfsPath, this.state.currentDescription)
-                    .send(paramsForCall)
-                    .on('confirmation', function (confNumber, receipt, latestBlockHash) {
-                        window.localStorage.setItem('forceUpdate','yes');
-                        if(confNumber === NUMBER_CONFIRMATIONS_NEEDED) {
-                            UIHelper.transactionOnConfirmation("The new skin is available for sale!", "/");
-                        }
-                    })
-                    .on('error', UIHelper.transactionOnError)
-                    .catch(function (e) { 
-                        UIHelper.hideSpinning();
-                    });
-            } else {
-                alert("Error on upload images. Please try again later.");
-                UIHelper.hideSpinning();
-            }
+            await this.state.contract.methods.newSkin(ipfsPathBytes, this.state.currentCar,
+                this.state.currentSimulator, price, placeholder, this.state.encryptedDataHash, nickname, this.state.image_ipfsPath, this.state.currentDescription)
+                .send(paramsForCall)
+                .on('confirmation', function (confNumber, receipt, latestBlockHash) {
+                    window.localStorage.setItem('forceUpdate','yes');
+                    if(confNumber === NUMBER_CONFIRMATIONS_NEEDED) {
+                        UIHelper.transactionOnConfirmation("The new skin is available for sale!", "/");
+                    }
+                })
+                .on('error', UIHelper.transactionOnError)
+                .catch(function (e) { 
+                    UIHelper.hideSpinning();
+                });
         }
+    }
+
+    onFileChange = ({ meta, file }, status) => {
+        if(status === "done") {
+            const reader = new window.FileReader();
+            reader.readAsArrayBuffer(file);
+            reader.onloadend = () => {
+                let imageBuffer = this.state.imageBuffer;
+                imageBuffer[meta.id] = { buffer: Buffer(reader.result), pos: Object.keys(imageBuffer).length + 1 };
+                this.setState({imageBuffer: imageBuffer});
+            }
+        } else if(status === "removed") {
+            let imageBuffer = this.state.imageBuffer;
+            let pos_c = imageBuffer[meta.id].pos;
+            Object.values(imageBuffer).forEach((image, idx) => {
+                if(image.pos > pos_c) imageBuffer[Object.keys(imageBuffer)[idx]].pos -=1;
+            })
+            delete imageBuffer[meta.id];
+            this.setState({imageBuffer: imageBuffer});
+        }
+    }
+    getFilesFromEvent = e => {
+        return new Promise(resolve => {
+            getDroppedOrSelectedFiles(e).then(chosenFiles => {
+                resolve(chosenFiles.map(f => f.fileObject))
+            })
+        })
+    }
+    selectFileInput = ({ accept, onFiles, files, getFilesFromEvent }) => {
+        const textMsg = files.length > 0 ? 'Add More' : 'Select Files'
+        return (
+            <label className="btn btn-danger mt-4">
+                {textMsg}
+                <input
+                    style={{ display: 'none' }}
+                    type="file"
+                    accept={accept}
+                    multiple
+                    onChange={e => {
+                        getFilesFromEvent(e).then(chosenFiles => {
+                            onFiles(chosenFiles)
+                        })
+                    }}
+                />
+            </label>
+        )
     }
 
     render() {
@@ -259,10 +304,13 @@ class UploadSkin extends Component {
                                                 <div className="form-group col-6">
                                                     <Form.Control type="number" min="0" step="1" pattern="([0-9]*[.])?[0-9]+" placeholder="Enter File price (SRC)" value={this.state.priceValue} onChange={this.handleFilePrice} />
                                                 </div>
-                                            </div>
-                                            <div className="form-row">
                                                 <div className="form-group col-6">
                                                     <Form.Control type="text" placeholder="Enter Car brand" onChange={this.onSelectCar} />
+                                                </div>
+                                            </div>
+                                            <div className="form-row">
+                                                <div className="form-group col-12">
+                                                    <Form.Control as="textarea" placeholder="Enter Description" onChange={this.handleDescription} />
                                                 </div>
                                             </div>
                                             <div className="form-row">
@@ -273,15 +321,26 @@ class UploadSkin extends Component {
                                                 </div>
                                             </div>
                                             <div className="form-group">
-                                                <FormLabel htmlFor="skin-image" className="col-sm-3 mr-2 col-form-label font-weight-bold">Choose Skin image:</FormLabel>
-                                                <input id="skin-image"  
+                                                <FormLabel htmlFor="skin-image" className="col-12 mr-2 col-form-label font-weight-bold">Choose Skin image (first will be the main image):</FormLabel>
+                                                <Dropzone
+                                                    id="dropzone"
+                                                    onChangeStatus={this.onFileChange}
+                                                    InputComponent={this.selectFileInput}
+                                                    getFilesFromEvent={this.getFilesFromEvent}
+                                                    SubmitButtonComponent={null}
+                                                    autoUpload={false}
+                                                    accept="image/*"
+                                                    maxFiles={5}
+                                                    inputContent="Drop A File"
+                                                    styles={{
+                                                        dropzone: { width: 600, height: 400 },
+                                                        dropzoneActive: { borderColor: 'green' },
+                                                        previewImage: { maxHeight: 60 }
+                                                    }}            
+                                                />
+                                                {/*<input id="skin-image"  
                                                     type="file" accept="image/*"
-                                                    onChange={this.uploadImageIPFS} multiple />
-                                            </div>
-                                            <div className="form-row">
-                                                <div className="form-group col-12">
-                                                    <Form.Control as="textarea" placeholder="Enter Description" onChange={this.handleDescription} />
-                                                </div>
+                                                    onChange={this.uploadImageIPFS} multiple />*/}
                                             </div>
                                             <div className="form-row mt-4">
                                                 <Button onClick={this.saveSkin}>Save Skin</Button>

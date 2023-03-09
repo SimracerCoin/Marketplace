@@ -115,8 +115,8 @@ static calculateGasUsingStation = async function(fromAccount) {
         });
         console.log('gassatation data: ', data);
 
-        gas.maxFeePerGas = Number(convertGwei2Wei( Math.trunc(data.fast.maxFee)));
-        gas.maxPriorityFeePerGas = Number(convertGwei2Wei( Math.trunc(data.fast.maxPriorityFee)));
+        gas.maxFeePerGas = Number(convertGwei2Wei( Math.trunc(data.standard.maxFee)));
+        gas.maxPriorityFeePerGas = Number(convertGwei2Wei( Math.trunc(data.standard.maxPriorityFee)));
     } catch (error) {
       console.log("gasstation error: ", error);
 
