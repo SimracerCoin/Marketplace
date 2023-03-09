@@ -296,16 +296,27 @@ class UploadSkin extends Component {
                                     <hr className="w-10 border-warning border-top-2 o-90" />
                                     <div className="mt-4">
                                         <Form>
-                                            <div className="form-group">
-                                                <FormLabel htmlFor="skin-file" className="col-sm-3 mr-2 col-form-label font-weight-bold">Choose Skin file (.zip):</FormLabel>
-                                                <input id="skin-file" type="file" accept=".zip" onChange={this.captureFile} />
+                                            <div className="form-row">
+                                                <div className="form-group col-12">
+                                                    <FormLabel htmlFor="skin-file" className="mr-2 col-form-label font-weight-bold">Choose Skin file (.zip):</FormLabel>
+                                                    <input id="skin-file" type="file" accept=".zip" onChange={this.captureFile} />
+                                                </div>
                                             </div>
                                             <div className="form-row">
-                                                <div className="form-group col-6">
+                                                <div className="form-group col-md-6 col-12">
                                                     <Form.Control type="number" min="0" step="1" pattern="([0-9]*[.])?[0-9]+" placeholder="Enter File price (SRC)" value={this.state.priceValue} onChange={this.handleFilePrice} />
                                                 </div>
-                                                <div className="form-group col-6">
+                                            </div>
+                                            <div className="form-row">
+                                                <div className="form-group col-md-6 col-12">
                                                     <Form.Control type="text" placeholder="Enter Car brand" onChange={this.onSelectCar} />
+                                                </div>
+                                            </div>
+                                            <div className="form-row">
+                                                <div className="form-group col-md-6 col-12">
+                                                    <DropdownButton id="dropdown-skin-button" title={this.state.currentSimulator} onSelect={this.onSelectSim}>
+                                                        {sims}
+                                                    </DropdownButton>
                                                 </div>
                                             </div>
                                             <div className="form-row">
@@ -314,33 +325,28 @@ class UploadSkin extends Component {
                                                 </div>
                                             </div>
                                             <div className="form-row">
-                                                <div className="form-group col-6">
-                                                    <DropdownButton id="dropdown-skin-button" title={this.state.currentSimulator} onSelect={this.onSelectSim}>
-                                                        {sims}
-                                                    </DropdownButton>
+                                                <div className="form-group col-md-6 col-12">
+                                                    <FormLabel htmlFor="skin-image" className="mr-2 col-form-label font-weight-bold">Choose Skin image (first will be the main image):</FormLabel>
+                                                    <Dropzone
+                                                        id="dropzone"
+                                                        onChangeStatus={this.onFileChange}
+                                                        InputComponent={this.selectFileInput}
+                                                        getFilesFromEvent={this.getFilesFromEvent}
+                                                        SubmitButtonComponent={null}
+                                                        autoUpload={false}
+                                                        accept="image/*"
+                                                        maxFiles={5}
+                                                        inputContent="Drop A File"
+                                                        styles={{
+                                                            dropzone: { maxHeight: 400 },
+                                                            dropzoneActive: { borderColor: 'green' },
+                                                            previewImage: { maxHeight: 60 }
+                                                        }}            
+                                                    />
+                                                    {/*<input id="skin-image"  
+                                                        type="file" accept="image/*"
+                                                        onChange={this.uploadImageIPFS} multiple />*/}
                                                 </div>
-                                            </div>
-                                            <div className="form-group">
-                                                <FormLabel htmlFor="skin-image" className="col-12 mr-2 col-form-label font-weight-bold">Choose Skin image (first will be the main image):</FormLabel>
-                                                <Dropzone
-                                                    id="dropzone"
-                                                    onChangeStatus={this.onFileChange}
-                                                    InputComponent={this.selectFileInput}
-                                                    getFilesFromEvent={this.getFilesFromEvent}
-                                                    SubmitButtonComponent={null}
-                                                    autoUpload={false}
-                                                    accept="image/*"
-                                                    maxFiles={5}
-                                                    inputContent="Drop A File"
-                                                    styles={{
-                                                        dropzone: { width: 600, height: 400 },
-                                                        dropzoneActive: { borderColor: 'green' },
-                                                        previewImage: { maxHeight: 60 }
-                                                    }}            
-                                                />
-                                                {/*<input id="skin-image"  
-                                                    type="file" accept="image/*"
-                                                    onChange={this.uploadImageIPFS} multiple />*/}
                                             </div>
                                             <div className="form-row mt-4">
                                                 <Button onClick={this.saveSkin}>Save Skin</Button>
