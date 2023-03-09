@@ -884,7 +884,7 @@ class ItemPage extends Component {
                     }
                     <p>
                       {this.state.description && 
-                      <span>Description: {this.state.description}</span>
+                      <span>{this.state.description}</span>
                       }
                     </p>
                     <div className="price-wrapper">

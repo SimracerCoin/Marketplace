@@ -76,6 +76,9 @@ contract STMarketplace is ContentMarketplace {
     // /// @notice To track if seller address already exists
     mapping (address => bool) userExists;
 
+    // /// @notice To track if seller address is verified
+    mapping (address => bool) userVerified;
+
     // /// @notice To mapping user and his nickname
     mapping (address => string) userNickname;
     
@@ -250,7 +253,7 @@ contract STMarketplace is ContentMarketplace {
     }
 
     /// @notice Registers seller address
-    function saveSeller(address _address, string memory _nickname) public returns(bool){
+    function saveSeller(address _address, string memory _nickname) public returns(bool) {
         if(userExists[_address] == false) {
             userExists[_address] = true;
             userAddresses.push(_address);
@@ -258,6 +261,13 @@ contract STMarketplace is ContentMarketplace {
             return true;    
         }
         return false;
+    }
+
+    /// @notice Set seller verified
+    function setSellerVerified(address _address, bool _verified) public {
+        require(msg.sender == owner, "Only owner can call this");
+        require(isSeller(_address), "Unknown seller");
+        userVerified[_address] = _verified;
     }
 
     /// @notice Registers seller address
@@ -334,6 +344,12 @@ contract STMarketplace is ContentMarketplace {
     /// @notice Tests if sellers exists
     function isSeller(address _address) public view returns(bool) {
         return userExists[_address];
+    }
+
+    /// @notice Get if seller is verified
+    function isSellerVerified(address _address) public view returns(bool) {
+        require(isSeller(_address), "Unknown seller");
+        return userVerified[_address];
     }
     
     /// @notice Gets number of sellers
