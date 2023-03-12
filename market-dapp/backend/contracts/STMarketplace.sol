@@ -37,6 +37,8 @@ contract STMarketplace is ContentMarketplace {
         string carBrand;
         string simulator;
         string description;
+        string designer;
+        string license;
         string[] skinPic;
     }
        
@@ -157,7 +159,9 @@ contract STMarketplace is ContentMarketplace {
         bytes32 _encryptedDataHash,       // merkle hash of encrypted data
         string memory _nickname,
         string[] memory _imagePath,       // ipfs path for image skin
-        string memory _description
+        string memory _description,
+        string memory _designer,
+        string memory _license
     ) public
         returns (uint256 id)           // returns ad identifier
     {
@@ -174,6 +178,8 @@ contract STMarketplace is ContentMarketplace {
         info.simulator = _simulator;
         info.skinPic = _imagePath;
         info.description = _description;
+        info.designer = _designer;
+        info.license = _license;
 
         carSkinIds.push(id);
         saveSeller(msg.sender, _nickname);
