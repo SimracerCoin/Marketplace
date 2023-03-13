@@ -15,6 +15,7 @@ const priceConversion = 10**18;
 const NON_SECURE_SELL = process.env.REACT_APP_NON_SECURE_SELL === "true";
 const NON_SECURE_KEY= process.env.REACT_APP_NON_SECURE_KEY;
 const NUMBER_CONFIRMATIONS_NEEDED = Number(process.env.REACT_APP_NUMBER_CONFIRMATIONS_NEEDED);
+const simsElements = ["iRacing", "F12020", "rFactor", "Assetto Corsa"];
 
 class UploadSkin extends Component {
 
@@ -185,6 +186,8 @@ class UploadSkin extends Component {
             alert('Item price is invalid');
         } else if(!this.state.buffer) {
             alert('File missing or invalid!');
+        } else if(!simsElements.includes(this.state.currentSimulator)) {
+            alert('Choose a simulator!');
         } else {
             let nickname = "";
             if (!this.state.isSeller) {
@@ -278,7 +281,6 @@ class UploadSkin extends Component {
     }
 
     render() {
-        const simsElements = ["iRacing", "F12020", "rFactor", "Assetto Corsa"];
         const sims = [];
 
         for (const [index, value] of simsElements.entries()) {
