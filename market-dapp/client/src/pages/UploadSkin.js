@@ -6,6 +6,7 @@ import computeMerkleRootHash from "../utils/merkle"
 import UIHelper from "../utils/uihelper"
 import Dropzone from 'react-dropzone-uploader'
 import { getDroppedOrSelectedFiles } from 'html5-file-selector'
+import * as $ from 'jquery'
 
 import 'react-dropzone-uploader/dist/styles.css'
 
@@ -107,12 +108,19 @@ class UploadSkin extends Component {
     //Guarda a imagem no ipfs 
     saveImage_toIPFS = async () => {
         let paths = [];
-        let imageBuffer = Object.values(this.state.imageBuffer.sort((a,b) => {return a.pos - b.pos}));
-        for(let i = 0; i < imageBuffer.length; ++i) {
-            const path = (await ipfs.add(imageBuffer[i].buffer)).path;
-            if(path) paths.push(path);
-            else return false;
-        }
+        let error = false;
+        const { imageBuffer } = this.state;
+
+        $(".dzu-dropzone .dzu-previewImage").each(async (idx, elem) => {
+            const path = (await ipfs.add(imageBuffer[$(elem).attr("src")])).path;
+            if(path) {
+                paths.push(path);
+            } else {
+                error = true;
+                return false;
+            }
+        });
+        if(error) return false;
 
         this.setState({ image_ipfsPath: paths });
         return true;
@@ -240,16 +248,12 @@ class UploadSkin extends Component {
             reader.readAsArrayBuffer(file);
             reader.onloadend = () => {
                 let imageBuffer = this.state.imageBuffer;
-                imageBuffer[meta.id] = { buffer: Buffer(reader.result), pos: Object.keys(imageBuffer).length + 1 };
+                imageBuffer[meta.previewUrl] = Buffer(reader.result);
                 this.setState({imageBuffer: imageBuffer});
             }
         } else if(status === "removed") {
             let imageBuffer = this.state.imageBuffer;
-            let pos_c = imageBuffer[meta.id].pos;
-            Object.values(imageBuffer).forEach((image, idx) => {
-                if(image.pos > pos_c) imageBuffer[Object.keys(imageBuffer)[idx]].pos -=1;
-            })
-            delete imageBuffer[meta.id];
+            delete imageBuffer[meta.previewUrl];
             this.setState({imageBuffer: imageBuffer});
         }
     }
