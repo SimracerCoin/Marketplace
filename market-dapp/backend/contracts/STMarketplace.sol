@@ -37,6 +37,8 @@ contract STMarketplace is ContentMarketplace {
         string carBrand;
         string simulator;
         string description;
+        string designer;
+        string license;
         string[] skinPic;
     }
        
@@ -75,6 +77,9 @@ contract STMarketplace is ContentMarketplace {
     
     // /// @notice To track if seller address already exists
     mapping (address => bool) userExists;
+
+    // /// @notice To track if seller address is verified
+    mapping (address => bool) userVerified;
 
     // /// @notice To mapping user and his nickname
     mapping (address => string) userNickname;
@@ -154,7 +159,9 @@ contract STMarketplace is ContentMarketplace {
         bytes32 _encryptedDataHash,       // merkle hash of encrypted data
         string memory _nickname,
         string[] memory _imagePath,       // ipfs path for image skin
-        string memory _description
+        string memory _description,
+        string memory _designer,
+        string memory _license
     ) public
         returns (uint256 id)           // returns ad identifier
     {
@@ -171,6 +178,8 @@ contract STMarketplace is ContentMarketplace {
         info.simulator = _simulator;
         info.skinPic = _imagePath;
         info.description = _description;
+        info.designer = _designer;
+        info.license = _license;
 
         carSkinIds.push(id);
         saveSeller(msg.sender, _nickname);
@@ -250,7 +259,7 @@ contract STMarketplace is ContentMarketplace {
     }
 
     /// @notice Registers seller address
-    function saveSeller(address _address, string memory _nickname) public returns(bool){
+    function saveSeller(address _address, string memory _nickname) public returns(bool) {
         if(userExists[_address] == false) {
             userExists[_address] = true;
             userAddresses.push(_address);
@@ -258,6 +267,13 @@ contract STMarketplace is ContentMarketplace {
             return true;    
         }
         return false;
+    }
+
+    /// @notice Set seller verified
+    function setSellerVerified(address _address, bool _verified) public {
+        require(msg.sender == owner, "Only owner can call this");
+        require(isSeller(_address), "Unknown seller");
+        userVerified[_address] = _verified;
     }
 
     /// @notice Registers seller address
@@ -276,6 +292,13 @@ contract STMarketplace is ContentMarketplace {
         }
         return setups;
     }
+
+    /// @notice Get car setup by Id
+    function getCarSetup(uint256 _itemId) public view returns(carSetup memory) {
+        require(isCarSetup(_itemId), "Item not found");
+
+        return carSetup(_itemId, ads[_itemId], carSetupInfos[_itemId]);
+    }
     
     /// @notice Gets the list of all skin files
     function getSkins() public view returns(carSkin[] memory skins){
@@ -287,6 +310,13 @@ contract STMarketplace is ContentMarketplace {
             skins[i].info = carSkinInfos[id];
         }
         return skins;
+    }
+
+    /// @notice Get skin by Id
+    function getSkin(uint256 _itemId) public view returns(carSkin memory) {
+        require(isSkin(_itemId), "Item not found");
+
+        return carSkin(_itemId, ads[_itemId], carSkinInfos[_itemId]);
     }
 
     /// @notice Gets the list of comments from item
@@ -320,6 +350,12 @@ contract STMarketplace is ContentMarketplace {
     /// @notice Tests if sellers exists
     function isSeller(address _address) public view returns(bool) {
         return userExists[_address];
+    }
+
+    /// @notice Get if seller is verified
+    function isSellerVerified(address _address) public view returns(bool) {
+        require(isSeller(_address), "Unknown seller");
+        return userVerified[_address];
     }
     
     /// @notice Gets number of sellers

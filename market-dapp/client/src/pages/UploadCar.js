@@ -211,41 +211,47 @@ class UploadCar extends Component {
                                 <hr className="w-10 border-warning border-top-2 o-90" />
                                 <div className="mt-4">
                                     <Form>
-                                        <div className="form-group">
-                                            <FormLabel for="car-file" className="col-sm-3 mr-2 col-form-label font-weight-bold">Choose Setup file (.zip):</FormLabel>
-                                            <input id="car-file" type="file" accept=".zip" onChange={this.captureFile} />
+                                        <div className="form-row">
+                                            <div className="form-group col-12">
+                                                <FormLabel for="car-file" className="mr-2 col-form-label font-weight-bold">Choose Setup file (.zip):</FormLabel>
+                                                <input id="car-file" type="file" accept=".zip" onChange={this.captureFile} />
+                                            </div>
                                         </div>
                                         <div className="form-row">
-                                            <div className="form-group col-6">
+                                            <div className="form-group col-md-6 col-12">
                                                 <Form.Control type="number" min="0" step="1" pattern="([0-9]*[.])?[0-9]+" placeholder="Enter File price (SRC)" value={this.state.priceValue} onChange={this.handleFilePrice} />
                                             </div>
                                         </div>
                                         <div className="form-row">
-                                            <div className="form-group col-6">
+                                            <div className="form-group col-md-6 col-12">
                                                 <Form.Control type="text" placeholder="Enter Season" onChange={this.handleSeason} />
                                             </div>
-                                            <div className="form-group col-6">
+                                        </div>
+                                        <div className="form-row">
+                                            <div className="form-group col-md-6 col-12">
                                                 <Form.Control type="text" placeholder="Enter Series name" onChange={this.handleSeries} />
+                                            </div>
+                                        </div>
+                                        <div className="form-row">
+                                            <div className="form-group col-md-6 col-12">
+                                                <Form.Control type="text" placeholder="Enter Car brand" onChange={this.onSelectCar} />
+                                            </div>
+                                        </div>
+                                        <div className="form-row">
+                                            <div className="form-group col-md-6 col-12">
+                                                <Form.Control type="text" placeholder="Enter Track" onChange={this.onSelectTrack} />
+                                            </div>
+                                        </div>
+                                        <div className="form-row">
+                                            <div className="form-group col-md-6 col-12">
+                                                <DropdownButton id="dropdown-skin-button" title={this.state.currentSimulator} onSelect={this.onSelectSim}>
+                                                    {sims}
+                                                </DropdownButton>
                                             </div>
                                         </div>
                                         <div className="form-row">
                                             <div className="form-group col-12">
                                                 <Form.Control as="textarea" placeholder="Enter Description" onChange={this.handleDescription} />
-                                            </div>
-                                        </div>
-                                        <div className="form-row">
-                                            <div className="form-group col-6">
-                                                <Form.Control type="text" placeholder="Enter Car brand" onChange={this.onSelectCar} />
-                                            </div>
-                                            <div className="form-group col-6">
-                                                <Form.Control type="text" placeholder="Enter Track" onChange={this.onSelectTrack} />
-                                            </div>
-                                        </div>
-                                        <div className="form-row">
-                                            <div className="form-group col-6">
-                                                <DropdownButton id="dropdown-skin-button" title={this.state.currentSimulator} onSelect={this.onSelectSim}>
-                                                    {sims}
-                                                </DropdownButton>
                                             </div>
                                         </div>
                                     </Form>

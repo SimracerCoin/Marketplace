@@ -828,6 +828,7 @@ class NFTInventoryPage extends Component {
                     selectedDescription: this.state.selectedDescription,
                     selectedPrice: this.state.selectedPrice,
                     selectedCarBrand: this.state.selectedCarBrand,
+                    selectedCarNumber: this.state.selectedCarNumber,
                     imagePath: this.state.selectedImagePath,
                     vendorAddress: this.state.vendorAddress,
                     vendorNickname: this.state.vendorNickname,
@@ -843,7 +844,7 @@ class NFTInventoryPage extends Component {
     }
 
     //Obs: this function was way to many paramaters, bette make a JSON object/payload maybe?
-    buyItem = async (event, itemId, track, simulator, season, series, description, price, carBrand, address, ipfsPath, imagePath, videoPath, isNFT, isMomentNFT) =>{
+    buyItem = async (event, itemId, track, simulator, season, series, description, price, carBrand, carNumber, address, ipfsPath, imagePath, videoPath, isNFT, isMomentNFT) =>{
       event.preventDefault();
      
       this.setState({
@@ -854,6 +855,7 @@ class NFTInventoryPage extends Component {
           selectedSeason: season,
           selectedSeries: series,
           selectedDescription: description,
+          selectedCarNumber: carNumber,
           selectedPrice: price,
           selectedCarBrand: carBrand,
           selectedImagePath: imagePath,
@@ -1028,7 +1030,7 @@ class NFTInventoryPage extends Component {
                                   itemId, null, simulator, null, series, carNumber, price, null , address, null, imagePath, true
                                 }*/
                                 return <div className="col-md-12 mb-4" key={key}>
-                                <a href="#1" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, carNumber, price, null , address, null, imagePath, null, true, false)} className="product-item">
+                                <a onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, description, price, null, carNumber, address, null, imagePath, null, true, false)} className="product-item">
                                   <div className="row align-items-center no-gutters">
                                     <div className="item_img d-none d-sm-block">
                                       <img className="img bl-3 text-primary" src={image} alt="Games Store"/>
@@ -1115,7 +1117,7 @@ class NFTInventoryPage extends Component {
                                 let description = value.description;
 
                                 return <div className="col-md-12 mb-4" key={key}>
-                                <a href="#1" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, description, price, null , address, null, imagePath, video, false, true)} className="product-item">
+                                <a onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, description, price, null , null, address, null, imagePath, video, false, true)} className="product-item">
                                   <div className="row align-items-center no-gutters">
                                     <div className="item_img d-none d-sm-block">
                                       <img className="img bl-3 text-primary" src={image} alt="Games Store"/>

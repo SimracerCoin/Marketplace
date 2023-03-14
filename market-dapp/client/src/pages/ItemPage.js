@@ -3,13 +3,17 @@ import { Button, Form, Card, ListGroup, Row, Col } from 'react-bootstrap';
 import { withRouter } from "react-router";
 import { confirmAlert } from 'react-confirm-alert';
 import { Link } from 'react-router-dom';
+import { Carousel } from 'react-responsive-carousel';
 import StarRatings from 'react-star-ratings';
 import UIHelper from "../utils/uihelper";
 import ReviewsComponent from "../components/ReviewsComponent";
 import SimilarItemsComponent from '../components/SimilarItemsComponent';
 import SimpleModal from '../components/SimpleModal';
-import "../css/itempage.css";
 import ipfs from "../ipfs";
+
+import 'react-responsive-carousel/lib/styles/carousel.min.css';
+import '../css/custom-carousel.css';
+import "../css/itempage.css";
 
 const BufferList = require('bl/BufferList');
 
@@ -25,6 +29,7 @@ class ItemPage extends Component {
 
     constructor(props) {
         super(props);
+
         this.state = {
             drizzle: props.drizzle,
             drizzleState: props.drizzleState,
@@ -36,11 +41,12 @@ class ItemPage extends Component {
             description: props.location.state.selectedDescription,
             price: props.location.state.selectedPrice,
             car: props.location.state.selectedCarBrand,
+            number: props.location.state.selectedCarNumber,
             vendorAddress: props.location.state.vendorAddress,
             vendorNickname: props.location.state.vendorNickname,
             ipfsPath: props.location.state.ipfsPath,
             videoPath: props.location.state.videoPath,
-            imagePath: props.location.state.imagePath,
+            imagePath: Array.isArray(props.location.state.imagePath) ? props.location.state.imagePath : [props.location.state.imagePath],
             isNFT: props.location.state.isNFT,
             isMomentNFT: props.location.state.isMomentNFT,
             contract: null,
@@ -58,8 +64,16 @@ class ItemPage extends Component {
             isContractOwner: false,
             canDelete: false,
             sellFromWallet: false,
-            isNFTOwner: false
+            isNFTOwner: false,
+            id: props.match.params.id
         }
+
+        console.log("ID: ", this.state.id);
+
+        this.state.imagePath.forEach((v, idx) => {
+          if(/(?:https?):\/\/(\w+:?\w*)?(\S+)(:\d+)?(\/|\/([\w#!:.?+=&%!\-\/]))?/.test(v))
+            this.state.imagePath[idx] = v.split('/').pop();
+        });
 
         this.mute = this.mute.bind(this);
         this.unmute = this.unmute.bind(this);
@@ -525,7 +539,7 @@ class ItemPage extends Component {
      */
     renderItemInformation = () => {
       if (this.state.isNFT || this.state.isMomentNFT) {
-          return this.renderItemInformationForNFT(this.state.isMomentNFT);
+          return this.renderItemInformationForNFT();
       } 
       else if (this.state.track == null || this.state.season == null) {
           return this.renderItemInformationForSkin();
@@ -586,6 +600,11 @@ class ItemPage extends Component {
                 <div className="col-sm-4"><strong className="fw-500">Car Brand:</strong></div>
                 <div className="col-sm-8">{this.state.car}</div>
                 </div>
+
+                <div className="row mb-4 mb-sm-0">
+                  <div className="col-sm-4"><strong className="fw-500">Description:</strong></div>
+                  <div className="col-sm-8">{this.state.description}</div>
+                </div>
                 
                 <div className="row mb-4 mb-sm-0">
                 <div className="col-sm-4"><strong className="fw-500">Price:</strong></div>
@@ -598,10 +617,10 @@ class ItemPage extends Component {
 
  
     //NFT
-    renderItemInformationForNFT = (isMomentNFT) => {
+    renderItemInformationForNFT = () => {
 
       let date = "N/A";
-      if(isMomentNFT && this.state.metadata && this.state.metadata.date) {
+      if(this.state.isMomentNFT && this.state.metadata && this.state.metadata.date) {
         date = UIHelper.formaDateAsString(this.state.metadata.date);
       }
      
@@ -613,7 +632,6 @@ class ItemPage extends Component {
                   <div className="col-sm-4"><strong className="fw-500">Date:</strong></div>
                   <div className="col-sm-8">{date}</div>
                 </div>
-
                 <div className="row mb-4 mb-sm-0">
                   <div className="col-sm-4"><strong className="fw-500">Simulator:</strong></div>
                   <div className="col-sm-8">{this.state.simulator}</div>
@@ -623,9 +641,16 @@ class ItemPage extends Component {
                   <div className="col-sm-8">{this.state.series}</div>
                 </div>
                 <div className="row mb-4 mb-sm-0">
-                  <div className="col-sm-4"><strong className="fw-500">{isMomentNFT ? 'Description:' : 'Car Number:'}</strong></div>
+                  <div className="col-sm-4"><strong className="fw-500">Description:</strong></div>
                   <div className="col-sm-8">{this.state.description}</div>
                 </div>
+                {
+                  this.state.isNFT &&
+                  <div className="row mb-4 mb-sm-0">
+                    <div className="col-sm-4"><strong className="fw-500">Car Number:</strong></div>
+                    <div className="col-sm-8">{this.state.number}</div>
+                  </div>
+                }
                 { !this.state.isNFTOwner && 
                 <div className="row mb-4 mb-sm-0">
                   <div className="col-sm-4"><strong className="fw-500">Price:</strong></div>
@@ -686,7 +711,7 @@ class ItemPage extends Component {
         price: payload.price,
         car: payload.carBrand,
         ipfsPath: payload.ipfsPath,
-        imagePath: payload.imagePath,
+        imagePath: Array.isArray(payload.imagePath) ? payload.imagePath : [payload.imagePath],
         isNFT: isNFT,
         isMomentNFT: isMomentNFT,
         isSkin: isSkin,
@@ -706,25 +731,42 @@ class ItemPage extends Component {
 
     }
 
-    renderVideoFrame = (hasVideo) => {
+    renderCarousel = (hasVideo, hasImage) => {
 
-      if(!hasVideo) {
-        return "";
-      }
-      if(this.state.isMuted) {
-        return <div className="carousel-product">
-                   <div className="slider text-secondary" data-slick="product-body">
-                      <video async className="videoContainer" loop muted autoPlay currenttime={0} src={this.state.videoPath} />  
-                      <button onClick={this.unmute} className="video-sound-control--btn video-sound-control--btn-off" label="Unmmute" type="button"></button> 
-                   </div>
-               </div>
-      } 
-      return  <div className="carousel-product">
-                <div className="slider text-secondary" data-slick="product-body">
-                  <video async className="videoContainer" loop autoPlay currenttime={0} src={this.state.videoPath} />  
-                  <button onClick={this.mute} className="video-sound-control--btn video-sound-control--btn-on" label="Mute" type="button"></button> 
-                </div>
+      if(hasImage && !hasVideo) {
+        if(this.state.imagePath.length > 1) {
+          return <Carousel>
+            {
+              this.state.imagePath.map((value, idx) => {
+                return <img className="imageContainer" src={"https://simthunder.infura-ipfs.io/ipfs/"+value} alt={"slide_"+idx}/>
+              })
+            }
+          </Carousel>;
+        } else {
+          return <div className="carousel-product">
+            <div className="slider text-secondary" data-slick="product-body">
+                  <img className="imageContainer" src={"https://simthunder.infura-ipfs.io/ipfs/"+this.state.imagePath[0]} alt={"slide"}/>
             </div>
+          </div>
+        }
+      } else if(hasVideo) {
+        if(this.state.isMuted) {
+          return <div className="carousel-product">
+                    <div className="slider text-secondary" data-slick="product-body">
+                        <video async className="videoContainer" loop muted autoPlay currenttime={0} src={this.state.videoPath} />  
+                        <button onClick={this.unmute} className="video-sound-control--btn video-sound-control--btn-off" label="Unmmute" type="button"></button> 
+                    </div>
+                </div>
+        } 
+        return  <div className="carousel-product">
+                  <div className="slider text-secondary" data-slick="product-body">
+                    <video async className="videoContainer" loop autoPlay currenttime={0} src={this.state.videoPath} />  
+                    <button onClick={this.mute} className="video-sound-control--btn video-sound-control--btn-on" label="Mute" type="button"></button> 
+                  </div>
+              </div>
+      }
+
+      return "";
     } 
 
     render() {
@@ -757,7 +799,7 @@ class ItemPage extends Component {
         return (
         <div className="page-body">     
         <main className="main-content">
-          <div className="overlay overflow-hidden pe-n"><img src="assets/img/bg/bg_shape.png" alt="Background shape"/></div>
+          <div className="overlay overflow-hidden pe-n"><img src="/assets/img/bg/bg_shape.png" alt="Background shape"/></div>
           {/*<!-- Start Content Area -->*/}
           <div className="content-section text-light pt-8">
             <div className="container">
@@ -792,19 +834,9 @@ class ItemPage extends Component {
                     <div className="col-12">
                       <div className="product-body">
 
-                        { this.renderVideoFrame(hasVideo)}
                         {/*<!--Carousel Wrapper-->*/}
-                        {/** Later we might have more images, for now display just 1 if any */}
-                        { hasImage && !hasVideo &&
-                        <div className="carousel-product">
-                          <div className="slider text-secondary" data-slick="product-body">
-                            <img className="imageContainer" src={this.state.imagePath} alt={this.state.imagePath}/>
-                            
-                          </div>
-                          
-                        </div>
-                        }
-                       {/*<!--/.Carousel Wrapper-->*/}
+                        { this.renderCarousel(hasVideo, hasImage)}
+                        {/*<!--/.Carousel Wrapper-->*/}
     
                         <div className="alert alert-no-border alert-share d-flex mb-6" role="alert">
                           <span className="flex-1 fw-600 text-uppercase text-warning">Share:</span>
@@ -823,52 +855,6 @@ class ItemPage extends Component {
                             <div className="tab-content" id="fillupTabContent">
                               <div className="tab-pane fade active show" id="fillup-1" role="tabpanel" aria-labelledby="fillup-home-tab">
                                 {this.renderItemInformation()}
-                                
-                              </div>
-                              <div className="tab-pane fade" id="fillup-2" role="tabpanel" aria-labelledby="fillup-profile-tab">
-                                <div className="row">
-                                  <div className="col-xs-12 col-lg-6 mb-6 mb-lg-0">
-                                    <div className="row">
-                                      <div className="col-12">
-                                        <span className="d-inline-block text-uppercase fw-500 mb-3 text-info">Minimum Requirements:</span>
-                                      </div>
-                                    </div>
-                                    <div className="row mb-4 mb-sm-0">
-                                      <div className="col-sm-4"><strong className="fw-500">OS:</strong></div>
-                                      <div className="col-sm-8">OSX 10.5</div>
-                                    </div>
-                                    <div className="row mb-4 mb-sm-0">
-                                      <div className="col-sm-4"><strong className="fw-500">Processor:</strong></div>
-                                      <div className="col-sm-8">Intel Core i5-2400s @ 2.5 GHz or AMD FX-6350 @ 3.9 GHz</div>
-                                    </div>
-                                    <div className="row mb-4 mb-sm-0">
-                                      <div className="col-sm-4"><strong className="fw-500">Memory:</strong></div>
-                                      <div className="col-sm-8">6 GB RAM</div>
-                                    </div>
-                                    <div className="row mb-4 mb-sm-0">
-                                      <div className="col-sm-4"><strong className="fw-500">Graphics:</strong></div>
-                                      <div className="col-sm-8">NVIDIA GeForce GTX 660 or AMD R9 270 (2048 MB VRAM with Shader Model 5.0 or better)</div>
-                                    </div>
-                                    <div className="row mb-4 mb-sm-0">
-                                      <div className="col-sm-4"><strong className="fw-500">Disk Space:</strong></div>
-                                      <div className="col-sm-8">42 GB available space</div>
-                                    </div>
-                                    <div className="row mb-4 mb-sm-0">
-                                      <div className="col-sm-4"><strong className="fw-500">Architecture:</strong></div>
-                                      <div className="col-sm-8">Requires a 64-bit processor and OS</div>
-                                    </div>
-                                    <div className="row mb-4 mb-sm-0">
-                                      <div className="col-sm-4"><strong className="fw-500">API:</strong></div>
-                                      <div className="col-sm-8">DirectX 11</div>
-                                    </div>
-                                    <div className="row mb-4 mb-sm-0">
-                                      <div className="col-sm-4"><strong className="fw-500">Miscellaneous:</strong></div>
-                                      <div className="col-sm-8">Video Preset: Lowest (720p)</div>
-                                    </div>
-                                    
-                                  </div>
-                                  
-                                </div>
                               </div>
                             </div>
                           </div>
@@ -894,11 +880,11 @@ class ItemPage extends Component {
                 <div className="col-lg-4">
                   <div className="bg-dark_A-20 p-4 mb-4">
                     {hasImage &&
-                        <img className="item-page-img mb-3" src={this.state.imagePath} alt="Product"/>
+                        <img className="item-page-img mb-3" src={"https://simthunder.infura-ipfs.io/ipfs/"+this.state.imagePath[0]} alt="Product"/>
                     }
                     <p>
                       {this.state.description && 
-                      <span>{(this.state.isNFT ? "Car Number:": "Description:")} {this.state.description}</span>
+                      <span>{this.state.description}</span>
                       }
                     </p>
                     <div className="price-wrapper">

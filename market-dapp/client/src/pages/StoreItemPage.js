@@ -3,7 +3,7 @@
     <!-- Start Main Content -->
     <div class="main-content">
 
-      <div class="overlay overflow-hidden pe-n"><img src="assets/img/bg/bg_shape.png" alt="Background shape"></div>
+      <div class="overlay overflow-hidden pe-n"><img src="//assets/img/bg/bg_shape.png" alt="Background shape"></div>
 
       <!-- Start Content Area -->
       <div class="content-section text-light pt-8">
@@ -47,18 +47,18 @@
                     <!--Carousel Wrapper-->
                     <div class="carousel-product">
                       <div class="slider text-secondary" data-slick="product-body">
-                        <img src="assets/img/content/product/01.jpg" alt="Game">
-                        <img src="assets/img/content/product/02.jpg" alt="Game">
-                        <img src="assets/img/content/product/03.jpg" alt="Game">
-                        <img src="assets/img/content/product/05.jpg" alt="Game">
-                        <img src="assets/img/content/product/04.jpg" alt="Game">
+                        <img src="/assets/img/content/product/01.jpg" alt="Game">
+                        <img src="/assets/img/content/product/02.jpg" alt="Game">
+                        <img src="/assets/img/content/product/03.jpg" alt="Game">
+                        <img src="/assets/img/content/product/05.jpg" alt="Game">
+                        <img src="/assets/img/content/product/04.jpg" alt="Game">
                       </div>
                       <div class="slider product-slider-nav text-secondary">
-                        <div class="slide-item px-1"><img src="assets/img/content/product/01.jpg" class="screenshot" alt="Game"></div>
-                        <div class="slide-item px-1"><img src="assets/img/content/product/02.jpg" class="screenshot" alt="Game"></div>
-                        <div class="slide-item px-1"><img src="assets/img/content/product/03.jpg" class="screenshot" alt="Game"></div>
-                        <div class="slide-item px-1"><img src="assets/img/content/product/05.jpg" class="screenshot" alt="Game"></div>
-                        <div class="slide-item px-1"><img src="assets/img/content/product/04.jpg" class="screenshot" alt="Game"></div>
+                        <div class="slide-item px-1"><img src="/assets/img/content/product/01.jpg" class="screenshot" alt="Game"></div>
+                        <div class="slide-item px-1"><img src="/assets/img/content/product/02.jpg" class="screenshot" alt="Game"></div>
+                        <div class="slide-item px-1"><img src="/assets/img/content/product/03.jpg" class="screenshot" alt="Game"></div>
+                        <div class="slide-item px-1"><img src="/assets/img/content/product/05.jpg" class="screenshot" alt="Game"></div>
+                        <div class="slide-item px-1"><img src="/assets/img/content/product/04.jpg" class="screenshot" alt="Game"></div>
                       </div>
                     </div>
                     <!--/.Carousel Wrapper-->
@@ -270,7 +270,7 @@
                       	<div class="owl-carousel carousel_sm" data-carousel-items="1, 2, 3, 3" data-carousel-margin="10" data-carousel-nav="false" data-carousel-dots="true">
                       		<div class="item">
                       			<a href="store-product.html#">
-	                                <div class="d-flex h-100 bs-c br-n bp-c ar-8_5 position-relative" style="background-image: url('assets/img/content/cont/cg-c_01.jpg');">
+	                                <div class="d-flex h-100 bs-c br-n bp-c ar-8_5 position-relative" style="background-image: url('/assets/img/content/cont/cg-c_01.jpg');">
 	                                  <div class="position-absolute w-100 l-0 b-0 bg-dark_A-80 text-light">
 	                                    <div class="px-4 py-3 lh-1">
 	                                      <h6 class="mb-1 small-1 text-light text-uppercase">Akamen</h6>
@@ -284,7 +284,7 @@
                       		</div>
                       		<div class="item">
                       			<a href="store-product.html#">
-                                    <div class="d-flex h-100 bs-c br-n bp-c ar-8_5 position-relative" style="background-image: url('assets/img/content/cont/cg-c_02.jpg');">
+                                    <div class="d-flex h-100 bs-c br-n bp-c ar-8_5 position-relative" style="background-image: url('/assets/img/content/cont/cg-c_02.jpg');">
                                       	<div class="position-absolute w-100 l-0 b-0 bg-dark_A-80 text-light">
                                         	<div class="px-4 py-3 lh-1">
 	                                          	<h6 class="mb-1 small-1 text-light text-uppercase">Punk City</h6>
@@ -298,7 +298,7 @@
                       		</div>
                       		<div class="item">
                       			<a href="store-product.html#">
-                                    <div class="d-flex h-100 bs-c br-n bp-c ar-8_5 position-relative" style="background-image: url('assets/img/content/cont/cg-c_03.jpg');">
+                                    <div class="d-flex h-100 bs-c br-n bp-c ar-8_5 position-relative" style="background-image: url('/assets/img/content/cont/cg-c_03.jpg');">
                                       <div class="position-absolute w-100 l-0 b-0 bg-dark_A-80 text-light">
                                         <div class="px-4 py-3 lh-1">
                                           <h6 class="mb-1 small-1 text-light text-uppercase">Transaction</h6>
@@ -312,7 +312,7 @@
                       		</div>
                       		<div class="item">
                       			<a href="store-product.html#">
-                                    <div class="d-flex h-100 bs-c br-n bp-c ar-8_5 position-relative" style="background-image: url('assets/img/content/cont/cg_04.jpg');">
+                                    <div class="d-flex h-100 bs-c br-n bp-c ar-8_5 position-relative" style="background-image: url('/assets/img/content/cont/cg_04.jpg');">
                                       <div class="position-absolute w-100 l-0 b-0 bg-dark_A-80 text-light">
                                         <div class="px-4 py-3 lh-1">
                                           <h6 class="mb-1 small-1 text-light text-uppercase">Golden Mask</h6>
@@ -326,7 +326,7 @@
                       		</div>
                       		<div class="item">
                       			<a href="store-product.html#">
-                                    <div class="d-flex h-100 bs-c br-n bp-c ar-8_5 position-relative" style="background-image: url('assets/img/content/cont/cg_05.jpg');">
+                                    <div class="d-flex h-100 bs-c br-n bp-c ar-8_5 position-relative" style="background-image: url('/assets/img/content/cont/cg_05.jpg');">
                                       <div class="position-absolute w-100 l-0 b-0 bg-dark_A-80 text-light">
                                         <div class="px-4 py-3 lh-1">
                                           <h6 class="mb-1 small-1 text-light text-uppercase">ONI</h6>
@@ -340,7 +340,7 @@
                       		</div>
                       		<div class="item">
                       			<a href="store-product.html#">
-                                    <div class="d-flex h-100 bs-c br-n bp-c ar-8_5 position-relative" style="background-image: url('assets/img/content/cont/cg_06.jpg');">
+                                    <div class="d-flex h-100 bs-c br-n bp-c ar-8_5 position-relative" style="background-image: url('/assets/img/content/cont/cg_06.jpg');">
                                       <div class="position-absolute w-100 l-0 b-0 bg-dark_A-80 text-light">
                                         <div class="px-4 py-3 lh-1">
                                           <h6 class="mb-1 small-1 text-light text-uppercase">Engineer</h6>
@@ -354,7 +354,7 @@
                       		</div>
                       		<div class="item">
                       			<a href="store-product.html#">
-                                    <div class="d-flex h-100 bs-c br-n bp-t ar-8_5 position-relative" style="background-image: url('assets/img/content/cont/cg_07.jpg');">
+                                    <div class="d-flex h-100 bs-c br-n bp-t ar-8_5 position-relative" style="background-image: url('/assets/img/content/cont/cg_07.jpg');">
                                       <div class="position-absolute w-100 l-0 b-0 bg-dark_A-80 text-light">
                                         <div class="px-4 py-3 lh-1">
                                           <h6 class="mb-1 small-1 text-light text-uppercase">Informant</h6>
@@ -368,7 +368,7 @@
                       		</div>
                       		<div class="item">
                       			<a href="store-product.html#">
-                                    <div class="d-flex h-100 bs-c br-n bp-c ar-8_5 position-relative" style="background-image: url('assets/img/content/cont/cg_08.jpg');">
+                                    <div class="d-flex h-100 bs-c br-n bp-c ar-8_5 position-relative" style="background-image: url('/assets/img/content/cont/cg_08.jpg');">
                                       <div class="position-absolute w-100 l-0 b-0 bg-dark_A-80 text-light">
                                         <div class="px-4 py-3 lh-1">
                                           <h6 class="mb-1 small-1 text-light text-uppercase">Haku</h6>
@@ -382,7 +382,7 @@
                       		</div>
                       		<div class="item">
                       			<a href="store-product.html#">
-                                    <div class="d-flex h-100 bs-c br-n bp-c ar-8_5 position-relative" style="background-image: url('assets/img/content/cont/cg-c_02.jpg');">
+                                    <div class="d-flex h-100 bs-c br-n bp-c ar-8_5 position-relative" style="background-image: url('/assets/img/content/cont/cg-c_02.jpg');">
                                       <div class="position-absolute w-100 l-0 b-0 bg-dark_A-80 text-light">
                                         <div class="px-4 py-3 lh-1">
                                           <h6 class="mb-1 small-1 text-light text-uppercase">Punk City</h6>
@@ -410,7 +410,7 @@
             </div>
             <div class="col-lg-4">
               <div class="bg-dark_A-20 p-4 mb-4">
-                <img src="assets/img/content/store/h-10.jpg" alt="Product" class="mb-3">
+                <img src="/assets/img/content/store/h-10.jpg" alt="Product" class="mb-3">
                 <p>Sed neque nibh, vehicula vel molestie eget, venenatis in odio. Nulla nec metus sagittis, scelerisque leo eu, vestibulum justo. Mauris rhoncus arcu eu sagittis consequat.</p>
                 <div class="price-wrapper">
                   <div class="mb-3">
@@ -522,37 +522,37 @@
           </div>
           <div class="owl-carousel" data-carousel-items="1, 2, 3, 6">
             <div class="item mx-3">
-              <img src="assets/img/content/store/h-01.jpg" alt="Game" class="mb-3">
+              <img src="/assets/img/content/store/h-01.jpg" alt="Game" class="mb-3">
               <a href="store-product.html#" class="text-uppercase fw-500 small-2 mb-0">Creature 2020</a>
               <span class="time d-block small-4">26 Sep, 2020</span>
               <span class="d-block small text-warning"><i class="far fa-eye"></i> 23</span>
             </div>
             <div class="item mx-3">
-              <img src="assets/img/content/store/h-02.jpg" alt="Game" class="mb-3">
+              <img src="/assets/img/content/store/h-02.jpg" alt="Game" class="mb-3">
               <a href="store-product.html#" class="text-uppercase fw-500 small-2 mb-0">Shadow Leap</a>
               <span class="time d-block small-4">14 Sep, 2020</span>
               <span class="d-block small text-warning"><i class="far fa-eye"></i> 57</span>
             </div>
             <div class="item mx-3">
-              <img src="assets/img/content/store/h-04.jpg" alt="Game" class="mb-3">
+              <img src="/assets/img/content/store/h-04.jpg" alt="Game" class="mb-3">
               <a href="store-product.html#" class="text-uppercase fw-500 small-2 mb-0">Golden Mask</a>
               <span class="time d-block small-4">18 Oct, 2020</span>
               <span class="d-block small text-warning"><i class="far fa-eye"></i> 57</span>
             </div>
             <div class="item mx-3">
-              <img src="assets/img/content/store/h-03.jpg" alt="Game" class="mb-3">
+              <img src="/assets/img/content/store/h-03.jpg" alt="Game" class="mb-3">
               <a href="store-product.html#" class="text-uppercase fw-500 small-2 mb-0">Mechaone</a>
               <span class="time d-block small-4">05 Oct, 2020</span>
               <span class="d-block small text-warning"><i class="far fa-eye"></i> 57</span>
             </div>
             <div class="item mx-3">
-              <img src="assets/img/content/store/h-05.jpg" alt="Game" class="mb-3">
+              <img src="/assets/img/content/store/h-05.jpg" alt="Game" class="mb-3">
               <a href="store-product.html#" class="text-uppercase fw-500 small-2 mb-0">ONE</a>
               <span class="time d-block small-4">16 Oct, 2020</span>
               <span class="d-block small text-warning"><i class="far fa-eye"></i> 57</span>
             </div>
             <div class="item mx-3">
-              <img src="assets/img/content/store/h-06.jpg" alt="Game" class="mb-3">
+              <img src="/assets/img/content/store/h-06.jpg" alt="Game" class="mb-3">
               <a href="store-product.html#" class="text-uppercase fw-500 small-2 mb-0">Engineer</a>
               <span class="time d-block small-4">27 Oct, 2019</span>
               <span class="d-block small text-warning"><i class="far fa-eye"></i> 57</span>
@@ -571,7 +571,7 @@
                   <!-- Item -->
                   <div class="col-12 mb-7">
                     <div class="d-flex flex-wrap flex-sm-nowrap">
-                      <div><img src="assets/img/avatar/1.jpg" class="d-none d-sm-block avatar rounded" alt="Avatar"></div>
+                      <div><img src="/assets/img/avatar/1.jpg" class="d-none d-sm-block avatar rounded" alt="Avatar"></div>
                       <div class="review-item ml-sm-4">
                         <div class="small d-flex align-items-start">
                           <!-- user -->
@@ -620,7 +620,7 @@
                   <!-- Item -->
                   <div class="col-12 mb-7">
                     <div class="d-flex flex-wrap flex-sm-nowrap">
-                      <div><img src="assets/img/avatar/2.jpg" class="d-none d-sm-block avatar rounded" alt="Avatar"></div>
+                      <div><img src="/assets/img/avatar/2.jpg" class="d-none d-sm-block avatar rounded" alt="Avatar"></div>
                       <div class="review-item ml-sm-4">
                         <div class="small d-flex align-items-start">
                           <!-- user -->
@@ -669,7 +669,7 @@
                   <!-- Item -->
                   <div class="col-12 mb-7">
                     <div class="d-flex flex-wrap flex-sm-nowrap">
-                      <div><img src="assets/img/avatar/3.jpg" class="d-none d-sm-block avatar rounded" alt="Avatar"></div>
+                      <div><img src="/assets/img/avatar/3.jpg" class="d-none d-sm-block avatar rounded" alt="Avatar"></div>
                       <div class="review-item ml-sm-4">
                         <div class="small d-flex align-items-start">
                           <!-- user -->

@@ -117,7 +117,7 @@ class NavbarPage extends React.Component {
                 <Container>
                     <div className="row">
                         <div className="col-4 col-sm-3 col-md-2 mr-auto ml-4">
-                            <Navbar.Brand href="/" className="logo font-weight-bold" style={{alignItems: "first baseline"}}><img src="assets/img/logo-2-sm.png" alt="Simthunder" /> beta</Navbar.Brand>
+                            <Navbar.Brand href="/" className="logo font-weight-bold" style={{alignItems: "first baseline"}}><img src="/assets/img/logo-2-sm.png" alt="Simthunder" /> beta</Navbar.Brand>
                         </div>
                         <div className="col-4 d-none d-lg-block mx-auto">
                             <form className="input-group border-0 bg-transparent" action="/store" mthod="GET">

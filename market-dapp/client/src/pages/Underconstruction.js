@@ -97,14 +97,14 @@ class Underconstruction extends Component {
 
         return ([
             <header id="header" className="header h-fullscreen__page text-light">
-                <div className="media-container parallax-window" data-parallax="scroll" data-image-src="assets/img/bg/bg-2.jpg" style={{ backgroundImage: 'url(\'/assets/img/bg/bg-8.png\')' }}></div>
+                <div className="media-container parallax-window" data-parallax="scroll" data-image-src="/assets/img/bg/bg-2.jpg" style={{ backgroundImage: 'url(\'/assets/img/bg/bg-8.png\')' }}></div>
                 <div className="overlay bg-dark_A-40"></div>
                 <div className="overlay d-flex align-items-center">
                     <div className="container text-center">
                         <div className="row align-items-center">
                             <div className="col-lg-6 mx-auto">
                                 <div className="fadeIn ad-500ms">
-                                    <img src="assets/img/logo-2.png" className="slideInLeft ad-400ms display-lg-2 fw-700 lh-2 mb-4" />
+                                    <img src="/assets/img/logo-2.png" className="slideInLeft ad-400ms display-lg-2 fw-700 lh-2 mb-4" />
                                     <h2 className="lead-2 ls-3 d-block slideInRight ad-500ms fw-300 text-uppercase mb-7">Beta 1.2</h2>
                                     <h3 className={`lead-2 ls-3 slideInRight ad-500ms fw-300 text-uppercase mb-7 ${hiddenErrorMsg}`}><strong>{error_msg}</strong></h3>
                                     {switchNeeded && 
