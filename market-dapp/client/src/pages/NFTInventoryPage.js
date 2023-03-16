@@ -808,17 +808,19 @@ class NFTInventoryPage extends Component {
 
     performBuyItemRedirection() {
       let similarItems = [];
+      let category = "";
+
       if (this.state.isNFT) {
         similarItems = similarItems.concat(this.state.latestNFTs);
-      } else if (this.state.selectedTrack == null || this.state.selectedSeason == null) {
-        similarItems = similarItems.concat(this.state.latestSkins);
+        category = "ownership";
       } else {
-        similarItems = similarItems.concat(this.state.latestCars);
+        similarItems = similarItems.concat(this.state.latestMomentNFTs);
+        category = "momentnfts";
       }
 
       return (<Redirect
             to={{
-                pathname: "/item",
+                pathname: "/item/"+category+"/"+this.state.selectedItemId,
                 state: {
                     selectedItemId: this.state.selectedItemId,
                     selectedTrack: this.state.selectedTrack,

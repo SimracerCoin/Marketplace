@@ -48,6 +48,16 @@ class SellerPage extends Component {
 
     buyItem = async (event, itemId, track, simulator, season, series, description, price, carBrand, carNumber, address, ipfsPath, imagePath) => {
         event.preventDefault();
+
+        let similarItems = [];
+        let category = "";
+        if(track == null || season == null) {
+            similarItems = similarItems.concat(this.state.listSkins);
+            category = "carskins";
+        } else {
+            similarItems = similarItems.concat(this.state.listCars);
+            category = "carsetup";
+        }
         
         this.setState({
             redirectBuyItem: true,
@@ -61,8 +71,10 @@ class SellerPage extends Component {
             selectedCarBrand: carBrand,
             selectedCarNumber: carNumber,
             selectedImagePath: imagePath,
+            selectedCategory: category,
             vendorAddress: address,
             ipfsPath: ipfsPath,
+            similarItems: similarItems
         });
     }
 
@@ -71,10 +83,10 @@ class SellerPage extends Component {
         const skins = [];
         let commentsRender = [];
 
-        if (this.state.redirectBuyItem == true) {
+        if (this.state.redirectBuyItem) {
             return (<Redirect
                 to={{
-                    pathname: "/item",
+                    pathname: "/item/"+this.state.selectedCategory+"/"+this.state.selectedItemId,
                     state: {
                         selectedItemId: this.state.selectedItemId,
                         selectedTrack: this.state.selectedTrack,
@@ -89,6 +101,7 @@ class SellerPage extends Component {
                         vendorAddress: this.state.vendorAddress,
                         vendorNickname: this.state.vendorNickname,
                         ipfsPath: this.state.ipfsPath,
+                        similarItems: this.state.similarItems
                     }
                 }}
             />)

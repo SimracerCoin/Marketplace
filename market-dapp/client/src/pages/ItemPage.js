@@ -33,50 +33,66 @@ class ItemPage extends Component {
         this.state = {
             drizzle: props.drizzle,
             drizzleState: props.drizzleState,
-            itemId: props.location.state.selectedItemId,
-            track: props.location.state.selectedTrack,
-            simulator: props.location.state.selectedSimulator,
-            season: props.location.state.selectedSeason,
-            series: props.location.state.selectedSeries,
-            description: props.location.state.selectedDescription,
-            price: props.location.state.selectedPrice,
-            car: props.location.state.selectedCarBrand,
-            number: props.location.state.selectedCarNumber,
-            vendorAddress: props.location.state.vendorAddress,
-            vendorNickname: props.location.state.vendorNickname,
-            ipfsPath: props.location.state.ipfsPath,
-            videoPath: props.location.state.videoPath,
-            imagePath: Array.isArray(props.location.state.imagePath) ? props.location.state.imagePath : [props.location.state.imagePath],
-            isNFT: props.location.state.isNFT,
-            isMomentNFT: props.location.state.isMomentNFT,
+            itemId: props.location.state ? props.location.state.selectedItemId : "",
+            track: props.location.state ? props.location.state.selectedTrack : "",
+            simulator: props.location.state ? props.location.state.selectedSimulator  : "",
+            season: props.location.state ? props.location.state.selectedSeason : "",
+            series: props.location.state ? props.location.state.selectedSeries : "",
+            description: props.location.state ? props.location.state.selectedDescription : "",
+            price: props.location.state ? props.location.state.selectedPrice : "",
+            carBrand: props.location.state ? props.location.state.selectedCarBrand : "",
+            carNumber: props.location.state ? props.location.state.selectedCarNumber : 0,
+            vendorAddress: props.location.state ? props.location.state.vendorAddress : "",
+            vendorNickname: props.location.state ? props.location.state.vendorNickname : "",
+            ipfsPath: props.location.state ? props.location.state.ipfsPath : "",
+            videoPath: props.location.state ? props.location.state.videoPath : "",
+            imagePath: props.location.state ? (Array.isArray(props.location.state.imagePath) ? props.location.state.imagePath : [props.location.state.imagePath]) : "",
+            isNFT: props.location.state ? props.location.state.isNFT : false,
+            isMomentNFT: props.location.state ? props.location.state.isMomentNFT : false,
+            similarItems: props.location.state ? props.location.state.similarItems : [],
+            usdValue : props.location.state ? props.location.state.usdPrice : 1,
+            metadata: props.location.state ? props.location.state.metadata : {},
             contract: null,
             currentAccount: "",
             comment: "",
             listComments: [],
             review_rating: 0,
             average_review: 0,
-            similarItems: props.location.state.similarItems,
             isMuted: true,
             messageOptions: {show: false, title:'', variant:'sucess',message:''},
-            usdValue : props.location.state.usdPrice,
-            metadata: props.location.state.metadata,
             isSeller: false, 
             isContractOwner: false,
             canDelete: false,
             sellFromWallet: false,
             isNFTOwner: false,
-            id: props.match.params.id
+            ...props.match.params
         }
 
-        console.log("ID: ", this.state.id);
-
-        this.state.imagePath.forEach((v, idx) => {
-          if(/(?:https?):\/\/(\w+:?\w*)?(\S+)(:\d+)?(\/|\/([\w#!:.?+=&%!\-\/]))?/.test(v))
-            this.state.imagePath[idx] = v.split('/').pop();
-        });
+        console.log("ID: ", this.state.itemId);
+        console.log("category: ", this.state.category);
 
         this.mute = this.mute.bind(this);
         this.unmute = this.unmute.bind(this);
+    }
+
+    fetchUSDPrice = async () => {
+      try {
+           const priceUSD = await UIHelper.fetchSRCPriceVsUSD();
+           const priceObj = await priceUSD.json();
+           const key = Object.keys(priceObj);
+           return priceObj[key]['usd']; 
+
+       }catch(err) {
+          return 1;
+       }
+   }
+
+    extractNFTTraitTypes(attributes) {
+        let data = {};
+        for(let attribute of attributes) {
+            data[attribute.trait_type] = attribute.value;
+        }
+        return data;
     }
 
     componentDidMount = async (event) => {
@@ -86,20 +102,60 @@ class ItemPage extends Component {
         const contractMomentNFTs = await this.state.drizzle.contracts.SimracingMomentOwner;
 
         const currentAccount = await this.state.drizzleState.accounts[0];
-        let marketplaceOwner = await contract.methods.getContractOwner().call();
-        console.log("market place owner is : ", marketplaceOwner);
-        let sellerAddress = this.state.vendorAddress;
-        console.log("item seller address ", sellerAddress);
-        let isSeller = (currentAccount == sellerAddress);
-        let isContractOwner = (currentAccount == marketplaceOwner);
-        console.log("is seller: " + isSeller + " is owner: " + isContractOwner);
+        const marketplaceOwner = await contract.methods.getContractOwner().call();
 
-        
-        
-        console.log('isNFT:' + this.state.isNFT);
-        console.log('isMomentNFT:' + this.state.isMomentNFT);
-        let isSkin = !this.state.isNFT && !this.state.isMomentNFT && (this.state.track == null || this.state.season == null);
-        console.log('isSkin:' + isSkin);
+        if(!this.state.itemId && this.state.id) {
+          let item, response, info, data;
+          let similarItems = [];
+          switch(this.state.category) {
+            case "carskins":
+              item = await contract.methods.getSkin(this.state.id).call();
+              similarItems = await contract.methods.getSkins().call();
+              this.setState({imagePath: item.info.skinPic});
+              break;
+            case "carsetup":
+              item = await contract.methods.getSetup(this.state.id).call();
+              similarItems = await contract.methods.getSetups().call();
+              break;
+            case "momentnfts":
+              [response, info] = await Promise.all([contractNFTs.methods.tokenURI(this.state.id).call().then(uri => fetch(uri)), contractMomentNFTs.methods.getItem(this.state.id).call()]);
+
+              data = await response.json();
+              item = { ad: {price: info[0], seller: info[1]}, info: {...data, imagePath: [data.image], isMomentNFT: true, metadata: this.extractNFTTraitTypes(data.attributes)}};
+              break;
+            case "ownership":
+              [response, info] = await Promise.all([contractNFTs.methods.tokenURI(this.state.id).call().then(uri => fetch(uri)), contractNFTs.methods.getItem(this.state.id).call()]);
+
+              data = await response.json();
+              item = { ad: {price: info[0], seller: info[1]}, info: {...data, imagePath: [data.image], isNFT: true, metadata: this.extractNFTTraitTypes(data.attributes)}};
+              break;
+            default:
+          }
+
+          this.setState({ 
+            ...item.ad, 
+            ...item.info,
+            itemId: this.state.id,
+            similarItems: similarItems,
+            usdValue: await this.fetchUSDPrice(),
+            vendorAddress: item.ad.seller,
+            vendorNickname: await contract.methods.getNickname(item.ad.seller).call() 
+          });
+        }
+
+        if(this.state.imagePath) {
+          let imagePath = Array.isArray(this.state.imagePath) ? this.state.imagePath : [this.state.imagePath];
+          imagePath.forEach((v, idx) => {
+              if(/(?:https?):\/\/(\w+:?\w*)?(\S+)(:\d+)?(\/|\/([\w#!:.?+=&%!\-\/]))?/.test(v))
+                imagePath[idx] = v.split('/').pop();
+            });
+            this.setState({imagePath: imagePath});
+        }
+
+        let sellerAddress = this.state.vendorAddress;
+        let isSeller = (currentAccount === sellerAddress);
+        let isContractOwner = (currentAccount === marketplaceOwner);
+        let isSkin = !this.state.isNFT && !this.state.isMomentNFT && (!this.state.track || !this.state.season);
 
         const canDelete = isSeller || isContractOwner;
         const hasVideo = this.state.isMomentNFT;
@@ -541,7 +597,7 @@ class ItemPage extends Component {
       if (this.state.isNFT || this.state.isMomentNFT) {
           return this.renderItemInformationForNFT();
       } 
-      else if (this.state.track == null || this.state.season == null) {
+      else if (!this.state.track || !this.state.season) {
           return this.renderItemInformationForSkin();
       } else {
           return this.renderItemInformationForCarSetup();
@@ -598,7 +654,7 @@ class ItemPage extends Component {
                 
                 <div className="row mb-4 mb-sm-0">
                 <div className="col-sm-4"><strong className="fw-500">Car Brand:</strong></div>
-                <div className="col-sm-8">{this.state.car}</div>
+                <div className="col-sm-8">{this.state.carBrand}</div>
                 </div>
 
                 <div className="row mb-4 mb-sm-0">
@@ -648,7 +704,7 @@ class ItemPage extends Component {
                   this.state.isNFT &&
                   <div className="row mb-4 mb-sm-0">
                     <div className="col-sm-4"><strong className="fw-500">Car Number:</strong></div>
-                    <div className="col-sm-8">{this.state.number}</div>
+                    <div className="col-sm-8">{this.state.carNumber}</div>
                   </div>
                 }
                 { !this.state.isNFTOwner && 
@@ -679,7 +735,7 @@ class ItemPage extends Component {
                 </div>
                 <div className="row mb-4 mb-sm-0">
                 <div className="col-sm-4"><strong className="fw-500">Car Brand:</strong></div>
-                <div className="col-sm-8">{this.state.car}</div>
+                <div className="col-sm-8">{this.state.carBrand}</div>
                 </div>
                 <div className="row mb-4 mb-sm-0">
                 <div className="col-sm-4"><strong className="fw-500">Season:</strong></div>
@@ -709,7 +765,7 @@ class ItemPage extends Component {
         series: payload.series,
         description: payload.description,
         price: payload.price,
-        car: payload.carBrand,
+        carBrand: payload.carBrand,
         ipfsPath: payload.ipfsPath,
         imagePath: Array.isArray(payload.imagePath) ? payload.imagePath : [payload.imagePath],
         isNFT: isNFT,
@@ -784,7 +840,7 @@ class ItemPage extends Component {
         else if(this.state.isMomentNFT) {
           item = "Simracing Moment NFT";
         }
-        else if (this.state.track == null || this.state.season == null) {
+        else if (!this.state.track || !this.state.season) {
           item = "Skin";
         } else {
           item = "Car Setup";
@@ -863,7 +919,7 @@ class ItemPage extends Component {
                           <h6 className="mb-0 fw-400 ls-1 text-uppercase">More like this</h6>
                           <hr className="border-secondary my-2"/>
                           <div>
-                              <SimilarItemsComponent contextParent={this} usdValue={this.state.usdValue} callbackParent={this.callbackParent} className="similaritems"  items={this.state.similarItems} isNFT={this.state.isNFT} isMomentNFT={this.state.isMomentNFT} isSkin={!this.state.isNFT && !this.state.isMomentNFT && (this.state.track == null || this.state.season == null)} selectedItemId={this.state.itemId}></SimilarItemsComponent>   
+                              <SimilarItemsComponent contextParent={this} usdValue={this.state.usdValue} callbackParent={this.callbackParent} className="similaritems"  items={this.state.similarItems} isNFT={this.state.isNFT} isMomentNFT={this.state.isMomentNFT} isSkin={!this.state.isNFT && !this.state.isMomentNFT && (!this.state.track || !this.state.season)} selectedItemId={this.state.itemId}></SimilarItemsComponent>   
                           </div>
                         </div>
                         <div className="mb-0">
@@ -879,7 +935,7 @@ class ItemPage extends Component {
                 </div>
                 <div className="col-lg-4">
                   <div className="bg-dark_A-20 p-4 mb-4">
-                    {hasImage &&
+                    {hasImage && this.state.imagePath &&
                         <img className="item-page-img mb-3" src={"https://simthunder.infura-ipfs.io/ipfs/"+this.state.imagePath[0]} alt="Product"/>
                     }
                     <p>
