@@ -809,11 +809,11 @@ class ItemPage extends Component {
         imagePath = "https://simthunder.infura-ipfs.io/ipfs/" + this.state.imagePath[0];
 
       return <Helmet>
-        <meta property="og:title" content="Simthunder - Sim racing goods" />
-        <meta property="og:description" content={this.state.description} />
-        <meta property="og:type" content={this.state.category} />
-        <meta property="og:url" content={window.location.href} />
-        <meta property="og:image" content={imagePath} />
+        <meta name="og:title" content="Simthunder - Sim racing goods" />
+        <meta name="og:description" content={this.state.description} />
+        <meta name="og:type" content={this.state.category} />
+        <meta name="og:url" content={window.location.href} />
+        <meta name="og:image" content={imagePath} />
         <meta name="twitter:title" content="Simthunder - Sim racing goods" />
         <meta name="twitter:description" content={this.state.description} />
         <meta name="twitter:image" content={imagePath} />
