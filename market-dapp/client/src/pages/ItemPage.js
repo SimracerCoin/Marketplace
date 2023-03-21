@@ -9,6 +9,7 @@ import UIHelper from "../utils/uihelper";
 import ReviewsComponent from "../components/ReviewsComponent";
 import SimilarItemsComponent from '../components/SimilarItemsComponent';
 import SimpleModal from '../components/SimpleModal';
+import {Helmet} from "react-helmet";
 import ipfs from "../ipfs";
 
 import 'react-responsive-carousel/lib/styles/carousel.min.css';
@@ -799,7 +800,26 @@ class ItemPage extends Component {
       }
 
       return "";
-    } 
+    }
+
+    renderMetadata = () => {
+
+      let imagePath = "https://simthunder.com/assets/img/logo-2-sm.png";
+      if(this.state.imagePath)
+        imagePath = "https://simthunder.infura-ipfs.io/ipfs/" + this.state.imagePath[0];
+
+      return <Helmet>
+        <meta property="og:title" content="Simthunder - Sim racing goods" />
+        <meta property="og:description" content={this.state.description} />
+        <meta property="og:type" content={this.state.category} />
+        <meta property="og:url" content={window.location.href} />
+        <meta property="og:image" content={imagePath} />
+        <meta name="twitter:title" content="Simthunder - Sim racing goods" />
+        <meta name="twitter:description" content={this.state.description} />
+        <meta name="twitter:image" content={imagePath} />
+        <meta name="twitter:card" content="summary_large_image" />
+      </Helmet>
+    }
 
     render() {
 
@@ -826,8 +846,9 @@ class ItemPage extends Component {
       const allowsReviews = !this.state.isNFT && !this.state.isMomentNFT;
       const price = Number((Math.round(this.state.price / priceConversion) * 100) / 100).toFixed(2);
 
-        return (
-        <div className="page-body">     
+        return ([
+          this.renderMetadata(),
+        <div className="page-body">    
         <main className="main-content">
           <div className="overlay overflow-hidden pe-n"><img src="/assets/img/bg/bg_shape.png" alt="Background shape"/></div>
           {/*<!-- Start Content Area -->*/}
@@ -1019,7 +1040,7 @@ class ItemPage extends Component {
           }
         </div>
         
-        );
+        ]);
     }
 }
 
