@@ -804,20 +804,21 @@ class ItemPage extends Component {
 
     renderMetadata = () => {
 
-      let imagePath = "https://simthunder.com/assets/img/logo-2-sm.png";
+      let imagePath = "https://simthunder.com/assets/img/logo-1.png";
       if(this.state.imagePath)
         imagePath = "https://simthunder.infura-ipfs.io/ipfs/" + this.state.imagePath[0];
 
       return <Helmet>
-        <meta name="og:title" content="Simthunder - Sim racing goods" />
-        <meta name="og:description" content={this.state.description} />
-        <meta name="og:type" content={this.state.category} />
-        <meta name="og:url" content={window.location.href} />
-        <meta name="og:image" content={imagePath} />
+        <meta property="og:title" content="Simthunder - Sim racing goods" />
+        <meta property="og:description" content={this.state.description} />
+        <meta property="og:type" content="article" />
+        <meta property="og:url" content={window.location.href} />
+        <meta property="og:image" content={imagePath} />
         <meta name="twitter:title" content="Simthunder - Sim racing goods" />
         <meta name="twitter:description" content={this.state.description} />
-        <meta name="twitter:image" content={imagePath} />
+        <meta name="twitter:image:src" content={imagePath} />
         <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:creator" content="@simthunder" />
       </Helmet>
     }
 
