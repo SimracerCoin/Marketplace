@@ -99,9 +99,8 @@ class NFTInventoryPage extends Component {
         localStorage.removeItem('searchQuery');
       });
     }
-    componentWillUnmount = async () => {
-      this.unlisten();
-    }
+    componentWillUnmount = async () => this.unlisten();
+
     componentDidMount = async () => {
 
       const currentAccount = await this.state.drizzleState.accounts[0];
@@ -158,16 +157,8 @@ class NFTInventoryPage extends Component {
       } 
   }
 
-  renderUSDPrice = (price) => {
-
-    let usdPrice = Number(Math.round((price / priceConversion) * this.state.usdValue * 100) / 100).toFixed(2);
-
-
-    if(usdPrice == 0.00) {
-      usdPrice = 0.01;
-    }
-    return "$" + usdPrice;
-  }
+  renderUSDPrice = (price) =>
+    ["$" + Number(Math.round((price / priceConversion) * this.state.usdValue * 100) / 100).toFixed(2), <sup className="secondary-sup">USD</sup>];
 
     //get all contracts data
     async getNFTsData() {
@@ -1075,7 +1066,7 @@ class NFTInventoryPage extends Component {
                                         <div className="text-right">
                                           {/*<span className="fw-600 td-lt">{price / priceConversion} ETH</span><br/>*/}
                                           <div className="store_price">
-                                          <span className="fw-600"><strong>{price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/><span className="secondary-price">{this.renderUSDPrice(price)}<sup className="secondary-sup">USD</sup></span></span>
+                                          <span className="fw-600"><strong>{price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/><span className="secondary-price">{this.renderUSDPrice(price)}</span></span>
                                           </div>
                                         </div>
                                       </div>
@@ -1162,7 +1153,7 @@ class NFTInventoryPage extends Component {
                                         <div className="text-right">
                                           {/*<span className="fw-600 td-lt">{price / priceConversion} ETH</span><br/>*/}
                                           <div className="store_price">
-                                          <span className="fw-600"><strong>{price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/><span className="secondary-price">{this.renderUSDPrice(price)}<sup className="secondary-sup">USD</sup></span></span>
+                                          <span className="fw-600"><strong>{price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/><span className="secondary-price">{this.renderUSDPrice(price)}</span></span>
                                           </div>
                                         </div>
                                       </div>

@@ -68,9 +68,6 @@ class ItemPage extends Component {
             ...props.match.params
         }
 
-        console.log("ID: ", this.state.itemId);
-        console.log("category: ", this.state.category);
-
         this.mute = this.mute.bind(this);
         this.unmute = this.unmute.bind(this);
     }
@@ -95,6 +92,30 @@ class ItemPage extends Component {
         return data;
     }
 
+    loadRemainingNFTS = async (contract) => {
+      let nftlist = [];
+
+      for (let i = 1; i < parseInt(await contract.methods.currentTokenId().call()) + 1; i++) {
+          try {
+              let ownerAddress = await contract.methods.ownerOf(i).call();
+              if(ownerAddress === contract.address) {
+                  
+                  let data = await contract.methods.tokenURI(i).call().then(u => fetch(u)).then(r => r.json());
+                  data.id = i;
+
+                  nftlist.push(data);
+                  
+                  // load only 10 nft's
+                  if(nftlist.length === 10) break;
+              }
+          } catch (e) {
+              console.error(e);
+          }
+      }
+
+      return nftlist;
+    }
+
     componentDidMount = async (event) => {
         const contract = await this.state.drizzle.contracts.STMarketplace;
         const contractNFTs = await this.state.drizzle.contracts.SimthunderOwner;
@@ -105,28 +126,24 @@ class ItemPage extends Component {
         const marketplaceOwner = await contract.methods.getContractOwner().call();
 
         if(!this.state.itemId && this.state.id) {
-          let item, response, info, data;
+          let item, info, data;
           let similarItems = [];
           switch(this.state.category) {
             case "carskins":
-              item = await contract.methods.getSkin(this.state.id).call();
-              similarItems = await contract.methods.getSkins().call();
+              [item, similarItems] = await Promise.all([contract.methods.getSkin(this.state.id).call(), contract.methods.getSkins().call()]);
               this.setState({imagePath: item.info.skinPic});
               break;
             case "carsetup":
-              item = await contract.methods.getSetup(this.state.id).call();
-              similarItems = await contract.methods.getSetups().call();
+              [item, similarItems] = await Promise.all([contract.methods.getCarSetup(this.state.id).call(),contract.methods.getCarSetups().call()]);
               break;
             case "momentnfts":
-              [response, info] = await Promise.all([contractNFTs.methods.tokenURI(this.state.id).call().then(uri => fetch(uri)), contractMomentNFTs.methods.getItem(this.state.id).call()]);
+              [data, info, similarItems] = await Promise.all([contractMomentNFTs.methods.tokenURI(this.state.id).call().then(uri => fetch(uri)).then(r => r.json()), contractMomentNFTs.methods.getItem(this.state.id).call(), this.loadRemainingNFTS(contractMomentNFTs)]);
 
-              data = await response.json();
               item = { ad: {price: info[0], seller: info[1]}, info: {...data, imagePath: [data.image], isMomentNFT: true, metadata: this.extractNFTTraitTypes(data.attributes)}};
               break;
             case "ownership":
-              [response, info] = await Promise.all([contractNFTs.methods.tokenURI(this.state.id).call().then(uri => fetch(uri)), contractNFTs.methods.getItem(this.state.id).call()]);
+              [data, info, similarItems] = await Promise.all([contractNFTs.methods.tokenURI(this.state.id).call().then(uri => fetch(uri)).then(r => r.json()), contractNFTs.methods.getItem(this.state.id).call(), this.loadRemainingNFTS(contractNFTs)]);
 
-              data = await response.json();
               item = { ad: {price: info[0], seller: info[1]}, info: {...data, imagePath: [data.image], isNFT: true, metadata: this.extractNFTTraitTypes(data.attributes)}};
               break;
             default:
@@ -604,16 +621,8 @@ class ItemPage extends Component {
       }
     }
 
-    renderUSDPrice = (price) => {
-
-      let usdPrice = Number(Math.round((price / priceConversion) * this.state.usdValue * 100) / 100).toFixed(2);
-
-      /**const usd = Number( ( Number(price) / priceConversion) * this.state.usdValue).toFixed(2);
-      if(usd == 0.00) {
-        usd = 0.01;
-      }*/
-      return "$" + usdPrice;
-    }
+    renderUSDPrice = (price) =>
+      ["$" + Number(Math.round((price / priceConversion) * this.state.usdValue * 100) / 100).toFixed(2), <sup className="secondary-sup">USD</sup>];
 
     renderSellerInfo =() => {
 
@@ -664,7 +673,7 @@ class ItemPage extends Component {
                 
                 <div className="row mb-4 mb-sm-0">
                 <div className="col-sm-4"><strong className="fw-500">Price:</strong></div>
-                <div className="col-sm-8"><strong>{price} <sup className="main-sup">SRC</sup></strong><br/><span className="secondary-price">{this.renderUSDPrice(this.state.price)}<sup className="secondary-sup">USD</sup></span></div>
+                <div className="col-sm-8"><strong>{price} <sup className="main-sup">SRC</sup></strong><br/><span className="secondary-price">{this.renderUSDPrice(this.state.price)}</span></div>
                 </div>
               </div>
             </div>
@@ -710,7 +719,7 @@ class ItemPage extends Component {
                 { !this.state.isNFTOwner && 
                 <div className="row mb-4 mb-sm-0">
                   <div className="col-sm-4"><strong className="fw-500">Price:</strong></div>
-                  <div className="col-sm-8"><strong>{price} <sup className="main-sup">SRC</sup></strong><br/><span className="secondary-price">{this.renderUSDPrice(this.state.price)}<sup className="secondary-sup">USD</sup></span></div>
+                  <div className="col-sm-8"><strong>{price} <sup className="main-sup">SRC</sup></strong><br/><span className="secondary-price">{this.renderUSDPrice(this.state.price)}</span></div>
                 </div>
                 }
               </div>
@@ -747,44 +756,11 @@ class ItemPage extends Component {
                 </div>
                 <div className="row mb-4 mb-sm-0">
                 <div className="col-sm-4"><strong className="fw-500">Price:</strong></div>
-                <div className="col-sm-8"><strong>{price} <sup className="main-sup">SRC</sup></strong><br/><span className="secondary-price">{this.renderUSDPrice(this.state.price)}<sup className="secondary-sup">USD</sup></span></div>
+                <div className="col-sm-8"><strong>{price} <sup className="main-sup">SRC</sup></strong><br/><span className="secondary-price">{this.renderUSDPrice(this.state.price)}</span></div>
                 </div>
               </div>
             </div>
       
-    }
-
-    //called from the similar items component
-    callbackParent = async (context, isNFT, isMomentNFT, isSkin, payload, item) => {
-    
-      context.setState({
-        itemId: item.id,
-        track: payload.track ? payload.track : null,
-        simulator: payload.simulator,
-        season: payload.season,
-        series: payload.series,
-        description: payload.description,
-        price: payload.price,
-        carBrand: payload.carBrand,
-        ipfsPath: payload.ipfsPath,
-        imagePath: Array.isArray(payload.imagePath) ? payload.imagePath : [payload.imagePath],
-        isNFT: isNFT,
-        isMomentNFT: isMomentNFT,
-        isSkin: isSkin,
-        vendorAddress: payload.address,
-        vendorNickname: payload.address ? await context.state.contract.methods.getNickname(payload.address).call() : "",
-        
-      });
-
-      if (!isNFT && !this.state.isMomentNFT) {
-          const comments = await context.state.contract.methods.getItemComments(item.id).call();
-          const average_review = context.average_rating(comments);
-
-          context.setState({ listComments: comments, average_review: average_review, isSkin: isSkin });
-      } 
-
-      this.scrollToTop();
-
     }
 
     renderCarousel = (hasVideo, hasImage) => {
@@ -827,9 +803,7 @@ class ItemPage extends Component {
 
     render() {
 
-        let item = ""
-        //let toRender;
-        //let commentsRender = [];
+        let item = "";
 
         let hasImage = true;
         let hasVideo = this.state.isMomentNFT && this.state.videoPath !== null;
@@ -919,7 +893,7 @@ class ItemPage extends Component {
                           <h6 className="mb-0 fw-400 ls-1 text-uppercase">More like this</h6>
                           <hr className="border-secondary my-2"/>
                           <div>
-                              <SimilarItemsComponent contextParent={this} usdValue={this.state.usdValue} callbackParent={this.callbackParent} className="similaritems"  items={this.state.similarItems} isNFT={this.state.isNFT} isMomentNFT={this.state.isMomentNFT} isSkin={!this.state.isNFT && !this.state.isMomentNFT && (!this.state.track || !this.state.season)} selectedItemId={this.state.itemId}></SimilarItemsComponent>   
+                              <SimilarItemsComponent drizzle={this.state.drizzle} category={this.state.category} className="similaritems" selectedItemId={this.state.itemId ? this.state.itemId : this.state.id}></SimilarItemsComponent>   
                           </div>
                         </div>
                         <div className="mb-0">
@@ -947,7 +921,7 @@ class ItemPage extends Component {
                       <div className="mb-3">
                         <div className="price">
                             {/*<div className="price-prev">300$</div>*/}
-                            <div className="price-current"><strong className="price_div_strong">{price} <sup className="main-sup">SRC</sup></strong><br/><span className="secondary-price"><span className="secondary-price">{this.renderUSDPrice(this.state.price)}<sup className="secondary-sup">USD</sup></span></span></div>
+                            <div className="price-current"><strong className="price_div_strong">{price} <sup className="main-sup">SRC</sup></strong><br/><span className="secondary-price"><span className="secondary-price">{this.renderUSDPrice(this.state.price)}</span></span></div>
                           </div>
                         {/*<div className="discount">
                             Save: $20.00 (33%)

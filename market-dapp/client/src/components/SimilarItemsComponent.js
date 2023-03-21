@@ -1,57 +1,96 @@
 import React from 'react';
 import { Carousel } from 'react-responsive-carousel';
 
-const priceConversion = 10 ** 18;
-
 class SimilarItemsComponent extends React.Component {
 
     constructor(props) {
         super(props);
         this.state = {
-            isNFT: props.isNFT,
-            isSkin: props.isSkin,
-            isMomentNFT: props.isMomentNFT,
             selectedItemId: props.selectedItemId,
             items: props.items,
             filteredItems: [],
-            contextParent : props.contextParent,
-            callbackParent: props.callbackParent,
-            usdValue: props.usdValue
-            //drizzle: props.drizzle,
-            //drizzleState: props.drizzleState,
+            drizzle: props.drizzle,
+            category: props.category
         }
+
+        this.routeChange = this.routeChange.bind(this);
+    }
+
+    loadRemainingNFTS = async (contract) => {
+      let nftlist = [];
+
+      for (let i = 1; i < parseInt(await contract.methods.currentTokenId().call()) + 1; i++) {
+          try {
+              let ownerAddress = await contract.methods.ownerOf(i).call();
+              if(ownerAddress === contract.address) {
+                  
+                  let data = await contract.methods.tokenURI(i).call().then(u => fetch(u)).then(r => r.json());
+                  data.id = i;
+
+                  nftlist.push(data);
+                  
+                  // load only 10 nft's
+                  if(nftlist.length === 10) break;
+              }
+          } catch (e) {
+              console.error("can't load " + i + " similar item - " + e);
+          }
+      }
+
+      return nftlist;
+    }
+
+    routeChange(e, itemId) {
+      e.preventDefault();
+
+      let path = '/item/'+this.state.category+'/'+itemId;
+      window.location.href = path;
     }
 
     componentDidMount = async (event) => {
-        console.log("SimilarItemsComponent did mount isSkin " + this.state.isSkin + " isNFT: " + this.state.isNFT + " isMomentNFT: " + this.state.isMomentNFT + " id: " + this.state.selectedItemId );
         let referenceItem = this.state.selectedItemId;
+
+        if(!this.state.items) {
+          const contract = await this.state.drizzle.contracts.STMarketplace;
+          const contractNFTs = await this.state.drizzle.contracts.SimthunderOwner;
+          const contractMomentNFTs = await this.state.drizzle.contracts.SimracingMomentOwner;
+
+          let similarItems = [];
+          switch(this.state.category) {
+            case "carskins":
+              similarItems = await contract.methods.getSkins().call();
+              break;
+            case "carsetup":
+              similarItems = await contract.methods.getCarSetups().call();
+              break;
+            case "momentnfts":
+              similarItems = await this.loadRemainingNFTS(contractMomentNFTs);
+              break;
+            case "ownership":
+              similarItems = await this.loadRemainingNFTS(contractNFTs);
+              break;
+            default:
+          }
+
+          this.setState({
+            items: similarItems,
+          });
+        }
+
         this.filterSimilarItems(referenceItem);
-      
       }
 
 
      filterSimilarItems = (referenceItem) => {
-
         if(this.state.items.length > 0) {
-          let filteredItems = this.state.items.filter(function(value, index) {
-            //console.log("filtering items: value " + JSON.stringify(value));
-            if(value && value.id) {
-              let itemId = value.id;
-              //console.log("item id: " + itemId + " selected one " + referenceItem); 
-              return itemId!== referenceItem;
-            }
-            return false;
-            
-          });
+          let filteredItems = this.state.items.filter((value) => value && value.id && value.id != referenceItem);
           this.setState({filteredItems: filteredItems});
         } else {
           this.setState({filteredItems: []});
         }
-        
       }
 
     extractMomentNFTTraitTypes(attributes) {
-
       let data = {};
       for(let attribute of attributes) {
           data[attribute.trait_type] = attribute.value;
@@ -59,70 +98,38 @@ class SimilarItemsComponent extends React.Component {
       return data;
     }
 
-    renderUSDPrice = (price) => {
-
-      let usdPrice = Number(Math.round((price / priceConversion) * this.state.usdValue * 100) / 100).toFixed(2);
-      //return "(" + usdPrice + "$) ";
-
-      //const usd = Number( ( Number(price) / priceConversion) * this.state.usdValue).toFixed(2);
-      return "$" + usdPrice + "USD";
-
-    }
-
     renderItemDetails = (payload, fullItem) => {
 
-      if(this.state.isNFT) {
-
-        return <div id={payload.itemId} className="carousel-pointer" onClick={(e) => this.switchSimilarItem(e, true, false,false, payload, fullItem)} >
+      if(this.state.category === "ownership") {
+        //ownership
+        return <div id={payload.itemId} className="carousel-pointer" onClick={(e) => this.routeChange(e, payload.itemId)} >
             <img className="carousel-pointer" alt={payload.description} src={payload.imagePath} />
             <p className="legend">{payload.description}</p>
           </div>
 
-      } else if(this.state.isMomentNFT) {
-
-        return <div id={payload.itemId} className="carousel-pointer" onClick={(e) => this.switchSimilarItem(e, false, true, false, payload, fullItem)} >
+      } else if(this.state.category === "momentnfts") {
+        //moment
+        return <div id={payload.itemId} className="carousel-pointer" onClick={(e) => this.routeChange(e, payload.itemId)} >
             <img className="carousel-pointer" alt={payload.description} src={payload.imagePath} />
             <p className="legend">{payload.description}</p>
           </div>
 
       }
-      else if(this.state.isSkin) {
-        
-        return <div className="carousel-pointer" id={payload.itemId} onClick={(e) => this.switchSimilarItem(e, false, false, true, payload, fullItem )}>
+      else if(this.state.category === "carskins") {
+        //skin
+        return <div className="carousel-pointer" id={payload.itemId} onClick={(e) => this.routeChange(e, payload.itemId )}>
             <img className="carousel-pointer" alt={payload.description} src={"https://simthunder.infura-ipfs.io/ipfs/"+payload.imagePath[0]}/>
             <p className="legend">{payload.description}</p>
           </div>
 
       } else {
         //car
-        return <div className="carousel-pointer" id={payload.itemId} onClick={(e) => this.switchSimilarItem(e, false, false, false, payload, fullItem)}>
+        return <div className="carousel-pointer" id={payload.itemId} onClick={(e) => this.routeChange(e, payload.itemId)}>
             <img className="carousel-pointer" alt={payload.description} src={payload.imagePath} />
             <p className="legend">{payload.description}</p>
           </div>
 
       }
-
-      
-    }
-    
-    /**
-     * 
-     * Will re-render the parent page (item)
-     * @param {*} isNFT 
-     * @param {*} isSkin 
-     * @param {*} item 
-     */
-    switchSimilarItem = async (event, isNFT, isMomentNFT, isSkin, payload, item) =>{
-
-      //console.log("set new selected on to " + item.id);
-      //this will update parent
-      this.state.callbackParent(this.state.contextParent, isNFT, isMomentNFT, isSkin, payload, item); //payload is actually the entire item data
-
-      let referenceItem = item.id;
-      //this will update children
-      this.setState({selectedItemId: referenceItem});
-      this.filterSimilarItems(referenceItem);
-  
     }
 
     render() {
@@ -132,9 +139,9 @@ class SimilarItemsComponent extends React.Component {
       }
 
       //exclude itself
-      let isNFT = this.state.isNFT;
-      let isSkin = this.state.isSkin;
-      let isMomentNFT = this.state.isMomentNFT;
+      let isNFT = this.state.category === "ownership";
+      let isSkin = this.state.category === "carskins";
+      let isMomentNFT = this.state.category === "momentnfts";
 
 
       //https://github.com/leandrowd/react-responsive-carousel/
@@ -148,49 +155,24 @@ class SimilarItemsComponent extends React.Component {
           let metadata =  this.extractMomentNFTTraitTypes(value.attributes);
   
           payload.imagePath = value.image;
-          payload.price = value.price;
-          payload.simulator = value.simulator;
-          payload.series = value.series;
-          payload.address = value.seriesOwner;
-          payload.carNumber = value.carNumber;
           payload.description =  (value.description || metadata.description);
 
-        }else if(isMomentNFT) {
-  
-          payload.imagePath = value.image;
+        } else if(isMomentNFT) {
 
           let metadata =  this.extractMomentNFTTraitTypes(value.attributes);
-         
-          payload.price = value.price;
+  
+          payload.imagePath = value.image;
           payload.description =  (value.description || metadata.description);
-
-          payload.simulator = metadata.simulator;
-          payload.series = metadata.series;
-          payload.address = value.seriesOwner;
-          payload.video = value.animation_url;
 
         } else if(isSkin) {
 
           payload.imagePath = value.info.skinPic;
-          payload.price = value.ad.price;
-          payload.carBrand = value.info.carBrand;
-          payload.simulator = value.info.simulator;
-          payload.address = value.ad.seller;
-          payload.ipfsPath = value.ad.ipfsPath;
-          payload.description = value.info.carBrand; //no description field on skin
+          payload.description = value.info.description;
 
         } else {
 
           payload.imagePath = value.ad.ipfsPath;
-          payload.price = value.ad.price;
-          payload.series = value.info.series;
-          payload.simulator = value.info.simulator;
-          payload.address = value.ad.seller;
-          payload.carBrand = value.info.carBrand;
-
-          payload.track = value.info.track;
-          payload.season = value.info.season;
-          payload.description = (value.info.description || value.info.carBrand);
+          payload.description = value.info.description;
         }
 
         payload.itemId = value.id;
@@ -200,73 +182,6 @@ class SimilarItemsComponent extends React.Component {
 
       },this)}
       </Carousel>
-      
-      
-
-      
-
-      
-
-      
-
-      
-
-      /**
-      if(this.state.isNFT) {
-        imagePath = value.image;
-        price = value.price * priceConversion;
-        simulator = value.simulator;
-        simulator = value.series;
-        address = value.seriesOwner;
-        carNumber = value.carNumber;
-        description = value.description;
-        
-        
-
-      }
-      else if (this.state.isSkin) {
-        imagePath = "https://ipfs.io/ipfs/" + value.info.skinPic;
-        price = value.ad.price;
-        carBrand = value.info.carBrand;
-        simulator = value.info.simulator;
-        address = value.ad.seller;
-        
-        let ipfsPath = value.ad.ipfsPath;
-        description = value.info.carBrand; //no description field on skin
-
-        return <div className="item">
-              <a href="#" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, null, null, price, carBrand , address, ipfsPath, imagePath, false)}>
-                <div className="d-flex h-100 bs-c br-n bp-c ar-8_5 position-relative" style={{backgroundImage: {imagePath}}}>
-                      <div className="position-absolute w-100 l-0 b-0 bg-dark_A-80 text-light">
-                        <div className="px-4 py-3 lh-1">
-                              <h6 className="mb-1 small-1 text-light text-uppercase">{description}</h6>
-                              <div className="price d-flex flex-wrap align-items-center">
-                                <span className="discount_final text-warning small-2">{price / priceConversion} ETH</span>
-                            </div>
-                        </div>
-                      </div>
-                </div>
-              </a>
-            </div>
-        
-   
-      }
-      else {//isCar
-        imagePath = value.ad.ipfsPath;
-        price = value.ad.price;
-        series = value.info.series;
-        simulator = value.info.simulator;
-        address = value.ad.seller;
-        carBrand = value.info.carBrand;
-
-        let track = value.info.track
-        let season = value.info.season
-        description = value.info.description
-        
-
-        
-        
-      }*/
     }
 }
 
