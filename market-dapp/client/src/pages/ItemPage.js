@@ -1,15 +1,14 @@
 import React, { Component } from 'react';
-import { Button, Form, Card, ListGroup, Row, Col } from 'react-bootstrap';
+import { Button, Form } from 'react-bootstrap';
 import { withRouter } from "react-router";
-import { confirmAlert } from 'react-confirm-alert';
 import { Link } from 'react-router-dom';
 import { Carousel } from 'react-responsive-carousel';
+import { Helmet } from "react-helmet";
 import StarRatings from 'react-star-ratings';
 import UIHelper from "../utils/uihelper";
 import ReviewsComponent from "../components/ReviewsComponent";
 import SimilarItemsComponent from '../components/SimilarItemsComponent';
 import SimpleModal from '../components/SimpleModal';
-import {Helmet} from "react-helmet";
 import ipfs from "../ipfs";
 
 import 'react-responsive-carousel/lib/styles/carousel.min.css';
@@ -346,14 +345,16 @@ class ItemPage extends Component {
     buyItem = async (event) => {
         event.preventDefault();
 
-        UIHelper.showSpinning();
-
+        const balance = this.state.drizzle.web3.utils.toBN(
+          await this.state.contractSimracerCoin.methods.balanceOf(this.state.currentAccount).call());
         const price = this.state.drizzle.web3.utils.toBN(this.state.price);
-        //console.log('item price =' + price);
 
-        // TODO: buyer public key
-        //const buyerPK = this.state.drizzle.web3.utils.hexToBytes(this.state.drizzle.web3.utils.randomHex(16));
-        //console.log('Item price:' + this.state.price);
+        if(balance.lt(price)) {
+          alert("Insufficient balance to purchase the item!");
+          return;
+        }
+
+        UIHelper.showSpinning();
 
         if (!this.state.isNFT && !this.state.isMomentNFT) {
           let buyerKey = localStorage.getItem('ak');
@@ -811,7 +812,7 @@ class ItemPage extends Component {
       return <Helmet>
         <meta property="og:title" content="Simthunder - Sim racing goods" />
         <meta property="og:description" content={this.state.description} />
-        <meta property="og:type" content="article" />
+        <meta property="og:type" content="og:product" />
         <meta property="og:url" content={window.location.href} />
         <meta property="og:image" content={imagePath} />
         <meta name="twitter:title" content="Simthunder - Sim racing goods" />
