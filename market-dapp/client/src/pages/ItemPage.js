@@ -885,9 +885,8 @@ class ItemPage extends Component {
                         <div className="alert alert-no-border alert-share d-flex mb-6" role="alert">
                           <span className="flex-1 fw-600 text-uppercase text-warning">Share:</span>
                           <div className="social-buttons text-unset">
-                            <a className="social-twitter mx-2" href="store-product.html#"><i className="fab fa-twitter"></i></a>
-                            <a className="social-dribbble mx-2" href="store-product.html#"><i className="fab fa-dribbble"></i></a>
-                            <a className="social-instagram ml-2" href="store-product.html#"><i className="fab fa-instagram"></i></a>
+                            <a className="social-twitter mx-2" target="_blank" rel="noreferrer" href="https://twitter.com/intent/tweet"><i className="fab fa-twitter"></i></a>
+                            <a className="social-dribbble mx-2" target="_blank" rel="noreferrer" href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fdevelopers.facebook.com%2Fdocs%2Fplugins%2F&amp;src=sdkpreparse"><i className="fab fa-facebook"></i></a>
                           </div>
                         </div>
                         
