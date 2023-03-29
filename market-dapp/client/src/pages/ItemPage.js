@@ -3,13 +3,13 @@ import { Button, Form } from 'react-bootstrap';
 import { withRouter } from "react-router";
 import { Link } from 'react-router-dom';
 import { Carousel } from 'react-responsive-carousel';
-import { Helmet } from "react-helmet";
 import StarRatings from 'react-star-ratings';
 import UIHelper from "../utils/uihelper";
 import ReviewsComponent from "../components/ReviewsComponent";
 import SimilarItemsComponent from '../components/SimilarItemsComponent';
 import SimpleModal from '../components/SimpleModal';
 import ipfs from "../ipfs";
+import knex from '../db'
 
 import 'react-responsive-carousel/lib/styles/carousel.min.css';
 import '../css/custom-carousel.css';
@@ -168,6 +168,19 @@ class ItemPage extends Component {
             });
             this.setState({imagePath: imagePath});
         }
+
+        // workaround to insure that item persist on metatags cache db
+        fetch('/api/metatags', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: this.state.itemId,
+            category: this.state.category,
+            title: this.state.name,
+            description: this.state.description,
+            image: this.state.imagePath[0]
+            })
+        });
 
         let sellerAddress = this.state.vendorAddress;
         let isSeller = (currentAccount === sellerAddress);
@@ -803,26 +816,6 @@ class ItemPage extends Component {
       return "";
     }
 
-    renderMetadata = () => {
-
-      let imagePath = "https://simthunder.com/assets/img/logo-1.png";
-      if(this.state.imagePath)
-        imagePath = "https://simthunder.infura-ipfs.io/ipfs/" + this.state.imagePath[0];
-
-      return <Helmet>
-        <meta property="og:title" content="Simthunder - Sim racing goods" />
-        <meta property="og:description" content={this.state.description} />
-        <meta property="og:type" content="og:product" />
-        <meta property="og:url" content={window.location.href} />
-        <meta property="og:image" content={imagePath} />
-        <meta name="twitter:title" content="Simthunder - Sim racing goods" />
-        <meta name="twitter:description" content={this.state.description} />
-        <meta name="twitter:image:src" content={imagePath} />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:creator" content="@simthunder" />
-      </Helmet>
-    }
-
     render() {
 
         let item = "";
@@ -848,8 +841,7 @@ class ItemPage extends Component {
       const allowsReviews = !this.state.isNFT && !this.state.isMomentNFT;
       const price = Number((Math.round(this.state.price / priceConversion) * 100) / 100).toFixed(2);
 
-        return ([
-          this.renderMetadata(),
+        return (
         <div className="page-body">    
         <main className="main-content">
           <div className="overlay overflow-hidden pe-n"><img src="/assets/img/bg/bg_shape.png" alt="Background shape"/></div>
@@ -1040,9 +1032,7 @@ class ItemPage extends Component {
           {this.state.sellFromWallet && 
             <SimpleModal onApproval={this.approveSellItem} open={true}></SimpleModal>
           }
-        </div>
-        
-        ]);
+        </div>);
     }
 }
 
