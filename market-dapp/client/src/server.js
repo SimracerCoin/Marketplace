@@ -30,9 +30,8 @@ app.post('/api/metatags', (req, res) => {
 	let data = req.body;
 
 	knex('metatags').where({id: data.id}).andWhere({category: data.category}).first().then(metatag => {
-		console.log("add metatag to db");
 		if(!metatag) {
-		  knex('metatags').insert(data).then(() => {console.log("item added"); res.send({id: data.id, category: data.category})});
+		  knex('metatags').insert(data).then(() => {res.send({id: data.id, category: data.category})});
 		}
 	  });
 });
@@ -50,10 +49,12 @@ app.get('*', (req, res) => {
 		if((sUrl = req.path.split('/')).length === 4) {
 			knex('metatags').where({id: sUrl[3]}).andWhere({category: sUrl[2]}).first().then(metatag => {
 				if(metatag) {
+					var fullUrl = req.protocol + '://' + req.get('host') + req.originalUrl;
 					htmlData = htmlData
-						.replace("__TITLE__", metatag.title)
+						.replace("__TITLE__", metatag.title ?? "Simthunder "  +  ({"carskins": "skin", "carsetup": "setup", "momentnfts": "moment NFT", "ownership": "ownership NFT"}[metatag.category]) + " asset")
 						.replace("__DESCRIPTION__", metatag.description)
-						.replace("__IMAGE__", "https://simthunder.infura-ipfs.io/ipfs/" + metatag.image);
+						.replace("__IMAGE__", metatag.image ?? "https://simthunder.com/assets/img/logo-1.png")
+						.replace("__URL__", fullUrl);
 				} 
 
 				res.send(htmlData);

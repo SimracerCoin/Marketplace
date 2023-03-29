@@ -25,7 +25,6 @@ knex.schema
       return knex.schema.createTable('metatags', (table)  => {
         table.primary(['id', 'category'])
         table.integer('id').unsigned()
-        table.string('title')
         table.string('description')
         table.string('image')
         table.string('category')

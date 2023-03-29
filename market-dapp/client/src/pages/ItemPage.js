@@ -176,9 +176,8 @@ class ItemPage extends Component {
           body: JSON.stringify({
             id: this.state.itemId,
             category: this.state.category,
-            title: this.state.name,
             description: this.state.description,
-            image: this.state.imagePath[0]
+            image: this.state.imagePath ? "https://simthunder.infura-ipfs.io/ipfs/" + this.state.imagePath[0] : null
             })
         });
 
