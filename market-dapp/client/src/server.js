@@ -49,7 +49,7 @@ app.get('*', (req, res) => {
 		if((sUrl = req.path.split('/')).length === 4) {
 			knex('metatags').where({id: sUrl[3]}).andWhere({category: sUrl[2]}).first().then(metatag => {
 				if(metatag) {
-					var fullUrl = req.protocol + '://' + req.get('host') + req.originalUrl;
+					var fullUrl = 'https://' + req.get('host') + req.originalUrl;
 					htmlData = htmlData
 						.replace(/__TITLE__/g, metatag.title ?? "Simthunder "  +  ({"carskins": "skin", "carsetup": "setup", "momentnfts": "moment NFT", "ownership": "ownership NFT"}[metatag.category]) + " asset")
 						.replace(/__DESCRIPTION__/g, metatag.description)
