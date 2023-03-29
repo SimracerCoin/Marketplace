@@ -51,9 +51,9 @@ app.get('*', (req, res) => {
 				if(metatag) {
 					var fullUrl = req.protocol + '://' + req.get('host') + req.originalUrl;
 					htmlData = htmlData
-						.replace("__TITLE__", metatag.title ?? "Simthunder "  +  ({"carskins": "skin", "carsetup": "setup", "momentnfts": "moment NFT", "ownership": "ownership NFT"}[metatag.category]) + " asset")
-						.replace("__DESCRIPTION__", metatag.description)
-						.replace("__IMAGE__", metatag.image ?? "https://simthunder.com/assets/img/logo-1.png")
+						.replaceAll("__TITLE__", metatag.title ?? "Simthunder "  +  ({"carskins": "skin", "carsetup": "setup", "momentnfts": "moment NFT", "ownership": "ownership NFT"}[metatag.category]) + " asset")
+						.replaceAll("__DESCRIPTION__", metatag.description)
+						.replaceAll("__IMAGE__", metatag.image ?? "https://simthunder.com/assets/img/logo-fb.png")
 						.replace("__URL__", fullUrl);
 				} 
 
