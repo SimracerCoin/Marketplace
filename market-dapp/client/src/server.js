@@ -31,7 +31,9 @@ app.post('/api/metatags', (req, res) => {
 
 	knex('metatags').where({id: data.id}).andWhere({category: data.category}).first().then(metatag => {
 		if(!metatag) {
-		  knex('metatags').insert(data).then(() => {res.send({id: data.id, category: data.category})});
+		  knex('metatags').insert(data)
+		  .then(() => {res.send({id: data.id, category: data.category})})
+		  .catch(err => {console.error("Impossible to insert data on metatags cache: ", err); res.send(500).end();});
 		}
 	  });
 });
