@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
-import { Button, Form, Card, ListGroup, Row, Col } from 'react-bootstrap';
+import { Button, Form } from 'react-bootstrap';
 import { withRouter } from "react-router";
-import { confirmAlert } from 'react-confirm-alert';
 import { Link } from 'react-router-dom';
 import { Carousel } from 'react-responsive-carousel';
 import StarRatings from 'react-star-ratings';
@@ -10,6 +9,7 @@ import ReviewsComponent from "../components/ReviewsComponent";
 import SimilarItemsComponent from '../components/SimilarItemsComponent';
 import SimpleModal from '../components/SimpleModal';
 import ipfs from "../ipfs";
+import knex from '../db'
 
 import 'react-responsive-carousel/lib/styles/carousel.min.css';
 import '../css/custom-carousel.css';
@@ -33,50 +33,87 @@ class ItemPage extends Component {
         this.state = {
             drizzle: props.drizzle,
             drizzleState: props.drizzleState,
-            itemId: props.location.state.selectedItemId,
-            track: props.location.state.selectedTrack,
-            simulator: props.location.state.selectedSimulator,
-            season: props.location.state.selectedSeason,
-            series: props.location.state.selectedSeries,
-            description: props.location.state.selectedDescription,
-            price: props.location.state.selectedPrice,
-            car: props.location.state.selectedCarBrand,
-            number: props.location.state.selectedCarNumber,
-            vendorAddress: props.location.state.vendorAddress,
-            vendorNickname: props.location.state.vendorNickname,
-            ipfsPath: props.location.state.ipfsPath,
-            videoPath: props.location.state.videoPath,
-            imagePath: Array.isArray(props.location.state.imagePath) ? props.location.state.imagePath : [props.location.state.imagePath],
-            isNFT: props.location.state.isNFT,
-            isMomentNFT: props.location.state.isMomentNFT,
+            itemId: props.location.state ? props.location.state.selectedItemId : "",
+            track: props.location.state ? props.location.state.selectedTrack : "",
+            simulator: props.location.state ? props.location.state.selectedSimulator  : "",
+            season: props.location.state ? props.location.state.selectedSeason : "",
+            series: props.location.state ? props.location.state.selectedSeries : "",
+            description: props.location.state ? props.location.state.selectedDescription : "",
+            price: props.location.state ? props.location.state.selectedPrice : "",
+            carBrand: props.location.state ? props.location.state.selectedCarBrand : "",
+            carNumber: props.location.state ? props.location.state.selectedCarNumber : 0,
+            vendorAddress: props.location.state ? props.location.state.vendorAddress : "",
+            vendorNickname: props.location.state ? props.location.state.vendorNickname : "",
+            ipfsPath: props.location.state ? props.location.state.ipfsPath : "",
+            videoPath: props.location.state ? props.location.state.videoPath : "",
+            imagePath: props.location.state ? (Array.isArray(props.location.state.imagePath) ? props.location.state.imagePath : [props.location.state.imagePath]) : "",
+            isNFT: props.location.state ? props.location.state.isNFT : false,
+            isMomentNFT: props.location.state ? props.location.state.isMomentNFT : false,
+            similarItems: props.location.state ? props.location.state.similarItems : [],
+            usdValue : props.location.state ? props.location.state.usdPrice : 1,
+            metadata: props.location.state ? props.location.state.metadata : {},
             contract: null,
             currentAccount: "",
             comment: "",
             listComments: [],
             review_rating: 0,
             average_review: 0,
-            similarItems: props.location.state.similarItems,
             isMuted: true,
             messageOptions: {show: false, title:'', variant:'sucess',message:''},
-            usdValue : props.location.state.usdPrice,
-            metadata: props.location.state.metadata,
             isSeller: false, 
             isContractOwner: false,
             canDelete: false,
             sellFromWallet: false,
             isNFTOwner: false,
-            id: props.match.params.id
+            ...props.match.params
         }
-
-        console.log("ID: ", this.state.id);
-
-        this.state.imagePath.forEach((v, idx) => {
-          if(/(?:https?):\/\/(\w+:?\w*)?(\S+)(:\d+)?(\/|\/([\w#!:.?+=&%!\-\/]))?/.test(v))
-            this.state.imagePath[idx] = v.split('/').pop();
-        });
 
         this.mute = this.mute.bind(this);
         this.unmute = this.unmute.bind(this);
+    }
+
+    fetchUSDPrice = async () => {
+      try {
+           const priceUSD = await UIHelper.fetchSRCPriceVsUSD();
+           const priceObj = await priceUSD.json();
+           const key = Object.keys(priceObj);
+           return priceObj[key]['usd']; 
+
+       }catch(err) {
+          return 1;
+       }
+   }
+
+    extractNFTTraitTypes(attributes) {
+        let data = {};
+        for(let attribute of attributes) {
+            data[attribute.trait_type] = attribute.value;
+        }
+        return data;
+    }
+
+    loadRemainingNFTS = async (contract) => {
+      let nftlist = [];
+
+      for (let i = 1; i < parseInt(await contract.methods.currentTokenId().call()) + 1; i++) {
+          try {
+              let ownerAddress = await contract.methods.ownerOf(i).call();
+              if(ownerAddress === contract.address) {
+                  
+                  let data = await contract.methods.tokenURI(i).call().then(u => fetch(u)).then(r => r.json());
+                  data.id = i;
+
+                  nftlist.push(data);
+                  
+                  // load only 10 nft's
+                  if(nftlist.length === 10) break;
+              }
+          } catch (e) {
+              console.error(e);
+          }
+      }
+
+      return nftlist;
     }
 
     componentDidMount = async (event) => {
@@ -86,20 +123,68 @@ class ItemPage extends Component {
         const contractMomentNFTs = await this.state.drizzle.contracts.SimracingMomentOwner;
 
         const currentAccount = await this.state.drizzleState.accounts[0];
-        let marketplaceOwner = await contract.methods.getContractOwner().call();
-        console.log("market place owner is : ", marketplaceOwner);
-        let sellerAddress = this.state.vendorAddress;
-        console.log("item seller address ", sellerAddress);
-        let isSeller = (currentAccount == sellerAddress);
-        let isContractOwner = (currentAccount == marketplaceOwner);
-        console.log("is seller: " + isSeller + " is owner: " + isContractOwner);
+        const marketplaceOwner = await contract.methods.getContractOwner().call();
 
-        
-        
-        console.log('isNFT:' + this.state.isNFT);
-        console.log('isMomentNFT:' + this.state.isMomentNFT);
-        let isSkin = !this.state.isNFT && !this.state.isMomentNFT && (this.state.track == null || this.state.season == null);
-        console.log('isSkin:' + isSkin);
+        if(!this.state.itemId && this.state.id) {
+          let item, info, data;
+          let similarItems = [];
+          switch(this.state.category) {
+            case "carskins":
+              [item, similarItems] = await Promise.all([contract.methods.getSkin(this.state.id).call(), contract.methods.getSkins().call()]);
+              this.setState({imagePath: item.info.skinPic});
+              break;
+            case "carsetup":
+              [item, similarItems] = await Promise.all([contract.methods.getCarSetup(this.state.id).call(),contract.methods.getCarSetups().call()]);
+              break;
+            case "momentnfts":
+              [data, info, similarItems] = await Promise.all([contractMomentNFTs.methods.tokenURI(this.state.id).call().then(uri => fetch(uri)).then(r => r.json()), contractMomentNFTs.methods.getItem(this.state.id).call(), this.loadRemainingNFTS(contractMomentNFTs)]);
+
+              item = { ad: {price: info[0], seller: info[1]}, info: {...data, imagePath: [data.image], isMomentNFT: true, metadata: this.extractNFTTraitTypes(data.attributes)}};
+              break;
+            case "ownership":
+              [data, info, similarItems] = await Promise.all([contractNFTs.methods.tokenURI(this.state.id).call().then(uri => fetch(uri)).then(r => r.json()), contractNFTs.methods.getItem(this.state.id).call(), this.loadRemainingNFTS(contractNFTs)]);
+
+              item = { ad: {price: info[0], seller: info[1]}, info: {...data, imagePath: [data.image], isNFT: true, metadata: this.extractNFTTraitTypes(data.attributes)}};
+              break;
+            default:
+          }
+
+          this.setState({ 
+            ...item.ad, 
+            ...item.info,
+            itemId: this.state.id,
+            similarItems: similarItems,
+            usdValue: await this.fetchUSDPrice(),
+            vendorAddress: item.ad.seller,
+            vendorNickname: await contract.methods.getNickname(item.ad.seller).call() 
+          });
+        }
+
+        if(this.state.imagePath) {
+          let imagePath = Array.isArray(this.state.imagePath) ? this.state.imagePath : [this.state.imagePath];
+          imagePath.forEach((v, idx) => {
+              if(/(?:https?):\/\/(\w+:?\w*)?(\S+)(:\d+)?(\/|\/([\w#!:.?+=&%!\-\/]))?/.test(v))
+                imagePath[idx] = v.split('/').pop();
+            });
+            this.setState({imagePath: imagePath});
+        }
+
+        // workaround to insure that item persist on metatags cache db
+        fetch('/api/metatags', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: this.state.itemId,
+            category: this.state.category,
+            description: this.state.description,
+            image: this.state.imagePath ? "https://simthunder.infura-ipfs.io/ipfs/" + this.state.imagePath[0] : null
+            })
+        });
+
+        let sellerAddress = this.state.vendorAddress;
+        let isSeller = (currentAccount === sellerAddress);
+        let isContractOwner = (currentAccount === marketplaceOwner);
+        let isSkin = !this.state.isNFT && !this.state.isMomentNFT && (!this.state.track || !this.state.season);
 
         const canDelete = isSeller || isContractOwner;
         const hasVideo = this.state.isMomentNFT;
@@ -272,14 +357,16 @@ class ItemPage extends Component {
     buyItem = async (event) => {
         event.preventDefault();
 
-        UIHelper.showSpinning();
-
+        const balance = this.state.drizzle.web3.utils.toBN(
+          await this.state.contractSimracerCoin.methods.balanceOf(this.state.currentAccount).call());
         const price = this.state.drizzle.web3.utils.toBN(this.state.price);
-        //console.log('item price =' + price);
 
-        // TODO: buyer public key
-        //const buyerPK = this.state.drizzle.web3.utils.hexToBytes(this.state.drizzle.web3.utils.randomHex(16));
-        //console.log('Item price:' + this.state.price);
+        if(balance.lt(price)) {
+          alert("Insufficient balance to purchase the item!");
+          return;
+        }
+
+        UIHelper.showSpinning();
 
         if (!this.state.isNFT && !this.state.isMomentNFT) {
           let buyerKey = localStorage.getItem('ak');
@@ -541,23 +628,15 @@ class ItemPage extends Component {
       if (this.state.isNFT || this.state.isMomentNFT) {
           return this.renderItemInformationForNFT();
       } 
-      else if (this.state.track == null || this.state.season == null) {
+      else if (!this.state.track || !this.state.season) {
           return this.renderItemInformationForSkin();
       } else {
           return this.renderItemInformationForCarSetup();
       }
     }
 
-    renderUSDPrice = (price) => {
-
-      let usdPrice = Number(Math.round((price / priceConversion) * this.state.usdValue * 100) / 100).toFixed(2);
-
-      /**const usd = Number( ( Number(price) / priceConversion) * this.state.usdValue).toFixed(2);
-      if(usd == 0.00) {
-        usd = 0.01;
-      }*/
-      return "$" + usdPrice;
-    }
+    renderUSDPrice = (price) =>
+      ["$" + Number(Math.round((price / priceConversion) * this.state.usdValue * 100) / 100).toFixed(2), <sup className="secondary-sup">USD</sup>];
 
     renderSellerInfo =() => {
 
@@ -598,7 +677,7 @@ class ItemPage extends Component {
                 
                 <div className="row mb-4 mb-sm-0">
                 <div className="col-sm-4"><strong className="fw-500">Car Brand:</strong></div>
-                <div className="col-sm-8">{this.state.car}</div>
+                <div className="col-sm-8">{this.state.carBrand}</div>
                 </div>
 
                 <div className="row mb-4 mb-sm-0">
@@ -608,7 +687,7 @@ class ItemPage extends Component {
                 
                 <div className="row mb-4 mb-sm-0">
                 <div className="col-sm-4"><strong className="fw-500">Price:</strong></div>
-                <div className="col-sm-8"><strong>{price} <sup className="main-sup">SRC</sup></strong><br/><span className="secondary-price">{this.renderUSDPrice(this.state.price)}<sup className="secondary-sup">USD</sup></span></div>
+                <div className="col-sm-8"><strong>{price} <sup className="main-sup">SRC</sup></strong><br/><span className="secondary-price">{this.renderUSDPrice(this.state.price)}</span></div>
                 </div>
               </div>
             </div>
@@ -648,13 +727,13 @@ class ItemPage extends Component {
                   this.state.isNFT &&
                   <div className="row mb-4 mb-sm-0">
                     <div className="col-sm-4"><strong className="fw-500">Car Number:</strong></div>
-                    <div className="col-sm-8">{this.state.number}</div>
+                    <div className="col-sm-8">{this.state.carNumber}</div>
                   </div>
                 }
                 { !this.state.isNFTOwner && 
                 <div className="row mb-4 mb-sm-0">
                   <div className="col-sm-4"><strong className="fw-500">Price:</strong></div>
-                  <div className="col-sm-8"><strong>{price} <sup className="main-sup">SRC</sup></strong><br/><span className="secondary-price">{this.renderUSDPrice(this.state.price)}<sup className="secondary-sup">USD</sup></span></div>
+                  <div className="col-sm-8"><strong>{price} <sup className="main-sup">SRC</sup></strong><br/><span className="secondary-price">{this.renderUSDPrice(this.state.price)}</span></div>
                 </div>
                 }
               </div>
@@ -679,7 +758,7 @@ class ItemPage extends Component {
                 </div>
                 <div className="row mb-4 mb-sm-0">
                 <div className="col-sm-4"><strong className="fw-500">Car Brand:</strong></div>
-                <div className="col-sm-8">{this.state.car}</div>
+                <div className="col-sm-8">{this.state.carBrand}</div>
                 </div>
                 <div className="row mb-4 mb-sm-0">
                 <div className="col-sm-4"><strong className="fw-500">Season:</strong></div>
@@ -691,44 +770,11 @@ class ItemPage extends Component {
                 </div>
                 <div className="row mb-4 mb-sm-0">
                 <div className="col-sm-4"><strong className="fw-500">Price:</strong></div>
-                <div className="col-sm-8"><strong>{price} <sup className="main-sup">SRC</sup></strong><br/><span className="secondary-price">{this.renderUSDPrice(this.state.price)}<sup className="secondary-sup">USD</sup></span></div>
+                <div className="col-sm-8"><strong>{price} <sup className="main-sup">SRC</sup></strong><br/><span className="secondary-price">{this.renderUSDPrice(this.state.price)}</span></div>
                 </div>
               </div>
             </div>
       
-    }
-
-    //called from the similar items component
-    callbackParent = async (context, isNFT, isMomentNFT, isSkin, payload, item) => {
-    
-      context.setState({
-        itemId: item.id,
-        track: payload.track ? payload.track : null,
-        simulator: payload.simulator,
-        season: payload.season,
-        series: payload.series,
-        description: payload.description,
-        price: payload.price,
-        car: payload.carBrand,
-        ipfsPath: payload.ipfsPath,
-        imagePath: Array.isArray(payload.imagePath) ? payload.imagePath : [payload.imagePath],
-        isNFT: isNFT,
-        isMomentNFT: isMomentNFT,
-        isSkin: isSkin,
-        vendorAddress: payload.address,
-        vendorNickname: payload.address ? await context.state.contract.methods.getNickname(payload.address).call() : "",
-        
-      });
-
-      if (!isNFT && !this.state.isMomentNFT) {
-          const comments = await context.state.contract.methods.getItemComments(item.id).call();
-          const average_review = context.average_rating(comments);
-
-          context.setState({ listComments: comments, average_review: average_review, isSkin: isSkin });
-      } 
-
-      this.scrollToTop();
-
     }
 
     renderCarousel = (hasVideo, hasImage) => {
@@ -767,13 +813,11 @@ class ItemPage extends Component {
       }
 
       return "";
-    } 
+    }
 
     render() {
 
-        let item = ""
-        //let toRender;
-        //let commentsRender = [];
+        let item = "";
 
         let hasImage = true;
         let hasVideo = this.state.isMomentNFT && this.state.videoPath !== null;
@@ -784,7 +828,7 @@ class ItemPage extends Component {
         else if(this.state.isMomentNFT) {
           item = "Simracing Moment NFT";
         }
-        else if (this.state.track == null || this.state.season == null) {
+        else if (!this.state.track || !this.state.season) {
           item = "Skin";
         } else {
           item = "Car Setup";
@@ -797,7 +841,7 @@ class ItemPage extends Component {
       const price = Number((Math.round(this.state.price / priceConversion) * 100) / 100).toFixed(2);
 
         return (
-        <div className="page-body">     
+        <div className="page-body">    
         <main className="main-content">
           <div className="overlay overflow-hidden pe-n"><img src="/assets/img/bg/bg_shape.png" alt="Background shape"/></div>
           {/*<!-- Start Content Area -->*/}
@@ -841,9 +885,8 @@ class ItemPage extends Component {
                         <div className="alert alert-no-border alert-share d-flex mb-6" role="alert">
                           <span className="flex-1 fw-600 text-uppercase text-warning">Share:</span>
                           <div className="social-buttons text-unset">
-                            <a className="social-twitter mx-2" href="store-product.html#"><i className="fab fa-twitter"></i></a>
-                            <a className="social-dribbble mx-2" href="store-product.html#"><i className="fab fa-dribbble"></i></a>
-                            <a className="social-instagram ml-2" href="store-product.html#"><i className="fab fa-instagram"></i></a>
+                            <a className="social-twitter mx-2" target="_blank" rel="noreferrer" href={ "https://twitter.com/intent/tweet?url="+encodeURIComponent(window.location.href) }><i className="fab fa-twitter"></i></a>
+                            <a className="social-dribbble mx-2" target="_blank" rel="noreferrer" href={ "https://www.facebook.com/sharer/sharer.php?u="+encodeURIComponent(window.location.href) }><i className="fab fa-facebook"></i></a>
                           </div>
                         </div>
                         
@@ -863,7 +906,7 @@ class ItemPage extends Component {
                           <h6 className="mb-0 fw-400 ls-1 text-uppercase">More like this</h6>
                           <hr className="border-secondary my-2"/>
                           <div>
-                              <SimilarItemsComponent contextParent={this} usdValue={this.state.usdValue} callbackParent={this.callbackParent} className="similaritems"  items={this.state.similarItems} isNFT={this.state.isNFT} isMomentNFT={this.state.isMomentNFT} isSkin={!this.state.isNFT && !this.state.isMomentNFT && (this.state.track == null || this.state.season == null)} selectedItemId={this.state.itemId}></SimilarItemsComponent>   
+                              <SimilarItemsComponent drizzle={this.state.drizzle} category={this.state.category} className="similaritems" selectedItemId={this.state.itemId ? this.state.itemId : this.state.id}></SimilarItemsComponent>   
                           </div>
                         </div>
                         <div className="mb-0">
@@ -879,7 +922,7 @@ class ItemPage extends Component {
                 </div>
                 <div className="col-lg-4">
                   <div className="bg-dark_A-20 p-4 mb-4">
-                    {hasImage &&
+                    {hasImage && this.state.imagePath &&
                         <img className="item-page-img mb-3" src={"https://simthunder.infura-ipfs.io/ipfs/"+this.state.imagePath[0]} alt="Product"/>
                     }
                     <p>
@@ -891,7 +934,7 @@ class ItemPage extends Component {
                       <div className="mb-3">
                         <div className="price">
                             {/*<div className="price-prev">300$</div>*/}
-                            <div className="price-current"><strong className="price_div_strong">{price} <sup className="main-sup">SRC</sup></strong><br/><span className="secondary-price"><span className="secondary-price">{this.renderUSDPrice(this.state.price)}<sup className="secondary-sup">USD</sup></span></span></div>
+                            <div className="price-current"><strong className="price_div_strong">{price} <sup className="main-sup">SRC</sup></strong><br/><span className="secondary-price"><span className="secondary-price">{this.renderUSDPrice(this.state.price)}</span></span></div>
                           </div>
                         {/*<div className="discount">
                             Save: $20.00 (33%)
@@ -987,9 +1030,7 @@ class ItemPage extends Component {
           {this.state.sellFromWallet && 
             <SimpleModal onApproval={this.approveSellItem} open={true}></SimpleModal>
           }
-        </div>
-        
-        );
+        </div>);
     }
 }
 

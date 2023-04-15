@@ -983,18 +983,10 @@ class StorePage extends Component {
     }
 
     performBuyItemRedirection() {
-      let similarItems = [];
-      if (this.state.isNFT) {
-        similarItems = similarItems.concat(this.state.latestNFTs);
-      } else if (this.state.selectedTrack == null || this.state.selectedSeason == null) {
-        similarItems = similarItems.concat(this.state.latestSkins);
-      } else {
-        similarItems = similarItems.concat(this.state.latestCars);
-      }
 
       return (<Redirect
             to={{
-                pathname: "/item",
+                pathname: "/item/"+this.state.selectedCategory+"/"+this.state.selectedItemId,
                 state: {
                     selectedItemId: this.state.selectedItemId,
                     selectedTrack: this.state.selectedTrack,
@@ -1010,7 +1002,7 @@ class StorePage extends Component {
                     vendorNickname: this.state.vendorNickname,
                     ipfsPath: this.state.ipfsPath,
                     isNFT: this.state.isNFT,
-                    similarItems: similarItems,
+                    similarItems: this.state.similarItems,
                     usdPrice : this.state.usdValue
                 }
             }}
@@ -1020,6 +1012,22 @@ class StorePage extends Component {
     //Obs: this function was way to many paramaters, bette make a JSON object/payload maybe?
     buyItem = async (event, itemId, track, simulator, season, series, description, price, carBrand, carNumber, address, ipfsPath, imagePath, isNFT, isMomentNFT) =>{
       event.preventDefault();
+
+      let similarItems = [];
+      let category = "";
+      if(isMomentNFT) {
+          similarItems = similarItems.concat(this.state.latestVideoNFTs);
+          category = "momentnfts";
+      } else if(isNFT) {
+          similarItems = similarItems.concat(this.state.latestNFTs);
+          category = "ownership";
+      } else if(track == null || season == null) {
+          similarItems = similarItems.concat(this.state.listSkins);
+          category = "carskins";
+      } else {
+          similarItems = similarItems.concat(this.state.listCars);
+          category = "carsetup";
+      }
      
       this.setState({
           redirectBuyItem: true,
@@ -1033,12 +1041,14 @@ class StorePage extends Component {
           selectedCarBrand: carBrand,
           selectedCarNumber: carNumber,
           selectedImagePath: imagePath,
+          selectedCategory: category,
           vendorAddress: address,
           vendorNickname: address ? await this.state.contract.methods.getNickname(address).call() : "",
           ipfsPath: ipfsPath,
           isNFT: isNFT,
           isMomentNFT: isMomentNFT,
-          usdPrice : this.state.usdValue
+          usdPrice : this.state.usdValue,
+          similarItems: similarItems
       });
   
     }
@@ -1150,7 +1160,6 @@ class StorePage extends Component {
       //const name = new URLSearchParams(search).get('q');
       //we might want to add additional redirections later, so maybe better specific functions?
       if (this.state.redirectBuyItem) {
-
        return this.performBuyItemRedirection();
       }
 

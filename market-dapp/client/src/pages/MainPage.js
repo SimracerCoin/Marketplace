@@ -194,70 +194,40 @@ class MainPage extends Component {
         this.setState({latestNFTs: nftlist, latestVideoNFTs: videoNftsList});
     }
 
-    loadRemainingSimracingMomentNFTS = async (contractMomentNFTs, alreadyLoaded, totalMomentNFTs) => {
-
-        let videoNftsList = [];
-
-        for (let i = 1; i < (totalMomentNFTs - alreadyLoaded) + 1; i++) {
-            try {
-                //TODO: change for different ids
-                //console.log('loading remaining moment at idx: ',i);
-                let ownerAddress = await contractMomentNFTs.methods.ownerOf(i).call();
-                //console.log('ID:'+i+'ownerAddress: '+ownerAddress.toString()+'nfts addr: '+contractMomentNFTs.address);
-                if(ownerAddress === contractMomentNFTs.address) {
-                    
-                    let uri = await contractMomentNFTs.methods.tokenURI(i).call();
-                    //console.log("loaded " + i + " uri: " + uri);
-
-                    let response = await fetch(uri);
-                    let data = await response.json();
-
-                    data.id=i;
-
-                    videoNftsList.push(data);
-                    
-                }
-            } catch (e) {
-                console.error(e);
-            }
-        }
-
-        return videoNftsList;
-    }
-    loadRemainingCardOwnershipNFTS = async (contractNFTs, alreadyLoaded, totalNFTs) => {
-
+    loadRemainingNFTS = async (contract, alreadyLoaded, total) => {
         let nftlist = [];
-        for (let i = 1; i < (totalNFTs - alreadyLoaded ) + 1 ; i++) {
+
+        for (let i = 1; i < (total - alreadyLoaded) + 1; i++) {
             try {
-                //console.log('loading remaining car at idx: ',i);
-                //TODO: change for different ids
-                let ownerAddress = await contractNFTs.methods.ownerOf(i).call();
-                //console.log('ID:'+i+'ownerAddress: '+ownerAddress.toString()+'nfts addr: '+contractNFTs.address);
-                if(ownerAddress === contractNFTs.address) {
+                let ownerAddress = await contract.methods.ownerOf(i).call();
+                if(ownerAddress === contract.address) {
                     
-                    let uri = await contractNFTs.methods.tokenURI(i).call();
-                    console.log("NFT loaded " + i + " uri: " + uri);
+                    let uri = await contract.methods.tokenURI(i).call();
                     let response = await fetch(uri);
                     let data = await response.json();
 
                     data.id=i;
 
-                    //always put on main list
-                    nftlist.push(data);  
+                    nftlist.push(data);
                     
+                    // load only 10 nft's
+                    if(nftlist.length === 10) break;
                 }
-
             } catch (e) {
                 console.error(e);
             }
         }
+
         return nftlist;
     }
 
-    componentDidMount = async () => {
+    loadRemainingSimracingMomentNFTS = async (contractMomentNFTs, alreadyLoaded, totalMomentNFTs) => 
+        this.loadRemainingNFTS(contractMomentNFTs, alreadyLoaded, totalMomentNFTs);
+        
+    loadRemainingCardOwnershipNFTS = async (contractNFTs, alreadyLoaded, totalNFTs) => 
+        this.loadRemainingNFTS(contractNFTs, alreadyLoaded, totalNFTs);
 
-        this.updateData();
-    }
+    componentDidMount = async () => this.updateData();
 
     componentDidUpdate = async () => {
         //Handy trick to know when we should update again (using react navigation approach was a total mess, and not even building)
@@ -272,15 +242,19 @@ class MainPage extends Component {
         event.preventDefault();
 
         let similarItems = [];
+        let category = "";
         if(isMomentNFT) {
             similarItems = similarItems.concat(this.state.latestVideoNFTs);
-        }
-        else if(isNFT) {
+            category = "momentnfts";
+        } else if(isNFT) {
             similarItems = similarItems.concat(this.state.latestNFTs);
+            category = "ownership";
         } else if(track == null || season == null) {
             similarItems = similarItems.concat(this.state.listSkins);
+            category = "carskins";
         } else {
             similarItems = similarItems.concat(this.state.listCars);
+            category = "carsetup";
         }
 
         this.setState({
@@ -292,6 +266,7 @@ class MainPage extends Component {
             selectedSeries: series,
             selectedDescription: description,
             selectedPrice: price,
+            selectedCategory: category,
             usdPrice : this.state.usdValue,
             selectedCarBrand: carBrand,
             selectedCarNumber: carNumber,
@@ -307,6 +282,7 @@ class MainPage extends Component {
         });
     }
 
+    /** @deprecated */
     isMomentVideoNFT(attributes) {
         
         for(let attribute of attributes) {
@@ -357,7 +333,7 @@ class MainPage extends Component {
 
             return (<Redirect
                 to={{
-                    pathname: path+"/"+this.state.selectedItemId,// "/item",
+                    pathname: path+"/"+this.state.selectedCategory+"/"+this.state.selectedItemId,// "/item",
                     state: {
                         selectedItemId: this.state.selectedItemId,
                         selectedTrack: this.state.selectedTrack,
@@ -571,7 +547,7 @@ class MainPage extends Component {
             let price_src = Number((Math.round(price / priceConversion) * 100) / 100).toFixed(2);
             let usdPrice = Number(Math.round(price_src  * this.state.usdValue * 100) / 100).toFixed(2);
 
-            if(usdPrice == 0.00) {
+            if(usdPrice === 0.00) {
                 usdPrice = 0.01;
             }
             usdPrice = "$" + usdPrice;

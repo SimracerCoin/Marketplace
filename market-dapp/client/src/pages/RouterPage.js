@@ -53,7 +53,7 @@ class RouterPage extends Component {
                     <Route exact path="/registorvendor">
                         <RegisterVendor drizzle={this.state.drizzle} drizzleState={this.state.drizzleState} />
                     </Route>
-                    <Route path="/item/:itemId">
+                    <Route path="/item/:category/:id">
                         <ItemPage drizzle={this.state.drizzle} drizzleState={this.state.drizzleState} />
                     </Route>
                     <Route exact path="/notifications">
