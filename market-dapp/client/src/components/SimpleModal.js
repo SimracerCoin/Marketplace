@@ -3,7 +3,7 @@ import Box from '@mui/material/Box';
 import { Form, Button } from 'react-bootstrap';
 import Typography from '@mui/material/Typography';
 import Modal from '@mui/material/Modal';
-import "../css/simplemodal.css";
+import "../css/modal.css";
 
 const style = {
     position: 'absolute',

@@ -9,7 +9,6 @@ import ReviewsComponent from "../components/ReviewsComponent";
 import SimilarItemsComponent from '../components/SimilarItemsComponent';
 import SimpleModal from '../components/SimpleModal';
 import ipfs from "../ipfs";
-import knex from '../db'
 
 import 'react-responsive-carousel/lib/styles/carousel.min.css';
 import '../css/custom-carousel.css';
