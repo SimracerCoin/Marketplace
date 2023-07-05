@@ -1,6 +1,7 @@
 import React from "react";
 import { Navbar, Nav, NavDropdown, Container } from 'react-bootstrap'; // Check out drizzle's react components at @drizzle/react-components
 import { Link, NavLink, Redirect } from 'react-router-dom';
+import QuickswapModal from '../components/QuickswapModal';
 import * as $ from 'jquery';
 
 class NavbarPage extends React.Component {
@@ -24,7 +25,8 @@ class NavbarPage extends React.Component {
             selectedCarBrand: "",
             searchQuery: "",
             isNFTOwner: false,
-            isMomentNFTOwner: false
+            isMomentNFTOwner: false,
+            showQSModal: false
         }
 
     }
@@ -39,15 +41,16 @@ class NavbarPage extends React.Component {
     componentDidMount = async (event) => {
         const contract = await this.state.drizzle.contracts.STMarketplace;
         const currentAccount = this.state.drizzleState.accounts[0];
-        const haveNotifications = (await contract.methods.listNotificationsPerUser(currentAccount).call()).length != 0;
+        const haveNotifications = (await contract.methods.listNotificationsPerUser(currentAccount).call()).length > 0;
+        const walletAddr = currentAccount.substr(0, 6) + "..." + currentAccount.substr(-4);
 
         const contractNFTs = await this.state.drizzle.contracts.SimthunderOwner;
         const contractMomentNFTs = await this.state.drizzle.contracts.SimracingMomentOwner;
         const ownerNFT = await contractNFTs.methods.owner().call();
         const ownerMomentNFT = await contractMomentNFTs.methods.owner().call();
         //check if account is contract(s) owner
-        const isNFTOwner = (ownerNFT == currentAccount);
-        const isMomentNFTOwner = (ownerMomentNFT == currentAccount);
+        const isNFTOwner = (ownerNFT === currentAccount);
+        const isMomentNFTOwner = (ownerMomentNFT === currentAccount);
 
         let previousSearch = localStorage.getItem('searchQuery');
         let searchQuery = "";
@@ -55,7 +58,7 @@ class NavbarPage extends React.Component {
             searchQuery = previousSearch;
         }
 
-        this.setState({ isNFTOwner: isNFTOwner, isMomentNFTOwner: isMomentNFTOwner, currentAccount: currentAccount, haveNotifications: haveNotifications, searchQuery: searchQuery });
+        this.setState({ isNFTOwner: isNFTOwner, isMomentNFTOwner: isMomentNFTOwner, currentAccount: walletAddr, haveNotifications: haveNotifications, searchQuery: searchQuery });
     }
 
     componentWillUnmount = async (event) => {
@@ -128,7 +131,7 @@ class NavbarPage extends React.Component {
                             </form>
                         </div>
                         <div className="col-8 col-sm-8 col-md-8 col-lg-6 col-xl-4 ml-auto text-right">
-                            <Navbar.Text>{this.state.currentAccount}</Navbar.Text>
+                            <Navbar.Text className="border border-warning rounded-2 p-2">{this.state.currentAccount} &nbsp;|&nbsp; <a className="btn m-0 p-0" role="button" onClick={() => this.setState({showQSModal: true})}><b>Get SRC</b></a></Navbar.Text>
                             <ul className="nav navbar-nav d-none d-sm-inline-flex flex-row">
                                 <li key="languagesettings" className="nav-item dropdown">
                                     <a className="nav-link dropdown-toggle small" href="store.html#" id="dropdownGaming" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i className="mr-2 fas fa-globe"></i>EN </a>
@@ -155,6 +158,9 @@ class NavbarPage extends React.Component {
                             </ul>
                         </div>
                     </div>
+                    {this.state.showQSModal && 
+                        <QuickswapModal open={true} onClose={() => this.setState({showQSModal: false})}></QuickswapModal>
+                    }
                 </Container>
             </Navbar>,
             <Navbar className="navbar-expand-lg navbar-dark bg-dark">

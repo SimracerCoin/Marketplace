@@ -111,12 +111,12 @@ static calculateGasUsingStation = async function(fromAccount) {
     try {
         const {data} = await axios({
             method: 'get',
-            url: 'https://gasstation-mainnet.matic.network/v2'
+            url: 'https://gasstation.polygon.technology/v2'
         });
         console.log('gassatation data: ', data);
 
-        gas.maxFeePerGas = Number(convertGwei2Wei( Math.trunc(data.standard.maxFee)));
-        gas.maxPriorityFeePerGas = Number(convertGwei2Wei( Math.trunc(data.standard.maxPriorityFee)));
+        gas.maxFeePerGas = Number(convertGwei2Wei(Math.trunc(data.fast.maxFee)));
+        gas.maxPriorityFeePerGas = Number(convertGwei2Wei(Math.trunc(data.fast.maxPriorityFee)));
     } catch (error) {
       console.log("gasstation error: ", error);
 
