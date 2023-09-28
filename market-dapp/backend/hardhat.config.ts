@@ -41,10 +41,10 @@ const config: HardhatUserConfig = {
   networks: {
     hardhat: mnemonic
       ? { accounts: { mnemonic }, chainId: 31337 }
-      : { chainId: 31337 },
+      : { chainId: 31337, allowUnlimitedContractSize: true },
     localhost: {
       url: "http://localhost:8545",
-      accounts: mnemonic ? { mnemonic } : undefined,
+      accounts: mnemonic ? { mnemonic } : undefined
     },
     coverage: {
       url: "http://localhost:8555", // <-- If you change this, also set the port option in .solcover.js.
@@ -75,8 +75,8 @@ const config: HardhatUserConfig = {
     version: "0.7.6",
     settings: {
       optimizer: {
-        runs: 110,
         enabled: true,
+        runs: 200
       },
     },
   },

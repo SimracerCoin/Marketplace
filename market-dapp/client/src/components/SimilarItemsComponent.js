@@ -1,6 +1,8 @@
 import React from 'react';
 import { Carousel } from 'react-responsive-carousel';
 
+const NUMBER_LOAD_ITEMS = 10;
+
 class SimilarItemsComponent extends React.Component {
 
     constructor(props) {
@@ -30,7 +32,7 @@ class SimilarItemsComponent extends React.Component {
                   nftlist.push(data);
                   
                   // load only 10 nft's
-                  if(nftlist.length === 10) break;
+                  if(nftlist.length === NUMBER_LOAD_ITEMS) break;
               }
           } catch (e) {
               console.error("can't load " + i + " similar item - " + e);
@@ -83,7 +85,7 @@ class SimilarItemsComponent extends React.Component {
 
      filterSimilarItems = (referenceItem) => {
         if(this.state.items.length > 0) {
-          let filteredItems = this.state.items.filter((value) => value && value.id && value.id != referenceItem);
+          let filteredItems = this.state.items.filter(item => item && item.id && item.id !== referenceItem && item.ad.active).slice(0, NUMBER_LOAD_ITEMS);
           this.setState({filteredItems: filteredItems});
         } else {
           this.setState({filteredItems: []});

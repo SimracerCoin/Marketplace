@@ -186,9 +186,9 @@ class StorePage extends Component {
         //simracing moment nfts
         const contractMomentNFTs = await this.state.drizzle.contracts.SimracingMomentOwner;
         //car setups
-        response_cars = await contract.methods.getCarSetups().call();
+        response_cars = (await contract.methods.getCarSetups().call()).filter(item => item.ad.active);
         //car setups
-        response_skins = await contract.methods.getSkins().call();
+        response_skins = (await contract.methods.getSkins().call()).filter(item => item.ad.active);
         
         let simsList = [];
         let simulatorsFilter = [];

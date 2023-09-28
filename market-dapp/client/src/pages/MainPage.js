@@ -67,8 +67,8 @@ class MainPage extends Component {
         const contractNFTs = await this.state.drizzle.contracts.SimthunderOwner;
         const contractMomentNFTs = await this.state.drizzle.contracts.SimracingMomentOwner;
 
-        const response_cars = await contract.methods.getCarSetups().call();
-        const response_skins = await contract.methods.getSkins().call();
+        const response_cars = (await contract.methods.getCarSetups().call()).filter(item => item.ad.active).slice(0, NUM_ITEMS_LOAD);
+        const response_skins = (await contract.methods.getSkins().call()).filter(item => item.ad.active).slice(0, NUM_ITEMS_LOAD);
 
         //const currentAccount = this.state.drizzleState.accounts[0];
         //car ownership nfts
@@ -487,7 +487,7 @@ class MainPage extends Component {
         }
 
         //skins
-        for(let i = this.state.listSkins.length-1, j = 0; j < Math.min(this.state.listSkins.length, NUM_ITEMS_LOAD); --i, ++j) {
+        for(let i = this.state.listSkins.length-1, j = 0; j < this.state.listSkins.length; --i, ++j) {
             let value = this.state.listSkins[i];
 
             let carBrand = value.info.carBrand
@@ -528,7 +528,7 @@ class MainPage extends Component {
         }
 
         //car setups
-        for(let i = this.state.listCars.length-1, j = 0; j < Math.min(this.state.listCars.length, NUM_ITEMS_LOAD); --i, ++j) {
+        for(let i = this.state.listCars.length-1, j = 0; j < this.state.listCars.length; --i, ++j) {
             let value = this.state.listCars[i];
             //console.log('list cars value:');
             //console.log(value);
@@ -635,7 +635,7 @@ class MainPage extends Component {
                             <ListGroup horizontal className="scrolling-wrapper">
                                     {skins}
                                 </ListGroup>
-                                {this.state.listSkins.length > NUM_ITEMS_LOAD &&
+                                {this.state.listSkins.length === NUM_ITEMS_LOAD &&
                                 <Link to="/store?m=carskins" className="view-more">View more &gt;&gt; </Link>
                                 }
                                 
@@ -654,7 +654,7 @@ class MainPage extends Component {
                             <ListGroup horizontal className="scrolling-wrapper">
                                     {cars}
                                 </ListGroup>
-                                {this.state.listCars.length > NUM_ITEMS_LOAD &&
+                                {this.state.listCars.length === NUM_ITEMS_LOAD &&
                                 <Link to="/store?m=carsetup" className="view-more">View more &gt;&gt; </Link>
                                 }
                             </div>

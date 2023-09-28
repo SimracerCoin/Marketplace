@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { Dropdown, Form, DropdownButton, Button, FormLabel } from 'react-bootstrap';
 import { Prompt } from 'react-st-modal';
+import { withRouter } from "react-router";
 import ipfs from "../ipfs";
 import computeMerkleRootHash from "../utils/merkle"
 import UIHelper from "../utils/uihelper"
@@ -20,27 +21,24 @@ class UploadCar extends Component {
         this.state = {
             drizzle: props.drizzle,
             drizzleState: props.drizzleState,
-            accounts: null,
+            contract: null,
             currentAccount: null,
             currentSimulator: "Choose your simulator",
-            currentSeason: null,
-            currentSeries: null,
-            currentDescription: null,
-            contract: null,
-            encryptedDataHash: null,
+            currentSeason: "",
+            currentSeries: "",
+            currentCar: "",
+            currentTrack: "",
+            currentDescription: "",
+            encryptedDataHash: "",
             ipfsPath: "",
-            formIPFS: "",
-            formAddress: "",
-            receivedIPFS: "",
             isSeller: false,
-            priceValue: ""
+            priceValue: "",
+            mode: "create"
         }
 
-        this.handleChangeHash = this.handleChangeHash.bind(this);
-        this.handleFilePrice = this.handleFilePrice.bind(this);
-        this.handleSeason = this.handleSeason.bind(this);
-        this.handleSeries = this.handleSeries.bind(this);
-        this.handleDescription = this.handleDescription.bind(this);
+        if(props.location.state) {
+            this.state = {...this.state, ...props.location.state};
+        }
     };
 
 
@@ -49,18 +47,17 @@ class UploadCar extends Component {
         const contract = this.state.drizzle.contracts.STMarketplace;
         const isSeller = await contract.methods.isSeller(currentAccount).call();
         this.setState({ currentAccount: currentAccount, contract: contract, isSeller: isSeller });
+
+        UIHelper.scrollToTop();
     };
 
     handleChangeHash = (event) => {
-        console.log("IPFS Hash: " + event.target.value);
         this.setState({ ipfsPath: event.target.value });
     }
 
     handleFilePrice = (event) => {
         const re = new RegExp(event.target.pattern);
-        if (re.test(event.target.value)) {
-            console.log("File price: " + event.target.value);
-        } else {
+        if (!re.test(event.target.value)) {
             event.target.value = '';
         }
 
@@ -108,6 +105,10 @@ class UploadCar extends Component {
     };
 
     onIPFSSubmit = async () => {
+        // edit mode, nothing to upload... continue and keep the same
+        if("edit" === this.state.mode)
+            return true;
+
         var fileName = document.getElementById('car-file').value.toLowerCase();
         if (!fileName.endsWith('.zip')) {
             alert('You can upload .zip files only.');
@@ -115,7 +116,7 @@ class UploadCar extends Component {
         }
 
         const password = NON_SECURE_SELL ? NON_SECURE_KEY : await Prompt('Type the password to encrypt the file. Use different password for each item.');
-        if (!password) return false;
+        if (!password) { alert("Invalid password"); return false; }
 
         const { message } = await openpgp.encrypt({
             message: openpgp.message.fromBinary(this.state.buffer), // input as Message object
@@ -128,10 +129,14 @@ class UploadCar extends Component {
         console.log(`Logger Root Hash: ${encryptedDataHash}`);
 
         const response = await ipfs.add(encryptedBuffer, (err, ipfsPath) => {
-            //console.log(err, ipfsPath);
-            //setState by setting ipfsPath to ipfsPath[0].hash 
-            this.setState({ ipfsPath: ipfsPath[0].hash });
-        })
+            if(err) console.error(err);
+        });
+        
+        if(!response) { 
+            alert("Error on upload files. Please try again later.")
+            return false;
+        }
+
         this.setState({ ipfsPath: response.path, encryptedDataHash: encryptedDataHash });
 
         return true;
@@ -142,52 +147,57 @@ class UploadCar extends Component {
 
         if (!this.state.priceValue) {
             alert('Item price must be a number');
-        } else if(!this.state.buffer) {
+        } else if("create" === this.state.mode && !this.state.buffer) {
             alert('File missing or invalid!');
+        } else if(!this.state.currentDescription) {
+            alert('Description is required!');
         } else {
             let nickname = "";
             if (!this.state.isSeller) {
                 nickname = await Prompt('You are adding your first item for sale, please choose your seller nickname.');
-                if (!nickname) return;
+                if (!nickname) { alert("Invalid nickname"); return; }
             }
 
             UIHelper.showSpinning();
 
             if(!(await this.onIPFSSubmit())) {
+                UIHelper.hideSpinning();
                 return;
             }
 
-            const price = this.state.drizzle.web3.utils.toWei(this.state.priceValue);
+            const { state } = this;
 
-            console.log("Current account: " + this.state.currentAccount);
-            console.log("Current hash: " + this.state.ipfsPath);
-            console.log("Current car: " + this.state.currentCar);
-            console.log("Current track: " + this.state.currentTrack);
-            console.log("Current simulator: " + this.state.currentSimulator);
-            console.log("Current season: " + this.state.currentSeason);
-            console.log("Current price: " + this.state.priceValue);
+            const price = state.drizzle.web3.utils.toWei(state.priceValue);
+            const ipfsPathBytes = state.drizzle.web3.utils.asciiToHex(state.ipfsPath);
+            const placeholder = state.drizzle.web3.utils.asciiToHex('');     // TODO
+            const paramsForCall = await UIHelper.calculateGasUsingStation(state.currentAccount);
 
-            const ipfsPathBytes = this.state.drizzle.web3.utils.fromAscii(this.state.ipfsPath);
+            console.log("account:", state.currentAccount);
+            console.log("hash:", state.ipfsPath);
+            console.log("car:", state.currentCar);
+            console.log("track:", state.currentTrack);
+            console.log("simulator:", state.currentSimulator);
+            console.log("season:", state.currentSeason);
+            console.log("price:", state.priceValue);
+            console.log("description:", state.currentDescription);
 
-            // TO DO: change placeholders for correct values
-            const placeholder = this.state.drizzle.web3.utils.fromAscii('');
-            console.log(placeholder);
-
-            let paramsForCall = await UIHelper.calculateGasUsingStation(this.state.currentAccount);
-
-            await this.state.contract.methods.newCarSetup(ipfsPathBytes, this.state.currentCar, this.state.currentTrack,
-                this.state.currentSimulator, this.state.currentSeason, this.state.currentSeries, this.state.currentDescription, price, placeholder, this.state.encryptedDataHash, nickname)
-                .send(paramsForCall)
-                .on('confirmation', function (confNumber, receipt, latestBlockHash) {
-                    window.localStorage.setItem('forceUpdate','yes');
-                    if(confNumber === NUMBER_CONFIRMATIONS_NEEDED) {
-                        UIHelper.transactionOnConfirmation("The new car setup is available for sale!", "/");
-                    }
-                })
-                .on('error', UIHelper.transactionOnError)
-                .catch(function (e) {
-                    UIHelper.hideSpinning();
-                 });
+            await (state.mode === "create" ? 
+                state.contract.methods.newCarSetup(ipfsPathBytes, state.currentCar, state.currentTrack, state.currentSimulator, state.currentSeason, state.currentSeries, state.currentDescription, price, placeholder, state.encryptedDataHash, nickname) :
+                state.contract.methods.editCarSetup(state.itemId, state.currentCar, state.currentTrack, state.currentSimulator, state.currentSeason, state.currentSeries, state.currentDescription, price)
+            ).send(paramsForCall)
+            .on('confirmation', (confNumber, receipt, latestBlockHash) => {
+                window.localStorage.setItem('forceUpdate','yes');
+                if(confNumber === NUMBER_CONFIRMATIONS_NEEDED) {
+                    UIHelper.transactionOnConfirmation(state.mode === "create" ? 
+                        "The new car setup is available for sale!" : 
+                        "The car setup was edited successfully", "/");
+                }
+            })
+            .on('error', UIHelper.transactionOnError)
+            .catch( (e) => {
+                console.error(e);
+                UIHelper.hideSpinning();
+            });
         }
     }
 
@@ -211,12 +221,14 @@ class UploadCar extends Component {
                                 <hr className="w-10 border-warning border-top-2 o-90" />
                                 <div className="mt-4">
                                     <Form>
+                                        { "create" === this.state.mode &&
                                         <div className="form-row">
                                             <div className="form-group col-12">
                                                 <FormLabel for="car-file" className="mr-2 col-form-label font-weight-bold">Choose Setup file (.zip):</FormLabel>
                                                 <input id="car-file" type="file" accept=".zip" onChange={this.captureFile} />
                                             </div>
                                         </div>
+                                        }
                                         <div className="form-row">
                                             <div className="form-group col-md-6 col-12">
                                                 <Form.Control type="number" min="0" step="1" pattern="([0-9]*[.])?[0-9]+" placeholder="Enter File price (SRC)" value={this.state.priceValue} onChange={this.handleFilePrice} />
@@ -224,22 +236,22 @@ class UploadCar extends Component {
                                         </div>
                                         <div className="form-row">
                                             <div className="form-group col-md-6 col-12">
-                                                <Form.Control type="text" placeholder="Enter Season" onChange={this.handleSeason} />
+                                                <Form.Control type="text" placeholder="Enter Season" value={this.state.currentSeason} onChange={this.handleSeason} />
                                             </div>
                                         </div>
                                         <div className="form-row">
                                             <div className="form-group col-md-6 col-12">
-                                                <Form.Control type="text" placeholder="Enter Series name" onChange={this.handleSeries} />
+                                                <Form.Control type="text" placeholder="Enter Series name" value={this.state.currentSeries} onChange={this.handleSeries} />
                                             </div>
                                         </div>
                                         <div className="form-row">
                                             <div className="form-group col-md-6 col-12">
-                                                <Form.Control type="text" placeholder="Enter Car brand" onChange={this.onSelectCar} />
+                                                <Form.Control type="text" placeholder="Enter Car brand" value={this.state.currentCar} onChange={this.onSelectCar} />
                                             </div>
                                         </div>
                                         <div className="form-row">
                                             <div className="form-group col-md-6 col-12">
-                                                <Form.Control type="text" placeholder="Enter Track" onChange={this.onSelectTrack} />
+                                                <Form.Control type="text" placeholder="Enter Track" value={this.state.currentTrack} onChange={this.onSelectTrack} />
                                             </div>
                                         </div>
                                         <div className="form-row">
@@ -251,7 +263,7 @@ class UploadCar extends Component {
                                         </div>
                                         <div className="form-row">
                                             <div className="form-group col-12">
-                                                <Form.Control as="textarea" placeholder="Enter Description" onChange={this.handleDescription} />
+                                                <Form.Control as="textarea" placeholder="Enter Description" value={this.state.currentDescription} onChange={this.handleDescription} />
                                             </div>
                                         </div>
                                     </Form>
@@ -269,4 +281,4 @@ class UploadCar extends Component {
 }
 
 
-export default UploadCar;
+export default withRouter(UploadCar);

@@ -36,9 +36,9 @@ class SellerPage extends Component {
     componentDidMount = async () => {
         const contract = await this.state.drizzle.contracts.STMarketplace
         const currentAccount = this.state.drizzleState.accounts[0];
-        const response_cars = await contract.methods.getCarSetups().call();
-        const response_skins = await contract.methods.getSkins().call();
-        const response_comments = await contract.methods.getSellerComments(this.state.vendorNickname).call();
+        const response_cars = (await contract.methods.getCarSetups().call()).filter(item => item.ad.active && item.ad.seller === this.state.vendorAddress);
+        const response_skins = (await contract.methods.getSkins().call()).filter(item => item.ad.active && item.ad.seller === this.state.vendorAddress);
+        const response_comments = await contract.methods.getSellerComments(this.state.vendorAddress).call();
         this.setState({ listCars: response_cars, listSkins: response_skins, contract: contract, currentAccount: currentAccount, listComments: response_comments });
     
         // scroll to top
@@ -111,8 +111,6 @@ class SellerPage extends Component {
 
         for (const [index, value] of this.state.listCars.entries()) {
 
-            if(value.ad.seller != this.state.vendorAddress) continue;
-
             let carBrand = value.info.carBrand
             let carNumber = value.info.carNumber
             let track = value.info.track
@@ -146,8 +144,6 @@ class SellerPage extends Component {
         if(cars) cars.reverse();
 
         for (const [index, value] of this.state.listSkins.entries()) {
-
-            if(value.ad.seller != this.state.vendorAddress) continue;
 
             let carBrand = value.info.carBrand
             let simulator = value.info.simulator

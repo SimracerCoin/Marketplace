@@ -27,11 +27,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     args: [SimracerCoin.address],
   });
 
-  await deploy("ContentMarketplace", {
+  /*await deploy("ContentMarketplace", {
     from: deployer,
     log: true,
     args: [SimracerCoin.address],
-  });
+  });*/
   await deploy("STMarketplace", {
     from: deployer,
     log: true,
