@@ -89,13 +89,7 @@ class AuctionPage extends Component {
 
         this.setState({isMuted: hasVideo});
         
-        this.scrollToTop();
-    }
-
-    scrollToTop = () => {
-      // scroll to top
-      document.body.scrollTop = 0;            // For Safari
-      document.documentElement.scrollTop = 0; // For Chrome, Firefox, IE and Opera
+        UIHelper.scrollToTop();
     }
 
     average_rating = async (comments) => {
@@ -530,7 +524,7 @@ class AuctionPage extends Component {
         isMomentNFT: isMomentNFT,
         isSkin: isSkin,
         vendorAddress: payload.address,
-        vendorNickname: payload.address ? await context.state.contract.methods.getNickname(payload.address).call() : "",
+        vendorNickname: payload.address ? (await context.state.contract.methods.getSeller(payload.address).call()).nickname : "",
         
       });
 
@@ -541,7 +535,7 @@ class AuctionPage extends Component {
           context.setState({ listComments: comments, average_review: average_review, isSkin: isSkin });
       } 
 
-      this.scrollToTop();
+      UIHelper.scrollToTop();
 
     }
 

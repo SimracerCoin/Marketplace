@@ -53,17 +53,18 @@ class SimilarItemsComponent extends React.Component {
         let referenceItem = this.state.selectedItemId;
 
         if(!this.state.items) {
-          const contract = await this.state.drizzle.contracts.STMarketplace;
           const contractNFTs = await this.state.drizzle.contracts.SimthunderOwner;
           const contractMomentNFTs = await this.state.drizzle.contracts.SimracingMomentOwner;
+          const stSetup = await this.state.drizzle.contracts.STSetup;
+          const stSkin = await this.state.drizzle.contracts.STSkin;
 
           let similarItems = [];
           switch(this.state.category) {
             case "carskins":
-              similarItems = await contract.methods.getSkins().call();
+              similarItems = await stSkin.methods.getSkins().call();
               break;
             case "carsetup":
-              similarItems = await contract.methods.getCarSetups().call();
+              similarItems = await stSetup.methods.getSetups().call();
               break;
             case "momentnfts":
               similarItems = await this.loadRemainingNFTS(contractMomentNFTs);

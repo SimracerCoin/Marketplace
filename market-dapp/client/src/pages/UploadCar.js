@@ -45,8 +45,9 @@ class UploadCar extends Component {
     componentDidMount = async () => {
         const currentAccount = this.state.drizzleState.accounts[0];
         const contract = this.state.drizzle.contracts.STMarketplace;
-        const isSeller = await contract.methods.isSeller(currentAccount).call();
-        this.setState({ currentAccount: currentAccount, contract: contract, isSeller: isSeller });
+        const stSetup = await this.state.drizzle.contracts.STSetup;
+        const isSeller = (await contract.methods.getSeller(currentAccount).call()).active;
+        this.setState({ currentAccount: currentAccount, contract: contract, stSetup: stSetup, isSeller: isSeller });
 
         UIHelper.scrollToTop();
     };
@@ -169,7 +170,6 @@ class UploadCar extends Component {
 
             const price = state.drizzle.web3.utils.toWei(state.priceValue);
             const ipfsPathBytes = state.drizzle.web3.utils.asciiToHex(state.ipfsPath);
-            const placeholder = state.drizzle.web3.utils.asciiToHex('');     // TODO
             const paramsForCall = await UIHelper.calculateGasUsingStation(state.currentAccount);
 
             console.log("account:", state.currentAccount);
@@ -182,8 +182,8 @@ class UploadCar extends Component {
             console.log("description:", state.currentDescription);
 
             await (state.mode === "create" ? 
-                state.contract.methods.newCarSetup(ipfsPathBytes, state.currentCar, state.currentTrack, state.currentSimulator, state.currentSeason, state.currentSeries, state.currentDescription, price, placeholder, state.encryptedDataHash, nickname) :
-                state.contract.methods.editCarSetup(state.itemId, state.currentCar, state.currentTrack, state.currentSimulator, state.currentSeason, state.currentSeries, state.currentDescription, price)
+                state.stSetup.methods.newSetup(ipfsPathBytes, state.currentCar, state.currentTrack, state.currentSimulator, state.currentSeason, state.currentSeries, state.currentDescription, price, state.encryptedDataHash, nickname) :
+                state.stSetup.methods.editSetup(state.itemId, state.currentCar, state.currentTrack, state.currentSimulator, state.currentSeason, state.currentSeries, state.currentDescription, price)
             ).send(paramsForCall)
             .on('confirmation', (confNumber, receipt, latestBlockHash) => {
                 window.localStorage.setItem('forceUpdate','yes');

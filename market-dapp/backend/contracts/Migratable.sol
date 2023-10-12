@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.7.0;
 pragma experimental ABIEncoderV2;
 
@@ -6,8 +7,8 @@ import "./ContentMarketplaceTypes.sol";
 interface Migratable {
     function getData(uint256) external view returns (
         Advertisement memory, 
-        carSetupInfo memory,
-        carSkinInfo memory,
+        setupInfo memory,
+        skinInfo memory,
         User memory,
         Comment[] memory,
         Purchase[] memory, 

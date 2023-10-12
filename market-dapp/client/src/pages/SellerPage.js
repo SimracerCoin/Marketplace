@@ -34,10 +34,14 @@ class SellerPage extends Component {
     }
 
     componentDidMount = async () => {
-        const contract = await this.state.drizzle.contracts.STMarketplace
+        const contract = await this.state.drizzle.contracts.STMarketplace;
+        const stSetup = await this.state.drizzle.contracts.STSetup;
+        const stSkin = await this.state.drizzle.contracts.STSkin;
+
         const currentAccount = this.state.drizzleState.accounts[0];
-        const response_cars = (await contract.methods.getCarSetups().call()).filter(item => item.ad.active && item.ad.seller === this.state.vendorAddress);
-        const response_skins = (await contract.methods.getSkins().call()).filter(item => item.ad.active && item.ad.seller === this.state.vendorAddress);
+
+        const response_cars = (await stSetup.methods.getSetups().call()).filter(item => item.ad.active && item.ad.seller === this.state.vendorAddress);
+        const response_skins = (await stSkin.methods.getSkins().call()).filter(item => item.ad.active && item.ad.seller === this.state.vendorAddress);
         const response_comments = await contract.methods.getSellerComments(this.state.vendorAddress).call();
         this.setState({ listCars: response_cars, listSkins: response_skins, contract: contract, currentAccount: currentAccount, listComments: response_comments });
     

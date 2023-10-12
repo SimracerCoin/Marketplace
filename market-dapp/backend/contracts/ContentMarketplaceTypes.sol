@@ -1,5 +1,5 @@
+// SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.7.0;
-pragma experimental ABIEncoderV2;
 
 enum PurchaseStatus { Request, Accept_A, Challenge, Accept_B, Reject }
 enum ItemType { Setup, Skin }
@@ -8,10 +8,8 @@ enum ItemType { Setup, Skin }
 struct Advertisement {
     address payable seller;       // seller address
     uint256 price;                // trade price
-    bytes32 dataHash;             // merkle hash of unencrypted data
     bytes32 encryptedDataHash;    // merkle hash of encrypted data
     bytes ipfsPath;               // ipfs path of encrypted data
-    bytes32 testTemplateHash;     // hash of the machine representing the test procedure for decrypted data
     bool active;
 }
 
@@ -38,7 +36,7 @@ struct Notification {
 }
 
 // holds information specific to a car setup file
-struct carSetupInfo {
+struct setupInfo {
     string carBrand;
     string track;
     string simulator;
@@ -48,7 +46,7 @@ struct carSetupInfo {
 }
 
 // holds information specific to a car skin file
-struct carSkinInfo {
+struct skinInfo {
     string carBrand;
     string simulator;
     string description;
@@ -58,17 +56,17 @@ struct carSkinInfo {
 }
     
 // full representation of an advertised car setup
-struct carSetup {
+struct Setup {
     uint256 id;         // id of the advertisement
     Advertisement ad;   // generic ad information, including seller and content
-    carSetupInfo info;  // specific car setup information
+    setupInfo info;  // specific car setup information
 }
     
 // full representation of an advertised car skin
-struct carSkin {
+struct Skin {
     uint256 id;         // id of the advertisement
     Advertisement ad;   // generic ad information, including seller and content
-    carSkinInfo info;   // specific car skin information
+    skinInfo info;   // specific car skin information
 }
 
 // full representation of comment

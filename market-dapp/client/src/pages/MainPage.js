@@ -66,9 +66,11 @@ class MainPage extends Component {
         const contract = await this.state.drizzle.contracts.STMarketplace;
         const contractNFTs = await this.state.drizzle.contracts.SimthunderOwner;
         const contractMomentNFTs = await this.state.drizzle.contracts.SimracingMomentOwner;
+        const stSetup = await this.state.drizzle.contracts.STSetup;
+        const stSkin = await this.state.drizzle.contracts.STSkin;
 
-        const response_cars = (await contract.methods.getCarSetups().call()).filter(item => item.ad.active).slice(0, NUM_ITEMS_LOAD);
-        const response_skins = (await contract.methods.getSkins().call()).filter(item => item.ad.active).slice(0, NUM_ITEMS_LOAD);
+        const response_cars = (await stSetup.methods.getSetups().call()).filter(item => item.ad.active).slice(0, NUM_ITEMS_LOAD);
+        const response_skins = (await stSkin.methods.getSkins().call()).filter(item => item.ad.active).slice(0, NUM_ITEMS_LOAD);
 
         //const currentAccount = this.state.drizzleState.accounts[0];
         //car ownership nfts
@@ -272,7 +274,7 @@ class MainPage extends Component {
             selectedCarNumber: carNumber,
             selectedImagePath: imagePath,
             vendorAddress: address,
-            vendorNickname: address ? await this.state.contract.methods.getNickname(address).call() : "",
+            vendorNickname: address ? (await this.state.contract.methods.getSeller(address).call()).nickname : "",
             ipfsPath: ipfsPath,
             videoPath: videoPath,
             isNFT: isNFT,

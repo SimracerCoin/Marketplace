@@ -41,7 +41,7 @@ const config: HardhatUserConfig = {
   networks: {
     hardhat: mnemonic
       ? { accounts: { mnemonic }, chainId: 31337 }
-      : { chainId: 31337, allowUnlimitedContractSize: true },
+      : { chainId: 31337 },
     localhost: {
       url: "http://localhost:8545",
       accounts: mnemonic ? { mnemonic } : undefined

@@ -32,10 +32,18 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     log: true,
     args: [SimracerCoin.address],
   });*/
-  await deploy("STMarketplace", {
+  const STSetup = await deploy("STSetup", {
+    from: deployer,
+    log: true
+  });
+  const STSkin = await deploy("STSkin", {
+    from: deployer,
+    log: true
+  });
+  const STMarketplace = await deploy("STMarketplace", {
     from: deployer,
     log: true,
-    args: [SimracerCoin.address],
+    args: [SimracerCoin.address, STSetup.address, STSkin.address],
   });
 };
 

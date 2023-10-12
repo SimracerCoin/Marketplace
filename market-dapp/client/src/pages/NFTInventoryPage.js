@@ -853,7 +853,7 @@ class NFTInventoryPage extends Component {
           selectedCarBrand: carBrand,
           selectedImagePath: imagePath,
           vendorAddress: address,
-          vendorNickname: address ? await this.state.contract.methods.getNickname(address).call() : "",
+          vendorNickname: address ? (await this.state.contract.methods.getSeller(address).call()).nickname : "",
           ipfsPath: ipfsPath,
           videoPath: videoPath,
           isNFT: isNFT,

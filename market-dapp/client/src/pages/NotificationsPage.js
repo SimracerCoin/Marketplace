@@ -36,7 +36,7 @@ class NotificationsPage extends Component {
         const contract = await this.state.drizzle.contracts.STMarketplace;
         //const descartesContract = await this.state.drizzle.contracts.Descartes;
         const currentAccount = this.state.drizzleState.accounts[0];
-        const notificationsIds = await contract.methods.listNotificationsPerUser(currentAccount).call()
+        const notificationsIds = await contract.methods.listNotificationsUser(currentAccount).call()
         const notifications_r = await contract.methods.getNotifications(notificationsIds).call();
 
         let notifications = [];

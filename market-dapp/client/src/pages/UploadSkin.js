@@ -53,7 +53,8 @@ class UploadSkin extends Component {
     componentDidMount = async () => {
         const currentAccount = this.state.drizzleState.accounts[0];
         const contract = this.state.drizzle.contracts.STMarketplace;
-        const isSeller = await contract.methods.isSeller(currentAccount).call();
+        const isSeller = (await contract.methods.getSeller(currentAccount).call()).active;
+        const stSkin = await this.state.drizzle.contracts.STSkin;
 
         // TODO: rebuild image previewer
         /*if("edit" === this.state.mode && this.state.image_ipfsPath) {
@@ -67,7 +68,7 @@ class UploadSkin extends Component {
             });
         }*/
 
-        this.setState({ currentAccount: currentAccount, contract: contract, isSeller: isSeller });
+        this.setState({ currentAccount: currentAccount, contract: contract, stSkin: stSkin, isSeller: isSeller });
 
         UIHelper.scrollToTop();
     };
@@ -211,7 +212,6 @@ class UploadSkin extends Component {
 
             const price = state.drizzle.web3.utils.toWei(state.priceValue);
             const ipfsPathBytes = state.drizzle.web3.utils.asciiToHex(state.ipfsPath);
-            const placeholder = state.drizzle.web3.utils.asciiToHex('');   // TODO
             const paramsForCall = await UIHelper.calculateGasUsingStation(state.currentAccount);
 
             //document.getElementById('formInsertCar').reset()
@@ -227,8 +227,8 @@ class UploadSkin extends Component {
             console.log("image_ipfsPath:", state.image_ipfsPath);
             
             await (state.mode === "create" ? 
-                state.contract.methods.newSkin(ipfsPathBytes, state.currentCar, state.currentSimulator, price, placeholder, state.encryptedDataHash, nickname, state.image_ipfsPath, state.currentDescription, state.designer, state.license) : 
-                state.contract.methods.editSkin(state.itemId, state.currentCar, state.currentSimulator, price, state.image_ipfsPath, state.currentDescription, state.designer, state.license)
+                state.stSkin.methods.newSkin(ipfsPathBytes, state.currentCar, state.currentSimulator, price, state.encryptedDataHash, nickname, state.image_ipfsPath, state.currentDescription, state.designer, state.license) : 
+                state.stSkin.methods.editSkin(state.itemId, state.currentCar, state.currentSimulator, price, state.image_ipfsPath, state.currentDescription, state.designer, state.license)
             ).send(paramsForCall)
             .on('confirmation', (confNumber, receipt, latestBlockHash) => {
                 window.localStorage.setItem('forceUpdate','yes');

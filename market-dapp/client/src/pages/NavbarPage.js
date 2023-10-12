@@ -41,7 +41,7 @@ class NavbarPage extends React.Component {
     componentDidMount = async (event) => {
         const contract = await this.state.drizzle.contracts.STMarketplace;
         const currentAccount = this.state.drizzleState.accounts[0];
-        const haveNotifications = (await contract.methods.listNotificationsPerUser(currentAccount).call()).length > 0;
+        const haveNotifications = (await contract.methods.listNotificationsUser(currentAccount).call()).length > 0;
         const walletAddr = currentAccount.substr(0, 6) + "..." + currentAccount.substr(-4);
 
         const contractNFTs = await this.state.drizzle.contracts.SimthunderOwner;

@@ -122,9 +122,11 @@ class ItemPage extends Component {
         const contractNFTs = await this.state.drizzle.contracts.SimthunderOwner;
         const contractSimracerCoin = await this.state.drizzle.contracts.SimracerCoin;
         const contractMomentNFTs = await this.state.drizzle.contracts.SimracingMomentOwner;
+        const stSetup = await this.state.drizzle.contracts.STSetup;
+        const stSkin = await this.state.drizzle.contracts.STSkin;
 
         const currentAccount = await this.state.drizzleState.accounts[0];
-        const marketplaceOwner = await contract.methods.getContractOwner().call();
+        const marketplaceOwner = await contract.methods.owner().call();
 
         if(!this.state.itemId && this.state.id) {
           let item, info, data;
@@ -132,11 +134,11 @@ class ItemPage extends Component {
           try {
             switch(this.state.category) {
               case "carskins":
-                item = await contract.methods.getSkin(this.state.id).call();
+                item = await stSkin.methods.getSkin(this.state.id).call();
                 this.setState({imagePath: item.info.skinPic});
                 break;
               case "carsetup":
-                item = await contract.methods.getCarSetup(this.state.id).call();
+                item = await stSetup.methods.getSetup(this.state.id).call();
                 break;
               case "momentnfts":
                 [data, info] = await Promise.all([contractMomentNFTs.methods.tokenURI(this.state.id).call().then(uri => fetch(uri)).then(r => r.json()), contractMomentNFTs.methods.getItem(this.state.id).call(), this.loadRemainingNFTS(contractMomentNFTs)]);
@@ -164,7 +166,7 @@ class ItemPage extends Component {
             itemId: this.state.id,
             usdValue: await this.fetchUSDPrice(),
             vendorAddress: item.ad.seller,
-            vendorNickname: await contract.methods.getNickname(item.ad.seller).call() 
+            vendorNickname: (await contract.methods.getSeller(item.ad.seller).call()).nickname
           });
         }
 
