@@ -440,7 +440,8 @@ class ItemPage extends Component {
                       format: 'binary'                                   // output as Uint8Array
                     });
 
-                    const isCarSetup = await this.state.contract.methods.isCarSetup(this.state.itemId).call();
+                    const isSkin = this.state.isSkin;
+                    const isCarSetup = !isSkin && !this.state.isNFT && !this.state.isMomentNFT;
 
                     var data = new Blob([decryptedFile]);
                     var csvURL = window.URL.createObjectURL(data);
