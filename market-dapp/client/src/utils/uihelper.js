@@ -59,7 +59,10 @@ export default class UIHelper {
   }
 
   static transactionOnConfirmation = (message, redirect = "/") => {
-    document.body.removeChild(document.getElementById('wait-div'));
+    const elem = document.getElementById("wait-div");
+    if(elem) {
+      elem.parentNode.removeChild(elem);
+    }
     alert(message);
 
     if (redirect)
