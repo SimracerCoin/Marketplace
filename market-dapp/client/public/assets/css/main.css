@@ -20347,14 +20347,6 @@ ul.list-style-square {
 
 /*# sourceMappingURL=main.css.map */
 
-#latest-container .list-group {
-  flex-direction: row;
-}
-#latest-container .list-group-item {
-  margin-left: 0.5rem;
-  width: 290px;
-}
-
 .root-div {
   min-height: 600px;
 }
