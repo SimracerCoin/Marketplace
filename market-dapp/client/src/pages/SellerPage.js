@@ -211,7 +211,7 @@ class SellerPage extends Component {
 
         return (
             <header className="header">
-                <div class="overlay overflow-hidden pe-n"><img src="/assets/img/bg/bg_shape.png" alt="Background shape" /></div>
+                <div className="overlay overflow-hidden pe-n"><img src="/assets/img/bg/bg_shape.png" alt="Background shape" /></div>
                 <section className="content-section text-light br-n bs-c bp-c pb-8">
                     <div id="latest-container" className="container">
                         <div>

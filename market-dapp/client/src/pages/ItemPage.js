@@ -663,12 +663,12 @@ class ItemPage extends Component {
 
       if(this.state.vendorNickname) {
             return <ul className="list-unstyled mb-3">
-                  <li>
+                  <li key="nickname">
                   <span className="platform">Nickname:</span> 
                   <span className="developer-item developer-item-smaller text-lt"><Link to={{ pathname: "/seller", state: { vendorAddress: this.state.vendorAddress, vendorNickname: this.state.vendorNickname } }}><u>{this.state.vendorNickname}</u></Link></span>
                   </li>
             
-                  <li>
+                  <li key="address">
                   <span className="platform">Address:</span> 
                   <span className="developer-item developer-item-smaller text-lt"><Link to={{ pathname: "/seller", state: { vendorAddress: this.state.vendorAddress, vendorNickname: this.state.vendorNickname } }}><u>{this.state.vendorAddress}</u></Link></span>
                   </li>
@@ -676,7 +676,7 @@ class ItemPage extends Component {
       } else {
         return <ul className="list-unstyled mb-3">
                 
-                  <li>
+                  <li key="address">
                   <span className="platform">Address:</span> 
                   <span className="developer-item developer-item-smaller text-lt"><Link to={{ pathname: "/seller", state: { vendorAddress: this.state.vendorAddress } }}><u>{this.state.vendorAddress}</u></Link></span>
                   </li>
