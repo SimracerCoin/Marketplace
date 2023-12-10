@@ -7,6 +7,8 @@ import "./STStorage.sol";
 
 abstract contract ContentMarketplace is STStorage {
 
+    uint256 private PURCHASE_FEE = 0;   // base 10**3
+
     //DescartesInterface descartes;
     ERC20 internal SIMRACERCOIN;
 
@@ -81,8 +83,13 @@ abstract contract ContentMarketplace is STStorage {
         require(ad.active, "ad not found");
         // check if allowed to spend SRC
         require(SIMRACERCOIN.allowance(_msgSender(), address(this)) >= ad.price, "token allowance");
+        
         // transfer SRC
-        require(SIMRACERCOIN.transferFrom(_msgSender(), secure ? address(this) : ad.seller, ad.price), "cannot pay for item");
+        uint256 fee = ad.price * PURCHASE_FEE / 1000;
+        if(fee > 0)
+            require(SIMRACERCOIN.transferFrom(_msgSender(), address(this), fee), "cannot pay fee"); // fee
+        
+        require(SIMRACERCOIN.transferFrom(_msgSender(), secure ? address(this) : ad.seller, ad.price - fee), "cannot pay");
 
         // stores purchase info
         Purchase storage purchase = purchases[numPurchases];
@@ -101,6 +108,14 @@ abstract contract ContentMarketplace is STStorage {
         }
 
         emit PurchaseRequested(purchase.adId, pId, purchase.buyer, purchase.buyerKey);
+    }
+
+    function setPurchaseFee(uint256 _fee) external onlyOwner {
+        PURCHASE_FEE = _fee;
+    }
+
+    function getPurchaseFee() external view returns (uint256) {
+        return PURCHASE_FEE;
     }
 
     /// @notice called by seller to accept a purchase request for a registered advertisement
