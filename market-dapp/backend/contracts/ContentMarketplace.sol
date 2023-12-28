@@ -160,7 +160,7 @@ abstract contract ContentMarketplace is STStorage {
     function rejectAllPurchases() external onlyOwner whenPaused {
         for(uint256 i = 0; i < numPurchases; ++i) {
             if(purchases[i].secure && (purchases[i].status == PurchaseStatus.Request || purchases[i].status == PurchaseStatus.Accept_A)) {
-                SIMRACERCOIN.transferFrom(address(this), purchases[i].buyer, ads[purchases[i].adId].price);
+                require(SIMRACERCOIN.transferFrom(address(this), purchases[i].buyer, ads[purchases[i].adId].price), "token transfer failed");
             }
         }
     }
