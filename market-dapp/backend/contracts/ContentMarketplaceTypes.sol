@@ -3,6 +3,7 @@ pragma solidity ^0.7.0;
 
 enum PurchaseStatus { Request, Accept_A, Challenge, Accept_B, Reject }
 enum ItemType { Setup, Skin }
+enum NotificationType { Purchase, System }
 
 /// @notice records necessary information for an advertisement
 struct Advertisement {
@@ -33,6 +34,7 @@ struct Notification {
     uint256 date;             // notification date
     address sender;           // notification from address
     address receiver;         // notification to address
+    NotificationType nType;   // notification type
 }
 
 // holds information specific to a car setup file
