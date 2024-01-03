@@ -143,6 +143,7 @@ class App extends React.Component {
         console.log('Accounts found: ', accounts);
         allow_wallets.push(currentAccount);
         //window.localStorage.setItem("isLoggedIn","true");
+        window.ethereum.on('accountsChanged', () => window.location.reload());
       }
     });
     
