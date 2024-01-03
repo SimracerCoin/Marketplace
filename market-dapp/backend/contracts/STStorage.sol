@@ -23,8 +23,9 @@ abstract contract STStorage is Pausable, Ownable {
 
     uint256[50] private __gap;  // Storage gap of 50 slots (32 bytes each)
 
-    event UserSaved(address addr);
-    event AdSaved(address seller, uint256 price, bytes ipfsPath);
+    event UserCreated(address addr);
+    event AdCreated(address seller, uint256 price, bytes ipfsPath);
+    event AdEdited(address seller, uint256 price);
 
     /// @notice creates a new advertisement for published and encrypted content
     function createAd(
@@ -45,7 +46,7 @@ abstract contract STStorage is Pausable, Ownable {
 
         adId = numAds++;
 
-        emit AdSaved(_msgSender(), _price, _ipfsPath);
+        emit AdCreated(_msgSender(), _price, _ipfsPath);
     }
 
     /// @notice edit an advertisement
@@ -59,7 +60,7 @@ abstract contract STStorage is Pausable, Ownable {
 
         ads[_adId].price = _price;
 
-        emit AdSaved(_msgSender(), _price, "");
+        emit AdEdited(_msgSender(), _price);
     }
 
     /// @notice Registers seller address
@@ -69,7 +70,7 @@ abstract contract STStorage is Pausable, Ownable {
             users[_user] = User(_user, true, false, _nick);
             numUsers++;
 
-            emit UserSaved(_user);
+            emit UserCreated(_user);
         }
     }
 

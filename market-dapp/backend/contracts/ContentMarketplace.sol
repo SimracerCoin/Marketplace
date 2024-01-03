@@ -4,8 +4,11 @@ pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "./STStorage.sol";
+import "./Migratable.sol";
 
-abstract contract ContentMarketplace is STStorage {
+abstract contract ContentMarketplace is STStorage, Migratable {
+
+    uint256 private PURCHASE_FEE = 0;   // base 10**3
 
     //DescartesInterface descartes;
     ERC20 internal SIMRACERCOIN;
@@ -14,11 +17,13 @@ abstract contract ContentMarketplace is STStorage {
     uint256 internal numPurchases = 0;
     mapping(uint256 => Purchase) internal purchases;
     mapping(uint256 => uint256[]) internal purchasesAd;
+    mapping(address => uint256[]) internal purchasesUser;
 
     // storage of notifications
     uint256 internal numNotifications = 0;
     mapping(uint256 => Notification) internal notifications;
     mapping(address => uint256[]) internal notificationsUser;
+    mapping(uint256 => uint256[]) internal notificationsPurchase;
 
         // /// @notice To track comments from item
     mapping(uint256 => Comment[]) internal itemComments;
@@ -30,8 +35,136 @@ abstract contract ContentMarketplace is STStorage {
     event PurchaseFinalized(uint256 adId, uint256 pId, bool isSuccess);
     event AdDeleted(uint256 adId);
 
+    // Modifier to check if the caller is the owner
+    modifier onlyOwnerOrInternal() {
+        require(msg.sender == owner() || msg.sender == address(this), "Caller is not the owner or internal");
+        _;
+    }
+
     constructor(address payable_token) {
         SIMRACERCOIN = ERC20(payable_token);
+    }
+
+    function migrateData(
+        address _oldContractAddr,
+        uint256 _startIndex, 
+        uint256 _endIndex
+    ) external override onlyOwner
+    {
+        require(_startIndex < _endIndex, "invalid range");
+
+        Migratable oldContract = Migratable(_oldContractAddr);
+
+        if(_endIndex > oldContract.getNumAds())
+            _endIndex = oldContract.getNumAds();
+
+        for (uint256 i = _startIndex; i < _endIndex; i++) {
+            (Advertisement memory _ad, 
+            setupInfo memory _setup,
+            skinInfo memory _skin,
+            User memory _user,
+            Comment[] memory _comments,
+            Purchase[] memory _purchases, 
+            Notification[] memory _notifications,
+            ItemType _type) = oldContract.getData(i);
+
+            address sellerAddr = _ad.seller;
+
+            // import ad
+            ads[numAds] = _ad;
+
+            // import user if not exists
+            if(users[sellerAddr].id == address(0)) {
+                users[sellerAddr] = _user;
+                numUsers++; 
+            }
+
+            // import details
+            if(_type == ItemType.Setup) {
+                setupInfos[numAds] = _setup;
+                setupIds.push(numAds);
+            } else if (_type == ItemType.Skin) {
+                skinInfos[numAds] = _skin;
+                skinIds.push(numAds);
+            }
+            
+            // import comments
+            for(uint256 j = 0; j < _comments.length; ++j) {
+                itemComments[numAds].push(_comments[j]);
+                sellerComments[sellerAddr].push(_comments[j]);
+            }
+            
+            // import purchases
+            for(uint256 j = 0; j < _purchases.length; ++j) {
+                purchases[numPurchases] = _purchases[j];
+                purchasesAd[_purchases[j].adId].push(numPurchases);
+                purchasesUser[_purchases[j].buyer].push(numPurchases);
+                numPurchases++;
+            }
+
+            // import notifications
+            for(uint256 j = 0; j < _notifications.length; ++j) {
+                notifications[numNotifications] = _notifications[j];
+                notificationsUser[_notifications[j].receiver].push(numNotifications);
+                notificationsPurchase[_notifications[j].purchaseId].push(numNotifications);
+                numNotifications++;
+            }
+
+            numAds++;
+        }
+    }
+
+    function getData(uint256 _idx) external view override whenPaused returns(
+        Advertisement memory _ad,
+        setupInfo memory _setupInfo,
+        skinInfo memory _skinInfo,
+        User memory _user,
+        Comment[] memory _comments,
+        Purchase[] memory _purchases, 
+        Notification[] memory _notifications,
+        ItemType _type
+    ) {
+        require(_idx < numAds, "ad not found");
+
+        _ad = ads[_idx];                      // export ad
+        _user = users[ads[_idx].seller];      // export ad user
+        _comments = itemComments[_idx];       // export comments about this ad
+
+        if(isSetup(_idx)) {
+            _setupInfo = setupInfos[_idx];  // export details about ad - if a car setup
+            _type = ItemType.Setup;
+        } else if (isSkin(_idx)) {
+            _skinInfo = skinInfos[_idx];    // export details about ad - if a skin
+            _type = ItemType.Skin;
+        }
+
+        // export purchases for this ad
+        uint256 nrPurchases = purchasesAd[_idx].length;
+
+        if(nrPurchases > 0) {
+            uint256 j = 0;
+
+            _purchases = new Purchase[](nrPurchases);
+            _notifications = new Notification[](calculateNotifications(_idx, nrPurchases));
+
+            for(uint256 u = 0; u < nrPurchases; ++u) {
+                uint256 pId = purchasesAd[_idx][u];
+
+                _purchases[u] = purchases[pId];
+
+                // export notifications for this purchase
+                for(uint256 i = 0; i < notificationsPurchase[pId].length; ++i) {
+                    _notifications[j++] = notifications[notificationsPurchase[pId][i]];
+                }
+            }
+        }
+    }
+
+    function calculateNotifications(uint256 _ad, uint256 _nrPurchases) private view returns (uint256 nrNotifications) {
+        nrNotifications = 0;
+        for(uint256 u = 0; u < _nrPurchases; ++u) {
+            nrNotifications += notificationsPurchase[purchasesAd[_ad][u]].length;
+        }
     }
 
     /// @notice retrieves an advertisement given its identifier
@@ -47,7 +180,7 @@ abstract contract ContentMarketplace is STStorage {
         }
     }
 
-    function getNumAds() external view returns (uint256) {
+    function getNumAds() external override view returns (uint256) {
         return numAds;
     }
 
@@ -81,11 +214,18 @@ abstract contract ContentMarketplace is STStorage {
         require(ad.active, "ad not found");
         // check if allowed to spend SRC
         require(SIMRACERCOIN.allowance(_msgSender(), address(this)) >= ad.price, "token allowance");
+        
         // transfer SRC
-        require(SIMRACERCOIN.transferFrom(_msgSender(), secure ? address(this) : ad.seller, ad.price), "cannot pay for item");
+        uint256 fee = ad.price * PURCHASE_FEE / 1000;
+        if(fee > 0)
+            require(SIMRACERCOIN.transferFrom(_msgSender(), address(this), fee), "cannot pay fee"); // fee
+        
+        require(SIMRACERCOIN.transferFrom(_msgSender(), secure ? address(this) : ad.seller, ad.price - fee), "cannot pay");
+
+        pId = numPurchases++;
 
         // stores purchase info
-        Purchase storage purchase = purchases[numPurchases];
+        Purchase storage purchase = purchases[pId];
         purchase.adId = _adId;
         purchase.buyer = payable(_msgSender());
         purchase.buyerKey = _buyerKey;
@@ -93,14 +233,22 @@ abstract contract ContentMarketplace is STStorage {
         purchase.status = secure ? PurchaseStatus.Request : PurchaseStatus.Accept_B;
         purchase.secure = secure;
 
-        pId = numPurchases++;
         purchasesAd[purchase.adId].push(pId);
+        purchasesUser[_msgSender()].push(pId);
 
         if(secure) {
-            newNotification(pId, "Purchase was requested", _msgSender(), ad.seller);
+            newNotification(pId, "Purchase was requested", _msgSender(), ad.seller, NotificationType.Purchase);
         }
 
         emit PurchaseRequested(purchase.adId, pId, purchase.buyer, purchase.buyerKey);
+    }
+
+    function setPurchaseFee(uint256 _fee) external onlyOwner {
+        PURCHASE_FEE = _fee;
+    }
+
+    function getPurchaseFee() external view returns (uint256) {
+        return PURCHASE_FEE;
     }
 
     /// @notice called by seller to accept a purchase request for a registered advertisement
@@ -114,7 +262,7 @@ abstract contract ContentMarketplace is STStorage {
         purchase.encryptedDataKey = _encryptedDataKey;
         purchase.status = PurchaseStatus.Accept_A;
 
-        newNotification(_pId, "Thank you for your purchase.", _msgSender(), purchase.buyer);
+        newNotification(_pId, "Thank you for your purchase.", _msgSender(), purchase.buyer, NotificationType.Purchase);
     
         emit PurchaseAccepted(purchase.adId, _pId, _encryptedDataKey);
     }
@@ -123,7 +271,8 @@ abstract contract ContentMarketplace is STStorage {
     function finalizePurchase(
         uint256 _pId,            // purchase request identifier
         bool _withSuccess
-    ) external whenNotPaused {
+    ) external whenNotPaused 
+    {
         Purchase storage purchase = purchases[_pId];
         Advertisement memory ad = ads[purchase.adId];
 
@@ -131,11 +280,11 @@ abstract contract ContentMarketplace is STStorage {
         
         if(_withSuccess) {
             purchase.status = PurchaseStatus.Accept_B;
-            newNotification(_pId, "Purchase was accepted.", _msgSender(), ad.seller);
+            newNotification(_pId, "Purchase was accepted.", _msgSender(), ad.seller, NotificationType.Purchase);
         }
         else {
             purchase.status = PurchaseStatus.Reject;
-            newNotification(_pId, "Purchase was rejected.", _msgSender(), ad.seller);
+            newNotification(_pId, "Purchase was rejected.", _msgSender(), ad.seller, NotificationType.Purchase);
         }
 
         emit PurchaseFinalized(purchase.adId, _pId, _withSuccess); 
@@ -145,33 +294,42 @@ abstract contract ContentMarketplace is STStorage {
     function rejectAllPurchases() external onlyOwner whenPaused {
         for(uint256 i = 0; i < numPurchases; ++i) {
             if(purchases[i].secure && (purchases[i].status == PurchaseStatus.Request || purchases[i].status == PurchaseStatus.Accept_A)) {
-                SIMRACERCOIN.transferFrom(address(this), purchases[i].buyer, ads[purchases[i].adId].price);
+                require(SIMRACERCOIN.transferFrom(address(this), purchases[i].buyer, ads[purchases[i].adId].price), "token transfer failed");
             }
         }
     }
 
     // @notice create notification
     function newNotification(
-        uint256 _pId,           // purchase request identifier
+        uint256 _pId,                  // purchase request identifier
         string memory _message,        // generic message
         address _sender,               // who sends the message
-        address _receiver              // who receives the message
-    ) internal returns (uint256 nId)
+        address _receiver,             // who receives the message
+        NotificationType _type         // type of notification
+    ) public onlyOwnerOrInternal returns (uint256 nId)
     {
-        Notification storage notification = notifications[numNotifications];
+        nId = numNotifications++;
+
+        Notification storage notification = notifications[nId];
         notification.purchaseId = _pId;
         notification.message = _message;
         notification.archive = false;
         notification.date = block.timestamp;
-        notification.sender = _sender;
+        notification.sender = _sender == address(0) ? owner() : _sender;
         notification.receiver = _receiver;
+        notification.nType = _type;
 
-        nId = numNotifications++;
         notificationsUser[_receiver].push(nId);
+
+        if(_type == NotificationType.Purchase)
+            notificationsPurchase[_pId].push(nId);
     }
 
     /// @notice retrieves an array of notifications given their identifiers
-    function getNotifications(uint256[] memory _nIds) external view returns (Notification[] memory ret) {
+    function getNotifications(
+        uint256[] memory _nIds
+    ) external view returns (Notification[] memory ret) 
+    {
         ret = new Notification[](_nIds.length);
         for(uint256 i = 0; i < _nIds.length; i++) {
             ret[i] = notifications[_nIds[i]];
@@ -181,6 +339,16 @@ abstract contract ContentMarketplace is STStorage {
     /// @notice returns identifiers for a seller's notifications
     function listNotificationsUser(address _user) external view returns (uint256[] memory) {
         return notificationsUser[_user];
+    }
+
+    /// @notice returns identifiers for a seller's notifications
+    function listPurchasesUser(address _user) external view returns (uint256[] memory) {
+        return purchasesUser[_user];
+    }
+
+    /// @notice returns identifiers for a seller's notifications
+    function listNotificationsPurchase(uint256 _pId) external view returns (uint256[] memory) {
+        return notificationsPurchase[_pId];
     }
 
     function archiveNotification(uint256 _nId) external whenNotPaused {
