@@ -5,34 +5,16 @@ class ReviewsComponent extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            //drizzle: props.drizzle,
-            //drizzleState: props.drizzleState,
-            /*itemId: props.location.state.selectedItemId,
-            track: props.location.state.selectedTrack,
-            simulator: props.location.state.selectedSimulator,
-            season: props.location.state.selectedSeason,
-            series: props.location.state.selectedSeries,
-            description: props.location.state.selectedDescription,
-            price: props.location.state.selectedPrice,
-            car: props.location.state.selectedCarBrand,
-            vendorAddress: props.location.state.vendorAddress,
-            vendorNickname: props.location.state.vendorNickname,
-            ipfsPath: props.location.state.ipfsPath,
-            imagePath: props.location.state.imagePath,
-            isNFT: props.location.state.isNFT,*/
-            //contract: null,
-            //currentAccount: "",
             comment: props.comment
-          
         }
     }
 
-    componentDidMount = async (event) => {
+    componentDidMount = async () => {
         console.log("render reviews component");
         let commentator = this.state.comment.commentator;
         let description = this.state.comment.description;
         let review = parseInt(this.state.comment.review);
-        let date = new Date(this.state.comment.date)
+        let date = new Date(this.state.comment.date*1000)
         let date_time = date.toLocaleDateString() + " " + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         this.setState({commentator: commentator, description: description, review: review, date: date_time});
     }

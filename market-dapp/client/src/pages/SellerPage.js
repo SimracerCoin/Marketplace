@@ -34,11 +34,15 @@ class SellerPage extends Component {
     }
 
     componentDidMount = async () => {
-        const contract = await this.state.drizzle.contracts.STMarketplace
+        const contract = await this.state.drizzle.contracts.STMarketplace;
+        const stSetup = await this.state.drizzle.contracts.STSetup;
+        const stSkin = await this.state.drizzle.contracts.STSkin;
+
         const currentAccount = this.state.drizzleState.accounts[0];
-        const response_cars = await contract.methods.getCarSetups().call();
-        const response_skins = await contract.methods.getSkins().call();
-        const response_comments = await contract.methods.getSellerComments(this.state.vendorNickname).call();
+
+        const response_cars = (await stSetup.methods.getSetups().call()).filter(item => item.ad.active && item.ad.seller === this.state.vendorAddress);
+        const response_skins = (await stSkin.methods.getSkins().call()).filter(item => item.ad.active && item.ad.seller === this.state.vendorAddress);
+        const response_comments = await contract.methods.getSellerComments(this.state.vendorAddress).call();
         this.setState({ listCars: response_cars, listSkins: response_skins, contract: contract, currentAccount: currentAccount, listComments: response_comments });
     
         // scroll to top
@@ -111,8 +115,6 @@ class SellerPage extends Component {
 
         for (const [index, value] of this.state.listCars.entries()) {
 
-            if(value.ad.seller != this.state.vendorAddress) continue;
-
             let carBrand = value.info.carBrand
             let carNumber = value.info.carNumber
             let track = value.info.track
@@ -146,8 +148,6 @@ class SellerPage extends Component {
         if(cars) cars.reverse();
 
         for (const [index, value] of this.state.listSkins.entries()) {
-
-            if(value.ad.seller != this.state.vendorAddress) continue;
 
             let carBrand = value.info.carBrand
             let simulator = value.info.simulator
@@ -211,7 +211,7 @@ class SellerPage extends Component {
 
         return (
             <header className="header">
-                <div class="overlay overflow-hidden pe-n"><img src="/assets/img/bg/bg_shape.png" alt="Background shape" /></div>
+                <div className="overlay overflow-hidden pe-n"><img src="/assets/img/bg/bg_shape.png" alt="Background shape" /></div>
                 <section className="content-section text-light br-n bs-c bp-c pb-8">
                     <div id="latest-container" className="container">
                         <div>

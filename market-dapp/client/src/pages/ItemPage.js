@@ -13,6 +13,7 @@ import ipfs from "../ipfs";
 import 'react-responsive-carousel/lib/styles/carousel.min.css';
 import '../css/custom-carousel.css';
 import "../css/itempage.css";
+import { Redirect } from 'react-router-dom/cjs/react-router-dom.min';
 
 const BufferList = require('bl/BufferList');
 
@@ -23,6 +24,7 @@ const PASSPHRASE = process.env.REACT_APP_PASSPHRASE;
 const NON_SECURE_SELL = process.env.REACT_APP_NON_SECURE_SELL === "true";
 const NON_SECURE_KEY= process.env.REACT_APP_NON_SECURE_KEY;
 const NUMBER_CONFIRMATIONS_NEEDED = Number(process.env.REACT_APP_NUMBER_CONFIRMATIONS_NEEDED);
+const NUMBER_LOAD_ITEMS = 10;
 
 class ItemPage extends Component {
 
@@ -48,7 +50,6 @@ class ItemPage extends Component {
             imagePath: props.location.state ? (Array.isArray(props.location.state.imagePath) ? props.location.state.imagePath : [props.location.state.imagePath]) : "",
             isNFT: props.location.state ? props.location.state.isNFT : false,
             isMomentNFT: props.location.state ? props.location.state.isMomentNFT : false,
-            similarItems: props.location.state ? props.location.state.similarItems : [],
             usdValue : props.location.state ? props.location.state.usdPrice : 1,
             metadata: props.location.state ? props.location.state.metadata : {},
             contract: null,
@@ -64,6 +65,7 @@ class ItemPage extends Component {
             canDelete: false,
             sellFromWallet: false,
             isNFTOwner: false,
+            redirectEdit: false,
             ...props.match.params
         }
 
@@ -105,7 +107,7 @@ class ItemPage extends Component {
                   nftlist.push(data);
                   
                   // load only 10 nft's
-                  if(nftlist.length === 10) break;
+                  if(nftlist.length === NUMBER_LOAD_ITEMS) break;
               }
           } catch (e) {
               console.error(e);
@@ -120,42 +122,51 @@ class ItemPage extends Component {
         const contractNFTs = await this.state.drizzle.contracts.SimthunderOwner;
         const contractSimracerCoin = await this.state.drizzle.contracts.SimracerCoin;
         const contractMomentNFTs = await this.state.drizzle.contracts.SimracingMomentOwner;
+        const stSetup = await this.state.drizzle.contracts.STSetup;
+        const stSkin = await this.state.drizzle.contracts.STSkin;
 
         const currentAccount = await this.state.drizzleState.accounts[0];
-        const marketplaceOwner = await contract.methods.getContractOwner().call();
+        const marketplaceOwner = await contract.methods.owner().call();
 
         if(!this.state.itemId && this.state.id) {
           let item, info, data;
-          let similarItems = [];
-          switch(this.state.category) {
-            case "carskins":
-              [item, similarItems] = await Promise.all([contract.methods.getSkin(this.state.id).call(), contract.methods.getSkins().call()]);
-              this.setState({imagePath: item.info.skinPic});
-              break;
-            case "carsetup":
-              [item, similarItems] = await Promise.all([contract.methods.getCarSetup(this.state.id).call(),contract.methods.getCarSetups().call()]);
-              break;
-            case "momentnfts":
-              [data, info, similarItems] = await Promise.all([contractMomentNFTs.methods.tokenURI(this.state.id).call().then(uri => fetch(uri)).then(r => r.json()), contractMomentNFTs.methods.getItem(this.state.id).call(), this.loadRemainingNFTS(contractMomentNFTs)]);
 
-              item = { ad: {price: info[0], seller: info[1]}, info: {...data, imagePath: [data.image], isMomentNFT: true, metadata: this.extractNFTTraitTypes(data.attributes)}};
-              break;
-            case "ownership":
-              [data, info, similarItems] = await Promise.all([contractNFTs.methods.tokenURI(this.state.id).call().then(uri => fetch(uri)).then(r => r.json()), contractNFTs.methods.getItem(this.state.id).call(), this.loadRemainingNFTS(contractNFTs)]);
+          try {
+            switch(this.state.category) {
+              case "carskins":
+                item = await stSkin.methods.getSkin(this.state.id).call();
+                this.setState({imagePath: item.info.skinPic});
+                break;
+              case "carsetup":
+                item = await stSetup.methods.getSetup(this.state.id).call();
+                break;
+              case "momentnfts":
+                [data, info] = await Promise.all([contractMomentNFTs.methods.tokenURI(this.state.id).call().then(uri => fetch(uri)).then(r => r.json()), contractMomentNFTs.methods.getItem(this.state.id).call(), this.loadRemainingNFTS(contractMomentNFTs)]);
 
-              item = { ad: {price: info[0], seller: info[1]}, info: {...data, imagePath: [data.image], isNFT: true, metadata: this.extractNFTTraitTypes(data.attributes)}};
-              break;
-            default:
+                item = { ad: {price: info[0], seller: info[1], active: true}, info: {...data, imagePath: [data.image], isMomentNFT: true, metadata: this.extractNFTTraitTypes(data.attributes)}};
+                break;
+              case "ownership":
+                [data, info] = await Promise.all([contractNFTs.methods.tokenURI(this.state.id).call().then(uri => fetch(uri)).then(r => r.json()), contractNFTs.methods.getItem(this.state.id).call(), this.loadRemainingNFTS(contractNFTs)]);
+
+                item = { ad: {price: info[0], seller: info[1], active: true}, info: {...data, imagePath: [data.image], isNFT: true, metadata: this.extractNFTTraitTypes(data.attributes)}};
+                break;
+              default:
+            }
+          } catch(e) {
+            console.error(e);
+
+            alert("Item not found!");
+            window.location.href = "/";
+            return;
           }
 
           this.setState({ 
             ...item.ad, 
             ...item.info,
             itemId: this.state.id,
-            similarItems: similarItems,
             usdValue: await this.fetchUSDPrice(),
             vendorAddress: item.ad.seller,
-            vendorNickname: await contract.methods.getNickname(item.ad.seller).call() 
+            vendorNickname: (await contract.methods.getSeller(item.ad.seller).call()).nickname
           });
         }
 
@@ -168,17 +179,21 @@ class ItemPage extends Component {
             this.setState({imagePath: imagePath});
         }
 
-        // workaround to insure that item persist on metatags cache db
-        fetch('/api/metatags', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            id: this.state.itemId,
-            category: this.state.category,
-            description: this.state.description,
-            image: this.state.imagePath ? "https://simthunder.infura-ipfs.io/ipfs/" + this.state.imagePath[0] : null
-            })
-        });
+        try {
+          // workaround to insure that item persist on metatags cache db
+          fetch('/api/metatags', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              id: this.state.itemId,
+              category: this.state.category,
+              description: this.state.description,
+              image: this.state.imagePath ? "https://simthunder.infura-ipfs.io/ipfs/" + this.state.imagePath[0] : null
+              })
+          });
+        } catch(e) {
+          console.error(e);
+        }
 
         let sellerAddress = this.state.vendorAddress;
         let isSeller = (currentAccount === sellerAddress);
@@ -205,13 +220,7 @@ class ItemPage extends Component {
 
         this.setState({isMuted: hasVideo});
         
-        this.scrollToTop();
-    }
-
-    scrollToTop = () => {
-      // scroll to top
-      document.body.scrollTop = 0;            // For Safari
-      document.documentElement.scrollTop = 0; // For Chrome, Firefox, IE and Opera
+        UIHelper.scrollToTop();
     }
 
     average_rating = async (comments) => {
@@ -249,18 +258,44 @@ class ItemPage extends Component {
     }
     */
 
-    deleteItem = async(event, itemId) => {
+    editItem = async(e) => {
+      e.preventDefault();
+      this.setState({redirectEdit: true});
+    }
+
+    performEditItemRedirection() {
+      return <Redirect
+        to={{
+          pathname: (this.state.isSkin?"/uploadskin":"/uploadcar"),
+          state: {
+            itemId: this.state.itemId,
+            priceValue: Number((Math.round(this.state.price / priceConversion) * 100) / 100).toFixed(2),
+            currentCar: this.state.carBrand,
+            currentSimulator: this.state.simulator,
+            currentDescription: this.state.description,
+            currentSeason: this.state.season,
+            currentSeries: this.state.series,
+            currentTrack: this.state.track,
+            image_ipfsPath: this.state.imagePath,
+            mode: "edit"
+          }
+        }}
+        />;
+    }
+
+    deleteItem = async(event) => {
       event.preventDefault();
+
       if(this.state.canDelete) {
-        let id = Number(itemId);
-        let paramsForCall = await UIHelper.calculateGasUsingStation(this.state.currentAccount);
-
+        const id = Number(this.state.itemId);
         UIHelper.showSpinning();
-        let isSkin = this.state.isSkin;
-        let isCarSetup = !isSkin && !this.state.isNFT && !this.state.isMomentNFT;
 
-        if(isSkin) {
-          await this.state.contract.methods.deleteSkin(id)
+        const isSkin = this.state.isSkin;
+        const isCarSetup = !isSkin && !this.state.isNFT && !this.state.isMomentNFT;
+        const paramsForCall = await UIHelper.calculateGasUsingStation(this.state.currentAccount);
+
+        if(isSkin || isCarSetup) {
+          await this.state.contract.methods.setAdActive(id, false)
               .send(paramsForCall)
               .on('confirmation', function (confNumber, receipt, latestBlockHash) {
                     window.localStorage.setItem('forceUpdate','yes');
@@ -272,19 +307,6 @@ class ItemPage extends Component {
                 .catch(function (e) {
                     UIHelper.hideSpinning();
                 });
-        } else if(isCarSetup) {
-          await this.state.contract.methods.deleteCarSetup(id)
-          .send(paramsForCall)
-          .on('confirmation', function (confNumber, receipt, latestBlockHash) {
-                window.localStorage.setItem('forceUpdate','yes');
-                if(confNumber === NUMBER_CONFIRMATIONS_NEEDED) {
-                  UIHelper.transactionOnConfirmation("The item was removed from sale!","/");
-                }
-            })
-            .on('error', UIHelper.transactionOnError)
-            .catch(function (e) {
-                UIHelper.hideSpinning();
-            });
         } else if(this.state.isNFT) {
           //normal nft
           await this.deleteNFT(this.state.contractNFTs, id);
@@ -394,7 +416,7 @@ class ItemPage extends Component {
             UIHelper.transactionOnError("ERROR ON APPROVAL");
           } else {
             //approved
-            await this.state.contract.methods.requestPurchase(price, this.state.itemId, buyerKey, !NON_SECURE_SELL)
+            await this.state.contract.methods.requestPurchase(this.state.itemId, buyerKey, !NON_SECURE_SELL)
             .send(paramsForCall)
             //.on('sent', UIHelper.transactionOnSent)
             .on('confirmation', async (confNumber, receipt, latestBlockHash) => {
@@ -418,7 +440,8 @@ class ItemPage extends Component {
                       format: 'binary'                                   // output as Uint8Array
                     });
 
-                    const isCarSetup = await this.state.contract.methods.isCarSetup(this.state.itemId).call();
+                    const isSkin = this.state.isSkin;
+                    const isCarSetup = !isSkin && !this.state.isNFT && !this.state.isMomentNFT;
 
                     var data = new Blob([decryptedFile]);
                     var csvURL = window.URL.createObjectURL(data);
@@ -532,8 +555,7 @@ class ItemPage extends Component {
         if (this.state.review_rating == 0) {
             alert("Please review this item")
         } else {
-            const date = new Date(Date.now());
-            await this.state.contract.methods.newComment(this.state.itemId, description, this.state.review_rating, date.toString(), this.state.vendorNickname).send({ from: this.state.currentAccount });
+            await this.state.contract.methods.newComment(this.state.itemId, description, this.state.review_rating).send({ from: this.state.currentAccount });
             const listComments = await this.state.contract.methods.getItemComments(this.state.itemId).call();
             const average_review = await this.average_rating(listComments);
             document.getElementById("comment").value = "";
@@ -641,12 +663,12 @@ class ItemPage extends Component {
 
       if(this.state.vendorNickname) {
             return <ul className="list-unstyled mb-3">
-                  <li>
+                  <li key="nickname">
                   <span className="platform">Nickname:</span> 
                   <span className="developer-item developer-item-smaller text-lt"><Link to={{ pathname: "/seller", state: { vendorAddress: this.state.vendorAddress, vendorNickname: this.state.vendorNickname } }}><u>{this.state.vendorNickname}</u></Link></span>
                   </li>
             
-                  <li>
+                  <li key="address">
                   <span className="platform">Address:</span> 
                   <span className="developer-item developer-item-smaller text-lt"><Link to={{ pathname: "/seller", state: { vendorAddress: this.state.vendorAddress, vendorNickname: this.state.vendorNickname } }}><u>{this.state.vendorAddress}</u></Link></span>
                   </li>
@@ -654,7 +676,7 @@ class ItemPage extends Component {
       } else {
         return <ul className="list-unstyled mb-3">
                 
-                  <li>
+                  <li key="address">
                   <span className="platform">Address:</span> 
                   <span className="developer-item developer-item-smaller text-lt"><Link to={{ pathname: "/seller", state: { vendorAddress: this.state.vendorAddress } }}><u>{this.state.vendorAddress}</u></Link></span>
                   </li>
@@ -816,30 +838,34 @@ class ItemPage extends Component {
 
     render() {
 
-        let item = "";
+      if (this.state.redirectEdit) {
+        return this.performEditItemRedirection();
+      }
 
-        let hasImage = true;
-        let hasVideo = this.state.isMomentNFT && this.state.videoPath !== null;
-        
-        if (this.state.isNFT) {
-          item = "Car Ownership NFT";
-        }
-        else if(this.state.isMomentNFT) {
-          item = "Simracing Moment NFT";
-        }
-        else if (!this.state.track || !this.state.season) {
-          item = "Skin";
-        } else {
-          item = "Car Setup";
-          hasImage = false;
-        }
-        //compute ratings
-        let reviewsRating = this.getReviewsRating();
+      let item = "";
+
+      let hasImage = true;
+      let hasVideo = this.state.isMomentNFT && this.state.videoPath !== null;
+      
+      if (this.state.isNFT) {
+        item = "Car Ownership NFT";
+      }
+      else if(this.state.isMomentNFT) {
+        item = "Simracing Moment NFT";
+      }
+      else if (!this.state.track || !this.state.season) {
+        item = "Skin";
+      } else {
+        item = "Car Setup";
+        hasImage = false;
+      }
+      //compute ratings
+      let reviewsRating = this.getReviewsRating();
 
       const allowsReviews = !this.state.isNFT && !this.state.isMomentNFT;
       const price = Number((Math.round(this.state.price / priceConversion) * 100) / 100).toFixed(2);
 
-        return (
+      return (
         <div className="page-body">    
         <main className="main-content">
           <div className="overlay overflow-hidden pe-n"><img src="/assets/img/bg/bg_shape.png" alt="Background shape"/></div>
@@ -950,10 +976,14 @@ class ItemPage extends Component {
                           <div className="flex-1"><a href="" onClick={this.sellItem} className="btn btn-block btn-warning"><i className="fas fa-shopping-cart"></i> Sell</a></div>
                         </div>
                       }
-                      
+                      { this.state.canDelete && !(this.state.isNFT || this.state.isMomentNFT) &&
+                      <div className="price-box mb-4">
+                        <div className="flex-1"><a href="" onClick={this.editItem} className="btn btn-block btn-primary"> Edit</a></div>
+                      </div>
+                      }
                       { this.state.canDelete &&
                       <div className="price-box mb-4">
-                        <div className="flex-1"><a href="" onClick={(e) => this.deleteItem(e, this.state.itemId)} className="btn btn-block btn-danger">{ (this.state.isNFT || this.state.isMomentNFT) ? "Return" : "Delete" }</a></div>
+                        <div className="flex-1"><a href="" onClick={this.deleteItem} className="btn btn-block btn-danger">{ (this.state.isNFT || this.state.isMomentNFT) ? "Return" : "Delete" }</a></div>
                       </div>
                       }
                       

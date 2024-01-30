@@ -11,8 +11,14 @@ export default class UIHelper {
 
   static defaultGasLimit = 7500000;
 
+  static scrollToTop = () => {
+    // scroll to top
+    document.body.scrollTop = 0;            // For Safari
+    document.documentElement.scrollTop = 0; // For Chrome, Firefox, IE and Opera
+  }
 
-  static getProvider = async function(rpc_uri) {
+
+  static getProvider = async (rpc_uri) => {
     return new ethers.providers.JsonRpcProvider({url: rpc_uri });
   }
 
@@ -45,22 +51,25 @@ export default class UIHelper {
       });
   }
 
-  static hideSpinning = function() {
+  static hideSpinning = () => {
     const elem = document.getElementById("wait-div");
     if(elem) {
       elem.parentNode.removeChild(elem);
     }
   }
 
-  static transactionOnConfirmation = function (message, redirect = "/") {
-    document.body.removeChild(document.getElementById('wait-div'));
+  static transactionOnConfirmation = (message, redirect = "/") => {
+    const elem = document.getElementById("wait-div");
+    if(elem) {
+      elem.parentNode.removeChild(elem);
+    }
     alert(message);
 
     if (redirect)
       window.location.href = redirect;
   }
 
-  static transactionOnError = function (error) {
+  static transactionOnError = (error) => {
     const elem = document.getElementById("wait-div");
     if(elem) {
       elem.parentNode.removeChild(elem);
@@ -84,7 +93,7 @@ export default class UIHelper {
   }
    */
 
-  static fetchSRCPriceVsUSD = async function(contract_address = '0x16587cf43f044aba0165ffa00acf412631194e4b', vs_currency = 'usd') {
+  static fetchSRCPriceVsUSD = async (contract_address = '0x16587cf43f044aba0165ffa00acf412631194e4b', vs_currency = 'usd') => {
     
     //'0x16587cf43f044aba0165ffa00acf412631194e4b','usd'
     const uri = 'https://api.coingecko.com/api/v3/simple/token_price/ethereum?contract_addresses=' + contract_address +'&vs_currencies=' +  vs_currency;
@@ -95,7 +104,7 @@ export default class UIHelper {
   //using gas station
 //https://github.com/ethers-io/ethers.js/issues/2828
 //workaround for "transaction underpriced" error
-static calculateGasUsingStation = async function(fromAccount) {
+static calculateGasUsingStation = async (fromAccount) => {
 
    const convertGwei2Wei = (input) =>  {
     console.log("convert " + input + " (gwei) to (wei) => " + ethers.BigNumber.from(input * 1000000000) );
@@ -128,7 +137,7 @@ static calculateGasUsingStation = async function(fromAccount) {
   return gas;
 }
 //PUT this on some other file in the future
-  static addDaysToDate = function (date, days) {
+  static addDaysToDate = (date, days) => {
     let result = new Date(date);
     result.setDate(result.getDate() + days);
     return result;
@@ -139,7 +148,7 @@ static calculateGasUsingStation = async function(fromAccount) {
    * @param {*} string one of ["1 day", "3 days", "7 days", "1 month", "3 month", "6 month"];
    * @returns 
    */
-  static extractDaysFromAuctionString = function (string) {
+  static extractDaysFromAuctionString = (string) => {
     if(string === "1 day") {
       return 1;
       

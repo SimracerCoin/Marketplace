@@ -65,7 +65,7 @@ class SellOwnership extends Component {
         const currentAccount = this.state.drizzleState.accounts[0];
         const contract = this.state.drizzle.contracts.STMarketplace;
         const contractNFTs = this.state.drizzle.contracts.SimthunderOwner;
-        const isSeller = await contract.methods.isSeller(currentAccount).call();
+        const isSeller = (await contract.methods.getSeller(currentAccount).call()).active;
         this.setState({ auctionStart: now, auctionEnd:endDate, currentTimingOption: timingOpt[0], timingOptions: timingOptions, currentAccount: currentAccount, contract: contract, contractNFTs: contractNFTs, isSeller: isSeller });
     };
 

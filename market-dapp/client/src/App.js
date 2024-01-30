@@ -3,8 +3,10 @@ import { DrizzleContext } from "@drizzle/react-plugin";
 import { Drizzle } from "@drizzle/store";
 import STMarketplace from "./STMarketplace.json";
 import SimracerCoin from "./SimracerCoin.json";
-import SimthunderOwner from "./SimthunderOwner.json"
-import SimracingMomentOwner from "./SimracingMomentOwner.json"
+import SimthunderOwner from "./SimthunderOwner.json";
+import SimracingMomentOwner from "./SimracingMomentOwner.json";
+import STSetup from "./STSetup.json";
+import STSkin from "./STSkin.json";
 //import Descartes from "./Descartes.json";
 import Underconstruction from "./pages/Underconstruction";
 import RouterPage from "./pages/RouterPage";
@@ -141,6 +143,7 @@ class App extends React.Component {
         console.log('Accounts found: ', accounts);
         allow_wallets.push(currentAccount);
         //window.localStorage.setItem("isLoggedIn","true");
+        window.ethereum.on('accountsChanged', () => window.location.reload());
       }
     });
     
@@ -207,6 +210,14 @@ class App extends React.Component {
           {
             contractName: "STMarketplace",
             web3Contract: new web3.eth.Contract(STMarketplace.abi, STMarketplace.address)
+          },
+          {
+            contractName: "STSetup",
+            web3Contract: new web3.eth.Contract(STSetup.abi, STMarketplace.address)
+          },
+          {
+            contractName: "STSkin",
+            web3Contract: new web3.eth.Contract(STSkin.abi, STMarketplace.address)
           },
           {
             contractName: "SimracerCoin",

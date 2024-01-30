@@ -185,10 +185,14 @@ class StorePage extends Component {
         const contractNFTs = await this.state.drizzle.contracts.SimthunderOwner;
         //simracing moment nfts
         const contractMomentNFTs = await this.state.drizzle.contracts.SimracingMomentOwner;
+
+        const stSetup = await this.state.drizzle.contracts.STSetup;
+        const stSkin = await this.state.drizzle.contracts.STSkin;
+
         //car setups
-        response_cars = await contract.methods.getCarSetups().call();
+        response_cars = (await stSetup.methods.getSetups().call()).filter(item => item.ad.active);
         //car setups
-        response_skins = await contract.methods.getSkins().call();
+        response_skins = (await stSkin.methods.getSkins().call()).filter(item => item.ad.active);
         
         let simsList = [];
         let simulatorsFilter = [];
@@ -1043,7 +1047,7 @@ class StorePage extends Component {
           selectedImagePath: imagePath,
           selectedCategory: category,
           vendorAddress: address,
-          vendorNickname: address ? await this.state.contract.methods.getNickname(address).call() : "",
+          vendorNickname: address ? (await this.state.contract.methods.getSeller(address).call()).nickname : "",
           ipfsPath: ipfsPath,
           isNFT: isNFT,
           isMomentNFT: isMomentNFT,

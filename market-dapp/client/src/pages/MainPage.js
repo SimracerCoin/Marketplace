@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Button, Card, ListGroup } from 'react-bootstrap';
+import { Button, Card } from 'react-bootstrap';
 import { Redirect, withRouter, Link } from "react-router-dom";
 import UIHelper from "../utils/uihelper";
 import "../css/mainpage.css";
@@ -66,9 +66,11 @@ class MainPage extends Component {
         const contract = await this.state.drizzle.contracts.STMarketplace;
         const contractNFTs = await this.state.drizzle.contracts.SimthunderOwner;
         const contractMomentNFTs = await this.state.drizzle.contracts.SimracingMomentOwner;
+        const stSetup = await this.state.drizzle.contracts.STSetup;
+        const stSkin = await this.state.drizzle.contracts.STSkin;
 
-        const response_cars = await contract.methods.getCarSetups().call();
-        const response_skins = await contract.methods.getSkins().call();
+        const response_cars = (await stSetup.methods.getSetups().call()).filter(item => item.ad.active).slice(0, NUM_ITEMS_LOAD);
+        const response_skins = (await stSkin.methods.getSkins().call()).filter(item => item.ad.active).slice(0, NUM_ITEMS_LOAD);
 
         //const currentAccount = this.state.drizzleState.accounts[0];
         //car ownership nfts
@@ -272,7 +274,7 @@ class MainPage extends Component {
             selectedCarNumber: carNumber,
             selectedImagePath: imagePath,
             vendorAddress: address,
-            vendorNickname: address ? await this.state.contract.methods.getNickname(address).call() : "",
+            vendorNickname: address ? (await this.state.contract.methods.getSeller(address).call()).nickname : "",
             ipfsPath: ipfsPath,
             videoPath: videoPath,
             isNFT: isNFT,
@@ -398,12 +400,12 @@ class MainPage extends Component {
                 
             //console.log('attributes: ', value.attributes);
             momentNfts.push(
-                        <ListGroup.Item key={itemId} className="bg-dark_A-20 col-3-24 mb-4">
-                    <Card className="card-block" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, description, price, null, null, address, null, imagePath, false, true, video, metadata)}>
+                    <div className="col-12 col-sm-6 col-md-4 col-lg-3 px-1">
+                    <Card className="card-block bg-dark_A-20 p-4 mx-1 mt-2" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, description, price, null, null, address, null, imagePath, false, true, video, metadata)}>
                         <Card.Header style={{height: '240px'}} className="d-flex flex-wrap align-items-center justify-content-center">
                             <Card.Img variant="top" src={imagePath} style={{width: 'auto', maxHeight: '100%'}} />
                         </Card.Header>
-                        <Card.Body>
+                        <Card.Body className="text-center">
                             <Card.Title className="mt-5 font-weight-bold">{series}</Card.Title>
                             <div className="text-left">
                             <div><strong  className="price_div_strong">{price_src} <sup className="main-sup">SRC</sup></strong><br/> <span className="secondary-price">{usdPrice}<sup className="secondary-sup">USD</sup></span></div>
@@ -432,7 +434,7 @@ class MainPage extends Component {
                         <Button variant="warning">Buy</Button>
                         </Card.Body>
                     </Card>
-            </ListGroup.Item>
+            </div>
             )
         }
 
@@ -466,15 +468,14 @@ class MainPage extends Component {
 
             //could be empty for these nfts (if not auction data)
             
-
             nfts.push(
-                <ListGroup.Item key={itemId} className="bg-dark_A-20 col-3-24 mb-4">
-                    <Card className="card-block" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, description, price, null, carNumber, address, null, imagePath, true, false, null, metadata)}>
+                <div className="col-12 col-sm-6 col-md-4 col-lg-3 px-1">
+                    <Card className="card-block bg-dark_A-20 p-4 mx-1 mt-2" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, description, price, null, carNumber, address, null, imagePath, true, false, null, metadata)}>
                         <Card.Header style={{height: '240px'}} className="d-flex flex-wrap align-items-center justify-content-center">
                             <Card.Img variant="top" src={imagePath} style={{width: 'auto', maxHeight: '100%'}} />
                         </Card.Header>
-                        <Card.Body>
-                            <Card.Title className="mt-5 font-weight-bold">{series}</Card.Title>
+                        <Card.Body className="text-center">
+                            <Card.Title className="mt-5 font-weight-bold text-truncate">{series}</Card.Title>
                             <div className="text-left">
                             <div><img src={thumb} width="32" alt={simulator} /> {simulator}</div>
                             <div className="price_div"><strong className="price_div_strong">{price_src} <sup className="main-sup">SRC</sup></strong><br/> <span className="secondary-price">{usdPrice}<sup className="secondary-sup">USD</sup></span></div>
@@ -482,12 +483,12 @@ class MainPage extends Component {
                             <Button variant="warning">Buy</Button>
                         </Card.Body>
                     </Card>
-                </ListGroup.Item>
+                </div> 
             )
         }
 
         //skins
-        for(let i = this.state.listSkins.length-1, j = 0; j < Math.min(this.state.listSkins.length, NUM_ITEMS_LOAD); --i, ++j) {
+        for(let i = this.state.listSkins.length-1, j = 0; j < this.state.listSkins.length; --i, ++j) {
             let value = this.state.listSkins[i];
 
             let carBrand = value.info.carBrand
@@ -509,12 +510,12 @@ class MainPage extends Component {
             usdPrice = "$" + usdPrice;
 
             skins.push(
-                <ListGroup.Item key={itemId} className="bg-dark_A-20 col-3-24 mb-4">
-                    <Card className="card-block" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, null, description, price, carBrand, null, address, ipfsPath, imagePath, false, false, null, null)}>
+                <div className="col-12 col-sm-6 col-md-4 col-lg-3 px-1">
+                    <Card className="card-block bg-dark_A-20 p-4 mx-1 mt-2" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, null, description, price, carBrand, null, address, ipfsPath, imagePath, false, false, null, null)}>
                         <Card.Header style={{height: '240px'}} className="d-flex flex-wrap align-items-center justify-content-center">
                             <Card.Img variant="top" src={"https://simthunder.infura-ipfs.io/ipfs/"+imagePath[0]} style={{width: 'auto', maxHeight: '100%'}} />
                         </Card.Header>
-                        <Card.Body>
+                        <Card.Body className="text-center">
                             <Card.Title className="mt-5 font-weight-bold">{carBrand}</Card.Title>
                             <div className="text-left">
                                 <div><img src={thumb} width="32" alt={simulator} /> {simulator}</div>
@@ -523,12 +524,12 @@ class MainPage extends Component {
                             <Button variant="warning">Buy</Button>
                         </Card.Body>
                     </Card>
-                </ListGroup.Item>
+                </div>
             )
         }
 
         //car setups
-        for(let i = this.state.listCars.length-1, j = 0; j < Math.min(this.state.listCars.length, NUM_ITEMS_LOAD); --i, ++j) {
+        for(let i = this.state.listCars.length-1, j = 0; j < this.state.listCars.length; --i, ++j) {
             let value = this.state.listCars[i];
             //console.log('list cars value:');
             //console.log(value);
@@ -553,12 +554,12 @@ class MainPage extends Component {
             usdPrice = "$" + usdPrice;
 
             cars.push(
-                <ListGroup.Item key={itemId} className="bg-dark_A-20 col-3-24 mb-4">
-                    <Card className="card-block" onClick={(e) => this.buyItem(e, itemId, track, simulator, season, series, description, price, carBrand, null, address, ipfsPath, "", false, false,null, null)}>
+                <div className="col-12 col-sm-6 col-md-4 col-lg-3 px-1">
+                    <Card className="card-block bg-dark_A-20 p-4 mx-1 mt-2" onClick={(e) => this.buyItem(e, itemId, track, simulator, season, series, description, price, carBrand, null, address, ipfsPath, "", false, false,null, null)}>
                         <Card.Header style={{height: '240px'}} className="d-flex flex-wrap align-items-center justify-content-center">
                             <Card.Img variant="top" src={thumb} style={{width: 'auto', maxHeight: '100%'}} />
                         </Card.Header>
-                        <Card.Body>
+                        <Card.Body className="text-center">
                             <Card.Title className="mt-5 font-weight-bold">{carBrand}</Card.Title>
                             <div className="text-left">
                             <div>{track}</div>
@@ -572,7 +573,7 @@ class MainPage extends Component {
                             <Button variant="warning">Buy</Button>
                         </Card.Body>
                     </Card>
-                </ListGroup.Item>
+                </div>
             )
         }
 
@@ -591,12 +592,14 @@ class MainPage extends Component {
 
                             <br /><br />
                             <div>
-                                <h4>Latest Simracing Moment NFTs</h4>
+                                <h4 className="pl-1">Latest Simracing Moment NFTs</h4>
                             </div>
                             <div>
-                                <ListGroup horizontal className="scrolling-wrapper">
+                            <div className="container-fluid">
+                                <div className="row">
                                     {momentNfts}
-                                </ListGroup>
+                                </div>
+                            </div>
                                 {this.state.latestVideoNFTs.length > NUM_ITEMS_LOAD &&
                                 <Link to="/store?m=momentnfts" className="view-more">View more &gt;&gt; </Link>
                                 }
@@ -610,12 +613,14 @@ class MainPage extends Component {
                         <div className="nftslist">
                             <br /><br />
                             <div>
-                                <h4>Latest Car Ownership NFTs</h4>
+                                <h4 className="pl-1">Latest Car Ownership NFTs</h4>
                             </div>
                             <div>
-                                <ListGroup horizontal className="scrolling-wrapper">
+                            <div className="container-fluid">
+                                <div className="row">
                                     {nfts}
-                                </ListGroup>
+                                </div>
+                            </div>
                                 {this.state.latestNFTs.length > NUM_ITEMS_LOAD &&
                                 <Link to="/store?m=ownership" className="view-more">View more &gt;&gt; </Link>
                                 }
@@ -629,13 +634,15 @@ class MainPage extends Component {
                         <div className="skinslist">
                             <br /><br />
                             <div>
-                                <h4>Latest Car Skins</h4>
+                                <h4 className="pl-1">Latest Car Skins</h4>
                             </div>
                             <div>
-                            <ListGroup horizontal className="scrolling-wrapper">
+                            <div className="container-fluid">
+                                <div className="row">
                                     {skins}
-                                </ListGroup>
-                                {this.state.listSkins.length > NUM_ITEMS_LOAD &&
+                                </div>
+                            </div>
+                                {this.state.listSkins.length === NUM_ITEMS_LOAD &&
                                 <Link to="/store?m=carskins" className="view-more">View more &gt;&gt; </Link>
                                 }
                                 
@@ -647,16 +654,18 @@ class MainPage extends Component {
                         <div className="carslist">
                             <br /><br />
                             <div>
-                                <h4>Latest Car Setups</h4>
+                                <h4 className="pl-1">Latest Car Setups</h4>
                             </div>
                             <div>
 
-                            <ListGroup horizontal className="scrolling-wrapper">
+                            <div className="container-fluid">
+                                <div className="row">
                                     {cars}
-                                </ListGroup>
-                                {this.state.listCars.length > NUM_ITEMS_LOAD &&
+                                </div>
+                            </div>
+                            {this.state.listCars.length === NUM_ITEMS_LOAD &&
                                 <Link to="/store?m=carsetup" className="view-more">View more &gt;&gt; </Link>
-                                }
+                            }
                             </div>
                         </div>
                         }

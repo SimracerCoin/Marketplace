@@ -1,6 +1,6 @@
 // File: @openzeppelin/contracts/utils/Context.sol
 
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: UNLICENSED
 
 pragma solidity ^0.7.0;
 
@@ -38,7 +38,7 @@ contract SimracingMomentOwner is ERC721, Ownable {
      * @notice The constructor for the Simthunder Owner NFT contract.
      * @param payable_token Address of SRC ERC20 contract, the contract in wich we pay the transactions
      */
-    constructor(address payable_token) public ERC721("Simthunder Moment", "STCLIP") {
+    constructor(address payable_token) ERC721("Simthunder Moment", "STCLIP") {
         SIMRACERCOIN = ERC20(payable_token);
     }
 
@@ -118,7 +118,7 @@ contract SimracingMomentOwner is ERC721, Ownable {
 
     }
 
-    function currentTokenId() public returns (uint256) {
+    function currentTokenId() public view returns (uint256) {
         return _tokenIds.current();
     }
 }

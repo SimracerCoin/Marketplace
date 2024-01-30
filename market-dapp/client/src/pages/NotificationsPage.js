@@ -36,7 +36,7 @@ class NotificationsPage extends Component {
         const contract = await this.state.drizzle.contracts.STMarketplace;
         //const descartesContract = await this.state.drizzle.contracts.Descartes;
         const currentAccount = this.state.drizzleState.accounts[0];
-        const notificationsIds = await contract.methods.listNotificationsPerUser(currentAccount).call()
+        const notificationsIds = await contract.methods.listNotificationsUser(currentAccount).call()
         const notifications_r = await contract.methods.getNotifications(notificationsIds).call();
 
         let notifications = [];
@@ -319,10 +319,10 @@ class NotificationsPage extends Component {
                     <td><Link onClick={(e) => this.viewItem(e, purchase.adId)}>{purchase.adId}</Link></td>
                     <td>{value.message}</td>
                     <td>
-                        {value.nType == 1 ?
+                        {purchase.status == 1 ?
                             <Link onClick={(e) => this.endPurchase(e, value.purchaseId, purchase.adId, ad.ipfsPath, purchase.buyerKey, purchase.encryptedDataKey, ad.encryptedDataHash)}><i className="fas fa-reply"></i></Link> :
-                            value.nType == 3 || value.nType == 4 ? '' :
-                                value.nType == 0 ?
+                            purchase.status == 3 || purchase.status == 4 ? '' :
+                                purchase.status == 0 ?
                                     <Link onClick={(e) => this.acceptPurchase(e, value.purchaseId, purchase.buyerKey)}><i className="fas fa-reply"></i></Link> : <Link onClick={(e) => this.resolvePurchase(e, value.purchaseId, purchase.descartesIndex)}><i className="fas fa-info"></i></Link>}
                     </td>
                 </tr>)

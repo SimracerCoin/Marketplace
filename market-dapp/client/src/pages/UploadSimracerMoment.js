@@ -73,7 +73,7 @@ class UploadSimracerMoment extends Component {
         const currentAccount = this.state.drizzleState.accounts[0];
         const contract = this.state.drizzle.contracts.STMarketplace;
         const contractNFTs = this.state.drizzle.contracts.SimracingMomentOwner;
-        const isSeller = await contract.methods.isSeller(currentAccount).call();
+        const isSeller = (await contract.methods.getSeller(currentAccount).call()).active;
         this.setState({ auctionStart: now, auctionEnd:endDate, currentTimingOption: timingOpt[0], timingOptions: timingOptions, currentAccount: currentAccount, contract: contract, contractNFTs: contractNFTs, isSeller: isSeller });
     };
 
@@ -492,7 +492,7 @@ class UploadSimracerMoment extends Component {
     
         UIHelper.showSpinning();
 
-        let self = this;
+        const self = this;
 
         const response_saveVideo = await this.saveVideo_toIPFS();
         console.log('response_saveVideo: ', response_saveVideo);
@@ -513,7 +513,7 @@ class UploadSimracerMoment extends Component {
             //console.log("params for call ", paramsForCall);
 
             //'https://gateway.pinata.cloud/ipfs/Qmboj3b42aW2nHGuQizdi2Zp35g6TBKmec6g77X9UiWQXg'
-            let tx = await this.state.contractNFTs.methods.awardItem(this.state.contractNFTs.address, this.state.currentAccount, price, 'https://simthunder.infura-ipfs.io/ipfs/' + this.state.jsonData_ipfsPath)
+            await this.state.contractNFTs.methods.awardItem(this.state.contractNFTs.address, this.state.currentAccount, price, 'https://simthunder.infura-ipfs.io/ipfs/' + this.state.jsonData_ipfsPath)
                 .send( paramsForCall )
                 //.on('sent', UIHelper.transactionOnSent)
                 .on('confirmation', function (confNumber, receipt, latestBlockHash) {
