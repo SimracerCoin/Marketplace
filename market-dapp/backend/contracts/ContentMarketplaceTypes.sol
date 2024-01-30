@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.7.0;
 
 enum PurchaseStatus { Request, Accept_A, Challenge, Accept_B, Reject }
