@@ -16,4 +16,6 @@ interface Migratable {
         ItemType);
 
     function migrateData(address, uint256, uint256) external;
+
+    function getNumAds() external view returns (uint256);
 }
