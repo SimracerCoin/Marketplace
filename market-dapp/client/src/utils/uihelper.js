@@ -75,7 +75,7 @@ export default class UIHelper {
       elem.parentNode.removeChild(elem);
     }
     alert("Something wrong. Please try again.");
-    console.log(error);
+    console.error(error);
   }
 
   /**

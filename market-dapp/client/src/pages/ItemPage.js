@@ -390,162 +390,119 @@ class ItemPage extends Component {
         UIHelper.showSpinning();
 
         if (!this.state.isNFT && !this.state.isMomentNFT) {
-          let buyerKey = localStorage.getItem('ak');
-          if (!buyerKey) {
-              const { privateKeyArmored, publicKeyArmored, revocationCertificate } = await openpgp.generateKey({
-                  userIds: [{ name: this.state.currentAccount }],             // you can pass multiple user IDs
-                  curve: 'p256',                                              // ECC curve name
-                  passphrase: PASSPHRASE                                      // protects the private key
-              });
 
-              buyerKey = this.state.drizzle.web3.utils.asciiToHex(publicKeyArmored);
+          const downloadFile = async () => {
+            const content = new BufferList();
+            const ipfsP = this.state.drizzle.web3.utils.hexToAscii(this.state.ipfsPath);
 
-              localStorage.setItem('ak', buyerKey);
-              localStorage.setItem('bk', this.state.drizzle.web3.utils.asciiToHex(privateKeyArmored));
-          }
-
-          //approve contract ot spend our SRC
-          let paramsForCall = await UIHelper.calculateGasUsingStation(this.state.currentAccount);
-
-          let approval = await this.state.contractSimracerCoin.methods.approve(this.state.contract.address, price)
-          .send(paramsForCall)
-          .catch(function (e) {
-            UIHelper.transactionOnError(e);
-            });
-          if(!approval) {
-            UIHelper.transactionOnError("ERROR ON APPROVAL");
-          } else {
-            //approved
-            await this.state.contract.methods.requestPurchase(this.state.itemId, buyerKey, !NON_SECURE_SELL)
-            .send(paramsForCall)
-            //.on('sent', UIHelper.transactionOnSent)
-            .on('confirmation', async (confNumber, receipt, latestBlockHash) => {
-              if(confNumber === NUMBER_CONFIRMATIONS_NEEDED) {
-                if(!NON_SECURE_SELL) {
-                  UIHelper.transactionOnConfirmation("Thank you for your purchase request. Seller will contact you soon.", "/");
-                } else {
-                  const content = new BufferList();
-                  const ipfsP = this.state.drizzle.web3.utils.hexToAscii(this.state.ipfsPath);
-
-                  try {
-                    for await (const file of ipfs.get(ipfsP)) {
-                        for await (const chunk of file.content) {
-                            content.append(chunk);
-                        }
-                    }
-
-                    const { data: decryptedFile } = await openpgp.decrypt({
-                      message: await openpgp.message.read(content),      // parse encrypted bytes
-                      passwords: [NON_SECURE_KEY],                       // decrypt with password
-                      format: 'binary'                                   // output as Uint8Array
-                    });
-
-                    const isSkin = this.state.isSkin;
-                    const isCarSetup = !isSkin && !this.state.isNFT && !this.state.isMomentNFT;
-
-                    var data = new Blob([decryptedFile]);
-                    var csvURL = window.URL.createObjectURL(data);
-                    var tempLink = document.createElement('a');
-                    tempLink.href = csvURL;
-                    tempLink.setAttribute('download', isCarSetup ? 'setup.zip' : 'skin.zip');  // has it isn't a car setup, it is a skin
-                    tempLink.click();
-
-                    UIHelper.transactionOnConfirmation("Thank you for your purchase!", false);
-
-                  } catch (e) {
-                    UIHelper.transactionOnError(e);
-                  }
+            for await (const file of ipfs.get(ipfsP)) {
+                for await (const chunk of file.content) {
+                    content.append(chunk);
                 }
-              }
-            })
-            .on('error', UIHelper.transactionOnError)
-            .catch(function (e) {
-              console.log(e);
-              });
+            }
+
+            const { data: decryptedFile } = await openpgp.decrypt({
+              message: await openpgp.message.read(content),      // parse encrypted bytes
+              passwords: [NON_SECURE_KEY],                       // decrypt with password
+              format: 'binary'                                   // output as Uint8Array
+            });
+
+            const isSkin = this.state.isSkin;
+            const isCarSetup = !isSkin && !this.state.isNFT && !this.state.isMomentNFT;
+
+            const data = new Blob([decryptedFile]);
+            const csvURL = window.URL.createObjectURL(data);
+            const tempLink = document.createElement('a');
+            tempLink.href = csvURL;
+            tempLink.setAttribute('download', isCarSetup ? 'setup.zip' : 'skin.zip');  // has it isn't a car setup, it is a skin
+            tempLink.click();
           }
-        } else {
 
-            let contractAddressToApprove = this.state.isNFT ? this.state.contractNFTs.address : this.state.contractMomentNFTs.address;
+          if(this.state.price == 0) {
+            downloadFile()
+              .then(UIHelper.hideSpinning)
+              .catch(UIHelper.transactionOnError);
+          } else {
+            let buyerKey = localStorage.getItem('ak');
+            if (!buyerKey) {
+                const { privateKeyArmored, publicKeyArmored, revocationCertificate } = await openpgp.generateKey({
+                    userIds: [{ name: this.state.currentAccount }],             // you can pass multiple user IDs
+                    curve: 'p256',                                              // ECC curve name
+                    passphrase: PASSPHRASE                                      // protects the private key
+                });
 
-            let paramsForCall = await UIHelper.calculateGasUsingStation(this.state.currentAccount);
-            let approval = await this.state.contractSimracerCoin.methods.approve(contractAddressToApprove, price)
-            .send(paramsForCall)
-            .catch(function (e) {
-              UIHelper.transactionOnError(e);
-             });
+                buyerKey = this.state.drizzle.web3.utils.asciiToHex(publicKeyArmored);
+
+                localStorage.setItem('ak', buyerKey);
+                localStorage.setItem('bk', this.state.drizzle.web3.utils.asciiToHex(privateKeyArmored));
+            }
+            
+            //approve contract ot spend our SRC
+            const paramsForCall = await UIHelper.calculateGasUsingStation(this.state.currentAccount);
+            const approval = await this.state.contractSimracerCoin.methods.approve(this.state.contract.address, price)
+              .send(paramsForCall)
+              .catch(UIHelper.transactionOnError);
+
             if(!approval) {
               UIHelper.transactionOnError("ERROR ON APPROVAL");
             } else {
-              //do it!
+              //approved
+              await this.state.contract.methods.requestPurchase(this.state.itemId, buyerKey, !NON_SECURE_SELL)
+                .send(paramsForCall)
+                //.on('sent', UIHelper.transactionOnSent)
+                .on('confirmation', async (confNumber, receipt, latestBlockHash) => {
+                  if(confNumber === NUMBER_CONFIRMATIONS_NEEDED) {
+                    if(!NON_SECURE_SELL) {
+                      UIHelper.transactionOnConfirmation("Thank you for your purchase request. Seller will contact you soon.", "/");
+                    } else {
+                      downloadFile()
+                        .then(() => UIHelper.transactionOnConfirmation("Thank you for your purchase!", false))
+                        .catch(UIHelper.transactionOnError);
+                    }
+                  }
+                })
+                .on('error', UIHelper.transactionOnError)
+                .catch(console.error);
+            }
+          }
+        } else {
+            const contractAddressToApprove = this.state.isNFT ? this.state.contractNFTs.address : this.state.contractMomentNFTs.address;
+            const paramsForCall = await UIHelper.calculateGasUsingStation(this.state.currentAccount);
+            const approval = await this.state.contractSimracerCoin.methods.approve(contractAddressToApprove, price)
+              .send(paramsForCall)
+              .catch(UIHelper.transactionOnError);
 
-              paramsForCall = await UIHelper.calculateGasUsingStation(this.state.currentAccount);
-
+            if(!approval) {
+              UIHelper.transactionOnError("ERROR ON APPROVAL");
+            } else {
               //SimthunderOwner NFT
               if(this.state.isNFT) {
               
-                await this.state.contractNFTs.methods.buyItem(this.state.itemId,price)
-                .send(paramsForCall)
-                .on('confirmation', function (confNumber, receipt, latestBlockHash) {
-                  if(confNumber === NUMBER_CONFIRMATIONS_NEEDED) {
-                    UIHelper.transactionOnConfirmation("Thank you for your purchase.", "/");
-                  }
-                    
-                })
-                .on('error', UIHelper.transactionOnError)
-                .catch(function (e) {
-                  console.log(e);
-                });
+                await this.state.contractNFTs.methods.buyItem(this.state.itemId, price)
+                  .send(paramsForCall)
+                  .on('confirmation', function (confNumber, receipt, latestBlockHash) {
+                    if(confNumber === NUMBER_CONFIRMATIONS_NEEDED) {
+                      UIHelper.transactionOnConfirmation("Thank you for your purchase.", "/");
+                    }
+                  })
+                  .on('error', UIHelper.transactionOnError)
+                  .catch(console.error);
 
                 //SimracingMomentOwner NFT
               } else if(this.state.isMomentNFT) {
                 
-                await this.state.contractMomentNFTs.methods.buyItem(this.state.itemId,price)
-                .send(paramsForCall)
-                .on('confirmation', function (confNumber, receipt, latestBlockHash) {
-                   if(confNumber === NUMBER_CONFIRMATIONS_NEEDED) {
-                    UIHelper.transactionOnConfirmation("Thank you for your purchase.", "/");
-                   }
-                    
-                })
-                .on('error', UIHelper.transactionOnError)
-                .catch(function (e) {
-                  console.log(e);
-                });
+                await this.state.contractMomentNFTs.methods.buyItem(this.state.itemId, price)
+                  .send(paramsForCall)
+                  .on('confirmation', function (confNumber, receipt, latestBlockHash) {
+                    if(confNumber === NUMBER_CONFIRMATIONS_NEEDED) {
+                      UIHelper.transactionOnConfirmation("Thank you for your purchase.", "/");
+                    }
+                  })
+                  .on('error', UIHelper.transactionOnError)
+                  .catch(console.error);
               }
-
-              
             }
-            
         }
-
-        // const responseFile = await ipfs.get(this.state.ipfsHash);
-        // for await (const file of ipfs.get(this.state.ipfsHash)) {
-        //     console.log(file.path)
-        //     console.log(file);
-
-        //     const content = new BufferList()
-        //     for await (const chunk of file.content) {
-        //       content.append(chunk)
-        //     }
-        //     console.log(content.toString())
-        //   }
-        /*
-        alert('Download you file at https://ipfs.io/ipfs/' + this.state.ipfsHash);
-
-        confirmAlert({
-            title: 'Review purchased item',
-            message: 'Review the purchased item and accept it or challenge the purchase if you found any issue. Purchase will be automatically accepted if not challenged within 10 minutes.',
-            buttons: [
-                {
-                    label: 'Accept',
-                    onClick: () => this.acceptItem(response.events.PurchaseRequested.returnValues.purchaseId)
-                },
-                {
-                    label: 'Reject/Challenge',
-                    onClick: () =>  this.rejectItem(response.events.PurchaseRequested.returnValues.purchaseId)
-                }
-            ]
-        });*/
     }
 
     submitComment = async (event) => {
