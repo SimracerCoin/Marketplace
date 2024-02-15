@@ -102,7 +102,7 @@ class App extends React.Component {
       isLoggedIn: null,
       wrongNetwork: null,
       currentAccount:null,
-      provider: null
+      provider: null,
     }
 
     this.login = this.login.bind(this);
@@ -138,7 +138,7 @@ class App extends React.Component {
         console.error("An error occurred: " + err);
       }
       else if (accounts.length !== 0) {
-        isLoggedIn = true;
+        isLoggedIn = true
         currentAccount = accounts[0];
         console.log('Accounts found: ', accounts);
         allow_wallets.push(currentAccount);
@@ -146,8 +146,6 @@ class App extends React.Component {
         window.ethereum.on('accountsChanged', () => window.location.reload());
       }
     });
-    
-
     this.setState({currentAccount: currentAccount, provider: provider, allow_wallets: allow_wallets, isLoggedIn: isLoggedIn, wrongNetwork: (networkId !== NETWORK_ID) });
   
   }
@@ -187,7 +185,6 @@ class App extends React.Component {
     if (localStorage.getItem('isWalletConnected') === 'true') {
       this.login();
     }
-
     this.checkCookiesAcceptance();
   }
 

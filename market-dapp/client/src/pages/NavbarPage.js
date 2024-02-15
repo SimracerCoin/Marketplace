@@ -9,6 +9,7 @@ class NavbarPage extends React.Component {
     super(props);
 
     this.state = {
+      userBalance: undefined,
       drizzle: props.drizzle,
       drizzleState: props.drizzleState,
       listCars: [],
@@ -52,9 +53,9 @@ class NavbarPage extends React.Component {
     const currentAccount = this.state.drizzleState.accounts[0];
     const haveNotifications = (await contract.methods.listNotificationsUser(currentAccount).call()).length > 0;
     const walletAddr = currentAccount.substr(0, 6) + "..." + currentAccount.substr(-4);
-
     const contractNFTs = await this.state.drizzle.contracts.SimthunderOwner;
     const contractMomentNFTs = await this.state.drizzle.contracts.SimracingMomentOwner;
+    const contractSimracerCoin = await this.state.drizzle.contracts.SimracerCoin;
     const ownerNFT = await contractNFTs.methods.owner().call();
     const ownerMomentNFT = await contractMomentNFTs.methods.owner().call();
     //check if account is contract(s) owner
@@ -70,10 +71,21 @@ class NavbarPage extends React.Component {
     this.setState({
       isNFTOwner: isNFTOwner,
       isMomentNFTOwner: isMomentNFTOwner,
+      currentAccountFullAddr: currentAccount,
       currentAccount: walletAddr,
       haveNotifications: haveNotifications,
+      contractSimracerCoin: contractSimracerCoin,
       searchQuery: searchQuery,
     });
+
+    this.getAccountBalance().then(userBalance => {
+      console.log("balance: " + userBalance);
+      console.log('conta: ', currentAccount);
+
+    }).catch(error => {
+      console.error("Erro ao obter saldo do usuário:", error);
+    });
+
   };
 
   componentWillUnmount = async (event) => {
@@ -131,6 +143,22 @@ class NavbarPage extends React.Component {
     this.setState({ searchQuery: event.target.value });
   };
 
+  getAccountBalance = async () => {
+    try {
+      const userBalance = this.state.drizzle.web3.utils.fromWei(
+        await this.state.contractSimracerCoin.methods.balanceOf(this.state.currentAccountFullAddr).call());
+      const userBalanceString = userBalance;
+
+      this.setState({
+        userBalance: userBalanceString
+      });
+
+      return userBalanceString;
+    } catch (error) {
+      console.log('Failed to access user balance', error);
+    }
+  };
+
   render() {
     return [
       <Navbar className="top-menu-navbar navbar navbar-expand-lg navbar-dark bg-dark border-nav zi-3">
@@ -144,6 +172,19 @@ class NavbarPage extends React.Component {
               >
                 <img src="/assets/img/logo-2-sm.png" alt="Simthunder" /> beta
               </Navbar.Brand>
+              <Navbar.Text>
+                <div class="userInfo">
+                  {this.state.currentAccount && (
+                    <span>{this.state.currentAccount}</span>
+                  )}
+                  
+                  {this.state.userBalance !== undefined ? (
+                    <span>Balance: {this.state.userBalance} SRC</span>
+                  ) : (
+                    <span>Balance: 0 SRC</span>
+                  )}
+                </div>
+              </Navbar.Text>
             </div>
             <div className="col-4 d-none d-lg-block mx-auto">
               <form
@@ -173,8 +214,23 @@ class NavbarPage extends React.Component {
               </form>
             </div>
             <div className="col-8 col-sm-8 col-md-8 col-lg-6 col-xl-4 ml-auto text-right">
-              <Navbar.Text>{this.state.currentAccount}</Navbar.Text>
-              {/*Navbar.Text className="border border-warning rounded-2 p-2">{this.state.currentAccount} &nbsp;|&nbsp; <a className="btn m-0 p-0" role="button" onClick={() => this.setState({showQSModal: true})}><b>Get SRC</b></a></Navbar.Text>*/}
+
+              <Navbar.Text>
+                <div class="userInfo1">
+                  {this.state.currentAccount && (
+                    <span>{this.state.currentAccount}</span>
+                  )}
+                  
+                  {this.state.userBalance !== undefined ? (
+                    <span>Balance: {this.state.userBalance} SRC</span>
+                  ) : (
+                    <span>Balance: 0 SRC</span>
+                  )}
+                </div>
+              </Navbar.Text>
+
+              {
+/*Navbar.Text className="border border-warning rounded-2 p-2">{this.state.currentAccount} &nbsp;|&nbsp; <a className="btn m-0 p-0" role="button" onClick={() => this.setState({showQSModal: true})}><b>Get SRC</b></a></Navbar.Text>*/}
               <ul className="nav navbar-nav d-none d-sm-inline-flex flex-row">
                 <li key="languagesettings" className="nav-item dropdown">
                   <a
