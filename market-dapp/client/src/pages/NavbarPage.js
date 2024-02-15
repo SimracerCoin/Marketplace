@@ -141,19 +141,24 @@ class NavbarPage extends React.Component {
       localStorage.removeItem("searchQuery");
     }
     this.setState({ searchQuery: event.target.value });
-  };
+  }
+
+
+
 
   getAccountBalance = async () => {
     try {
       const userBalance = this.state.drizzle.web3.utils.fromWei(
         await this.state.contractSimracerCoin.methods.balanceOf(this.state.currentAccountFullAddr).call());
       const userBalanceString = userBalance;
+      let balance = Number(Math.round(userBalanceString)).toFixed(2);
 
       this.setState({
-        userBalance: userBalanceString
+        userBalance: userBalanceString,
+        balance:balance
       });
 
-      return userBalanceString;
+      return balance;
     } catch (error) {
       console.log('Failed to access user balance', error);
     }
@@ -179,7 +184,7 @@ class NavbarPage extends React.Component {
                   )}
                   
                   {this.state.userBalance !== undefined ? (
-                    <span>Balance: {this.state.userBalance} SRC</span>
+                    <span>Balance: {this.state.balance} SRC</span>
                   ) : (
                     <span>Balance: 0 SRC</span>
                   )}
@@ -222,7 +227,7 @@ class NavbarPage extends React.Component {
                   )}
                   
                   {this.state.userBalance !== undefined ? (
-                    <span>Balance: {this.state.userBalance} SRC</span>
+                    <span>Balance: {this.state.balance} SRC</span>
                   ) : (
                     <span>Balance: 0 SRC</span>
                   )}
