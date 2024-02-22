@@ -143,15 +143,12 @@ class NavbarPage extends React.Component {
     this.setState({ searchQuery: event.target.value });
   }
 
-
-
-
   getAccountBalance = async () => {
     try {
       const userBalance = this.state.drizzle.web3.utils.fromWei(
         await this.state.contractSimracerCoin.methods.balanceOf(this.state.currentAccountFullAddr).call());
       const userBalanceString = userBalance;
-      let balance = Number(Math.round(userBalanceString)).toFixed(2);
+      let balance = Number(Math.round(userBalanceString * 100) / 100).toFixed(2);
 
       this.setState({
         userBalance: userBalanceString,
@@ -178,7 +175,7 @@ class NavbarPage extends React.Component {
                 <img src="/assets/img/logo-2-sm.png" alt="Simthunder" /> beta
               </Navbar.Brand>
               <Navbar.Text>
-                <div class="userInfo">
+                <div className="userInfo">
                   {this.state.currentAccount && (
                     <span>{this.state.currentAccount}</span>
                   )}
@@ -221,7 +218,7 @@ class NavbarPage extends React.Component {
             <div className="col-8 col-sm-8 col-md-8 col-lg-6 col-xl-4 ml-auto text-right">
 
               <Navbar.Text>
-                <div class="userInfo1">
+                <div className="userInfo1">
                   {this.state.currentAccount && (
                     <span>{this.state.currentAccount}</span>
                   )}

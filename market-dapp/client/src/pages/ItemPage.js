@@ -47,7 +47,7 @@ class ItemPage extends Component {
             vendorNickname: props.location.state ? props.location.state.vendorNickname : "",
             ipfsPath: props.location.state ? props.location.state.ipfsPath : "",
             videoPath: props.location.state ? props.location.state.videoPath : "",
-            imagePath: props.location.state ? (Array.isArray(props.location.state.imagePath) ? props.location.state.imagePath : [props.location.state.imagePath]) : "",
+            imagePath: props.location.state ? (Array.isArray(props.location.state.imagePath) ? props.location.state.imagePath : [props.location.state.imagePath]) : [],
             isNFT: props.location.state ? props.location.state.isNFT : false,
             isMomentNFT: props.location.state ? props.location.state.isMomentNFT : false,
             usdValue : props.location.state ? props.location.state.usdPrice : 1,
@@ -176,7 +176,7 @@ class ItemPage extends Component {
               if(/(?:https?):\/\/(\w+:?\w*)?(\S+)(:\d+)?(\/|\/([\w#!:.?+=&%!\-\/]))?/.test(v))
                 imagePath[idx] = v.split('/').pop();
             });
-            this.setState({imagePath: imagePath});
+            this.setState({imagePath});
         }
 
         try {
@@ -758,21 +758,15 @@ class ItemPage extends Component {
     renderCarousel = (hasVideo, hasImage) => {
 
       if(hasImage && !hasVideo) {
-        if(this.state.imagePath.length > 1) {
-          return <Carousel>
+        return (
+          <Carousel>
             {
               this.state.imagePath.map((value, idx) => {
                 return <img className="imageContainer" src={"https://simthunder.infura-ipfs.io/ipfs/"+value} alt={"slide_"+idx}/>
               })
             }
-          </Carousel>;
-        } else {
-          return <div className="carousel-product">
-            <div className="slider text-secondary" data-slick="product-body">
-                  <img className="imageContainer" src={"https://simthunder.infura-ipfs.io/ipfs/"+this.state.imagePath[0]} alt={"slide"}/>
-            </div>
-          </div>
-        }
+          </Carousel>
+        );
       } else if(hasVideo) {
         if(this.state.isMuted) {
           return <div className="carousel-product">
