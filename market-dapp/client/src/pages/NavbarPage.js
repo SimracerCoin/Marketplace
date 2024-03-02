@@ -9,8 +9,6 @@ class NavbarPage extends React.Component {
     super(props);
 
     this.state = {
-      drizzle: props.drizzle,
-      drizzleState: props.drizzleState,
       listCars: [],
       listSkins: [],
       haveNotifications: false,
@@ -25,7 +23,7 @@ class NavbarPage extends React.Component {
       isNFTOwner: false,
       isMomentNFTOwner: false,
       showQSModal: false,
-      expanded: false,
+      expanded: false
     };
 
     this.handleNavClick = this.handleNavClick.bind(this);
@@ -47,14 +45,16 @@ class NavbarPage extends React.Component {
     }
   }
 
-  componentDidMount = async (event) => {
-    const contract = await this.state.drizzle.contracts.STMarketplace;
-    const currentAccount = this.state.drizzleState.accounts[0];
+  componentDidMount = async () => {
+    const { drizzle, drizzleState } = this.props;
+
+    const contract = await drizzle.contracts.STMarketplace;
+    const currentAccount = drizzleState.accounts[0];
     const haveNotifications = (await contract.methods.listNotificationsUser(currentAccount).call()).length > 0;
     const walletAddr = currentAccount.substr(0, 6) + "..." + currentAccount.substr(-4);
 
-    const contractNFTs = await this.state.drizzle.contracts.SimthunderOwner;
-    const contractMomentNFTs = await this.state.drizzle.contracts.SimracingMomentOwner;
+    const contractNFTs = await drizzle.contracts.SimthunderOwner;
+    const contractMomentNFTs = await drizzle.contracts.SimracingMomentOwner;
     const ownerNFT = await contractNFTs.methods.owner().call();
     const ownerMomentNFT = await contractMomentNFTs.methods.owner().call();
     //check if account is contract(s) owner
@@ -68,11 +68,11 @@ class NavbarPage extends React.Component {
     }
 
     this.setState({
-      isNFTOwner: isNFTOwner,
-      isMomentNFTOwner: isMomentNFTOwner,
+      isNFTOwner,
+      isMomentNFTOwner,
       currentAccount: walletAddr,
-      haveNotifications: haveNotifications,
-      searchQuery: searchQuery,
+      haveNotifications,
+      searchQuery,
     });
   };
 

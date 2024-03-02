@@ -4,8 +4,6 @@ import { Redirect, withRouter, Link } from "react-router-dom";
 import UIHelper from "../utils/uihelper";
 import "../css/mainpage.css";
 
-const priceConversion = 10**18;
-
 const NUM_ITEMS_LOAD = Number(process.env.REACT_APP_NUM_ITEMS_LOAD) || 4;
 
 const getProperDate = (metadataDate) => {
@@ -26,8 +24,6 @@ class MainPage extends Component {
         super(props);
 
         this.state = {
-            drizzle: props.drizzle,
-            drizzleState: props.drizzleState,
             listCars: [],
             listSkins: [],
             latestNFTs: [],
@@ -54,25 +50,24 @@ class MainPage extends Component {
             usdValue: 1
         }
 
-        this.props.history.push('/');
         this.props.history.push(this.props.match.url);
-
     }
 
     updateData = async () => {
 
+        const { drizzle } = this.props;
+
         UIHelper.showSpinning('loading items ...');
 
-        const contract = await this.state.drizzle.contracts.STMarketplace;
-        const contractNFTs = await this.state.drizzle.contracts.SimthunderOwner;
-        const contractMomentNFTs = await this.state.drizzle.contracts.SimracingMomentOwner;
-        const stSetup = await this.state.drizzle.contracts.STSetup;
-        const stSkin = await this.state.drizzle.contracts.STSkin;
+        const contract = await drizzle.contracts.STMarketplace;
+        const contractNFTs = await drizzle.contracts.SimthunderOwner;
+        const contractMomentNFTs = await drizzle.contracts.SimracingMomentOwner;
+        const stSetup = await drizzle.contracts.STSetup;
+        const stSkin = await drizzle.contracts.STSkin;
 
         const response_cars = (await stSetup.methods.getSetups().call()).filter(item => item.ad.active).slice(0, NUM_ITEMS_LOAD);
         const response_skins = (await stSkin.methods.getSkins().call()).filter(item => item.ad.active).slice(0, NUM_ITEMS_LOAD);
 
-        //const currentAccount = this.state.drizzleState.accounts[0];
         //car ownership nfts
         
         const shorterNFTsList = []; //hold NUM_ITEMS_LOAD max
@@ -169,7 +164,7 @@ class MainPage extends Component {
             { 
                 shorterNFTsList: shorterNFTsList, 
                 shorterVideosNftsList: shorterVideosNftsList,
-                usdValue: await this.fetchUSDPrice(), 
+                usdValue: await UIHelper.fetchSRCPriceVsUSD(), 
                 listCars: response_cars, 
                 listSkins: response_skins, 
                 contract: contract, 
@@ -269,7 +264,6 @@ class MainPage extends Component {
             selectedDescription: description,
             selectedPrice: price,
             selectedCategory: category,
-            usdPrice : this.state.usdValue,
             selectedCarBrand: carBrand,
             selectedCarNumber: carNumber,
             selectedImagePath: imagePath,
@@ -303,22 +297,11 @@ class MainPage extends Component {
         }
         return data;
     }
-
-    fetchUSDPrice = async () => {
-       try {
-            const priceUSD = await UIHelper.fetchSRCPriceVsUSD();
-            const priceObj = await priceUSD.json();
-            const key = Object.keys(priceObj);
-            return priceObj[key]['usd']; 
-
-        }catch(err) {
-           return 1;
-        }
-    }
       
 
     render() {
 
+        const { web3 } = this.props.drizzle;
         const cars = [];
         const skins = [];
         const nfts = [];
@@ -333,32 +316,33 @@ class MainPage extends Component {
                 path = "/auction";
             }
 
-            return (<Redirect
-                to={{
-                    pathname: path+"/"+this.state.selectedCategory+"/"+this.state.selectedItemId,// "/item",
-                    state: {
-                        selectedItemId: this.state.selectedItemId,
-                        selectedTrack: this.state.selectedTrack,
-                        selectedSimulator: this.state.selectedSimulator,
-                        selectedSeason: this.state.selectedSeason,
-                        selectedSeries: this.state.selectedSeries,
-                        selectedDescription: this.state.selectedDescription,
-                        selectedPrice: this.state.selectedPrice,
-                        usdPrice : this.state.usdValue,
-                        selectedCarBrand: this.state.selectedCarBrand,
-                        selectedCarNumber: this.state.selectedCarNumber,
-                        imagePath: this.state.selectedImagePath,
-                        vendorAddress: this.state.vendorAddress,
-                        vendorNickname: this.state.vendorNickname,
-                        ipfsPath: this.state.ipfsPath,
-                        videoPath: this.state.videoPath,
-                        isNFT: this.state.isNFT,
-                        isMomentNFT: this.state.isMomentNFT,
-                        similarItems: this.state.similarItems,
-                        metadata: this.state.metadata
-                    }
-                }}
-            />)
+            return (
+                <Redirect
+                    to={{
+                        pathname: path+"/"+this.state.selectedCategory+"/"+this.state.selectedItemId,// "/item",
+                        state: {
+                            selectedItemId: this.state.selectedItemId,
+                            selectedTrack: this.state.selectedTrack,
+                            selectedSimulator: this.state.selectedSimulator,
+                            selectedSeason: this.state.selectedSeason,
+                            selectedSeries: this.state.selectedSeries,
+                            selectedDescription: this.state.selectedDescription,
+                            selectedPrice: this.state.selectedPrice,
+                            selectedCarBrand: this.state.selectedCarBrand,
+                            selectedCarNumber: this.state.selectedCarNumber,
+                            imagePath: this.state.selectedImagePath,
+                            vendorAddress: this.state.vendorAddress,
+                            vendorNickname: this.state.vendorNickname,
+                            ipfsPath: this.state.ipfsPath,
+                            videoPath: this.state.videoPath,
+                            isNFT: this.state.isNFT,
+                            isMomentNFT: this.state.isMomentNFT,
+                            similarItems: this.state.similarItems,
+                            metadata: this.state.metadata
+                        }
+                    }}
+                />
+            );
         }
 
         //moment nfts
@@ -380,7 +364,7 @@ class MainPage extends Component {
             let video = value.animation_url; 
             let description = value.description;
 
-            let price_src = Number((Math.round(price / priceConversion) * 100) / 100).toFixed(2);
+            let price_src = Number(web3.utils.fromWei(price)).toFixed(2);
             let usdPrice = Number(Math.round(price_src  * this.state.usdValue * 100) / 100).toFixed(2);
           
             if(usdPrice === 0.00) {
@@ -456,7 +440,7 @@ class MainPage extends Component {
             //console.log(' ID NFT:'+value.id);
             let imagePath = value.image;
 
-            let price_src = Number((Math.round(price / priceConversion) * 100) / 100).toFixed(2);
+            let price_src = Number(web3.utils.fromWei(price)).toFixed(2);
             let usdPrice = Number(Math.round(price_src  * this.state.usdValue * 100) / 100).toFixed(2);
 
             if(usdPrice === 0.00) {
@@ -501,7 +485,7 @@ class MainPage extends Component {
             let description = value.info.description
             let thumb = "/assets/img/sims/"+simulator+".png"
 
-            let price_src = Number((Math.round(price / priceConversion) * 100) / 100).toFixed(2);
+            let price_src = Number(web3.utils.fromWei(price)).toFixed(2);
             let usdPrice = Number(Math.round(price_src  * this.state.usdValue * 100) / 100).toFixed(2);
 
             if(usdPrice === 0.00) {
@@ -545,7 +529,7 @@ class MainPage extends Component {
             let ipfsPath = value.ad.ipfsPath
             let thumb = "/assets/img/sims/"+simulator+".png";
 
-            let price_src = Number((Math.round(price / priceConversion) * 100) / 100).toFixed(2);
+            let price_src = Number(web3.utils.fromWei(price)).toFixed(2);
             let usdPrice = Number(Math.round(price_src  * this.state.usdValue * 100) / 100).toFixed(2);
 
             if(usdPrice === 0.00) {
@@ -574,7 +558,7 @@ class MainPage extends Component {
                         </Card.Body>
                     </Card>
                 </div>
-            )
+            );
         }
 
         return (

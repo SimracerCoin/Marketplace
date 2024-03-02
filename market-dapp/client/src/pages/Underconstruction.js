@@ -5,24 +5,16 @@ const allowAllWallets = (process.env.REACT_APP_ALLOW_ALL_WALLETS === "true" ? tr
 
 class Underconstruction extends Component {
 
-    constructor(props) {
-        super(props);
-
-        this.state = {
-            isLoggedIn: props.isLoggedIn,
-            wrongNetwork: props.wrongNetwork
-        }
-    }
-
     componentDidMount = async () => {
-        const { state } = this;
+        const { props } = this;
 
-        if(state.isLoggedIn && !state.wrongNetwork) {
+        if(props.isLoggedIn && !props.wrongNetwork) {
             alert("Welcome to SimThunder! Please request your beta access first.");
         }
     }
 
     requestBtnClick = (event) => {
+        event.preventDefault();
         document.querySelector('.discord-dialog').className = 'discord-dialog discord-dialog--active';
     }
 
@@ -69,33 +61,34 @@ class Underconstruction extends Component {
       }
 
     renderSwitchButton = () => {
-
-        return <div>
-                <button className="switch-btn" onClick={(e) => this.switchNetwork()}>Switch Network</button>
-                </div>
-    }  
+        return (
+          <div>
+            <button className="switch-btn" onClick={(e) => this.switchNetwork()}>Switch Network</button>
+          </div>
+        );
+    }
 
     render() {
-        const { state } = this;
+        const { props } = this;
         const { web3 } = window;
 
-        let hiddenLoginBtn = !web3 || state.isLoggedIn ? 'd-none' : '';
-        let hiddenRequestBtn = state.wrongNetwork || allowAllWallets ? 'd-none' : '';
-        let hiddenErrorMsg = web3 && !state.wrongNetwork ? 'd-none' : 'd-block';
+        let hiddenLoginBtn = !web3 || props.isLoggedIn ? 'd-none' : '';
+        let hiddenRequestBtn = props.wrongNetwork || allowAllWallets ? 'd-none' : '';
+        let hiddenErrorMsg = web3 && !props.wrongNetwork ? 'd-none' : 'd-block';
 
         let error_msg = '';
-        if(!web3 || state.wrongNetwork) {
+        if(!web3 || props.wrongNetwork) {
             if(!web3) {
                 error_msg = "No Ethereum wallet detected.";
                 hiddenLoginBtn = '';
-            } else if(state.isLoggedIn && state.wrongNetwork) {
+            } else if(props.isLoggedIn && props.wrongNetwork) {
                 error_msg = "Wrong network! SimThunder is now on Polygon Network.";
             }
         }
 
-        const switchNeeded = (web3 && state.wrongNetwork);
+        const switchNeeded = (web3 && props.wrongNetwork);
 
-        return ([
+        return (
             <header id="header" className="header h-fullscreen__page text-light">
                 <div className="media-container parallax-window" data-parallax="scroll" data-image-src="/assets/img/bg/bg-2.jpg" style={{ backgroundImage: 'url(\'/assets/img/bg/bg-8.png\')' }}></div>
                 <div className="overlay bg-dark_A-40"></div>
@@ -104,7 +97,7 @@ class Underconstruction extends Component {
                         <div className="row align-items-center">
                             <div className="col-lg-6 mx-auto">
                                 <div className="fadeIn ad-500ms">
-                                    <img src="/assets/img/logo-2.png" className="slideInLeft ad-400ms display-lg-2 fw-700 lh-2 mb-4" />
+                                    <img src="/assets/img/logo-2.png" className="slideInLeft ad-400ms display-lg-2 fw-700 lh-2 mb-4" alt="logo" />
                                     <h2 className="lead-2 ls-3 d-block slideInRight ad-500ms fw-300 text-uppercase mb-7">Beta 1.2</h2>
                                     <h3 className={`lead-2 ls-3 slideInRight ad-500ms fw-300 text-uppercase mb-7 ${hiddenErrorMsg}`}><strong>{error_msg}</strong></h3>
                                     {switchNeeded && 
@@ -118,7 +111,7 @@ class Underconstruction extends Component {
                     </div>
                 </div>
             </header>
-        ]);
+        );
     }
 }
 

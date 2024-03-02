@@ -1,13 +1,14 @@
-const ethers = require('ethers')
-const createKeccakHash = require('keccak')
+import { Buffer } from 'buffer';
+import web3 from 'web3';
 
+const createKeccakHash = require('keccak')
 
 /**
  * Holds pre-computed keccak256 hash for empty data entries on each level of the merkle tree (0 corresponds to the leaves)
  * - The leaf level hash for an empty 8-byte data entry is pre-computed
  * - Hashes for others levels are computed on demand by #getEmptyTreeHash
  */
-const emptyDataHashes = [Buffer.from(ethers.utils.arrayify('0x011b4d03dd8c01f1049143cf9c4c817e4b167f1d1b83e5c6f0f10d89ba1e7bce'))];
+const emptyDataHashes = [Buffer.from(web3.utils.hexToBytes('0x011b4d03dd8c01f1049143cf9c4c817e4b167f1d1b83e5c6f0f10d89ba1e7bce'))];
 
 /**
  * Computes the 256 bit keccak hash
@@ -118,7 +119,7 @@ function computeMerkleRootHash(buffer) {
 
     // calculates merkle root hash by recursively computing the keccak256 of the concatenation of each data entry pair
     const rootHash = computeMerkleRootHashFromHashes(hashes, 0, rootLevel);
-    return ethers.utils.hexlify(rootHash);
+    return web3.utils.toHex(rootHash);
 }
 
 export default computeMerkleRootHash;
