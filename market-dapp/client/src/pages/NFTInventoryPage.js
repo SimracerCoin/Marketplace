@@ -989,7 +989,7 @@ class NFTInventoryPage extends Component {
                                 let key = itemId + "_" + index
                                 let image = value.image;
                                 let carNumber = value.carNumber;
-                                let name = value.name;
+                                //let name = value.name;
                                 let imagePath = value.image;
                                 let description = value.description;
                                 
@@ -1081,7 +1081,7 @@ class NFTInventoryPage extends Component {
                                 let image = value.image;
                                 let video = value.animation_url; 
                                 //let carNumber = value.carNumber;
-                                let name = value.name;
+                                //let name = value.name;
                                 let imagePath = value.image;
                                 let description = value.description;
 

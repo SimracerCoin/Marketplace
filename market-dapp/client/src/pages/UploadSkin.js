@@ -37,7 +37,6 @@ class UploadSkin extends Component {
             imageBuffer: [],
             priceValue: "",
             currentDescription: "",
-            currentCar: "",
             designer: "",
             license: "",
             mode: "create"

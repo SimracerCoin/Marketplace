@@ -1,7 +1,6 @@
 import React from "react";
 import { Navbar, Nav, NavDropdown, Container } from "react-bootstrap"; // Check out drizzle's react components at @drizzle/react-components
 import { Link, NavLink, Redirect } from "react-router-dom";
-import QuickswapModal from "../components/QuickswapModal";
 import * as $ from "jquery";
 
 class NavbarPage extends React.Component {
@@ -22,7 +21,6 @@ class NavbarPage extends React.Component {
       searchQuery: "",
       isNFTOwner: false,
       isMomentNFTOwner: false,
-      showQSModal: false,
       expanded: false
     };
 
@@ -144,7 +142,7 @@ class NavbarPage extends React.Component {
 
   getAccountBalance = async () => {
     try {
-      const userBalance = this.state.drizzle.web3.utils.fromWei(
+      const userBalance = this.props.drizzle.web3.utils.fromWei(
         await this.state.contractSimracerCoin.methods.balanceOf(this.state.currentAccountFullAddr).call());
       const userBalanceString = userBalance;
       let balance = Number(Math.round(userBalanceString * 100) / 100).toFixed(2);
@@ -229,21 +227,18 @@ class NavbarPage extends React.Component {
                   )}
                 </div>
               </Navbar.Text>
-
-              {
-/*Navbar.Text className="border border-warning rounded-2 p-2">{this.state.currentAccount} &nbsp;|&nbsp; <a className="btn m-0 p-0" role="button" onClick={() => this.setState({showQSModal: true})}><b>Get SRC</b></a></Navbar.Text>*/}
               <ul className="nav navbar-nav d-none d-sm-inline-flex flex-row">
                 <li key="languagesettings" className="nav-item dropdown">
-                  <a
+                  <Link
+                    to="#"
                     className="nav-link dropdown-toggle small"
-                    href="#"
                     id="dropdownGaming"
                     data-toggle="dropdown"
                     aria-haspopup="true"
                     aria-expanded="false"
                   >
                     <i className="mr-2 fas fa-globe"></i>EN{" "}
-                  </a>
+                  </Link>
                   <div
                     className="dropdown-menu position-absolute"
                     aria-labelledby="dropdownGaming"
@@ -283,12 +278,6 @@ class NavbarPage extends React.Component {
               </ul>
             </div>
           </div>
-          {this.state.showQSModal && (
-            <QuickswapModal
-              open={true}
-              onClose={() => this.setState({ showQSModal: false })}
-            ></QuickswapModal>
-          )}
         </Container>
       </Navbar>,
       <Navbar
