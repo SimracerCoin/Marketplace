@@ -4,22 +4,18 @@ import { Redirect } from "react-router-dom";
 import { withRouter } from "react-router";
 import StarRatings from 'react-star-ratings';
 
-const priceConversion = 10**18;
-
 class SellerPage extends Component {
     constructor(props) {
         super(props);
 
         this.state = {
-            drizzle: props.drizzle,
-            drizzleState: props.drizzleState,
             listCars: [],
             listSkins: [],
-            vendorAddress: props.location.state.vendorAddress,
-            vendorNickname: props.location.state.vendorNickname,
+            listComments: [],
+            vendorAddress: "",
+            vendorNickname: "",
             contract: null,
             currentAccount: null,
-            listComments: [],
             selectedItemId: "",
             selectedTrack: "",
             selectedSimulator: "",
@@ -34,16 +30,21 @@ class SellerPage extends Component {
     }
 
     componentDidMount = async () => {
-        const contract = await this.state.drizzle.contracts.STMarketplace;
-        const stSetup = await this.state.drizzle.contracts.STSetup;
-        const stSkin = await this.state.drizzle.contracts.STSkin;
+        const { props } = this;
+        const { drizzle, drizzleState } = props;
+        const { vendorAddress } = props.location.state;
 
-        const currentAccount = this.state.drizzleState.accounts[0];
+        const contract = await drizzle.contracts.STMarketplace;
+        const stSetup = await drizzle.contracts.STSetup;
+        const stSkin = await drizzle.contracts.STSkin;
 
-        const response_cars = (await stSetup.methods.getSetups().call()).filter(item => item.ad.active && item.ad.seller === this.state.vendorAddress);
-        const response_skins = (await stSkin.methods.getSkins().call()).filter(item => item.ad.active && item.ad.seller === this.state.vendorAddress);
-        const response_comments = await contract.methods.getSellerComments(this.state.vendorAddress).call();
-        this.setState({ listCars: response_cars, listSkins: response_skins, contract: contract, currentAccount: currentAccount, listComments: response_comments });
+        const currentAccount = drizzleState.accounts[0];
+
+        const listCars = (await stSetup.methods.getSetups().call()).filter(item => item.ad.active && item.ad.seller === vendorAddress);
+        const listSkins = (await stSkin.methods.getSkins().call()).filter(item => item.ad.active && item.ad.seller === vendorAddress);
+        const listComments = await contract.methods.getSellerComments(vendorAddress).call();
+
+        this.setState({ listCars, listSkins, contract, currentAccount, listComments, ...props.location.state });
     
         // scroll to top
         document.body.scrollTop = 0;            // For Safari
@@ -83,32 +84,36 @@ class SellerPage extends Component {
     }
 
     render() {
+        const { web3 } = this.props.drizzle;
+
         const cars = [];
         const skins = [];
-        let commentsRender = [];
+        const commentsRender = [];
 
         if (this.state.redirectBuyItem) {
-            return (<Redirect
-                to={{
-                    pathname: "/item/"+this.state.selectedCategory+"/"+this.state.selectedItemId,
-                    state: {
-                        selectedItemId: this.state.selectedItemId,
-                        selectedTrack: this.state.selectedTrack,
-                        selectedSimulator: this.state.selectedSimulator,
-                        selectedSeason: this.state.selectedSeason,
-                        selectedSeries: this.state.selectedSeries,
-                        selectedDescription: this.state.selectedDescription,
-                        selectedPrice: this.state.selectedPrice,
-                        selectedCarBrand: this.state.selectedCarBrand,
-                        selectedCarNumber: this.state.selectedCarNumber,
-                        imagePath: this.state.selectedImagePath,
-                        vendorAddress: this.state.vendorAddress,
-                        vendorNickname: this.state.vendorNickname,
-                        ipfsPath: this.state.ipfsPath,
-                        similarItems: this.state.similarItems
-                    }
-                }}
-            />)
+            return (
+                <Redirect
+                    to={{
+                        pathname: "/item/"+this.state.selectedCategory+"/"+this.state.selectedItemId,
+                        state: {
+                            selectedItemId: this.state.selectedItemId,
+                            selectedTrack: this.state.selectedTrack,
+                            selectedSimulator: this.state.selectedSimulator,
+                            selectedSeason: this.state.selectedSeason,
+                            selectedSeries: this.state.selectedSeries,
+                            selectedDescription: this.state.selectedDescription,
+                            selectedPrice: this.state.selectedPrice,
+                            selectedCarBrand: this.state.selectedCarBrand,
+                            selectedCarNumber: this.state.selectedCarNumber,
+                            imagePath: this.state.selectedImagePath,
+                            vendorAddress: this.state.vendorAddress,
+                            vendorNickname: this.state.vendorNickname,
+                            ipfsPath: this.state.ipfsPath,
+                            similarItems: this.state.similarItems
+                        }
+                    }}
+                />
+            );
         }
 
         let nickname = this.state.vendorNickname;
@@ -116,7 +121,6 @@ class SellerPage extends Component {
         for (const [index, value] of this.state.listCars.entries()) {
 
             let carBrand = value.info.carBrand
-            let carNumber = value.info.carNumber
             let track = value.info.track
             let simulator = value.info.simulator
             let season = value.info.season
@@ -135,7 +139,7 @@ class SellerPage extends Component {
                                 <div><b>Track:</b> {track}</div>
                                 <div><b>Simulator:</b> {simulator}</div>
                                 <div><b>Season:</b> {season}</div>
-                                <div><b>Price:</b> {price / priceConversion} SRC</div>
+                                <div><b>Price:</b> {Number(web3.utils.fromWei(price)).toFixed(2)} SRC</div>
                                 {/* <div><b>Vendor address:</b> {address}</div> */}
                             </div>
                             <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, track, simulator, season, series, description, price, carBrand, address, nickname, ipfsPath)}> View item</Button>
@@ -164,7 +168,7 @@ class SellerPage extends Component {
                             <Card.Title>{carBrand}</Card.Title>
                             <div className="text-left">
                                 <div><b>Simulator:</b> {simulator}</div>
-                                <div><b>Price:</b> {price / priceConversion} SRC</div>
+                                <div><b>Price:</b> {Number(web3.utils.fromWei(price)).toFixed(2)} SRC</div>
                                 {/* <div><b>Vendor address:</b> {address}</div> */}
                             </div>
                             <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, null, null, price, carBrand , address, ipfsPath, imagePath)}> View item</Button>

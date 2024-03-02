@@ -8,11 +8,8 @@ class SimilarItemsComponent extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            selectedItemId: props.selectedItemId,
-            items: props.items,
             filteredItems: [],
-            drizzle: props.drizzle,
-            category: props.category
+            ...props
         }
 
         this.routeChange = this.routeChange.bind(this);
@@ -49,14 +46,15 @@ class SimilarItemsComponent extends React.Component {
       window.location.href = path;
     }
 
-    componentDidMount = async (event) => {
-        let referenceItem = this.state.selectedItemId;
+    componentDidMount = async () => {
+        const { drizzle } = this.props;
+        const referenceItem = this.state.selectedItemId;
 
         if(!this.state.items) {
-          const contractNFTs = await this.state.drizzle.contracts.SimthunderOwner;
-          const contractMomentNFTs = await this.state.drizzle.contracts.SimracingMomentOwner;
-          const stSetup = await this.state.drizzle.contracts.STSetup;
-          const stSkin = await this.state.drizzle.contracts.STSkin;
+          const contractNFTs = await drizzle.contracts.SimthunderOwner;
+          const contractMomentNFTs = await drizzle.contracts.SimracingMomentOwner;
+          const stSetup = await drizzle.contracts.STSetup;
+          const stSkin = await drizzle.contracts.STSkin;
 
           let similarItems = [];
           switch(this.state.category) {
@@ -86,8 +84,8 @@ class SimilarItemsComponent extends React.Component {
 
      filterSimilarItems = (referenceItem) => {
         if(this.state.items.length > 0) {
-          let filteredItems = this.state.items.filter(item => item && item.id && item.id !== referenceItem && item.ad.active).slice(0, NUMBER_LOAD_ITEMS);
-          this.setState({filteredItems: filteredItems});
+          const filteredItems = this.state.items.filter(item => item && item.id && item.id !== referenceItem && (!item.ad || item.ad.active)).slice(0, NUMBER_LOAD_ITEMS);
+          this.setState({filteredItems});
         } else {
           this.setState({filteredItems: []});
         }
@@ -105,33 +103,38 @@ class SimilarItemsComponent extends React.Component {
 
       if(this.state.category === "ownership") {
         //ownership
-        return <div id={payload.itemId} className="carousel-pointer" onClick={(e) => this.routeChange(e, payload.itemId)} >
+        return (
+          <div id={payload.itemId} className="carousel-pointer" onClick={(e) => this.routeChange(e, payload.itemId)} >
             <img className="carousel-pointer" alt={payload.description} src={payload.imagePath} />
             <p className="legend">{payload.description}</p>
           </div>
-
+        );
       } else if(this.state.category === "momentnfts") {
         //moment
-        return <div id={payload.itemId} className="carousel-pointer" onClick={(e) => this.routeChange(e, payload.itemId)} >
+        return (
+          <div id={payload.itemId} className="carousel-pointer" onClick={(e) => this.routeChange(e, payload.itemId)} >
             <img className="carousel-pointer" alt={payload.description} src={payload.imagePath} />
             <p className="legend">{payload.description}</p>
           </div>
-
+        );
       }
       else if(this.state.category === "carskins") {
         //skin
-        return <div className="carousel-pointer" id={payload.itemId} onClick={(e) => this.routeChange(e, payload.itemId )}>
+        return (
+          <div className="carousel-pointer" id={payload.itemId} onClick={(e) => this.routeChange(e, payload.itemId )}>
             <img className="carousel-pointer" alt={payload.description} src={"https://simthunder.infura-ipfs.io/ipfs/"+payload.imagePath[0]}/>
             <p className="legend">{payload.description}</p>
           </div>
+        );
 
       } else {
         //car
-        return <div className="carousel-pointer" id={payload.itemId} onClick={(e) => this.routeChange(e, payload.itemId)}>
+        return (
+          <div className="carousel-pointer" id={payload.itemId} onClick={(e) => this.routeChange(e, payload.itemId)}>
             <img className="carousel-pointer" alt={payload.description} src={payload.imagePath} />
             <p className="legend">{payload.description}</p>
           </div>
-
+        );
       }
     }
 
@@ -149,7 +152,7 @@ class SimilarItemsComponent extends React.Component {
 
       //https://github.com/leandrowd/react-responsive-carousel/
       return <Carousel autoPlay>
-      {this.state.filteredItems.map( function(value, index) {
+      {this.state.filteredItems.map((value, index) => {
 
         let payload = {};
 
@@ -174,7 +177,7 @@ class SimilarItemsComponent extends React.Component {
 
         } else {
 
-          payload.imagePath = value.ad.ipfsPath;
+          payload.imagePath = "/assets/img/sims/"+value.info.simulator+".png";
           payload.description = value.info.description;
         }
 

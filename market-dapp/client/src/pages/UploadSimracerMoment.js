@@ -1,13 +1,10 @@
 import React, { Component } from 'react';
 import { Dropdown, Form, DropdownButton, Button, FormCheck } from 'react-bootstrap';
+import { Buffer } from 'buffer';
 import ipfs from "../ipfs";
 import UIHelper from "../utils/uihelper";
 import "../css/auction.css";
 
-//import fetch from 'node-fetch';
-
-
-const priceConversion = 10**18;
 const timingOpt = ["1 day", "3 days", "7 days", "1 month", "3 month", "6 month"];
 const timingOptions = [];
 const NUMBER_CONFIRMATIONS_NEEDED = Number(process.env.REACT_APP_NUMBER_CONFIRMATIONS_NEEDED);
@@ -23,8 +20,6 @@ class UploadSimracerMoment extends Component {
         super(props)
 
         this.state = {
-            drizzle: props.drizzle,
-            drizzleState: props.drizzleState,
             currentAccount: null,
             currentSimulator: "Choose your simulator",
             contract: null,
@@ -56,7 +51,6 @@ class UploadSimracerMoment extends Component {
         this.onSelectAuctionTiming = this.onSelectAuctionTiming.bind(this);
         this.handleAuction = this.handleAuction.bind(this);
         this.handleAuctionRange = this.handleAuctionRange.bind(this);
-        //upload img
         this.uploadImageIPFS = this.uploadImageIPFS.bind(this);
     }
 
@@ -67,14 +61,16 @@ class UploadSimracerMoment extends Component {
             timingOptions.push(<Dropdown.Item eventKey={value} key={index}>{value}</Dropdown.Item>)
         }
 
+        const { drizzle, drizzleState } = this.props;
+
         let now = new Date();
         let daysForEnd = UIHelper.extractDaysFromAuctionString(timingOpt[0]);
         let endDate = this.getUpdatedEndDate(now,daysForEnd);
-        const currentAccount = this.state.drizzleState.accounts[0];
-        const contract = this.state.drizzle.contracts.STMarketplace;
-        const contractNFTs = this.state.drizzle.contracts.SimracingMomentOwner;
+        const currentAccount = drizzleState.accounts[0];
+        const contract = drizzle.contracts.STMarketplace;
+        const contractNFTs = drizzle.contracts.SimracingMomentOwner;
         const isSeller = (await contract.methods.getSeller(currentAccount).call()).active;
-        this.setState({ auctionStart: now, auctionEnd:endDate, currentTimingOption: timingOpt[0], timingOptions: timingOptions, currentAccount: currentAccount, contract: contract, contractNFTs: contractNFTs, isSeller: isSeller });
+        this.setState({ auctionStart: now, auctionEnd:endDate, currentTimingOption: timingOpt[0], timingOptions: timingOptions, currentAccount, contract, contractNFTs, isSeller });
     };
 
 
@@ -505,7 +501,7 @@ class UploadSimracerMoment extends Component {
         if(response_saveVideo && response_saveImage && response_saveJson) {
             //all good!
 
-            const price = this.state.drizzle.web3.utils.toWei(this.state.priceValue);
+            const price = this.props.drizzle.web3.utils.toWei(this.state.priceValue);
 
             //some gas estimations
             //estimate method gas consuption (units of gas)
@@ -588,7 +584,7 @@ class UploadSimracerMoment extends Component {
             },
             //{
             //    "trait_type": "price", 
-            //    "value": this.state.currentFilePrice / priceConversion
+            //    "value": this.state.currentFilePrice
             //},
             //{
             //    "trait_type": "auction_item", 
@@ -645,7 +641,7 @@ class UploadSimracerMoment extends Component {
 
         for (const [index, value] of simsElements.entries()) {
             let thumb = "/assets/img/sims/" + value + ".png";
-            sims.push(<Dropdown.Item eventKey={value} key={index}><img src={thumb} width="24" /> {value}</Dropdown.Item>)
+            sims.push(<Dropdown.Item eventKey={value} key={index}><img src={thumb} width="24" alt="thumbnail" /> {value}</Dropdown.Item>)
         }
 
         return (

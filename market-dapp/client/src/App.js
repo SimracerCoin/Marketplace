@@ -1,20 +1,16 @@
 import React from 'react';
+import { Drizzle, generateStore } from "@drizzle/store";
 import { DrizzleContext } from "@drizzle/react-plugin";
-import { Drizzle } from "@drizzle/store";
 import STMarketplace from "./STMarketplace.json";
 import SimracerCoin from "./SimracerCoin.json";
 import SimthunderOwner from "./SimthunderOwner.json";
 import SimracingMomentOwner from "./SimracingMomentOwner.json";
 import STSetup from "./STSetup.json";
 import STSkin from "./STSkin.json";
-//import Descartes from "./Descartes.json";
 import Underconstruction from "./pages/Underconstruction";
 import RouterPage from "./pages/RouterPage";
 import Web3 from "web3";
-
-//web3 login stuff
 import Web3Modal from "web3modal";
-//wallet providers
 import WalletConnectProvider from "@walletconnect/web3-provider";
 import Torus from "@toruslabs/torus-embed";
 import WalletLink from "walletlink";
@@ -23,15 +19,12 @@ import TagManager from 'react-gtm-module'
 
 import "./css/App.css";
 
-
-//var web3 = new Web3(Web3.givenProvider);
-
 const allowAllWallets = process.env.REACT_APP_ALLOW_ALL_WALLETS === "true";
 const NETWORK_ID = Number(process.env.REACT_APP_NETWORK_ID) || 137;
 const NETWORK_URL = process.env.REACT_APP_NETWORK_URL;
 const INFURA_ID = process.env.REACT_APP_INFURA_ID;
 const tagManagerArgs = {
-  gtmId: 'G-152H5MJ0P0'
+  gtmId: process.env.REACT_APP_GTAG
 }
 
 //console.log('NETWORK_ID: ' + NETWORK_ID + ' NETWORK_URL: ' + NETWORK_URL + ' INFURA_ID: ' + INFURA_ID);
@@ -83,8 +76,6 @@ const providerOptions = {
      //}
   };
 
-console.log('providerOptions:', providerOptions);
-  
 const web3Modal = new Web3Modal({
     //network: "mainnet", // optional
     cacheProvider: true, // optional
@@ -131,19 +122,22 @@ class App extends React.Component {
     let isLoggedIn = false;
     let currentAccount = null;
  
-    await window.web3.eth.getAccounts(function (err, accounts) {
-      if (err != null) {
-        console.error("An error occurred: " + err);
-      }
-      else if (accounts.length !== 0) {
-        isLoggedIn = true
+
+    try {
+      const accounts = await window.web3.eth.getAccounts();
+      if (accounts) {
+        isLoggedIn = true;
         currentAccount = accounts[0];
-        console.log('Accounts found: ', accounts);
+        console.log('Accounts found: ', currentAccount);
         allow_wallets.push(currentAccount);
 
         me.setState({currentAccount, provider, allow_wallets, isLoggedIn });
       }
-    });
+    } catch(err) {
+      console.error("An error occurred: " + err);
+    }
+    
+    this.setState({currentAccount, provider, allow_wallets, isLoggedIn, wrongNetwork: (networkId !== NETWORK_ID) });
   }
 
   //open web3Modal dialog to choose wallet provider
@@ -189,14 +183,14 @@ class App extends React.Component {
   }
 
   render() {
+    const { web3 } = window;
     const { state } = this;
 
     if(state.allow_wallets.length === 0 && !allowAllWallets) {
-      return (<div id="wait-div" className="spinner-outer"><div className="spinner"></div></div>)
+      return <div id="wait-div" className="spinner-outer"><div className="spinner"></div></div>
     }
-    if (state.isLoggedIn) {
-      let web3 = window.web3;
-      
+
+    if (state.isLoggedIn && !state.wrongNetwork && (allowAllWallets || state.allow_wallets.includes(state.currentAccount) )) {
       const drizzleOptions = {
         contracts: [
           {
@@ -223,61 +217,36 @@ class App extends React.Component {
             contractName: "SimracingMomentOwner",
             web3Contract: new web3.eth.Contract(SimracingMomentOwner.abi, SimracingMomentOwner.address)
           }
-          //,
-          //{
-          //  contractName: "Descartes",
-          //  web3Contract: new web3.eth.Contract(Descartes.abi, Descartes.address, { data: Descartes.deployedBytecode })
-          //}
-        ],
-        //web3: {
-        //  customProvider: state.provider
-        //}
+        ]
       };
 
-      const drizzle = new Drizzle(drizzleOptions);
+      const drizzleStore = generateStore(drizzleOptions);
+      const drizzle = new Drizzle(drizzleOptions, drizzleStore);
 
-      return (
+      return [
         <DrizzleContext.Provider drizzle={drizzle}>
           <DrizzleContext.Consumer>
             {drizzleContext => {
               const { drizzle, drizzleState, initialized } = drizzleContext;
-              /*if(state.currentAccount) {
-                if(drizzleState.accounts.length > 0) {
-                  drizzleState.accounts[0] = state.currentAccount;
-                }
-                else {
-                  drizzleState.accounts.push(state.currentAccount);
-                }
-              }*/
-              if (!initialized) {
-                return (<div id="wait-div" className="spinner-outer"><div className="spinner"></div></div>)
-              }
 
-              if ( (allowAllWallets || state.allow_wallets.includes(drizzleState.accounts[0]) ) && !state.wrongNetwork) {
-                return ([
-                  <RouterPage drizzle={drizzle} drizzleState={drizzleState} />,
-                  <CookieConsent 
-                    enableDeclineButton
-                    location="bottom"
-                    style={{zIndex: 40000}}
-                    buttonText="GOT IT!"
-                    onAccept={this.checkCookiesAcceptance}>Our website uses cookies to ensure you get the best experience. By proceeding on our website you are consenting to the use of these cookies.</CookieConsent>
-                ]
-                )
-              } else {
-                return (
-                  <Underconstruction isLoggedIn={state.isLoggedIn} wrongNetwork={state.wrongNetwork} login={this.login}/>
-                )
+              if (!initialized) {
+                return <div id="wait-div" className="spinner-outer"><div className="spinner"></div></div>
               }
+              
+              return <RouterPage drizzle={drizzle} drizzleState={drizzleState} />
             }}
           </DrizzleContext.Consumer>
-        </DrizzleContext.Provider>
-      );
+        </DrizzleContext.Provider>,
+        <CookieConsent 
+          enableDeclineButton
+          location="bottom"
+          style={{zIndex: 40000}}
+          buttonText="GOT IT!"
+          onAccept={this.checkCookiesAcceptance}>Our website uses cookies to ensure you get the best experience. By proceeding on our website you are consenting to the use of these cookies.</CookieConsent>
+      ]
     }
 
-    return (
-      <Underconstruction isLoggedIn={state.isLoggedIn} wrongNetwork={state.wrongNetwork} login={this.login} />
-    )
+    return <Underconstruction isLoggedIn={state.isLoggedIn} wrongNetwork={state.wrongNetwork} login={this.login} />
   }
   
   login = async () => {

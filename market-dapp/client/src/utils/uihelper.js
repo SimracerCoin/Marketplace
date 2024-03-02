@@ -1,25 +1,20 @@
-const ethers = require('ethers');
-const axios = require('axios');
-
 const monthNames = ["January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December"
 ];
 
 const use_eip_1559 = process.env.REACT_APP_USE_EIP_1559 === "true";
 
+const web3 = require('web3');
+
 export default class UIHelper {
 
   static defaultGasLimit = 7500000;
+  static simsElements = ["iRacing", "F12020", "rFactor", "Assetto Corsa"];
 
   static scrollToTop = () => {
     // scroll to top
     document.body.scrollTop = 0;            // For Safari
     document.documentElement.scrollTop = 0; // For Chrome, Firefox, IE and Opera
-  }
-
-
-  static getProvider = async (rpc_uri) => {
-    return new ethers.providers.JsonRpcProvider({url: rpc_uri });
   }
 
   static showSpinning = function (textToDisplay) {
@@ -95,42 +90,48 @@ export default class UIHelper {
 
   static fetchSRCPriceVsUSD = async (contract_address = '0x16587cf43f044aba0165ffa00acf412631194e4b', vs_currency = 'usd') => {
     
-    //'0x16587cf43f044aba0165ffa00acf412631194e4b','usd'
-    const uri = 'https://api.coingecko.com/api/v3/simple/token_price/ethereum?contract_addresses=' + contract_address +'&vs_currencies=' +  vs_currency;
-    return fetch(uri);
+    try {
+      //'0x16587cf43f044aba0165ffa00acf412631194e4b','usd'
+      const uri = 'https://api.coingecko.com/api/v3/simple/token_price/ethereum?contract_addresses=' + contract_address +'&vs_currencies=' +  vs_currency;
+      const priceUSD = await fetch(uri);
+      const priceObj = await priceUSD.json();
+      const key = Object.keys(priceObj);
+      return Number(priceObj[key]['usd']); 
+    } catch(err) {
+      console.error(err);
+      return 1;
+    }
   }
 
 
   //using gas station
-//https://github.com/ethers-io/ethers.js/issues/2828
-//workaround for "transaction underpriced" error
-static calculateGasUsingStation = async (fromAccount) => {
-
+  static calculateGasUsingStation = async (fromAccount) => {
    const convertGwei2Wei = (input) =>  {
-    console.log("convert " + input + " (gwei) to (wei) => " + ethers.BigNumber.from(input * 1000000000) );
-    return ethers.BigNumber.from(input * 1000000000);
+    console.log("convert " + input + " (gwei) to (wei) => " + web3.utils.toBN(Number(input) * 1000000000) );
+    return web3.utils.toBN(Number(input) * 1000000000);
   }
 
   let gas = {
-      gasLimit: Number(Math.trunc(UIHelper.defaultGasLimit)),
+      gasLimit: UIHelper.defaultGasLimit,
       from: fromAccount
   };
 
   if(use_eip_1559) {
     try {
-        const {data} = await axios({
-            method: 'get',
-            url: 'https://gasstation.polygon.technology/v2'
-        });
-        console.log('gassatation data: ', data);
+        const response = await fetch('https://gasstation.polygon.technology/v2');
+        const feesData = await response.json();
+        //use "fast" instead of "standard"
+        if(feesData && feesData.fast) {
+          console.log('gassatation data: ', feesData);
 
-        gas.maxFeePerGas = Number(convertGwei2Wei(Math.trunc(data.fast.maxFee)));
-        gas.maxPriorityFeePerGas = Number(convertGwei2Wei(Math.trunc(data.fast.maxPriorityFee)));
+          gas.maxFeePerGas = convertGwei2Wei(feesData.fast.maxFee);
+          gas.maxPriorityFeePerGas = convertGwei2Wei(feesData.fast.maxPriorityFee);
+        }
     } catch (error) {
       console.log("gasstation error: ", error);
 
-      gas.maxFeePerGas = Number(ethers.BigNumber.from(40000000000)); //40 gwei
-      gas.maxPriorityFeePerGas = Number(ethers.BigNumber.from(40000000000));
+      gas.maxFeePerGas = convertGwei2Wei(40); //40 gwei
+      gas.maxPriorityFeePerGas = convertGwei2Wei(40);
     }
   }
 
