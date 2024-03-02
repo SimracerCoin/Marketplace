@@ -40,7 +40,7 @@ class MainPage extends Component {
             selectedPrice: "",
             selectedCarBrand: "",
             selectedCarNumber: "",
-            selectedImagePath: "",
+            selectedImagePath: [],
             vendorAddress: "",
             vendorNickname: "",
             ipfsPath: "",
@@ -65,8 +65,8 @@ class MainPage extends Component {
         const stSetup = await drizzle.contracts.STSetup;
         const stSkin = await drizzle.contracts.STSkin;
 
-        const response_cars = (await stSetup.methods.getSetups().call()).filter(item => item.ad.active).slice(0, NUM_ITEMS_LOAD);
-        const response_skins = (await stSkin.methods.getSkins().call()).filter(item => item.ad.active).slice(0, NUM_ITEMS_LOAD);
+        const response_cars = (await stSetup.methods.getSetups().call()).filter(item => item.ad.active).slice(-NUM_ITEMS_LOAD);
+        const response_skins = (await stSkin.methods.getSkins().call()).filter(item => item.ad.active).slice(-NUM_ITEMS_LOAD);
 
         //car ownership nfts
         

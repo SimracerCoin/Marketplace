@@ -27,8 +27,6 @@ const tagManagerArgs = {
   gtmId: process.env.REACT_APP_GTAG
 }
 
-var allow_wallets = []; 
-
 //console.log('NETWORK_ID: ' + NETWORK_ID + ' NETWORK_URL: ' + NETWORK_URL + ' INFURA_ID: ' + INFURA_ID);
 /**
  * console.log("connectWallet...");
@@ -93,7 +91,7 @@ class App extends React.Component {
       isLoggedIn: null,
       wrongNetwork: null,
       currentAccount:null,
-      provider: null
+      provider: null,
     }
 
     this.login = this.login.bind(this);
@@ -116,14 +114,15 @@ class App extends React.Component {
     }
   }
 
-  getAccountInfo = async (allow_wallets, provider) => {
+  getAccountInfo = async (provider) => {
+
+    const me = this;
+    const { allow_wallets } = this.state;
 
     let isLoggedIn = false;
-    let networkId = await window.web3.eth.net.getId();
     let currentAccount = null;
-    //console.log('network: ' + networkname);
-    console.log('network: ' + networkId);
  
+
     try {
       const accounts = await window.web3.eth.getAccounts();
       if (accounts) {
@@ -131,8 +130,8 @@ class App extends React.Component {
         currentAccount = accounts[0];
         console.log('Accounts found: ', currentAccount);
         allow_wallets.push(currentAccount);
-        //window.localStorage.setItem("isLoggedIn","true");
-        window.ethereum.on('accountsChanged', () => window.location.reload());
+
+        me.setState({currentAccount, provider, allow_wallets, isLoggedIn });
       }
     } catch(err) {
       console.error("An error occurred: " + err);
@@ -144,14 +143,14 @@ class App extends React.Component {
   //open web3Modal dialog to choose wallet provider
   connectWalletProvider = async () => {
     console.log("will login");
-    let provider = null;
     try {
         //some weird bugs happen if we don´t clear the cache first (one is Metamask now opening if/when selected), other is not shwoing modal on Brave
         //web3Modal.clearCachedProvider()
-        provider = await web3Modal.connect();
-        console.log("got wallet provider");
+        const provider = await web3Modal.connect();
+        console.log("got wallet provider.. " + provider);
         return provider;
     } catch(e) {
+        web3Modal.clearCachedProvider()
         console.error("Could not get a wallet connection", e);
         return null;
     }
@@ -159,6 +158,7 @@ class App extends React.Component {
 
   componentDidMount = async () => {
     //if not set or evaluates to false
+    const me = this;
     if(!allowAllWallets) {
       await fetch('/allow.json', {
         headers: {
@@ -168,19 +168,18 @@ class App extends React.Component {
       }).then(function (response) {
         return response.json();
       }).then(function (myJson) {
-        allow_wallets = myJson;
+        me.setState({allow_wallets: myJson});
       });
-    }  
-
-    if (localStorage.getItem('isWalletConnected') === 'true') {
-      this.login();
     }
 
+    if(localStorage.getItem("isWalletConnected") === "true")
+      this.login();
+    
     this.checkCookiesAcceptance();
   }
 
   componentWillUnmount = async () => {
-    localStorage.setItem('isWalletConnected', false);
+    localStorage.setItem("isWalletConnected", "false");
   }
 
   render() {
@@ -256,14 +255,14 @@ class App extends React.Component {
     //if (typeof web3 !== 'undefined') {
 
     if(!provider) {
-      provider = await this.connectWalletProvider();
+      provider = await this.connectWalletProvider() || Web3.givenProvider;
     }
 
     if(provider) {
-
         // Subscribe to accounts change
         provider.on("accountsChanged", (accounts) => {
           console.log("accountsChanged", accounts);
+          window.location.reload()
         });
                           
         // Subscribe to chainId change
@@ -274,23 +273,21 @@ class App extends React.Component {
         // Subscribe to provider connection
         provider.on("connect", (info) => { //{ chainId: number }
             console.log("provider connect", info);
+            localStorage.setItem("isWalletConnected", "true")
             //return given provider to main initialization sequence
         });
                           
         // Subscribe to provider disconnection
         provider.on("disconnect", (error) => {//: { code: number; message: string }
             console.log("disconnect", error);
+            localStorage.setItem("isWalletConnected", "false")
         });
-        window.web3 = new Web3(provider);
-    } else {
-      //defaukts to built-in Metamask
-      window.web3 = new Web3(Web3.givenProvider);
-      provider = Web3.givenProvider;
-    } 
 
-    await this.setWeb3Options();
-    await this.getAccountInfo(allow_wallets, provider);
-    localStorage.setItem('isWalletConnected', true);
+        window.web3 = new Web3(provider);
+
+        await this.setWeb3Options();
+        await this.getAccountInfo(provider).then(() => localStorage.setItem("isWalletConnected", "true"));
+    }
   }
   //}
 }

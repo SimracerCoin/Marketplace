@@ -25,6 +25,7 @@ class UploadSkin extends Component {
         this.state = {
             contract: null,
             currentAccount: null,
+            currentCar: "",
             currentSimulator: "Choose your simulator",
             ipfsPath: "",
             image_ipfsPath: [],
@@ -123,18 +124,18 @@ class UploadSkin extends Component {
 
     //Guarda a imagem no ipfs 
     saveImage_toIPFS = async () => {
-        let paths = [];
         let error = false;
-        const { imageBuffer } = this.state;
+        const { imageBuffer, image_ipfsPath } = this.state;
 
         // TODO: edit mode, nothing to upload... continue and keep the same
         if("edit" === this.state.mode)
             return true;
 
         $(".dzu-dropzone .dzu-previewImage").each(async (idx, elem) => {
-            const path = (await ipfs.add(imageBuffer[$(elem).attr("src")])).path;
-            if(path) {
-                paths.push(path);
+            const response = await ipfs.add(imageBuffer[$(elem).attr("alt").split(',')[0]]);
+
+            if(response) {
+                image_ipfsPath[idx] = response.path;
             } else {
                 error = true;
                 return false;
@@ -142,7 +143,7 @@ class UploadSkin extends Component {
         });
         if(error) { alert("Error on upload files. Please try again later."); return false; }
 
-        this.setState({ image_ipfsPath: paths.reverse() });
+        this.setState({ image_ipfsPath });
         return true;
     }
 
@@ -245,18 +246,19 @@ class UploadSkin extends Component {
     }
 
     onFileChange = ({ meta, file }, status) => {
+        const { imageBuffer } = this.state;
+        console.log(imageBuffer);
+
         if(status === "done") {
             const reader = new window.FileReader();
             reader.readAsArrayBuffer(file);
             reader.onloadend = () => {
-                let imageBuffer = this.state.imageBuffer;
-                imageBuffer[meta.previewUrl] = Buffer(reader.result);
-                this.setState({imageBuffer: imageBuffer});
+                imageBuffer[meta.name] = Buffer(reader.result);
+                this.setState({imageBuffer});
             }
         } else if(status === "removed") {
-            let imageBuffer = this.state.imageBuffer;
-            delete imageBuffer[meta.previewUrl];
-            this.setState({imageBuffer: imageBuffer});
+            delete imageBuffer[meta.name];
+            this.setState({imageBuffer});
         }
     }
     getFilesFromEvent = e => {
@@ -296,6 +298,10 @@ class UploadSkin extends Component {
 
         return sims;
     }
+    
+    handleValidation = ({meta}) => {
+      return this.state.imageBuffer[meta.name] !== undefined;
+    };
 
     render() {
         return (
@@ -346,6 +352,7 @@ class UploadSkin extends Component {
                                                         <FormLabel htmlFor="skin-image" className="mr-2 col-form-label font-weight-bold">Choose Skin images (first will be the main image):</FormLabel>
                                                         <Dropzone
                                                             id="dropzone"
+                                                            validate={this.handleValidation}
                                                             onChangeStatus={this.onFileChange}
                                                             InputComponent={this.selectFileInput}
                                                             getFilesFromEvent={this.getFilesFromEvent}
@@ -355,6 +362,19 @@ class UploadSkin extends Component {
                                                             maxFiles={5}
                                                             inputContent={(files, extra) => (extra.reject ? 'Image files only' : 'Drag Files')}
                                                             initialFiles={this.state.files}
+                                                            LayoutComponent={({input, previews, submitButton, dropzoneProps}) => {
+                                                                // Remove previews which do not pass the validation
+                                                                const previewsToDisplay = previews.filter((preview) => {
+                                                                  return preview.props.meta.status !== 'error_validation';
+                                                                });
+                                                                return (
+                                                                  <div {...dropzoneProps}>
+                                                                    {previewsToDisplay}
+                                                                    {input}
+                                                                    {submitButton}
+                                                                  </div>
+                                                                );
+                                                              }}
                                                             styles={{
                                                                 dropzone: { maxHeight: 400 },
                                                                 dropzoneActive: { borderColor: 'green' },
