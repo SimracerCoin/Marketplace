@@ -172,7 +172,7 @@ class ItemPage extends Component {
             switch(category) {
               case "carskins":
                 item = await UIHelper.callWithRetry(stSkin.methods.getSkin(id));
-                this.setState({imagePath: [item.info.skinPic]});
+                this.setState({imagePath: item.info.skinPic});
                 break;
               case "carsetup":
                 item = await UIHelper.callWithRetry(stSetup.methods.getSetup(id));
