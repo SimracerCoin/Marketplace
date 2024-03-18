@@ -1,16 +1,14 @@
 import React from "react";
 import { Navbar, Nav, NavDropdown, Container } from "react-bootstrap"; // Check out drizzle's react components at @drizzle/react-components
 import { Link, NavLink, Redirect } from "react-router-dom";
-import QuickswapModal from "../components/QuickswapModal";
 import * as $ from "jquery";
+import UIHelper from "../utils/uihelper";
 
 class NavbarPage extends React.Component {
   constructor(props) {
     super(props);
 
     this.state = {
-      drizzle: props.drizzle,
-      drizzleState: props.drizzleState,
       listCars: [],
       listSkins: [],
       haveNotifications: false,
@@ -24,8 +22,7 @@ class NavbarPage extends React.Component {
       searchQuery: "",
       isNFTOwner: false,
       isMomentNFTOwner: false,
-      showQSModal: false,
-      expanded: false,
+      expanded: false
     };
 
     this.handleNavClick = this.handleNavClick.bind(this);
@@ -47,16 +44,19 @@ class NavbarPage extends React.Component {
     }
   }
 
-  componentDidMount = async (event) => {
-    const contract = await this.state.drizzle.contracts.STMarketplace;
-    const currentAccount = this.state.drizzleState.accounts[0];
-    const haveNotifications = (await contract.methods.listNotificationsUser(currentAccount).call()).length > 0;
-    const walletAddr = currentAccount.substr(0, 6) + "..." + currentAccount.substr(-4);
+  componentDidMount = async () => {
+    const { drizzle, drizzleState } = this.props;
 
-    const contractNFTs = await this.state.drizzle.contracts.SimthunderOwner;
-    const contractMomentNFTs = await this.state.drizzle.contracts.SimracingMomentOwner;
-    const ownerNFT = await contractNFTs.methods.owner().call();
-    const ownerMomentNFT = await contractMomentNFTs.methods.owner().call();
+    const contract = await drizzle.contracts.STMarketplace;
+    const currentAccount = drizzleState.accounts[0];
+    const haveNotifications = (await UIHelper.callWithRetry(contract.methods.listNotificationsUser(currentAccount))).length > 0;
+    const walletAddr = currentAccount.substr(0, 6) + "..." + currentAccount.substr(-4);
+    const contractNFTs = await drizzle.contracts.SimthunderOwner;
+    const contractMomentNFTs = await drizzle.contracts.SimracingMomentOwner;
+    const contractSimracerCoin = await drizzle.contracts.SimracerCoin;
+
+    const ownerNFT = await UIHelper.callWithRetry(contractNFTs.methods.owner());
+    const ownerMomentNFT = await UIHelper.callWithRetry(contractMomentNFTs.methods.owner());
     //check if account is contract(s) owner
     const isNFTOwner = ownerNFT === currentAccount;
     const isMomentNFTOwner = ownerMomentNFT === currentAccount;
@@ -68,12 +68,16 @@ class NavbarPage extends React.Component {
     }
 
     this.setState({
-      isNFTOwner: isNFTOwner,
-      isMomentNFTOwner: isMomentNFTOwner,
+      isNFTOwner,
+      isMomentNFTOwner,
+      currentAccountFullAddr: currentAccount,
       currentAccount: walletAddr,
-      haveNotifications: haveNotifications,
-      searchQuery: searchQuery,
+      haveNotifications,
+      contractSimracerCoin,
+      searchQuery
     });
+
+    this.getAccountBalance();
   };
 
   componentWillUnmount = async (event) => {
@@ -129,6 +133,23 @@ class NavbarPage extends React.Component {
       localStorage.removeItem("searchQuery");
     }
     this.setState({ searchQuery: event.target.value });
+  }
+
+  getAccountBalance = async () => {
+    const { props, state } = this;
+
+    try {
+      const userBalance = props.drizzle.web3.utils.fromWei(
+        await UIHelper.callWithRetry(state.contractSimracerCoin.methods.balanceOf(state.currentAccountFullAddr)));
+      const balance = Number(Math.round(userBalance * 100) / 100).toFixed(2);
+
+      this.setState({
+        userBalance,
+        balance
+      });
+    } catch (error) {
+      console.log('Failed to access user balance', error);
+    }
   };
 
   render() {
@@ -140,17 +161,27 @@ class NavbarPage extends React.Component {
               <Navbar.Brand
                 href="/"
                 className="logo font-weight-bold"
-                style={{ alignItems: "first baseline" }}
-              >
+                style={{ alignItems: "first baseline" }}>
                 <img src="/assets/img/logo-2-sm.png" alt="Simthunder" /> beta
               </Navbar.Brand>
+              <Navbar.Text>
+                <div className="userInfo">
+                  {this.state.currentAccount && (
+                    <span>{this.state.currentAccount}</span>
+                  )}
+                  {this.state.userBalance !== undefined ? (
+                    <span>Balance: {this.state.balance} SRC</span>
+                  ) : (
+                    <span>Balance: 0 SRC</span>
+                  )}
+                </div>
+              </Navbar.Text>
             </div>
             <div className="col-4 d-none d-lg-block mx-auto">
               <form
                 className="input-group border-0 bg-transparent"
                 action="/store"
-                mthod="GET"
-              >
+                mthod="GET">
                 <input
                   className="form-control"
                   value={this.state.searchQuery}
@@ -159,41 +190,46 @@ class NavbarPage extends React.Component {
                   onChange={this.handleChange}
                   type="search"
                   placeholder="Search"
-                  aria-label="Search"
-                />
+                  aria-label="Search" />
                 <div className="input-group-append">
                   <button
                     className="btn btn-sm btn-warning text-secondary my-0 mx-0"
                     type="submit"
-                    onClick={this.searchOnClick}
-                  >
+                    onClick={this.searchOnClick}>
                     <i className="fas fa-search"></i>
                   </button>
                 </div>
               </form>
             </div>
             <div className="col-8 col-sm-8 col-md-8 col-lg-6 col-xl-4 ml-auto text-right">
-              <Navbar.Text>{this.state.currentAccount}</Navbar.Text>
-              {/*Navbar.Text className="border border-warning rounded-2 p-2">{this.state.currentAccount} &nbsp;|&nbsp; <a className="btn m-0 p-0" role="button" onClick={() => this.setState({showQSModal: true})}><b>Get SRC</b></a></Navbar.Text>*/}
+              <Navbar.Text>
+                <div className="userInfo1">
+                  {this.state.currentAccount && (
+                    <span>{this.state.currentAccount}</span>
+                  )}
+                  
+                  {this.state.userBalance !== undefined ? (
+                    <span>Balance: {this.state.balance} SRC</span>
+                  ) : (
+                    <span>Balance: 0 SRC</span>
+                  )}
+                </div>
+              </Navbar.Text>
               <ul className="nav navbar-nav d-none d-sm-inline-flex flex-row">
                 <li key="languagesettings" className="nav-item dropdown">
-                  <a
+                  <Link
+                    to="#"
                     className="nav-link dropdown-toggle small"
-                    href="#"
                     id="dropdownGaming"
                     data-toggle="dropdown"
                     aria-haspopup="true"
-                    aria-expanded="false"
-                  >
+                    aria-expanded="false">
                     <i className="mr-2 fas fa-globe"></i>EN{" "}
-                  </a>
-                  <div
-                    className="dropdown-menu position-absolute"
-                    aria-labelledby="dropdownGaming"
-                  >
-                    <a className="dropdown-item" href="/">
+                  </Link>
+                  <div className="dropdown-menu position-absolute" aria-labelledby="dropdownGaming">
+                    <Link className="dropdown-item" to="/">
                       English
-                    </a>
+                    </Link>
                   </div>
                 </li>
                 {/*<li className="nav-item">
@@ -209,13 +245,10 @@ class NavbarPage extends React.Component {
                     to="/notifications"
                     className="nav-link small"
                     data-toggle="offcanvas"
-                    data-target="#offcanvas-notification"
-                  >
+                    data-target="#offcanvas-notification">
                     <span className="p-relative d-inline-flex">
                       {this.state.haveNotifications ? (
-                        <span className="badge-cart badge badge-counter badge-warning position-absolute l-1">
-                          !
-                        </span>
+                        <span className="badge-cart badge badge-counter badge-warning position-absolute l-1">!</span>
                       ) : (
                         <span></span>
                       )}
@@ -226,33 +259,22 @@ class NavbarPage extends React.Component {
               </ul>
             </div>
           </div>
-          {this.state.showQSModal && (
-            <QuickswapModal
-              open={true}
-              onClose={() => this.setState({ showQSModal: false })}
-            ></QuickswapModal>
-          )}
         </Container>
       </Navbar>,
-      <Navbar
-        expanded={this.state.expanded}
-        className="navbar-expand-lg navbar-dark bg-dark"
-      >
+      <Navbar expanded={this.state.expanded} className="navbar-expand-lg navbar-dark bg-dark">
         <Container>
           <Navbar.Toggle
             onClick={this.toggleNavbar}
             aria-controls="collapsingNavbar"
             aria-label="Toggle navigation"
             aria-expanded="false"
-            className="navbar-toggler-fixed"
-          />
+            className="navbar-toggler-fixed" />
           <Navbar.Collapse id="collapsingNavbar">
             <Nav>
               <NavDropdown title="Sell">
                 <Link
                   to={{ pathname: "/inventory", state: { view: "momentnfts" } }}
-                  onClick={this.changeInventory}
-                >
+                  onClick={this.changeInventory}>
                   <NavDropdown.Item as="div">
                     Sell Simracing Moment
                   </NavDropdown.Item>
@@ -260,8 +282,7 @@ class NavbarPage extends React.Component {
 
                 <Link
                   to={{ pathname: "/inventory", state: { view: "ownership" } }}
-                  onClick={this.changeInventory}
-                >
+                  onClick={this.changeInventory}>
                   <NavDropdown.Item as="div" name="ownership">
                     Sell Car Ownership
                   </NavDropdown.Item>

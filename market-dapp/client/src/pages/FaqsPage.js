@@ -22,20 +22,6 @@ class FaqsPage extends Component {
 
                                     <h5>What are Ownership NFTs?</h5>
                                     <p className="lead-1">These are like entries for private league competitions. By having the NFT you are owner of that car entry and number and receive the prize if that car gets one.</p>
-
-{/*
-                                    <h5>#1 - Don't do that</h5>
-                                    <p className="lead-1">ok</p>
-
-                                    <h5>#2 - Don't do that</h5>
-                                    <p className="lead-1">ok</p>
-
-                                    <h5>#3 - Don't do that</h5>
-                                    <p className="lead-1">ok</p>
-
-                                    <h5>#4 - Don't do that</h5>
-<p className="lead-1">ok</p>*/}
-
                                 </div>
                             </div>
                         </div>

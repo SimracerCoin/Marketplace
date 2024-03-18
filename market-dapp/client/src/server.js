@@ -3,28 +3,25 @@
 const express = require('express');
 const path = require('path');
 const http = require('http');
-const https = require('https');
 const fs = require('fs');
 const app = express();
 const knex = require('./db');
+const cors = require('cors');
+const helmet = require('helmet');
 
 require('dotenv').config();
 
 const PORT = process.env.PORT || 80;
 const INDEX = path.join(__dirname, '..', 'build', 'index.html'); // Initialization.
 
-const httpServer = http.createServer(app);/* https.createServer({
-	key: fs.readFileSync('/etc/letsencrypt/live/simthunder.com/privkey.pem'),
-	cert: fs.readFileSync('/etc/letsencrypt/live/simthunder.com/cert.pem'),
-	ca: fs.readFileSync('/etc/letsencrypt/live/simthunder.com/chain.pem')
-}, app); // define routes and socket
-*/
 app.use(express.static(
 	path.join(__dirname, '..','build'), 
-	{ maxAge: '30d' }
+	{ maxAge: '7d' }
 ));
 
-app.use(express.json());
+app.use(cors());
+app.use(helmet());
+app.use(express.json({limit: '1KB', extended: true}));
 
 app.post('/api/metatags', (req, res) => {
 	let data = req.body;
@@ -66,4 +63,4 @@ app.get('*', (req, res) => {
 	});
 });
 
-httpServer.listen(PORT);
+http.createServer(app).listen(PORT);

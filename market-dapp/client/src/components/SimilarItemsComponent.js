@@ -7,12 +7,9 @@ class SimilarItemsComponent extends React.Component {
 
     constructor(props) {
         super(props);
+
         this.state = {
-            selectedItemId: props.selectedItemId,
-            items: props.items,
-            filteredItems: [],
-            drizzle: props.drizzle,
-            category: props.category
+            filteredItems: []
         }
 
         this.routeChange = this.routeChange.bind(this);
@@ -45,49 +42,42 @@ class SimilarItemsComponent extends React.Component {
     routeChange(e, itemId) {
       e.preventDefault();
 
-      let path = '/item/'+this.state.category+'/'+itemId;
+      let path = '/item/'+this.props.category+'/'+itemId;
       window.location.href = path;
     }
 
-    componentDidMount = async (event) => {
-        let referenceItem = this.state.selectedItemId;
+    componentDidMount = async () => {
+        const { drizzle, selectedItemId } = this.props;
 
-        if(!this.state.items) {
-          const contractNFTs = await this.state.drizzle.contracts.SimthunderOwner;
-          const contractMomentNFTs = await this.state.drizzle.contracts.SimracingMomentOwner;
-          const stSetup = await this.state.drizzle.contracts.STSetup;
-          const stSkin = await this.state.drizzle.contracts.STSkin;
+        const contractNFTs = await drizzle.contracts.SimthunderOwner;
+        const contractMomentNFTs = await drizzle.contracts.SimracingMomentOwner;
+        const stSetup = await drizzle.contracts.STSetup;
+        const stSkin = await drizzle.contracts.STSkin;
 
-          let similarItems = [];
-          switch(this.state.category) {
-            case "carskins":
-              similarItems = await stSkin.methods.getSkins().call();
-              break;
-            case "carsetup":
-              similarItems = await stSetup.methods.getSetups().call();
-              break;
-            case "momentnfts":
-              similarItems = await this.loadRemainingNFTS(contractMomentNFTs);
-              break;
-            case "ownership":
-              similarItems = await this.loadRemainingNFTS(contractNFTs);
-              break;
-            default:
-          }
-
-          this.setState({
-            items: similarItems,
-          });
+        let similarItems = [];
+        switch(this.props.category) {
+          case "carskins":
+            similarItems = await stSkin.methods.getSkins().call();
+            break;
+          case "carsetup":
+            similarItems = await stSetup.methods.getSetups().call();
+            break;
+          case "momentnfts":
+            similarItems = await this.loadRemainingNFTS(contractMomentNFTs);
+            break;
+          case "ownership":
+            similarItems = await this.loadRemainingNFTS(contractNFTs);
+            break;
+          default:
         }
-
-        this.filterSimilarItems(referenceItem);
+        
+        this.filterSimilarItems(similarItems, selectedItemId);
       }
 
-
-     filterSimilarItems = (referenceItem) => {
-        if(this.state.items.length > 0) {
-          let filteredItems = this.state.items.filter(item => item && item.id && item.id !== referenceItem && item.ad.active).slice(0, NUMBER_LOAD_ITEMS);
-          this.setState({filteredItems: filteredItems});
+     filterSimilarItems = (items, referenceItem) => {
+        if(items.length > 0) {
+          const filteredItems = items.filter(item => item && item.id && item.id !== referenceItem && (!item.ad || item.ad.active)).slice(0, NUMBER_LOAD_ITEMS);
+          this.setState({filteredItems});
         } else {
           this.setState({filteredItems: []});
         }
@@ -101,55 +91,64 @@ class SimilarItemsComponent extends React.Component {
       return data;
     }
 
-    renderItemDetails = (payload, fullItem) => {
+    renderItemDetails = (payload) => {
 
-      if(this.state.category === "ownership") {
+      const { props } = this;
+
+      if(props.category === "ownership") {
         //ownership
-        return <div id={payload.itemId} className="carousel-pointer" onClick={(e) => this.routeChange(e, payload.itemId)} >
+        return (
+          <div id={payload.itemId} className="carousel-pointer" onClick={(e) => this.routeChange(e, payload.itemId)} >
             <img className="carousel-pointer" alt={payload.description} src={payload.imagePath} />
             <p className="legend">{payload.description}</p>
           </div>
-
-      } else if(this.state.category === "momentnfts") {
+        );
+      } else if(props.category === "momentnfts") {
         //moment
-        return <div id={payload.itemId} className="carousel-pointer" onClick={(e) => this.routeChange(e, payload.itemId)} >
+        return (
+          <div id={payload.itemId} className="carousel-pointer" onClick={(e) => this.routeChange(e, payload.itemId)} >
             <img className="carousel-pointer" alt={payload.description} src={payload.imagePath} />
             <p className="legend">{payload.description}</p>
           </div>
-
+        );
       }
-      else if(this.state.category === "carskins") {
+      else if(props.category === "carskins") {
         //skin
-        return <div className="carousel-pointer" id={payload.itemId} onClick={(e) => this.routeChange(e, payload.itemId )}>
+        return (
+          <div className="carousel-pointer" id={payload.itemId} onClick={(e) => this.routeChange(e, payload.itemId )}>
             <img className="carousel-pointer" alt={payload.description} src={"https://simthunder.infura-ipfs.io/ipfs/"+payload.imagePath[0]}/>
             <p className="legend">{payload.description}</p>
           </div>
+        );
 
       } else {
         //car
-        return <div className="carousel-pointer" id={payload.itemId} onClick={(e) => this.routeChange(e, payload.itemId)}>
+        return (
+          <div className="carousel-pointer" id={payload.itemId} onClick={(e) => this.routeChange(e, payload.itemId)}>
             <img className="carousel-pointer" alt={payload.description} src={payload.imagePath} />
             <p className="legend">{payload.description}</p>
           </div>
-
+        );
       }
     }
 
     render() {
 
-      if(this.state.filteredItems.length === 0) {
+      const { state, props } = this;
+
+      if(state.filteredItems.length === 0) {
         return "No items found in this category";
       }
 
       //exclude itself
-      let isNFT = this.state.category === "ownership";
-      let isSkin = this.state.category === "carskins";
-      let isMomentNFT = this.state.category === "momentnfts";
+      let isNFT = props.category === "ownership";
+      let isSkin = props.category === "carskins";
+      let isMomentNFT = props.category === "momentnfts";
 
 
       //https://github.com/leandrowd/react-responsive-carousel/
       return <Carousel autoPlay>
-      {this.state.filteredItems.map( function(value, index) {
+      {state.filteredItems.map(value => {
 
         let payload = {};
 
@@ -174,16 +173,15 @@ class SimilarItemsComponent extends React.Component {
 
         } else {
 
-          payload.imagePath = value.ad.ipfsPath;
+          payload.imagePath = "/assets/img/sims/"+value.info.simulator+".png";
           payload.description = value.info.description;
         }
 
         payload.itemId = value.id;
-        payload.index = index;
 
-        return this.renderItemDetails(payload, value);  
+        return this.renderItemDetails(payload);  
 
-      },this)}
+      }, this)}
       </Carousel>
     }
 }

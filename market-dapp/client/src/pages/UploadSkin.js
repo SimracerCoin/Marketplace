@@ -1,23 +1,21 @@
 import React, { Component } from 'react';
 import { Dropdown, Form, DropdownButton, Button, FormLabel } from 'react-bootstrap';
 import { Prompt } from 'react-st-modal';
+import { Buffer } from 'buffer';
 import { withRouter } from "react-router";
 import ipfs from "../ipfs";
-import computeMerkleRootHash from "../utils/merkle"
-import UIHelper from "../utils/uihelper"
-import Dropzone from 'react-dropzone-uploader'
-import { getDroppedOrSelectedFiles } from 'html5-file-selector'
-import * as $ from 'jquery'
+import computeMerkleRootHash from "../utils/merkle";
+import UIHelper from "../utils/uihelper";
+import Dropzone from 'react-dropzone-uploader';
+import { getDroppedOrSelectedFiles } from 'html5-file-selector';
+import * as $ from 'jquery';
+import * as openpgp from 'openpgp';
 
 import 'react-dropzone-uploader/dist/styles.css'
 
-const openpgp = require('openpgp');
-
-const priceConversion = 10**18;
 const NON_SECURE_SELL = process.env.REACT_APP_NON_SECURE_SELL === "true";
 const NON_SECURE_KEY= process.env.REACT_APP_NON_SECURE_KEY;
 const NUMBER_CONFIRMATIONS_NEEDED = Number(process.env.REACT_APP_NUMBER_CONFIRMATIONS_NEEDED);
-const simsElements = ["iRacing", "F12020", "rFactor", "Assetto Corsa"];
 
 class UploadSkin extends Component {
 
@@ -25,10 +23,9 @@ class UploadSkin extends Component {
         super(props);
 
         this.state = {
-            drizzle: props.drizzle,
-            drizzleState: props.drizzleState,
             contract: null,
             currentAccount: null,
+            currentCar: "",
             currentSimulator: "Choose your simulator",
             ipfsPath: "",
             image_ipfsPath: [],
@@ -44,17 +41,16 @@ class UploadSkin extends Component {
             license: "",
             mode: "create"
         }
-
-        if(props.location.state) {
-            this.state = {...this.state, ...props.location.state};
-        }
     };
 
     componentDidMount = async () => {
-        const currentAccount = this.state.drizzleState.accounts[0];
-        const contract = this.state.drizzle.contracts.STMarketplace;
-        const isSeller = (await contract.methods.getSeller(currentAccount).call()).active;
-        const stSkin = await this.state.drizzle.contracts.STSkin;
+        const { props } = this;
+        const { drizzle, drizzleState } = props;
+
+        const currentAccount = drizzleState.accounts[0];
+        const contract = drizzle.contracts.STMarketplace;
+        const isSeller = (await UIHelper.callWithRetry(contract.methods.getSeller(currentAccount))).active;
+        const stSkin = await drizzle.contracts.STSkin;
 
         // TODO: rebuild image previewer
         /*if("edit" === this.state.mode && this.state.image_ipfsPath) {
@@ -68,7 +64,7 @@ class UploadSkin extends Component {
             });
         }*/
 
-        this.setState({ currentAccount: currentAccount, contract: contract, stSkin: stSkin, isSeller: isSeller });
+        this.setState({ currentAccount, contract, stSkin, isSeller, ...props.location.state });
 
         UIHelper.scrollToTop();
     };
@@ -127,18 +123,18 @@ class UploadSkin extends Component {
 
     //Guarda a imagem no ipfs 
     saveImage_toIPFS = async () => {
-        let paths = [];
         let error = false;
-        const { imageBuffer } = this.state;
+        const { imageBuffer, image_ipfsPath } = this.state;
 
         // TODO: edit mode, nothing to upload... continue and keep the same
         if("edit" === this.state.mode)
             return true;
 
         $(".dzu-dropzone .dzu-previewImage").each(async (idx, elem) => {
-            const path = (await ipfs.add(imageBuffer[$(elem).attr("src")])).path;
-            if(path) {
-                paths.push(path);
+            const response = await ipfs.add(imageBuffer[$(elem).attr("alt").split(',')[0]]);
+
+            if(response) {
+                image_ipfsPath[idx] = response.path;
             } else {
                 error = true;
                 return false;
@@ -146,7 +142,7 @@ class UploadSkin extends Component {
         });
         if(error) { alert("Error on upload files. Please try again later."); return false; }
 
-        this.setState({ image_ipfsPath: paths.reverse() });
+        this.setState({ image_ipfsPath });
         return true;
     }
 
@@ -159,13 +155,12 @@ class UploadSkin extends Component {
         const password = NON_SECURE_SELL ? NON_SECURE_KEY : await Prompt('Type the password to encrypt the file. Use different password for each item.');
         if (!password) { alert("Invalid password"); return false; }
 
-        const { message } = await openpgp.encrypt({
-            message: openpgp.message.fromBinary(this.state.buffer), // input as Message object
+        const message = await openpgp.createMessage({ binary: this.state.buffer });
+        const encryptedBuffer = await openpgp.encrypt({
+            message,                                                // input as Message object
             passwords: [password],                                  // multiple passwords possible
-            armor: false                                            // don't ASCII armor (for Uint8Array output)
+            format: 'binary'                                        // don't ASCII armor (for Uint8Array output)
         });
-        const encryptedBuffer = message.packets.write(); // get raw encrypted packets as Uint8Array
-
         const encryptedDataHash = computeMerkleRootHash(Buffer.from(encryptedBuffer));
         console.log(`Logger Root Hash: ${encryptedDataHash}`);
 
@@ -186,11 +181,13 @@ class UploadSkin extends Component {
     saveSkin = async (event) => {
         event.preventDefault();
 
+        const { web3 } = this.props.drizzle;
+
         if (!this.state.priceValue) {
             alert('Item price is invalid');
         } else if("create" === this.state.mode && !this.state.buffer) {
             alert('File missing or invalid!');
-        } else if(!simsElements.includes(this.state.currentSimulator)) {
+        } else if(!UIHelper.simsElements.includes(this.state.currentSimulator)) {
             alert('Choose a simulator!');
         } else if(!this.state.currentDescription) {
             alert('Description is required!');
@@ -210,8 +207,9 @@ class UploadSkin extends Component {
 
             const { state } = this;
 
-            const price = state.drizzle.web3.utils.toWei(state.priceValue);
-            const ipfsPathBytes = state.drizzle.web3.utils.asciiToHex(state.ipfsPath);
+            const price = web3.utils.toWei(state.priceValue);
+            console.log(price);
+            const ipfsPathBytes = web3.utils.asciiToHex(state.ipfsPath);
             const paramsForCall = await UIHelper.calculateGasUsingStation(state.currentAccount);
 
             //document.getElementById('formInsertCar').reset()
@@ -247,18 +245,19 @@ class UploadSkin extends Component {
     }
 
     onFileChange = ({ meta, file }, status) => {
+        const { imageBuffer } = this.state;
+        console.log(imageBuffer);
+
         if(status === "done") {
             const reader = new window.FileReader();
             reader.readAsArrayBuffer(file);
             reader.onloadend = () => {
-                let imageBuffer = this.state.imageBuffer;
-                imageBuffer[meta.previewUrl] = Buffer(reader.result);
-                this.setState({imageBuffer: imageBuffer});
+                imageBuffer[meta.name] = Buffer(reader.result);
+                this.setState({imageBuffer});
             }
         } else if(status === "removed") {
-            let imageBuffer = this.state.imageBuffer;
-            delete imageBuffer[meta.previewUrl];
-            this.setState({imageBuffer: imageBuffer});
+            delete imageBuffer[meta.name];
+            this.setState({imageBuffer});
         }
     }
     getFilesFromEvent = e => {
@@ -288,14 +287,22 @@ class UploadSkin extends Component {
         )
     }
 
-    render() {
+    simOptions = () => {
         const sims = [];
 
-        for (const [index, value] of simsElements.entries()) {
+        for (const [index, value] of UIHelper.simsElements.entries()) {
             let thumb = "/assets/img/sims/" + value + ".png";
-            sims.push(<Dropdown.Item eventKey={value} key={index}><img src={thumb} alt="tumb" width="24" /> {value}</Dropdown.Item>)
+            sims.push(<Dropdown.Item eventKey={value} key={index}><img src={thumb} width="16" alt="thumbnail" /> {value}</Dropdown.Item>)
         }
 
+        return sims;
+    }
+    
+    handleValidation = ({meta}) => {
+      return this.state.imageBuffer[meta.name] !== undefined;
+    };
+
+    render() {
         return (
             <header className="header">
                 <div className="overlay overflow-hidden pe-n"><img src="/assets/img/bg/bg_shape.png" alt="Background shape" /></div>
@@ -329,7 +336,7 @@ class UploadSkin extends Component {
                                             <div className="form-row">
                                                 <div className="form-group col-md-6 col-12">
                                                     <DropdownButton id="dropdown-skin-button" title={this.state.currentSimulator} onSelect={this.handleSelectSim}>
-                                                        {sims}
+                                                        {this.simOptions()}
                                                     </DropdownButton>
                                                 </div>
                                             </div>
@@ -344,6 +351,7 @@ class UploadSkin extends Component {
                                                         <FormLabel htmlFor="skin-image" className="mr-2 col-form-label font-weight-bold">Choose Skin images (first will be the main image):</FormLabel>
                                                         <Dropzone
                                                             id="dropzone"
+                                                            validate={this.handleValidation}
                                                             onChangeStatus={this.onFileChange}
                                                             InputComponent={this.selectFileInput}
                                                             getFilesFromEvent={this.getFilesFromEvent}
@@ -353,6 +361,19 @@ class UploadSkin extends Component {
                                                             maxFiles={5}
                                                             inputContent={(files, extra) => (extra.reject ? 'Image files only' : 'Drag Files')}
                                                             initialFiles={this.state.files}
+                                                            LayoutComponent={({input, previews, submitButton, dropzoneProps}) => {
+                                                                // Remove previews which do not pass the validation
+                                                                const previewsToDisplay = previews.filter((preview) => {
+                                                                  return preview.props.meta.status !== 'error_validation';
+                                                                });
+                                                                return (
+                                                                  <div {...dropzoneProps}>
+                                                                    {previewsToDisplay}
+                                                                    {input}
+                                                                    {submitButton}
+                                                                  </div>
+                                                                );
+                                                              }}
                                                             styles={{
                                                                 dropzone: { maxHeight: 400 },
                                                                 dropzoneActive: { borderColor: 'green' },

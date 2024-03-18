@@ -1,16 +1,13 @@
 import React, { Component } from 'react';
 import { Link } from 'react-router-dom';
-import { withRouter } from "react-router";
 import { confirmAlert } from 'react-confirm-alert';
 import { Prompt } from 'react-st-modal';
+import { Buffer } from 'buffer';
 import ipfs from "../ipfs";
 import 'react-confirm-alert/src/react-confirm-alert.css';
-import { generateStore, EventActions } from '@drizzle/store'
-import { ethers } from "ethers";
 import UIHelper from "../utils/uihelper"
 
 const openpgp = require('openpgp');
-const BufferList = require('bl/BufferList');
 
 // TODO: use addresses from config file of the Cartesi nodes that will participating
 //const claimer = '0xF393a9865cb4f1b68813359D5D282878d5d0BdE1';
@@ -22,48 +19,35 @@ class NotificationsPage extends Component {
         super(props);
 
         this.state = {
-            drizzle: props.drizzle,
-            drizzleState: props.drizzleState,
             listNotifications: [],
-            //listNotificationsIds: [],
-            //listPurchases: [],
-            //listAds: [],
             currentAccount: null
         }
     }
 
     componentDidMount = async () => {
-        const contract = await this.state.drizzle.contracts.STMarketplace;
-        //const descartesContract = await this.state.drizzle.contracts.Descartes;
-        const currentAccount = this.state.drizzleState.accounts[0];
-        const notificationsIds = await contract.methods.listNotificationsUser(currentAccount).call()
-        const notifications_r = await contract.methods.getNotifications(notificationsIds).call();
+
+        const { drizzle, drizzleState } = this.props;
+
+        const contract = await drizzle.contracts.STMarketplace;
+        const currentAccount = drizzleState.accounts[0];
+        const notificationsIds = await UIHelper.callWithRetry(contract.methods.listNotificationsUser(currentAccount));
+        const notifications_r = await UIHelper.callWithRetry(contract.methods.getNotifications(notificationsIds));
 
         let notifications = [];
         for (const [index, value] of notificationsIds.entries()) {
             notifications[index] = Object.assign({ "id": value }, notifications_r[index]);
 
-            notifications[index].purchase = await contract.methods.getPurchase(notifications[index].purchaseId).call();
-            notifications[index].ad = await contract.methods.getAd(notifications[index].purchase.adId).call();
+            notifications[index].purchase = await UIHelper.callWithRetry(contract.methods.getPurchase(notifications[index].purchaseId));
+            notifications[index].ad = await UIHelper.callWithRetry(contract.methods.getAd(notifications[index].purchase.adId));
 
             //purchasesIds.push(value.purchaseId);
         }
 
         // reverse sort by id
         notifications.sort((a, b) => b.date - a.date);
-
-        //const purchases = await contract.methods.getPurchases(purchasesIds).call();
-
-
-        //const adsIds = [];
-        //for (const [index, value] of purchases.entries()) {
-        //    adsIds.push(value.adId);
-        // }
-
-        //const ads = await contract.methods.getAds(purchasesIds).call();
-
+        
         ////Descartes test:
-        this.setState({ listNotifications: notifications, currentAccount: currentAccount, contract: contract /*, descartesContract: descartesContract*/ });
+        this.setState({ listNotifications: notifications, currentAccount, contract /*, descartesContract: descartesContract*/ });
 
         //this.setState({ listNotifications: notifications, currentAccount: currentAccount, contract: contract });
     }
@@ -80,15 +64,16 @@ class NotificationsPage extends Component {
     acceptPurchase = async (event, purchaseId, buyerKey) => {
         event.preventDefault();
 
+        const { web3 } = this.props.drizzle;
         const password = await Prompt('Password to decrypt');
 
         if (!password) return;
 
         const encrypted = await openpgp.encrypt({
             message: openpgp.message.fromText(password),                      // input as Message object
-            publicKeys: (await openpgp.key.readArmored(this.state.drizzle.web3.utils.hexToAscii(buyerKey))).keys,   // for encryption
+            publicKeys: (await openpgp.key.readArmored(web3.utils.hexToAscii(buyerKey))).keys,   // for encryption
         });
-        const encryptedDataKey = this.state.drizzle.web3.utils.asciiToHex(encrypted.data); // ReadableStream containing '-----BEGIN PGP MESSAGE ... END PGP MESSAGE-----'
+        const encryptedDataKey = web3.utils.asciiToHex(encrypted.data); // ReadableStream containing '-----BEGIN PGP MESSAGE ... END PGP MESSAGE-----'
 
         await this.state.contract.methods.acceptPurchase(purchaseId, encryptedDataKey)
             .send({ from: this.state.currentAccount })
@@ -103,10 +88,7 @@ class NotificationsPage extends Component {
     resolvePurchase = async (event, purchaseId, descartesId) => {
         event.preventDefault();
 
-        let st = this.state.contract;
-        let stateBack = this.state;
-
-        let res = await st.methods.getResult(descartesId, purchaseId).call();
+        let res = await UIHelper.callWithRetry(this.state.contract.methods.getResult(descartesId, purchaseId));
 
         console.log(descartesId, purchaseId, res);
 
@@ -118,9 +100,9 @@ class NotificationsPage extends Component {
         if (!res["0"]) {
             alert("An unexpected error occurred. The Reject/Challenge needs to be done again.");
         } else {
-            res = stateBack.drizzle.web3.utils.hexToAscii(res["3"]).slice(0, 1);
+            res = this.props.drizzle.web3.utils.hexToAscii(res["3"]).slice(0, 1);
 
-            if ("1" == res) {
+            if ("1" === res) {
                 alert("The purchase was successfully validated. No refund was issued.");
             } else {
                 alert("A refund was issued.");
@@ -148,7 +130,7 @@ class NotificationsPage extends Component {
                 UIHelper.transactionOnConfirmation("Thank you for your purchase!","/");
             })
             .on('error', UIHelper.transactionOnError)
-            .catch(function (e) { });
+            .catch(console.error);
     }
 
     rejectItem = async (purchaseId, password, ipfsPath, ipfsSize, loggerRootHash) => {
@@ -225,27 +207,26 @@ class NotificationsPage extends Component {
     endPurchase = async (event, purchaseId, adId, ipfsPath, buyerKey, encryptedDataKey, loggerRootHash) => {
         event.preventDefault();
 
-        const content = new BufferList();
-        const ipfsP = this.state.drizzle.web3.utils.hexToAscii(ipfsPath);
+        const { web3 } = this.props.drizzle;
+        const ipfsP = web3.utils.hexToAscii(ipfsPath);
 
-        let password;
+        let password, content;
 
         try {
-
-            for await (const file of ipfs.get(ipfsP)) {
-                for await (const chunk of file.content) {
-                    content.append(chunk);
-                }
+            const chunks = [];
+            for await (const chunk of ipfs.cat(ipfsP)) {
+              chunks.push(chunk);
             }
+            content = Buffer.concat(chunks);
 
-            const privateKeyArmored = this.state.drizzle.web3.utils.hexToAscii(localStorage.getItem('bk'));
+            const privateKeyArmored = web3.utils.hexToAscii(localStorage.getItem('bk'));
 
             const privateKey = (await openpgp.key.readArmored([privateKeyArmored])).keys[0];
             await privateKey.decrypt(passphrase);
 
             const decrypted = await openpgp.decrypt({
-                message: await openpgp.message.readArmored(this.state.drizzle.web3.utils.hexToAscii(encryptedDataKey)),       // parse armored message
-                publicKeys: (await openpgp.key.readArmored(this.state.drizzle.web3.utils.hexToAscii(buyerKey))).keys,         // for verification (optional)
+                message: await openpgp.message.readArmored(web3.utils.hexToAscii(encryptedDataKey)),       // parse armored message
+                publicKeys: (await openpgp.key.readArmored(web3.utils.hexToAscii(buyerKey))).keys,         // for verification (optional)
                 privateKeys: [privateKey]                                             // for decryption
             });
             password = await openpgp.stream.readToEnd(decrypted.data);
@@ -256,7 +237,7 @@ class NotificationsPage extends Component {
                 format: 'binary'                                   // output as Uint8Array
             });
 
-            const isCarSetup = await this.state.contract.methods.isCarSetup(adId).call();
+            const isCarSetup = await UIHelper.callWithRetry(this.state.contract.methods.isCarSetup(adId));
 
             var data = new Blob([decryptedFile]);
             var csvURL = window.URL.createObjectURL(data);
@@ -280,7 +261,6 @@ class NotificationsPage extends Component {
                 ]
             });
         } catch {
-
             confirmAlert({
                 title: 'Error',
                 message: 'Something went wrong while we were trying to obtain the file',
@@ -292,7 +272,6 @@ class NotificationsPage extends Component {
                 ]
             });
         }
-
     }
     // =========================
 
@@ -313,50 +292,54 @@ class NotificationsPage extends Component {
                 let purchase = value.purchase;
                 let ad = value.ad;
 
-                notifications.push(<tr>
-                    <th scope="row">#{value.id}</th>
-                    <td>{new Intl.DateTimeFormat('en-US', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).format(value.date * 1000)}</td>
-                    <td><Link onClick={(e) => this.viewItem(e, purchase.adId)}>{purchase.adId}</Link></td>
-                    <td>{value.message}</td>
-                    <td>
-                        {purchase.status == 1 ?
-                            <Link onClick={(e) => this.endPurchase(e, value.purchaseId, purchase.adId, ad.ipfsPath, purchase.buyerKey, purchase.encryptedDataKey, ad.encryptedDataHash)}><i className="fas fa-reply"></i></Link> :
-                            purchase.status == 3 || purchase.status == 4 ? '' :
-                                purchase.status == 0 ?
-                                    <Link onClick={(e) => this.acceptPurchase(e, value.purchaseId, purchase.buyerKey)}><i className="fas fa-reply"></i></Link> : <Link onClick={(e) => this.resolvePurchase(e, value.purchaseId, purchase.descartesIndex)}><i className="fas fa-info"></i></Link>}
-                    </td>
-                </tr>)
+                notifications.push(
+                    <tr>
+                        <th scope="row">#{value.id}</th>
+                        <td>{new Intl.DateTimeFormat('en-US', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).format(value.date * 1000)}</td>
+                        <td><Link onClick={(e) => this.viewItem(e, purchase.adId)}>{purchase.adId}</Link></td>
+                        <td>{value.message}</td>
+                        <td>
+                            {purchase.status == 1 ?
+                                <Link onClick={(e) => this.endPurchase(e, value.purchaseId, purchase.adId, ad.ipfsPath, purchase.buyerKey, purchase.encryptedDataKey, ad.encryptedDataHash)}><i className="fas fa-reply"></i></Link> :
+                                purchase.status == 3 || purchase.status == 4 ? '' :
+                                    purchase.status == 0 ?
+                                        <Link onClick={(e) => this.acceptPurchase(e, value.purchaseId, purchase.buyerKey)}><i className="fas fa-reply"></i></Link> : <Link onClick={(e) => this.resolvePurchase(e, value.purchaseId, purchase.descartesIndex)}><i className="fas fa-info"></i></Link>}
+                        </td>
+                    </tr>
+                );
             }
         }
 
-        return (<header className="header">
-            <div className="overlay overflow-hidden pe-n"><img src="/assets/img/bg/bg_shape.png" alt="Background shape" /></div>
-            <section className="content-section text-light br-n bs-c bp-c pb-8">
-                <div id="latest-container" className="container">
-                    <div className="center-text">
-                        <h1>Notifications</h1>
+        return (
+            <header className="header">
+                <div className="overlay overflow-hidden pe-n"><img src="/assets/img/bg/bg_shape.png" alt="Background shape" /></div>
+                <section className="content-section text-light br-n bs-c bp-c pb-8">
+                    <div id="latest-container" className="container">
+                        <div className="center-text">
+                            <h1>Notifications</h1>
+                        </div>
+                        <div>
+                            <table className="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">#</th>
+                                        <th scope="col">Date</th>
+                                        <th scope="col">Item</th>
+                                        <th scope="col">Message</th>
+                                        <th scope="col"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {notifications}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                    <div>
-                        <table className="table table-striped">
-                            <thead>
-                                <tr>
-                                    <th scope="col">#</th>
-                                    <th scope="col">Date</th>
-                                    <th scope="col">Item</th>
-                                    <th scope="col">Message</th>
-                                    <th scope="col"></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {notifications}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-        </header>);
+                </section>
+            </header>
+        );
     }
 
 }
 
-export default withRouter(NotificationsPage);
+export default NotificationsPage;

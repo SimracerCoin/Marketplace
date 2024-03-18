@@ -1,14 +1,14 @@
 import React, { Component } from 'react';
 import { Dropdown, Form, DropdownButton, Button, FormCheck } from 'react-bootstrap';
 import { Prompt } from 'react-st-modal';
+import { Buffer } from 'buffer';
 import ipfs from "../ipfs";
 import computeMerkleRootHash from "../utils/merkle";
 import UIHelper from "../utils/uihelper";
+import * as openpgp from 'openpgp';
+
 import "../css/auction.css";
 
-const openpgp = require('openpgp');
-
-const priceConversion = 10**18;
 const timingOpt = ["1 day", "3 days", "7 days", "1 month", "3 month", "6 month"];
 const timingOptions = [];
 const NUMBER_CONFIRMATIONS_NEEDED = Number(process.env.REACT_APP_NUMBER_CONFIRMATIONS_NEEDED);
@@ -19,8 +19,6 @@ class SellOwnership extends Component {
         super(props)
 
         this.state = {
-            drizzle: props.drizzle,
-            drizzleState: props.drizzleState,
             currentAccount: null,
             currentSimulator: "Choose your simulator",
             currentSeries: "",
@@ -59,14 +57,16 @@ class SellOwnership extends Component {
             timingOptions.push(<Dropdown.Item eventKey={value} key={index}>{value}</Dropdown.Item>)
         }
 
+        const { drizzle, drizzleState } = this.props;
+
         let now = new Date();
         let daysForEnd = UIHelper.extractDaysFromAuctionString(timingOpt[0]);
         let endDate = this.getUpdatedEndDate(now,daysForEnd);
-        const currentAccount = this.state.drizzleState.accounts[0];
-        const contract = this.state.drizzle.contracts.STMarketplace;
-        const contractNFTs = this.state.drizzle.contracts.SimthunderOwner;
-        const isSeller = (await contract.methods.getSeller(currentAccount).call()).active;
-        this.setState({ auctionStart: now, auctionEnd:endDate, currentTimingOption: timingOpt[0], timingOptions: timingOptions, currentAccount: currentAccount, contract: contract, contractNFTs: contractNFTs, isSeller: isSeller });
+        const currentAccount = drizzleState.accounts[0];
+        const contract = drizzle.contracts.STMarketplace;
+        const contractNFTs = drizzle.contracts.SimthunderOwner;
+        const isSeller = (await UIHelper.callWithRetry(contract.methods.getSeller(currentAccount))).active;
+        this.setState({ auctionStart: now, auctionEnd:endDate, currentTimingOption: timingOpt[0], timingOptions: timingOptions, currentAccount, contract, contractNFTs, isSeller });
     };
 
 
@@ -206,7 +206,6 @@ class SellOwnership extends Component {
         //jsonData['seriesOwner'] = this.state.currentAccount;
         jsonData['carNumber'] = this.state.currentCarNumber;
         jsonData['simulator'] = this.state.currentSimulator;
-        //jsonData['price'] = this.state.currentFilePrice / priceConversion;
 
         jsonData.attributes = [];
 /*        jsonData.attributes.push(
@@ -280,13 +279,12 @@ class SellOwnership extends Component {
 
         if (!password) return;
 
-        const { message } = await openpgp.encrypt({
-            message: openpgp.message.fromBinary(this.state.buffer), // input as Message object
+        const message = await openpgp.createMessage({ binary: this.state.buffer });
+        const encryptedBuffer = await openpgp.encrypt({
+            message,                                                // input as Message object
             passwords: [password],                                  // multiple passwords possible
-            armor: false                                            // don't ASCII armor (for Uint8Array output)
+            format: 'binary'                                        // don't ASCII armor (for Uint8Array output)
         });
-        const encryptedBuffer = message.packets.write(); // get raw encrypted packets as Uint8Array
-
         const loggerRootHash = computeMerkleRootHash(Buffer.from(encryptedBuffer));
         console.log(`Logger Root Hash: ${loggerRootHash}`);
 
@@ -325,7 +323,7 @@ class SellOwnership extends Component {
 
             if(response_saveJson) {
 
-                const price = this.state.drizzle.web3.utils.toWei(this.state.priceValue);
+                const price = this.props.drizzle.web3.utils.toWei(this.state.priceValue);
 
                 //some gas estimations
                 //estimate method gas consuption (units of gas)
@@ -358,7 +356,7 @@ class SellOwnership extends Component {
 
         for (const [index, value] of simsElements.entries()) {
             let thumb = "/assets/img/sims/" + value + ".png";
-            sims.push(<Dropdown.Item eventKey={value} key={index}><img src={thumb} width="16" /> {value}</Dropdown.Item>)
+            sims.push(<Dropdown.Item eventKey={value} key={index}><img src={thumb} width="16" alt={"sim_"+value} /> {value}</Dropdown.Item>)
         }
 
 

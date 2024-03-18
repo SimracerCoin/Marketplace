@@ -1,30 +1,32 @@
 import React, { Component } from 'react';
 import { Button } from 'react-bootstrap';
+import UIHelper from "../utils/uihelper";
 
 class RegisterVendor extends Component {
 
     constructor(props) {
         super(props);
         this.state = {
-            drizzle: props.drizzle,
-            drizzleState: props.drizzleState,
             contract: null,
             currentAccount: "",
             isVendor: false
         }
     }
 
-    componentDidMount = async (event) => {
-        const contract = await this.state.drizzle.contracts.STMarketplace;
-        const currentAccount = await this.state.drizzleState.accounts[0];
-        const isVendor = await contract.methods.isVendor(currentAccount).call();
+    componentDidMount = async () => {
+        const { drizzle, drizzleState } = this.props;
+
+        const contract = await drizzle.contracts.STMarketplace;
+        const currentAccount = await drizzleState.accounts[0];
+        const isVendor = await UIHelper.callWithRetry(contract.methods.isVendor(currentAccount));
         
         this.setState({ contract, currentAccount, isVendor });
     }
 
     registerVendor = async (event) => {
         event.preventDefault();
-        const response = await this.state.contract.methods.saveVendor(this.state.currentAccount).send({ from: this.state.currentAccount });
+
+        await this.state.contract.methods.saveVendor(this.state.currentAccount).send({ from: this.state.currentAccount });
         this.setState({ isVendor: true })
     }
 

@@ -23,8 +23,6 @@ class AuctionPage extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            drizzle: props.drizzle,
-            drizzleState: props.drizzleState,
             itemId: props.location.state.selectedItemId,
             track: props.location.state.selectedTrack,
             simulator: props.location.state.selectedSimulator,
@@ -51,7 +49,7 @@ class AuctionPage extends Component {
             isMuted: true,
             currentTimingOption: timingOpt[0],
             messageOptions: {show: false, title:'', variant:'sucess',message:''},
-            usdValue : props.location.state.usdPrice
+            usdValue : 1
         }
 
         this.mute = this.mute.bind(this);
@@ -59,35 +57,37 @@ class AuctionPage extends Component {
         this.onSelectAuctionTiming = this.onSelectAuctionTiming.bind(this);
     }
 
-    componentDidMount = async (event) => {
+    componentDidMount = async () => {
 
-      for (const [index, value] of timingOpt.entries()) {
-        timingOptions.push(<Dropdown.Item eventKey={value} key={index}>{value}</Dropdown.Item>)
-      }
+        for (const [index, value] of timingOpt.entries()) {
+          timingOptions.push(<Dropdown.Item eventKey={value} key={index}>{value}</Dropdown.Item>)
+        }
+
+        const { drizzle, drizzleState } = this.props;
        
-        const contract = await this.state.drizzle.contracts.STMarketplace;
-        const contractNFTs = await this.state.drizzle.contracts.SimthunderOwner;
-        const contractSimracerCoin = await this.state.drizzle.contracts.SimracerCoin;
-        const contractMomentNFTs = await this.state.drizzle.contracts.SimracingMomentOwner;
+        const contract = await drizzle.contracts.STMarketplace;
+        const contractNFTs = await drizzle.contracts.SimthunderOwner;
+        const contractSimracerCoin = await drizzle.contracts.SimracerCoin;
+        const contractMomentNFTs = await drizzle.contracts.SimracingMomentOwner;
 
-        const currentAccount = await this.state.drizzleState.accounts[0];
+        const currentAccount = await drizzleState.accounts[0];
         console.log('isNFT:' + this.state.isNFT);
         console.log('isMomentNFT:' + this.state.isMomentNFT);
-        let isSkin = !this.state.isNFT && !this.state.isMomentNFT && (this.state.track == null || this.state.season == null);
+        const isSkin = !this.state.isNFT && !this.state.isMomentNFT && (this.state.track == null || this.state.season == null);
         console.log('isSkin:' + isSkin);
 
         const hasVideo = this.state.isMomentNFT;
 
         if (!this.state.isNFT && !this.state.isMomentNFT) {
-            const comments = await contract.methods.getItemComments(this.state.itemId).call();
-            const average_review = await this.average_rating(comments);
+            const listComments = await contract.methods.getItemComments(this.state.itemId).call();
+            const average_review = await this.average_rating(listComments);
 
-            this.setState({ currentAccount: currentAccount, contract: contract, contractSimracerCoin: contractSimracerCoin, listComments: comments, average_review: average_review, isSkin: isSkin });
+            this.setState({ currentAccount, contract, contractSimracerCoin, listComments, average_review, isSkin });
         } else {
-            this.setState({currentTimingOption: timingOpt[0], timingOptions: timingOptions, currentAccount: currentAccount, contract: contract, contractMomentNFTs: contractMomentNFTs, contractNFTs: contractNFTs, contractSimracerCoin: contractSimracerCoin, isSkin: isSkin });
+            this.setState({currentTimingOption: timingOpt[0], timingOptions, currentAccount, contract, contractMomentNFTs, contractNFTs, contractSimracerCoin, isSkin });
         }
 
-        this.setState({isMuted: hasVideo});
+        this.setState({usdValue: await UIHelper.fetchSRCPriceVsUSD(), isMuted: hasVideo});
         
         UIHelper.scrollToTop();
     }
@@ -95,7 +95,7 @@ class AuctionPage extends Component {
     average_rating = async (comments) => {
         const total = comments.length;
         let counter_rating = 0;
-        if (total == 0) {
+        if (total === 0) {
             return counter_rating;
         } else {
             for (const [index, value] of comments.entries()) {
@@ -135,29 +135,31 @@ class AuctionPage extends Component {
     buyItem = async (event) => {
         event.preventDefault();
 
+        const { web3 } = this.props.drizzle;
+
         UIHelper.showSpinning();
 
-        const price = this.state.drizzle.web3.utils.toBN(this.state.price);
+        const price = web3.utils.toBN(this.state.price);
         console.log('item price =' + price);
 
         // TODO: buyer public key
-        //const buyerPK = this.state.drizzle.web3.utils.hexToBytes(this.state.drizzle.web3.utils.randomHex(16));
+        //const buyerPK = web3.utils.hexToBytes(web3.utils.randomHex(16));
         //console.log('Item price:' + this.state.price);
 
         if (!this.state.isNFT && !this.state.isMomentNFT) {
 
             let buyerKey = localStorage.getItem('ak');
             if (!buyerKey) {
-                const { privateKeyArmored, publicKeyArmored, revocationCertificate } = await openpgp.generateKey({
-                    userIds: [{ name: this.state.currentAccount }],             // you can pass multiple user IDs
+                const { privateKeyArmored, publicKeyArmored } = await openpgp.generateKey({
+                    userIDs: [{ name: this.state.currentAccount }],             // you can pass multiple user IDs
                     curve: 'p256',                                              // ECC curve name
                     passphrase: passphrase                                      // protects the private key
                 });
 
-                buyerKey = this.state.drizzle.web3.utils.asciiToHex(publicKeyArmored);
+                buyerKey = web3.utils.asciiToHex(publicKeyArmored);
 
                 localStorage.setItem('ak', buyerKey);
-                localStorage.setItem('bk', this.state.drizzle.web3.utils.asciiToHex(privateKeyArmored));
+                localStorage.setItem('bk', web3.utils.asciiToHex(privateKeyArmored));
             }
 
             //approve contract ot spend our SRC

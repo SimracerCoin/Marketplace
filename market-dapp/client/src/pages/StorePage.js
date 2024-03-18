@@ -1,12 +1,11 @@
 /* eslint-disable no-loop-func */
 import React, { Component } from 'react';
-import { Redirect } from "react-router-dom";
+import { Redirect, Link } from "react-router-dom";
 import { withRouter } from "react-router";
 import * as $ from 'jquery';
 import UIHelper from "../utils/uihelper";
 import "../css/itempage.css";
 
-const priceConversion = 10 ** 18;
 //pagination is out of scope for now, also would require more items to test properly
 const MAX_ITEMS_PER_PAGE = 10;
 
@@ -36,141 +35,115 @@ let maxElems, maxElems2 = 0;
 
 class StorePage extends Component {
 
-    constructor(props) {
-        super(props);
-       
-        this.state = {
-            drizzle: props.drizzle,
-            drizzleState: props.drizzleState,
-            //-------------------- lists ----------
-            latestCars: [], //contains all the cars returned by the contracts
-            filteredCars:[], //list of cars but filtered
-            latestSkins: [], //contains all the skins returned by the contracts
-            filteredSkins: [], //list of skins but filtered
-            latestNFTs: [], //contains all the nfts returned by the contracts
-            filteredNFTs: [], // list of nfst but filtered
-            
-            latestMomentNFTs: [], //contains all the nfts returned by the contracts
-            filteredMomentNFTs: [], // list of nfst but filtered
-
-            listSimulators: [], //list of all simulators available
-            filteredSimulators: [], //list of filtered simulators
-            //---------------- buy / view item ----------
-            redirectBuyItem: false,
-            selectedItemId: "",
-            selectedTrack: "",
-            selectedSimulator: "",
-            selectedSeason: "",
-            selectedSeries: "",
-            selectedDescription: "",
-            selectedPrice: "",
-            selectedCarBrand: "",
-            selectedImagePath: "",
-            vendorAddress: "",
-            vendorNickname: "",
-            ipfsPath: "",
-            //-------------------- other stuff --------------
-            contract: null,
-            currentPage: 1, //for future filtering purposes
-            numPages: 1, //num pages by default
-            contractNFTs: null,
-            context: props.context,
-            //---------------------- filters -----------
-            activeSimulatorsFilter: [{simulator: "All", checked: true}], //default filter
-            priceStep: 0.0001,
-            priceMin: 0,
-            priceMinDefault: 0,
-            priceMax: 10000,
-            priceMaxDefault: 10000,
-
-            //just as reference, we can define others intervals if needed
-            //activePriceFilters: [
-            //  {name: "min", label: "min", default_value: 0.00000001, value: 0.00000001},
-            //  {name: "max", label: "max", default_value: 100000000, value: 100000000}
-            //],
-            searchQuery: "",
-            //searchRef: props.searchRef //search field
-            usdValue: 1,
-            moreItems: ""
-        }
-
-        // This binding is necessary to make `this` work in the callback
-       //this.simulatorsFilterChanged = this.simulatorsFilterChanged.bind(this);
-
-    }
-
-    
-
-    //-----------------------------------------------------------------------------------------------------
-    //-----------------------------------------------------------------------------------------------------
-    componentWillMount() {
-      this.unlisten = this.props.history.listen((location, action) => {
-        localStorage.removeItem('searchQuery');
-      });
-    }
-    componentWillUnmount = async () => {
-      this.unlisten();
-    }
-    componentDidMount = async () => {
-
-      //console.log("STORE: componentDidMount");
-      //scroll to top of page
-      window.scrollTo(0, 0);
-
-       UIHelper.showSpinning("loading items ...");
-
-        const usdValue = await this.fetchUSDPrice();
-        this.setState({usdValue: Number(usdValue)});
-
-        const searchQuery = this.hasSearchFilter();
-        if(searchQuery && searchQuery.length > 0) {
-          this.setState({searchQuery: searchQuery});
-        }
-
-        const hasMoreItems = this.hasMoreItemsFilter();
-        if(hasMoreItems && hasMoreItems.length > 0) {
-          this.setState({moreItems: hasMoreItems});
-        }
-
-        this.getNFTsData();
+  constructor(props) {
+      super(props);
       
-        //------------------------- Collapser hack -------------------------
-        //all the js/jquery will get loaded before the elements are displayed on page so the handlers on main.js don´t work
-        //because the elements are not part of the DOM yet
-      $('.collapser:not(.readmore-btn)').on('click', function() {
-        if($(this).is('.collapser-active')) {
-          $(this).removeClass('collapser-active');
-          $(this).next().removeClass('show');
-        } else {
-          $(this).addClass('collapser-active');
-          $(this).next().addClass('show');
-        }
-        
-        //--------------------------------------------------------------
+      this.state = {
+          //-------------------- lists ----------
+          latestCars: [], //contains all the cars returned by the contracts
+          filteredCars:[], //list of cars but filtered
+          latestSkins: [], //contains all the skins returned by the contracts
+          filteredSkins: [], //list of skins but filtered
+          latestNFTs: [], //contains all the nfts returned by the contracts
+          filteredNFTs: [], // list of nfst but filtered
+          
+          latestMomentNFTs: [], //contains all the nfts returned by the contracts
+          filteredMomentNFTs: [], // list of nfst but filtered
 
+          listSimulators: [], //list of all simulators available
+          filteredSimulators: [], //list of filtered simulators
+          //---------------- buy / view item ----------
+          redirectBuyItem: false,
+          selectedItemId: "",
+          selectedTrack: "",
+          selectedSimulator: "",
+          selectedSeason: "",
+          selectedSeries: "",
+          selectedDescription: "",
+          selectedPrice: "",
+          selectedCarBrand: "",
+          selectedImagePath: "",
+          vendorAddress: "",
+          vendorNickname: "",
+          ipfsPath: "",
+          //-------------------- other stuff --------------
+          contract: null,
+          currentPage: 1, //for future filtering purposes
+          numPages: 1, //num pages by default
+          contractNFTs: null,
+          context: props.context,
+          //---------------------- filters -----------
+          activeSimulatorsFilter: [{simulator: "All", checked: true}], //default filter
+          priceStep: 0.0001,
+          priceMin: 0,
+          priceMinDefault: 0,
+          priceMax: 10000,
+          priceMaxDefault: 10000,
+
+          //just as reference, we can define others intervals if needed
+          //activePriceFilters: [
+          //  {name: "min", label: "min", default_value: 0.00000001, value: 0.00000001},
+          //  {name: "max", label: "max", default_value: 100000000, value: 100000000}
+          //],
+          searchQuery: "",
+          //searchRef: props.searchRef //search field
+          usdValue: 1,
+          moreItems: ""
+      }
+
+      console.log(this.props.match.url);
+      this.props.history.push(this.props.match.url);
+  }
+
+  //-----------------------------------------------------------------------------------------------------
+  //-----------------------------------------------------------------------------------------------------
+  componentWillUnmount = async () => this.unlisten();
+
+  componentDidMount = async () => {
+
+    this.unlisten = this.props.history.listen((location, action) => {
+      localStorage.removeItem('searchQuery');
     });
 
-    
-    
+    //console.log("STORE: componentDidMount");
+    //scroll to top of page
+    window.scrollTo(0, 0);
+
+    UIHelper.showSpinning("loading items ...");
+
+    const usdValue = await UIHelper.fetchSRCPriceVsUSD();
+    this.setState({usdValue});
+
+    const searchQuery = this.hasSearchFilter();
+    if(searchQuery && searchQuery.length > 0) {
+      this.setState({searchQuery});
     }
 
-    fetchUSDPrice = async () => {
-      try {
-          const priceUSD = await UIHelper.fetchSRCPriceVsUSD();
-          const priceObj = await priceUSD.json();
-          const key = Object.keys(priceObj);
-          return priceObj[key]['usd']; 
-      } catch(err) {
-          return 1;
-      } 
+    const hasMoreItems = this.hasMoreItemsFilter();
+    if(hasMoreItems && hasMoreItems.length > 0) {
+      this.setState({moreItems: hasMoreItems});
+    }
+
+    this.getNFTsData();
+  
+    //------------------------- Collapser hack -------------------------
+    //all the js/jquery will get loaded before the elements are displayed on page so the handlers on main.js don´t work
+    //because the elements are not part of the DOM yet
+    $('.collapser:not(.readmore-btn)').on('click', function() {
+      if($(this).is('.collapser-active')) {
+        $(this).removeClass('collapser-active');
+        $(this).next().removeClass('show');
+      } else {
+        $(this).addClass('collapser-active');
+        $(this).next().addClass('show');
+      }
+    });
   }
 
   renderUSDPrice = (price) => {
+    let usdPrice = Number(Math.round(Number(this.props.drizzle.web3.utils.fromWei(price)) * this.state.usdValue * 100) / 100).toFixed(2);
 
-    let usdPrice = Number(Math.round((price / priceConversion) * this.state.usdValue * 100) / 100).toFixed(2);
-
-
-    if(usdPrice == 0.00) {
+    if(usdPrice === 0.00) {
       usdPrice = 0.01;
     }
     return "$" + usdPrice;
@@ -179,20 +152,22 @@ class StorePage extends Component {
     //get all contracts data
     async getNFTsData() {
 
+      const { drizzle } = this.props;
+
         //market place
-        const contract = await this.state.drizzle.contracts.STMarketplace;
+        const contract = await drizzle.contracts.STMarketplace;
         //ownership nfts
-        const contractNFTs = await this.state.drizzle.contracts.SimthunderOwner;
+        const contractNFTs = await drizzle.contracts.SimthunderOwner;
         //simracing moment nfts
-        const contractMomentNFTs = await this.state.drizzle.contracts.SimracingMomentOwner;
+        const contractMomentNFTs = await drizzle.contracts.SimracingMomentOwner;
 
-        const stSetup = await this.state.drizzle.contracts.STSetup;
-        const stSkin = await this.state.drizzle.contracts.STSkin;
+        const stSetup = await drizzle.contracts.STSetup;
+        const stSkin = await drizzle.contracts.STSkin;
 
         //car setups
-        response_cars = (await stSetup.methods.getSetups().call()).filter(item => item.ad.active);
+        response_cars = (await UIHelper.callWithRetry(stSetup.methods.getSetups())).filter(item => item.ad.active);
         //car setups
-        response_skins = (await stSkin.methods.getSkins().call()).filter(item => item.ad.active);
+        response_skins = (await UIHelper.callWithRetry(stSkin.methods.getSkins())).filter(item => item.ad.active);
         
         let simsList = [];
         let simulatorsFilter = [];
@@ -290,7 +265,7 @@ class StorePage extends Component {
      */
     loadCarOwnershipNFTs = async (contractNFTs, maxElems, simsList, simulatorsFilter, maxElems2, filteredCarsList, filteredSkinsList) => {
 
-     const numNfts = await contractNFTs.methods.currentTokenId().call();
+      const numNfts = await UIHelper.callWithRetry(contractNFTs.methods.currentTokenId());
      console.log('ownership nft count:' + numNfts);
 
      let max = parseInt(numNfts) + 1;
@@ -304,16 +279,15 @@ class StorePage extends Component {
 
       for (let i = 1; i < max ; i++) {
         try {
-            //TODO: change for different ids
-            let ownerAddress = await contractNFTs.methods.ownerOf(i).call();
+            const ownerAddress = await UIHelper.callWithRetry(contractNFTs.methods.ownerOf(i));
             //console.log('ID:'+i+'ownerAddress: '+ownerAddress.toString()+'nfts addr: '+contractNFTs.address);
             if(ownerAddress === contractNFTs.address) {
                 console.log('GOT MATCH');
-                let uri = await contractNFTs.methods.tokenURI(i).call();
-                //console.log('uri: ', uri);
-                let response = await fetch(uri);
-                let info = await contractNFTs.methods.getItem(i).call();
-                let data = {id: i, price: info[0], seriesOwner: info[1], ...await response.json()};
+                const [response, info] = await Promise.all([
+                  UIHelper.callWithRetry(contractNFTs.methods.tokenURI(i)).then(fetch).then(r => r.json()),
+                  UIHelper.callWithRetry(contractNFTs.methods.getItem(i))
+                ]);
+                const data = {id: i, price: info[0], seriesOwner: info[1], ...response};
                 
                         /**  DATA example:
                         {  
@@ -388,7 +362,7 @@ class StorePage extends Component {
     loadMomentNFTs = async (contractMomentNFTs, maxElems, simsList, simulatorsFilter, maxElems2, filteredCarsList, filteredSkinsList) => {
       
       // get info from marketplace NFT contract
-      const numMomentNfts = await contractMomentNFTs.methods.currentTokenId().call();
+      const numMomentNfts = await UIHelper.callWithRetry(contractMomentNFTs.methods.currentTokenId());
       console.log('moment nft count:' + numMomentNfts);
 
       let max = parseInt(numMomentNfts) + 1;
@@ -400,15 +374,15 @@ class StorePage extends Component {
       for (let i = 1; i < max; i++) {
         try {
             //TODO: change for different ids
-            let ownerAddress = await contractMomentNFTs.methods.ownerOf(i).call();
+            const ownerAddress = await UIHelper.callWithRetry(contractMomentNFTs.methods.ownerOf(i));
             //console.log('ID:'+i+'ownerAddress: '+ownerAddress.toString()+'nfts addr: '+contractMomentNFTs.address);
             if(ownerAddress === contractMomentNFTs.address) {
                
-                let uri = await contractMomentNFTs.methods.tokenURI(i).call();
-                //console.log('uri: ', uri);
-                let response = await fetch(uri);
-                let info = await contractMomentNFTs.methods.getItem(i).call();
-                let data = {id: i, price: info[0], seriesOwner: info[1], ...await response.json()};
+                const [response, info] = await Promise.all([
+                  UIHelper.callWithRetry(contractMomentNFTs.methods.tokenURI(i)).then(fetch).then(r => r.json()),
+                  UIHelper.callWithRetry(contractMomentNFTs.methods.getItem(i))
+                ]);
+                const data = {id: i, price: info[0], seriesOwner: info[1], ...response};
 
                 let metadata = this.extractMomentNFTTraitTypes(data.attributes);
                 //global list of all
@@ -564,7 +538,7 @@ class StorePage extends Component {
     //filter skins by simulator
     filterSkinsBySimulator(enabledSimulators) {
       
-      let filteredListBySimulator = this.state.latestSkins.filter( function(SKIN){
+      let filteredListBySimulator = this.state.latestSkins.filter((SKIN) => {
       
           for (let simulator of enabledSimulators) {
                
@@ -587,9 +561,9 @@ class StorePage extends Component {
     //filter skinn by price
     filterSkinsByPrice(priceMin, priceMax) {
      
-      let filteredListByPrice = this.state.latestSkins.filter( function(SKIN){
+      let filteredListByPrice = this.state.latestSkins.filter((SKIN) => {
       
-          let skinPrice = (SKIN.ad.price / priceConversion);
+          let skinPrice = Number(this.props.drizzle.web3.utils.fromWei(SKIN.ad.price));
           return ( skinPrice >= priceMin && skinPrice <= priceMax );
             
         });
@@ -601,7 +575,7 @@ class StorePage extends Component {
     filterNFTsBySimulator(enabledSimulators) {
 
        //get all the nfts available
-      let filteredListBySimulator = this.state.latestNFTs.filter( function(NFT){
+      let filteredListBySimulator = this.state.latestNFTs.filter((NFT) => {
         
         for (let simulator of enabledSimulators) {
            
@@ -668,11 +642,9 @@ class StorePage extends Component {
     //filter cars by price
     filterCarsByPrice(priceMin, priceMax) {
 
-      let filteredListByPrice = this.state.latestCars.filter( function(Car){
-      
-        let carPrice = (Car.ad.price / priceConversion);
+      let filteredListByPrice = this.state.latestCars.filter((Car) => {
+        let carPrice = Number(this.props.drizzle.web3.utils.fromWei(Car.ad.price));
         return ( carPrice >= priceMin && carPrice <= priceMax );
-          
       });
 
       this.setState({filteredCars: this.paginate(filteredListByPrice, this.state.currentPage)})
@@ -758,14 +730,10 @@ class StorePage extends Component {
 
 
     //reset all filters
-    resetFilters = (event) => {
-      
-      event.preventDefault();
+    resetFilters = () => {
       this.setState({searchQuery: ""});
       this.resetPriceFilters();
       this.resetSimulatorsFilters();
-
-      
     }
 
   
@@ -988,7 +956,8 @@ class StorePage extends Component {
 
     performBuyItemRedirection() {
 
-      return (<Redirect
+      return (
+        <Redirect
             to={{
                 pathname: "/item/"+this.state.selectedCategory+"/"+this.state.selectedItemId,
                 state: {
@@ -1006,11 +975,11 @@ class StorePage extends Component {
                     vendorNickname: this.state.vendorNickname,
                     ipfsPath: this.state.ipfsPath,
                     isNFT: this.state.isNFT,
-                    similarItems: this.state.similarItems,
-                    usdPrice : this.state.usdValue
+                    similarItems: this.state.similarItems
                 }
             }}
-        />)
+        />
+      );
     }
 
     //Obs: this function was way to many paramaters, bette make a JSON object/payload maybe?
@@ -1047,11 +1016,10 @@ class StorePage extends Component {
           selectedImagePath: imagePath,
           selectedCategory: category,
           vendorAddress: address,
-          vendorNickname: address ? (await this.state.contract.methods.getSeller(address).call()).nickname : "",
+          vendorNickname: address ? (await UIHelper.callWithRetry(this.state.contract.methods.getSeller(address))).nickname : "",
           ipfsPath: ipfsPath,
           isNFT: isNFT,
           isMomentNFT: isMomentNFT,
-          usdPrice : this.state.usdValue,
           similarItems: similarItems
       });
   
@@ -1140,8 +1108,6 @@ class StorePage extends Component {
             return "tab-pane fade";
           }
         }
-
-        
       } else {
         let active = this.getFilteredListWithResults();
         //consider search
@@ -1150,28 +1116,24 @@ class StorePage extends Component {
          }
          return "tab-pane fade";
       }
-     
-    }
-
-    changeTab = async (event, tab) => {
-      console.log('tab clicked ',tab);
-      //TODO
     }
 
     render() {
+
+      const { web3 } = this.props.drizzle;
 
       //const name = this.props.location.;
       //const name = new URLSearchParams(search).get('q');
       //we might want to add additional redirections later, so maybe better specific functions?
       if (this.state.redirectBuyItem) {
-       return this.performBuyItemRedirection();
+        return this.performBuyItemRedirection();
       }
 
       return (
             
     <div className="page-body">
 
- {/*<!-- Start Main Content -->*/}
+    {/*<!-- Start Main Content -->*/}
     <main className="main-content">
 
       {/*<!-- Start Content Area -->*/}
@@ -1189,16 +1151,16 @@ class StorePage extends Component {
                 {/*<!-- nav tabs -->*/}
                 <ul className="spotlight-tabs spotlight-tabs-dark nav nav-tabs border-0 mb-5 position-relative flex-nowrap" id="most_popular_products-carousel-01" role="tablist">
                   <li key="ownership" className="nav-item text-fnwp position-relative">
-                    <a className={this.getActiveClasses('ownership')} id="mp-2-01-tab" onClick={ (e) => this.changeTab(e,'ownership')} data-toggle="tab" href="#mp-2-01-c" role="tab" aria-controls="mp-2-01-c" aria-selected="true">Car Ownership NFTs</a>
+                    <a className={this.getActiveClasses('ownership')} id="mp-2-01-tab" data-toggle="tab" href="#mp-2-01-c" role="tab" aria-controls="mp-2-01-c" aria-selected="true">Car Ownership NFTs</a>
                   </li>
                   <li key="momentnfts" className="nav-item text-fnwp position-relative"> 
-                    <a className={this.getActiveClasses('momentnfts')} id="mp-2-04-tab" onClick={(e) => this.changeTab(e,'momentnfts')} data-toggle="tab" href="#mp-2-04-c" role="tab" aria-controls="mp-2-04-c" aria-selected="false">Simracing Moment NFTs</a>
+                    <a className={this.getActiveClasses('momentnfts')} id="mp-2-04-tab" data-toggle="tab" href="#mp-2-04-c" role="tab" aria-controls="mp-2-04-c" aria-selected="false">Simracing Moment NFTs</a>
                   </li>
                   <li key="carsetup" className="nav-item text-fnwp position-relative"> 
-                    <a className={this.getActiveClasses('carsetup')} id="mp-2-02-tab" onClick={(e) => this.changeTab(e,'carsetup')} data-toggle="tab" href="#mp-2-02-c" role="tab" aria-controls="mp-2-02-c" aria-selected="false">Car Setups</a>
+                    <a className={this.getActiveClasses('carsetup')} id="mp-2-02-tab" data-toggle="tab" href="#mp-2-02-c" role="tab" aria-controls="mp-2-02-c" aria-selected="false">Car Setups</a>
                   </li>
                   <li key="carskins" className="nav-item text-fnwp position-relative"> 
-                    <a className={this.getActiveClasses('carskins')} id="mp-2-03-tab" onClick={(e) => this.changeTab(e,'carskins')} data-toggle="tab" href="#mp-2-03-c" role="tab" aria-controls="mp-2-03-c" aria-selected="false">Car Skins</a>
+                    <a className={this.getActiveClasses('carskins')} id="mp-2-03-tab" data-toggle="tab" href="#mp-2-03-c" role="tab" aria-controls="mp-2-03-c" aria-selected="false">Car Skins</a>
                   </li>
                 </ul>
                 {/*<!-- tab panes -->*/}
@@ -1226,58 +1188,60 @@ class StorePage extends Component {
                                 /*let payload = {
                                   itemId, null, simulator, null, series, carNumber, price, null , address, null, imagePath, true
                                 }*/
-                                return <div className="col-md-12 mb-4" key={key}>
-                                <a onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, description, price, null, carNumber, address, null, imagePath, true, false)} className="product-item">
-                                  <div className="row align-items-center no-gutters">
-                                    <div className="item_img d-none d-sm-block">
-                                      <img className="img bl-3 text-primary" src={imagePath} alt="Games Store"/>
-                                    </div>
-                                    <div className="item_content flex-1 flex-grow pl-0 pl-sm-6 pr-6">
-                                      <h6 className="item_title ls-1 small-1 fw-600 text-uppercase mb-1">Series: {series}</h6>
+                                return (
+                                <div className="col-md-12 mb-4" key={key}>
+                                  <Link to="#" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, description, price, null, carNumber, address, null, imagePath, true, false)} className="product-item">
+                                    <div className="row align-items-center no-gutters">
+                                      <div className="item_img d-none d-sm-block">
+                                        <img className="img bl-3 text-primary" src={imagePath} alt="Games Store"/>
+                                      </div>
+                                      <div className="item_content flex-1 flex-grow pl-0 pl-sm-6 pr-6">
+                                        <h6 className="item_title ls-1 small-1 fw-600 text-uppercase mb-1">Series: {series}</h6>
 
+                                        <div className="position-relative">
+                                          <span className="item_genre small fw-600">
+                                          Simulator: {simulator}
+                                          </span>
+                                        </div>
+                                        {/* 
+                                        <div className="mb-0">
+                                          <i className="mr-2 fab fa-windows"></i>
+                                          <i className="mr-2 fab fa-steam"></i>
+                                          <i className="fab fa-apple"></i>
+                                        </div>
+                                      */}
                                       <div className="position-relative">
-                                        <span className="item_genre small fw-600">
-                                        Simulator: {simulator}
-                                        </span>
-                                      </div>
-                                      {/* 
-                                      <div className="mb-0">
-                                        <i className="mr-2 fab fa-windows"></i>
-                                        <i className="mr-2 fab fa-steam"></i>
-                                        <i className="fab fa-apple"></i>
-                                      </div>
-                                     */}
-                                     <div className="position-relative">
-                                        <span className="item_genre small fw-600">
-                                        Car Number: {carNumber}
-                                        </span>
-                                      </div>
-                                      <div className="position-relative">
-                                        <span className="item_genre small fw-600">
-                                          {description}
-                                        </span>
-                                      </div>
-                                    </div>
-                                    {/*<div className="item_discount d-none d-sm-block">
-                                      <div className="row align-items-center h-100 no-gutters">
-                                        <div className="text-right text-secondary px-6">
-                                          <span className="fw-600 btn bg-warning">-22%</span>
+                                          <span className="item_genre small fw-600">
+                                          Car Number: {carNumber}
+                                          </span>
+                                        </div>
+                                        <div className="position-relative">
+                                          <span className="item_genre small fw-600">
+                                            {description}
+                                          </span>
                                         </div>
                                       </div>
-                                    </div>*/}
-                                    <div className="item_price">
-                                      <div className="row align-items-center h-100 no-gutters">
-                                        <div className="text-right">
-                                          {/*<span className="fw-600 td-lt">{price / priceConversion} ETH</span><br/>*/}
-                                          <div className="store_price">
-                                          <span className="fw-600"><strong>{price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/><span className="secondary-price">{this.renderUSDPrice(price)}<sup className="secondary-sup">USD</sup></span></span>
+                                      {/*<div className="item_discount d-none d-sm-block">
+                                        <div className="row align-items-center h-100 no-gutters">
+                                          <div className="text-right text-secondary px-6">
+                                            <span className="fw-600 btn bg-warning">-22%</span>
+                                          </div>
+                                        </div>
+                                      </div>*/}
+                                      <div className="item_price">
+                                        <div className="row align-items-center h-100 no-gutters">
+                                          <div className="text-right">
+                                            {/*<span className="fw-600 td-lt">{price / priceConversion} ETH</span><br/>*/}
+                                            <div className="store_price">
+                                            <span className="fw-600"><strong>{Number(web3.utils.fromWei(price)).toFixed(2)} <sup className="main-sup">SRC</sup></strong><br/><span className="secondary-price">{this.renderUSDPrice(price)}<sup className="secondary-sup">USD</sup></span></span>
+                                            </div>
                                           </div>
                                         </div>
                                       </div>
                                     </div>
-                                  </div>
-                                </a>
+                                  </Link>
                                 </div>
+                                );
                            
                 
                             }, this)} {/*Obs: need to pass the context to the map function*/}
@@ -1301,7 +1265,7 @@ class StorePage extends Component {
 
                                 let series = metadata.series;
                                 let simulator = metadata.simulator;
-                                let price = value.price / priceConversion;
+                                let price = value.price;
                                 //TODO: change hardcode
                                 let address = value.seriesOwner;
                                 let itemId = value.id;
@@ -1311,8 +1275,9 @@ class StorePage extends Component {
                                 /*let payload = {
                                   itemId, null, simulator, null, series, carNumber, price, null , address, null, imagePath, true
                                 }*/
-                                return <div className="col-md-12 mb-4" key={key}>
-                                <a onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, description, price, null, null, address, null, imagePath, false, true)} className="product-item">
+                                return (
+                                <div className="col-md-12 mb-4" key={key}>
+                                <Link to="#" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, description, price, null, null, address, null, imagePath, false, true)} className="product-item">
                                   <div className="row align-items-center no-gutters">
                                     <div className="item_img d-none d-sm-block">
                                       <img className="img bl-3 text-primary" src={imagePath} alt="Games Store"/>
@@ -1355,15 +1320,15 @@ class StorePage extends Component {
                                         <div className="text-right">
                                           {/*<span className="fw-600 td-lt">{price / priceConversion} ETH</span><br/>*/}
                                           <div className="store_price">
-                                          <span className="fw-600"><strong>{price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/><span className="secondary-price">{this.renderUSDPrice(price)}<sup className="secondary-sup">USD</sup></span></span>
+                                          <span className="fw-600"><strong>{Number(web3.utils.fromWei(price)).toFixed(2)} <sup className="main-sup">SRC</sup></strong><br/><span className="secondary-price">{this.renderUSDPrice(price)}<sup className="secondary-sup">USD</sup></span></span>
                                           </div>
                                         </div>
                                       </div>
                                     </div>
                                   </div>
-                                </a>
+                                </Link>
                                 </div>
-                           
+                                );
                 
                             }, this)} {/*Obs: need to pass the context to the map function*/}
 
@@ -1403,55 +1368,57 @@ class StorePage extends Component {
                             <div><b>Season:</b> {season}</div>
                             <div><b>Price:</b> {price / priceConversion} ETH</div>
                             */
-                           return <div className="col-md-12 mb-4" key={key}>
-                           <a onClick={(e) => this.buyItem(e, itemId, track, simulator, season, series, description, price, carBrand, null, address, ipfsPath, "", false)} className="product-item">
-                             <div className="row align-items-center no-gutters">
-                               <div className="item_img d-none d-sm-block">
-                                 <img className="img bl-3 text-primary" src={thumb} alt=""/>
-                               </div>
-                               <div className="item_content flex-1 flex-grow pl-0 pl-sm-6 pr-6">
-                                 <h6 className="item_title ls-1 small-1 fw-600 text-uppercase mb-1">{carBrand}</h6> 
-                                 {/*<div className="mb-0">
-                                   <i className="mr-2 fab fa-windows"></i>
-                                   <i className="mr-2 fab fa-steam"></i>
-                                   <i className="fab fa-apple"></i>
-                                 </div>*/}
-                                 <div className="position-relative">
-                                   <span className="item_genre small fw-600">
-                                     Track: {track}
-                                   </span>
-                                 </div>
-                                 <div className="position-relative">
-                                   <span className="item_genre small fw-600">
-                                   Simulator: {simulator}
-                                   </span>
-                                 </div>
-                                 <div className="position-relative">
-                                   <span className="item_genre small fw-600">
-                                   Season: {season}
-                                   </span>
-                                 </div>
-                               </div>
-                               {/*<div className="item_discount d-none d-sm-block">
-                                 <div className="row align-items-center h-100 no-gutters">
-                                   <div className="text-right text-secondary px-6">
-                                     <span className="fw-600 btn bg-warning">-10%</span>
-                                   </div>
-                                 </div>
-                               </div>*/}
-                               <div className="item_price">
-                                 <div className="row align-items-center h-100 no-gutters">
-                                   <div className="text-right">
-                                     {/*<span className="fw-600 td-lt">{price / priceConversion} ETH</span><br/>*/}
-                                     <div className="store_price">
-                                     <span className="fw-600"><strong>{price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/><span className="secondary-price">{this.renderUSDPrice(price)}<sup className="secondary-sup">USD</sup></span></span>
-                                     </div>
-                                   </div>
-                                 </div>
-                               </div>
-                             </div>
-                           </a>
-                         </div> 
+                           return (
+                            <div className="col-md-12 mb-4" key={key}>
+                              <Link to="#" onClick={(e) => this.buyItem(e, itemId, track, simulator, season, series, description, price, carBrand, null, address, ipfsPath, "", false)} className="product-item">
+                                <div className="row align-items-center no-gutters">
+                                  <div className="item_img d-none d-sm-block">
+                                    <img className="img bl-3 text-primary" src={thumb} alt=""/>
+                                  </div>
+                                  <div className="item_content flex-1 flex-grow pl-0 pl-sm-6 pr-6">
+                                    <h6 className="item_title ls-1 small-1 fw-600 text-uppercase mb-1">{carBrand}</h6> 
+                                    {/*<div className="mb-0">
+                                      <i className="mr-2 fab fa-windows"></i>
+                                      <i className="mr-2 fab fa-steam"></i>
+                                      <i className="fab fa-apple"></i>
+                                    </div>*/}
+                                    <div className="position-relative">
+                                      <span className="item_genre small fw-600">
+                                        Track: {track}
+                                      </span>
+                                    </div>
+                                    <div className="position-relative">
+                                      <span className="item_genre small fw-600">
+                                      Simulator: {simulator}
+                                      </span>
+                                    </div>
+                                    <div className="position-relative">
+                                      <span className="item_genre small fw-600">
+                                      Season: {season}
+                                      </span>
+                                    </div>
+                                  </div>
+                                  {/*<div className="item_discount d-none d-sm-block">
+                                    <div className="row align-items-center h-100 no-gutters">
+                                      <div className="text-right text-secondary px-6">
+                                        <span className="fw-600 btn bg-warning">-10%</span>
+                                      </div>
+                                    </div>
+                                  </div>*/}
+                                  <div className="item_price">
+                                    <div className="row align-items-center h-100 no-gutters">
+                                      <div className="text-right">
+                                        {/*<span className="fw-600 td-lt">{price / priceConversion} ETH</span><br/>*/}
+                                        <div className="store_price">
+                                        <span className="fw-600"><strong>{Number(web3.utils.fromWei(price)).toFixed(2)} <sup className="main-sup">SRC</sup></strong><br/><span className="secondary-price">{this.renderUSDPrice(price)}<sup className="secondary-sup">USD</sup></span></span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </Link>
+                            </div> 
+                            );
                       },this)}
 
                       
@@ -1472,7 +1439,7 @@ class StorePage extends Component {
 
                                     let carBrand = value.info.carBrand
                                     let simulator = value.info.simulator
-                                    
+                                    let description = value.info.description
                                     let price = value.ad.price
                                     let address = value.ad.seller
                                     let itemId = value.id
@@ -1480,8 +1447,9 @@ class StorePage extends Component {
                                     let ipfsPath = value.ad.ipfsPath
                                     let imagePath = value.info.skinPic
                                     
-                                    return <div className="col-md-12 mb-4" key={key}>
-                                        <a onClick={(e) => this.buyItem(e, itemId, null, simulator, null, null, null, price, carBrand, null, address, ipfsPath, imagePath, false)} className="product-item">
+                                    return (
+                                      <div className="col-md-12 mb-4" key={key}>
+                                        <Link to="#" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, null, description, price, carBrand, null, address, ipfsPath, imagePath, false)} className="product-item">
                                         <div className="row align-items-center no-gutters">
                                             <div className="item_img d-none d-sm-block">
                                             <img className="img bl-3 text-primary" src={"https://simthunder.infura-ipfs.io/ipfs/"+imagePath[0]} alt="thumb"/>
@@ -1513,14 +1481,15 @@ class StorePage extends Component {
                                                 <div className="text-right">
                                                 {/*<span className="fw-600 td-lt">{price / priceConversion} ETH</span><br/>*/}
                                                 <div className="store_price">
-                                                <span className="fw-600"><strong>{price / priceConversion} <sup className="main-sup">SRC</sup></strong><br/><span className="secondary-price">{this.renderUSDPrice(price)}<sup className="secondary-sup">USD</sup></span></span>
+                                                <span className="fw-600"><strong>{Number(web3.utils.fromWei(price)).toFixed(2)} <sup className="main-sup">SRC</sup></strong><br/><span className="secondary-price">{this.renderUSDPrice(price)}<sup className="secondary-sup">USD</sup></span></span>
                                                 </div>
                                                 </div>
                                             </div>
                                             </div>
                                         </div>
-                                        </a>
+                                        </Link>
                                     </div>
+                                    );
                             },this)}
                       {/*<!-- /.item -->*/}
                       {/*<!-- item -->*/}
@@ -1568,32 +1537,21 @@ class StorePage extends Component {
                           <span className="p-collapsing-title">Price</span>
                       </a>
                       <div className="collapse nav-collapse show">
-
                           <ul className="list-unstyled py-2">
-
-                          
                             <li key="price_filter" className="nav-item">
                               <div className="nav-link py-2 px-3">
-                                
-                                    
                                     <label className="custom-control-label1" htmlFor="MIN_PRICE">Min: </label>
-                                    <input className="custom-control-input1" type="number" min={this.state.priceMinDefault} max={this.state.priceMaxDefault} step={this.state.priceStep}  onChange={ (e) => this.priceFilterChanged(e,"min")} value={this.state.priceMin} name="MIN_PRICE" id="MIN_PRICE"/>
+                                    <input className="custom-control-input1" type="number" min={this.state.priceMinDefault} max={this.state.priceMaxDefault} step={this.state.priceStep}  onChange={ (e) => this.priceFilterChanged(e,"min")} value={this.state.priceMin} name="MIN_PRICE" id="MIN_PRICE" />
                                     <br/>
                                     <label className="custom-control-label1" htmlFor="MAX_PRICE">Max: </label>
-                                    <input className="custom-control-input1" type="number" min={this.state.priceMinDefault} max={this.state.priceMaxDefault}  step={this.state.priceStep}  onChange={ (e) => this.priceFilterChanged(e, "max")} value={this.state.priceMax} name="MAX_PRICE" id="MAX_PRICE"/>
-                                   
-                               
+                                    <input className="custom-control-input1" type="number" min={this.state.priceMinDefault} max={this.state.priceMaxDefault}  step={this.state.priceStep}  onChange={ (e) => this.priceFilterChanged(e, "max")} value={this.state.priceMax} name="MAX_PRICE" id="MAX_PRICE" />
                               </div>
                             </li>
-                         
-                            
                           </ul>
                       </div>
                     </li>
-                
-                    
                     <li key="resetfilter" className="nav-item text-light transition mt-4">
-                      <a href="#" onClick={this.resetFilters} className="btn btn-warning d-block">Reset Filter</a>
+                      <button onClick={this.resetFilters} className="btn btn-warning w-100">Reset Filter</button>
                     </li>
                   </ul>
                 </div>

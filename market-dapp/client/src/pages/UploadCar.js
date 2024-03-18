@@ -1,14 +1,13 @@
 import React, { Component } from 'react';
 import { Dropdown, Form, DropdownButton, Button, FormLabel } from 'react-bootstrap';
 import { Prompt } from 'react-st-modal';
+import { Buffer } from 'buffer';
 import { withRouter } from "react-router";
 import ipfs from "../ipfs";
-import computeMerkleRootHash from "../utils/merkle"
-import UIHelper from "../utils/uihelper"
+import computeMerkleRootHash from "../utils/merkle";
+import UIHelper from "../utils/uihelper";
+import * as openpgp from 'openpgp';
 
-const openpgp = require('openpgp');
-
-const priceConversion = 10**18;
 const NON_SECURE_SELL = process.env.REACT_APP_NON_SECURE_SELL === "true";
 const NON_SECURE_KEY= process.env.REACT_APP_NON_SECURE_KEY;
 const NUMBER_CONFIRMATIONS_NEEDED = Number(process.env.REACT_APP_NUMBER_CONFIRMATIONS_NEEDED);
@@ -19,8 +18,6 @@ class UploadCar extends Component {
         super(props)
 
         this.state = {
-            drizzle: props.drizzle,
-            drizzleState: props.drizzleState,
             contract: null,
             currentAccount: null,
             currentSimulator: "Choose your simulator",
@@ -35,26 +32,21 @@ class UploadCar extends Component {
             priceValue: "",
             mode: "create"
         }
-
-        if(props.location.state) {
-            this.state = {...this.state, ...props.location.state};
-        }
     };
 
-
     componentDidMount = async () => {
-        const currentAccount = this.state.drizzleState.accounts[0];
-        const contract = this.state.drizzle.contracts.STMarketplace;
-        const stSetup = await this.state.drizzle.contracts.STSetup;
-        const isSeller = (await contract.methods.getSeller(currentAccount).call()).active;
-        this.setState({ currentAccount: currentAccount, contract: contract, stSetup: stSetup, isSeller: isSeller });
+        const { props } = this;
+        const { drizzle, drizzleState } = props;
+
+        const currentAccount = drizzleState.accounts[0];
+        const contract = drizzle.contracts.STMarketplace;
+        const stSetup = await drizzle.contracts.STSetup;
+        const isSeller = (await UIHelper.callWithRetry(contract.methods.getSeller(currentAccount))).active;
+
+        this.setState({ currentAccount, contract, stSetup, isSeller, ...props.location.state });
 
         UIHelper.scrollToTop();
     };
-
-    handleChangeHash = (event) => {
-        this.setState({ ipfsPath: event.target.value });
-    }
 
     handleFilePrice = (event) => {
         const re = new RegExp(event.target.pattern);
@@ -119,12 +111,12 @@ class UploadCar extends Component {
         const password = NON_SECURE_SELL ? NON_SECURE_KEY : await Prompt('Type the password to encrypt the file. Use different password for each item.');
         if (!password) { alert("Invalid password"); return false; }
 
-        const { message } = await openpgp.encrypt({
-            message: openpgp.message.fromBinary(this.state.buffer), // input as Message object
+        const message = await openpgp.createMessage({ binary: this.state.buffer });
+        const encryptedBuffer = await openpgp.encrypt({
+            message,                                                // input as Message object
             passwords: [password],                                  // multiple passwords possible
-            armor: false                                            // don't ASCII armor (for Uint8Array output)
+            format: 'binary'                                        // don't ASCII armor (for Uint8Array output)
         });
-        const encryptedBuffer = message.packets.write(); // get raw encrypted packets as Uint8Array
 
         const encryptedDataHash = computeMerkleRootHash(Buffer.from(encryptedBuffer));
         console.log(`Logger Root Hash: ${encryptedDataHash}`);
@@ -132,13 +124,13 @@ class UploadCar extends Component {
         const response = await ipfs.add(encryptedBuffer, (err, ipfsPath) => {
             if(err) console.error(err);
         });
-        
+
         if(!response) { 
             alert("Error on upload files. Please try again later.")
             return false;
         }
 
-        this.setState({ ipfsPath: response.path, encryptedDataHash: encryptedDataHash });
+        this.setState({ ipfsPath: response.path, encryptedDataHash });
 
         return true;
     };
@@ -150,6 +142,8 @@ class UploadCar extends Component {
             alert('Item price must be a number');
         } else if("create" === this.state.mode && !this.state.buffer) {
             alert('File missing or invalid!');
+        } else if(!UIHelper.simsElements.includes(this.state.currentSimulator)) {
+            alert('Choose a simulator!');
         } else if(!this.state.currentDescription) {
             alert('Description is required!');
         } else {
@@ -167,9 +161,10 @@ class UploadCar extends Component {
             }
 
             const { state } = this;
+            const { web3 } = this.props.drizzle;
 
-            const price = state.drizzle.web3.utils.toWei(state.priceValue);
-            const ipfsPathBytes = state.drizzle.web3.utils.asciiToHex(state.ipfsPath);
+            const price = web3.utils.toWei(state.priceValue);
+            const ipfsPathBytes = web3.utils.asciiToHex(state.ipfsPath);
             const paramsForCall = await UIHelper.calculateGasUsingStation(state.currentAccount);
 
             console.log("account:", state.currentAccount);
@@ -201,15 +196,18 @@ class UploadCar extends Component {
         }
     }
 
-    render() {
-        const simsElements = ["iRacing", "F12020", "rFactor", "Assetto Corsa"];
+    simOptions = () => {
         const sims = [];
 
-        for (const [index, value] of simsElements.entries()) {
+        for (const [index, value] of UIHelper.simsElements.entries()) {
             let thumb = "/assets/img/sims/" + value + ".png";
             sims.push(<Dropdown.Item eventKey={value} key={index}><img src={thumb} width="16" alt="thumbnail" /> {value}</Dropdown.Item>)
         }
 
+        return sims;
+    }
+
+    render() {
         return (
             <header className="header">
                 <div className="overlay overflow-hidden pe-n"><img src="/assets/img/bg/bg_shape.png" alt="Background shape" /></div>
@@ -224,7 +222,7 @@ class UploadCar extends Component {
                                         { "create" === this.state.mode &&
                                         <div className="form-row">
                                             <div className="form-group col-12">
-                                                <FormLabel for="car-file" className="mr-2 col-form-label font-weight-bold">Choose Setup file (.zip):</FormLabel>
+                                                <FormLabel htmlFor="car-file" className="mr-2 col-form-label font-weight-bold">Choose Setup file (.zip):</FormLabel>
                                                 <input id="car-file" type="file" accept=".zip" onChange={this.captureFile} />
                                             </div>
                                         </div>
@@ -257,7 +255,7 @@ class UploadCar extends Component {
                                         <div className="form-row">
                                             <div className="form-group col-md-6 col-12">
                                                 <DropdownButton id="dropdown-skin-button" title={this.state.currentSimulator} onSelect={this.onSelectSim}>
-                                                    {sims}
+                                                    {this.simOptions()}
                                                 </DropdownButton>
                                             </div>
                                         </div>
