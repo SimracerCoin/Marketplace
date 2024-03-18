@@ -3,6 +3,7 @@ import { Button, Card, ListGroup } from 'react-bootstrap';
 import { Redirect } from "react-router-dom";
 import { withRouter } from "react-router";
 import StarRatings from 'react-star-ratings';
+import UIHelper from "../utils/uihelper";
 
 class SellerPage extends Component {
     constructor(props) {
@@ -40,15 +41,20 @@ class SellerPage extends Component {
 
         const currentAccount = drizzleState.accounts[0];
 
-        const listCars = (await stSetup.methods.getSetups().call()).filter(item => item.ad.active && item.ad.seller === vendorAddress);
-        const listSkins = (await stSkin.methods.getSkins().call()).filter(item => item.ad.active && item.ad.seller === vendorAddress);
-        const listComments = await contract.methods.getSellerComments(vendorAddress).call();
+        const [listCars, listSkins, listComments] = await Promise.all([
+            UIHelper.callWithRetry(stSetup.methods.getSetups()),
+            UIHelper.callWithRetry(stSkin.methods.getSkins()),
+            UIHelper.callWithRetry(contract.methods.getSellerComments(vendorAddress))
+        ]).then(values => [
+            values[0].filter(item => item.ad.active && item.ad.seller === vendorAddress),
+            values[1].filter(item => item.ad.active && item.ad.seller === vendorAddress),
+            values[2]
+        ]);
 
         this.setState({ listCars, listSkins, contract, currentAccount, listComments, ...props.location.state });
     
         // scroll to top
-        document.body.scrollTop = 0;            // For Safari
-        document.documentElement.scrollTop = 0; // For Chrome, Firefox, IE and Opera
+        UIHelper.scrollToTop();
     }
 
     buyItem = async (event, itemId, track, simulator, season, series, description, price, carBrand, carNumber, address, ipfsPath, imagePath) => {

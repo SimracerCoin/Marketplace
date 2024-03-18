@@ -41,7 +41,7 @@ class UploadCar extends Component {
         const currentAccount = drizzleState.accounts[0];
         const contract = drizzle.contracts.STMarketplace;
         const stSetup = await drizzle.contracts.STSetup;
-        const isSeller = (await contract.methods.getSeller(currentAccount).call()).active;
+        const isSeller = (await UIHelper.callWithRetry(contract.methods.getSeller(currentAccount))).active;
 
         this.setState({ currentAccount, contract, stSetup, isSeller, ...props.location.state });
 

@@ -113,7 +113,7 @@ class App extends React.Component {
     }
   }
 
-  setWeb3Options = async () => {
+  setWeb3Options = () => {
     //set bigger timeouts (provided values according to the documentation examples)
     if(window.web3 && window.web3.eth) {
       // set the transaction block timeout (default is 50)
@@ -254,7 +254,7 @@ class App extends React.Component {
               }
 
               if ( (allowAllWallets || state.allow_wallets.includes(drizzleState.accounts[0]) ) && !state.wrongNetwork) {
-                return ([
+                return [
                   <RouterPage drizzle={drizzle} drizzleState={drizzleState} />,
                   <CookieConsent 
                     enableDeclineButton
@@ -263,7 +263,6 @@ class App extends React.Component {
                     buttonText="GOT IT!"
                     onAccept={this.checkCookiesAcceptance}>Our website uses cookies to ensure you get the best experience. By proceeding on our website you are consenting to the use of these cookies.</CookieConsent>
                 ]
-                )
               } else {
                 return (
                   <Underconstruction isLoggedIn={state.isLoggedIn} wrongNetwork={state.wrongNetwork} login={this.login}/>
@@ -316,7 +315,7 @@ class App extends React.Component {
 
         window.web3 = new Web3(provider);
 
-        await this.setWeb3Options();
+        this.setWeb3Options();
         await this.getAccountInfo(provider).then(() => localStorage.setItem("isWalletConnected", "true"));
     }
   }

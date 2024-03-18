@@ -165,9 +165,9 @@ class StorePage extends Component {
         const stSkin = await drizzle.contracts.STSkin;
 
         //car setups
-        response_cars = (await stSetup.methods.getSetups().call()).filter(item => item.ad.active);
+        response_cars = (await UIHelper.callWithRetry(stSetup.methods.getSetups())).filter(item => item.ad.active);
         //car setups
-        response_skins = (await stSkin.methods.getSkins().call()).filter(item => item.ad.active);
+        response_skins = (await UIHelper.callWithRetry(stSkin.methods.getSkins())).filter(item => item.ad.active);
         
         let simsList = [];
         let simulatorsFilter = [];
@@ -265,7 +265,7 @@ class StorePage extends Component {
      */
     loadCarOwnershipNFTs = async (contractNFTs, maxElems, simsList, simulatorsFilter, maxElems2, filteredCarsList, filteredSkinsList) => {
 
-     const numNfts = await contractNFTs.methods.currentTokenId().call();
+      const numNfts = await UIHelper.callWithRetry(contractNFTs.methods.currentTokenId());
      console.log('ownership nft count:' + numNfts);
 
      let max = parseInt(numNfts) + 1;
@@ -279,16 +279,15 @@ class StorePage extends Component {
 
       for (let i = 1; i < max ; i++) {
         try {
-            //TODO: change for different ids
-            let ownerAddress = await contractNFTs.methods.ownerOf(i).call();
+            const ownerAddress = await UIHelper.callWithRetry(contractNFTs.methods.ownerOf(i));
             //console.log('ID:'+i+'ownerAddress: '+ownerAddress.toString()+'nfts addr: '+contractNFTs.address);
             if(ownerAddress === contractNFTs.address) {
                 console.log('GOT MATCH');
-                let uri = await contractNFTs.methods.tokenURI(i).call();
-                //console.log('uri: ', uri);
-                let response = await fetch(uri);
-                let info = await contractNFTs.methods.getItem(i).call();
-                let data = {id: i, price: info[0], seriesOwner: info[1], ...await response.json()};
+                const [response, info] = await Promise.all([
+                  UIHelper.callWithRetry(contractNFTs.methods.tokenURI(i)).then(fetch).then(r => r.json()),
+                  UIHelper.callWithRetry(contractNFTs.methods.getItem(i))
+                ]);
+                const data = {id: i, price: info[0], seriesOwner: info[1], ...response};
                 
                         /**  DATA example:
                         {  
@@ -363,7 +362,7 @@ class StorePage extends Component {
     loadMomentNFTs = async (contractMomentNFTs, maxElems, simsList, simulatorsFilter, maxElems2, filteredCarsList, filteredSkinsList) => {
       
       // get info from marketplace NFT contract
-      const numMomentNfts = await contractMomentNFTs.methods.currentTokenId().call();
+      const numMomentNfts = await UIHelper.callWithRetry(contractMomentNFTs.methods.currentTokenId());
       console.log('moment nft count:' + numMomentNfts);
 
       let max = parseInt(numMomentNfts) + 1;
@@ -375,15 +374,15 @@ class StorePage extends Component {
       for (let i = 1; i < max; i++) {
         try {
             //TODO: change for different ids
-            let ownerAddress = await contractMomentNFTs.methods.ownerOf(i).call();
+            const ownerAddress = await UIHelper.callWithRetry(contractMomentNFTs.methods.ownerOf(i));
             //console.log('ID:'+i+'ownerAddress: '+ownerAddress.toString()+'nfts addr: '+contractMomentNFTs.address);
             if(ownerAddress === contractMomentNFTs.address) {
                
-                let uri = await contractMomentNFTs.methods.tokenURI(i).call();
-                //console.log('uri: ', uri);
-                let response = await fetch(uri);
-                let info = await contractMomentNFTs.methods.getItem(i).call();
-                let data = {id: i, price: info[0], seriesOwner: info[1], ...await response.json()};
+                const [response, info] = await Promise.all([
+                  UIHelper.callWithRetry(contractMomentNFTs.methods.tokenURI(i)).then(fetch).then(r => r.json()),
+                  UIHelper.callWithRetry(contractMomentNFTs.methods.getItem(i))
+                ]);
+                const data = {id: i, price: info[0], seriesOwner: info[1], ...response};
 
                 let metadata = this.extractMomentNFTTraitTypes(data.attributes);
                 //global list of all
@@ -1017,7 +1016,7 @@ class StorePage extends Component {
           selectedImagePath: imagePath,
           selectedCategory: category,
           vendorAddress: address,
-          vendorNickname: address ? (await this.state.contract.methods.getSeller(address).call()).nickname : "",
+          vendorNickname: address ? (await UIHelper.callWithRetry(this.state.contract.methods.getSeller(address))).nickname : "",
           ipfsPath: ipfsPath,
           isNFT: isNFT,
           isMomentNFT: isMomentNFT,

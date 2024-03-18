@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { Button } from 'react-bootstrap';
+import UIHelper from "../utils/uihelper";
 
 class RegisterVendor extends Component {
 
@@ -17,7 +18,7 @@ class RegisterVendor extends Component {
 
         const contract = await drizzle.contracts.STMarketplace;
         const currentAccount = await drizzleState.accounts[0];
-        const isVendor = await contract.methods.isVendor(currentAccount).call();
+        const isVendor = await UIHelper.callWithRetry(contract.methods.isVendor(currentAccount));
         
         this.setState({ contract, currentAccount, isVendor });
     }

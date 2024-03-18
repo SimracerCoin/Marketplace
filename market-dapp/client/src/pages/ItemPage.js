@@ -28,6 +28,125 @@ class ItemPage extends Component {
         super(props);
 
         this.state = {
+            itemId: "",
+            track:  "",
+            simulator: "",
+            season: "",
+            series: "",
+            description: "",
+            price: "",
+            carBrand: "",
+            carNumber: 0,
+            vendorAddress: "",
+            vendorNickname: "",
+            ipfsPath: "",
+            videoPath: "",
+            imagePath: [],
+            isNFT: false,
+            isMomentNFT: false,
+            usdValue: 1,
+            metadata: {},
+            contract: null,
+            currentAccount: "",
+            comment: "",
+            listComments: [],
+            review_rating: 0,
+            average_review: 0,
+            isMuted: true,
+            messageOptions: {show: false, title:'', variant:'sucess', message:''},
+            isSeller: false, 
+            isContractOwner: false,
+            canDelete: false,
+            sellFromWallet: false,
+            isNFTOwner: false,
+            redirectEdit: false,
+            hasVideo: false,
+            hasImage: false
+        }
+
+        this.mute = this.mute.bind(this);
+        this.unmute = this.unmute.bind(this);
+    }
+
+    extractNFTTraitTypes(attributes) {
+        let data = {};
+        for(let attribute of attributes) {
+            data[attribute.trait_type] = attribute.value;
+        }
+        return data;
+    }
+
+    componentDidMount = async () => {
+        const { props } = this;
+        const { drizzle, drizzleState } = props;
+
+        const contract = await drizzle.contracts.STMarketplace;
+        const contractNFTs = await drizzle.contracts.SimthunderOwner;
+        const contractSimracerCoin = await drizzle.contracts.SimracerCoin;
+        const contractMomentNFTs = await drizzle.contracts.SimracingMomentOwner;
+        const stSetup = await drizzle.contracts.STSetup;
+        const stSkin = await drizzle.contracts.STSkin;
+
+        const currentAccount = await drizzleState.accounts[0];
+        const marketplaceOwner = await UIHelper.callWithRetry(contract.methods.owner());
+
+        const updateAfterLoad = async () => {
+          const { state } = this;
+
+          this.setState({usdValue: await UIHelper.fetchSRCPriceVsUSD()});
+
+          if(state.imagePath && (!Array.isArray(state.imagePath) || !state.imagePath.every(str => str === ""))) {
+            const imagePath = Array.isArray(state.imagePath) ? state.imagePath : [state.imagePath];
+            imagePath.forEach((v, idx) => {
+              if(/(?:https?):\/\/(\w+:?\w*)?(\S+)(:\d+)?(\/|\/([\w#!:.?+=&%!\-\/]))?/.test(v)) {
+                imagePath[idx] = v.split('/').pop();
+              }
+            });
+            this.setState({imagePath, hasImage: true});
+
+            try {
+              // workaround to insure that item persist on metatags cache db
+              fetch('/api/metatags', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  id: state.itemId,
+                  category: state.category,
+                  description: state.description,
+                  image: imagePath ? "https://simthunder.infura-ipfs.io/ipfs/" + imagePath[0] : null
+                  })
+              });
+            } catch(e) {
+              console.error(e);
+            }
+          }
+
+          const sellerAddress = state.vendorAddress;
+          const isSeller = (currentAccount === sellerAddress);
+          const isContractOwner = (currentAccount === marketplaceOwner);
+          const isSkin = !state.isNFT && !state.isMomentNFT && (!state.track || !state.season);
+          const canDelete = isSeller || isContractOwner;
+          const hasVideo = state.isMomentNFT && state.videoPath;
+  
+          if (!state.isNFT && !state.isMomentNFT) {
+            const listComments = await UIHelper.callWithRetry(contract.methods.getItemComments(state.itemId));
+            const average_review = await this.averageRating(listComments);
+  
+            this.setState({ canDelete, currentAccount, isSeller, isContractOwner, contract, contractSimracerCoin, listComments, average_review, isSkin });
+          } else {
+            const isNFTOwner = (await UIHelper.callWithRetry((state.isNFT ? contractNFTs : contractMomentNFTs).methods.ownerOf(state.itemId))) === currentAccount;
+  
+            this.setState({ isNFTOwner, canDelete, currentAccount, isSeller, contract, contractMomentNFTs, contractNFTs, contractSimracerCoin, isSkin });
+          }
+  
+          this.setState({hasVideo, isMuted: hasVideo});
+        }
+
+        const {category, id} = props.match.params;
+        this.setState({category});
+
+        if(props.location.state) {
+          this.setState({
             itemId: props.location.state ? props.location.state.selectedItemId : "",
             track: props.location.state ? props.location.state.selectedTrack : "",
             simulator: props.location.state ? props.location.state.selectedSimulator  : "",
@@ -44,145 +163,27 @@ class ItemPage extends Component {
             imagePath: props.location.state ? (Array.isArray(props.location.state.imagePath) ? props.location.state.imagePath : [props.location.state.imagePath]) : [],
             isNFT: props.location.state ? props.location.state.isNFT : false,
             isMomentNFT: props.location.state ? props.location.state.isMomentNFT : false,
-            usdValue: 1,
             metadata: props.location.state ? props.location.state.metadata : {},
-            contract: null,
-            currentAccount: "",
-            comment: "",
-            listComments: [],
-            review_rating: 0,
-            average_review: 0,
-            isMuted: true,
-            messageOptions: {show: false, title:'', variant:'sucess', message:''},
-            isSeller: false, 
-            isContractOwner: false,
-            canDelete: false,
-            sellFromWallet: false,
-            isNFTOwner: false,
-            redirectEdit: false,
-            ...props.match.params
-        }
-
-        this.mute = this.mute.bind(this);
-        this.unmute = this.unmute.bind(this);
-    }
-
-    extractNFTTraitTypes(attributes) {
-        let data = {};
-        for(let attribute of attributes) {
-            data[attribute.trait_type] = attribute.value;
-        }
-        return data;
-    }
-
-    loadRemainingNFTS = async (contract) => {
-      let nftlist = [];
-
-      for (let i = 1; i < parseInt(await contract.methods.currentTokenId().call()) + 1; i++) {
-          try {
-              let ownerAddress = await contract.methods.ownerOf(i).call();
-              if(ownerAddress === contract.address) {
-                  
-                  let data = await contract.methods.tokenURI(i).call().then(u => fetch(u)).then(r => r.json());
-                  data.id = i;
-
-                  nftlist.push(data);
-                  
-                  // load only 10 nft's
-                  if(nftlist.length === NUMBER_LOAD_ITEMS) break;
-              }
-          } catch (e) {
-              console.error(e);
-          }
-      }
-
-      return nftlist;
-    }
-
-    componentDidMount = async () => {
-        const { state } = this;
-        const { drizzle, drizzleState } = this.props;
-
-        const contract = await drizzle.contracts.STMarketplace;
-        const contractNFTs = await drizzle.contracts.SimthunderOwner;
-        const contractSimracerCoin = await drizzle.contracts.SimracerCoin;
-        const contractMomentNFTs = await drizzle.contracts.SimracingMomentOwner;
-        const stSetup = await drizzle.contracts.STSetup;
-        const stSkin = await drizzle.contracts.STSkin;
-
-        const currentAccount = await drizzleState.accounts[0];
-        const marketplaceOwner = await contract.methods.owner().call();
-
-        const updateAfterLoad = async () => {
-          this.setState({usdValue: await UIHelper.fetchSRCPriceVsUSD()});
-
-          if(state.imagePath) {
-            const imagePath = Array.isArray(state.imagePath) ? state.imagePath : [state.imagePath];
-            imagePath.forEach((v, idx) => {
-              if(/(?:https?):\/\/(\w+:?\w*)?(\S+)(:\d+)?(\/|\/([\w#!:.?+=&%!\-\/]))?/.test(v))
-              imagePath[idx] = v.split('/').pop();
-            });
-            this.setState({imagePath});
-          }
-  
-          try {
-            // workaround to insure that item persist on metatags cache db
-            fetch('/api/metatags', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                id: state.itemId,
-                category: state.category,
-                description: state.description,
-                image: state.imagePath ? "https://simthunder.infura-ipfs.io/ipfs/" + state.imagePath[0] : null
-                })
-            });
-          } catch(e) {
-            console.error(e);
-          }
-  
-          const sellerAddress = state.vendorAddress;
-          const isSeller = (currentAccount === sellerAddress);
-          const isContractOwner = (currentAccount === marketplaceOwner);
-          const isSkin = !state.isNFT && !state.isMomentNFT && (!state.track || !state.season);
-          const canDelete = isSeller || isContractOwner;
-          const hasVideo = state.isMomentNFT;
-  
-          if (!state.isNFT && !state.isMomentNFT) {
-            const listComments = await contract.methods.getItemComments(state.itemId).call();
-            const average_review = await this.averageRating(listComments);
-  
-            this.setState({ canDelete, currentAccount, isSeller, isContractOwner, contract, contractSimracerCoin, listComments, average_review, isSkin });
-          } else {
-            const isNFTOwner = (await (state.isNFT ? contractNFTs : contractMomentNFTs).methods.ownerOf(state.itemId).call()) === currentAccount;
-  
-            this.setState({ isNFTOwner, canDelete, currentAccount, isSeller, contract, contractMomentNFTs, contractNFTs, contractSimracerCoin, isSkin });
-          }
-  
-          this.setState({isMuted: hasVideo});
-        }
-
-        if(state.itemId) {
-          updateAfterLoad();
-        } else if(state.id) {
+          }, updateAfterLoad);
+        } else if(id) {
           let item, info, data;
 
           try {
-            switch(state.category) {
+            switch(category) {
               case "carskins":
-                item = await stSkin.methods.getSkin(state.id).call();
-                this.setState({imagePath: item.info.skinPic});
+                item = await UIHelper.callWithRetry(stSkin.methods.getSkin(id));
+                this.setState({imagePath: [item.info.skinPic]});
                 break;
               case "carsetup":
-                item = await stSetup.methods.getSetup(state.id).call();
+                item = await UIHelper.callWithRetry(stSetup.methods.getSetup(id));
                 break;
               case "momentnfts":
-                [data, info] = await Promise.all([contractMomentNFTs.methods.tokenURI(state.id).call().then(uri => fetch(uri)).then(r => r.json()), contractMomentNFTs.methods.getItem(state.id).call(), this.loadRemainingNFTS(contractMomentNFTs)]);
+                [data, info] = await Promise.all([UIHelper.callWithRetry(contractMomentNFTs.methods.tokenURI(id)).then(uri => fetch(uri)).then(r => r.json()), UIHelper.callWithRetry(contractMomentNFTs.methods.getItem(id))]);
 
                 item = { ad: {price: info[0], seller: info[1], active: true}, info: {...data, imagePath: [data.image], isMomentNFT: true, metadata: this.extractNFTTraitTypes(data.attributes)}};
                 break;
               case "ownership":
-                [data, info] = await Promise.all([contractNFTs.methods.tokenURI(state.id).call().then(uri => fetch(uri)).then(r => r.json()), contractNFTs.methods.getItem(state.id).call(), this.loadRemainingNFTS(contractNFTs)]);
+                [data, info] = await Promise.all([UIHelper.callWithRetry(contractNFTs.methods.tokenURI(id)).then(uri => fetch(uri)).then(r => r.json()), UIHelper.callWithRetry(contractNFTs.methods.getItem(id))]);
 
                 item = { ad: {price: info[0], seller: info[1], active: true}, info: {...data, imagePath: [data.image], isNFT: true, metadata: this.extractNFTTraitTypes(data.attributes)}};
                 break;
@@ -199,9 +200,9 @@ class ItemPage extends Component {
           this.setState({ 
             ...item.ad, 
             ...item.info,
-            itemId: state.id,
+            itemId: id,
             vendorAddress: item.ad.seller,
-            vendorNickname: (await contract.methods.getSeller(item.ad.seller).call()).nickname
+            vendorNickname: (await UIHelper.callWithRetry(contract.methods.getSeller(item.ad.seller))).nickname
           }, updateAfterLoad);
         } else {
           alert("Item not found!");
@@ -369,7 +370,7 @@ class ItemPage extends Component {
         const { web3 } = this.props.drizzle;
 
         const balance = web3.utils.toBN(
-          await state.contractSimracerCoin.methods.balanceOf(state.currentAccount).call());
+          await UIHelper.callWithRetry(state.contractSimracerCoin.methods.balanceOf(state.currentAccount)));
         const price = web3.utils.toBN(state.price);
 
         if(balance.lt(price)) {
@@ -500,11 +501,12 @@ class ItemPage extends Component {
         event.stopPropagation();
         event.preventDefault();
         const description = document.getElementById('comment').value;
+
         if (this.state.review_rating === 0) {
             alert("Please review this item")
         } else {
             await this.state.contract.methods.newComment(this.state.itemId, description, this.state.review_rating).send({ from: this.state.currentAccount });
-            const listComments = await this.state.contract.methods.getItemComments(this.state.itemId).call();
+            const listComments = await UIHelper.callWithRetry(this.state.contract.methods.getItemComments(this.state.itemId));
             const average_review = await this.averageRating(listComments);
             document.getElementById("comment").value = "";
             this.setState({ listComments: listComments, review_rating: 0, average_review: average_review });
@@ -752,9 +754,9 @@ class ItemPage extends Component {
       );
     }
 
-    renderCarousel = (hasVideo, hasImage) => {
+    renderCarousel = () => {
 
-      console.log(this.state);
+      const { hasVideo, hasImage } = this.state;
 
       if(hasImage && !hasVideo) {
         return (
@@ -796,22 +798,12 @@ class ItemPage extends Component {
         return this.performEditItemRedirection();
       }
 
-      let item = "";
-      let hasImage = true;
-      let hasVideo = state.isMomentNFT && state.videoPath;
+      let item = 
+        state.category === "carskins" ? "Skin" : 
+        state.category === "carsetup" ? "Car Setup" :
+        state.category === "momentnfts" ? "Simracing Moment NFT" :
+        state.category === "ownership" ? "Car Ownership NFT" : "";
       
-      if (state.isNFT) {
-        item = "Car Ownership NFT";
-      }
-      else if(state.isMomentNFT) {
-        item = "Simracing Moment NFT";
-      }
-      else if (!state.track || !state.season) {
-        item = "Skin";
-      } else {
-        item = "Car Setup";
-        hasImage = false;
-      }
       //compute ratings
       const reviewsRating = this.getReviewsRating();
       const allowsReviews = !state.isNFT && !state.isMomentNFT;
@@ -850,7 +842,7 @@ class ItemPage extends Component {
                     <div className="col-12">
                       <div className="product-body">
                         {/*<!--Carousel Wrapper-->*/}
-                        {this.renderCarousel(hasVideo, hasImage)}
+                        {this.renderCarousel()}
                         {/*<!--/.Carousel Wrapper-->*/}
                         <div className="alert alert-no-border alert-share d-flex mb-6" role="alert">
                           <span className="flex-1 fw-600 text-uppercase text-warning">Share:</span>
@@ -874,7 +866,7 @@ class ItemPage extends Component {
                           <h6 className="mb-0 fw-400 ls-1 text-uppercase">More like this</h6>
                           <hr className="border-secondary my-2"/>
                           <div>
-                              <SimilarItemsComponent drizzle={props.drizzle} category={state.category} className="similaritems" selectedItemId={state.itemId ? state.itemId : state.id}></SimilarItemsComponent>   
+                              <SimilarItemsComponent drizzle={props.drizzle} category={props.match.params.category} className="similaritems" selectedItemId={props.match.params.id}></SimilarItemsComponent>   
                           </div>
                         </div>
                         <div className="mb-0">
@@ -890,7 +882,7 @@ class ItemPage extends Component {
                 </div>
                 <div className="col-lg-4">
                   <div className="bg-dark_A-20 p-4 mb-4">
-                    { hasImage && state.imagePath &&
+                    { state.hasImage &&
                       <img className="item-page-img mb-3" src={"https://simthunder.infura-ipfs.io/ipfs/"+state.imagePath[0]} alt="Product"/>
                     }
                     <p>

@@ -69,7 +69,7 @@ class UploadSimracerMoment extends Component {
         const currentAccount = drizzleState.accounts[0];
         const contract = drizzle.contracts.STMarketplace;
         const contractNFTs = drizzle.contracts.SimracingMomentOwner;
-        const isSeller = (await contract.methods.getSeller(currentAccount).call()).active;
+        const isSeller = (await UIHelper.callWithRetry(contract.methods.getSeller(currentAccount))).active;
         this.setState({ auctionStart: now, auctionEnd:endDate, currentTimingOption: timingOpt[0], timingOptions: timingOptions, currentAccount, contract, contractNFTs, isSeller });
     };
 

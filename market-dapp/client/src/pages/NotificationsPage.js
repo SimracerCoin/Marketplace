@@ -30,32 +30,22 @@ class NotificationsPage extends Component {
 
         const contract = await drizzle.contracts.STMarketplace;
         const currentAccount = drizzleState.accounts[0];
-        const notificationsIds = await contract.methods.listNotificationsUser(currentAccount).call()
-        const notifications_r = await contract.methods.getNotifications(notificationsIds).call();
+        const notificationsIds = await UIHelper.callWithRetry(contract.methods.listNotificationsUser(currentAccount));
+        const notifications_r = await UIHelper.callWithRetry(contract.methods.getNotifications(notificationsIds));
 
         let notifications = [];
         for (const [index, value] of notificationsIds.entries()) {
             notifications[index] = Object.assign({ "id": value }, notifications_r[index]);
 
-            notifications[index].purchase = await contract.methods.getPurchase(notifications[index].purchaseId).call();
-            notifications[index].ad = await contract.methods.getAd(notifications[index].purchase.adId).call();
+            notifications[index].purchase = await UIHelper.callWithRetry(contract.methods.getPurchase(notifications[index].purchaseId));
+            notifications[index].ad = await UIHelper.callWithRetry(contract.methods.getAd(notifications[index].purchase.adId));
 
             //purchasesIds.push(value.purchaseId);
         }
 
         // reverse sort by id
         notifications.sort((a, b) => b.date - a.date);
-
-        //const purchases = await contract.methods.getPurchases(purchasesIds).call();
-
-
-        //const adsIds = [];
-        //for (const [index, value] of purchases.entries()) {
-        //    adsIds.push(value.adId);
-        // }
-
-        //const ads = await contract.methods.getAds(purchasesIds).call();
-
+        
         ////Descartes test:
         this.setState({ listNotifications: notifications, currentAccount, contract /*, descartesContract: descartesContract*/ });
 
@@ -98,7 +88,7 @@ class NotificationsPage extends Component {
     resolvePurchase = async (event, purchaseId, descartesId) => {
         event.preventDefault();
 
-        let res = await this.state.contract.methods.getResult(descartesId, purchaseId).call();
+        let res = await UIHelper.callWithRetry(this.state.contract.methods.getResult(descartesId, purchaseId));
 
         console.log(descartesId, purchaseId, res);
 
@@ -247,7 +237,7 @@ class NotificationsPage extends Component {
                 format: 'binary'                                   // output as Uint8Array
             });
 
-            const isCarSetup = await this.state.contract.methods.isCarSetup(adId).call();
+            const isCarSetup = await UIHelper.callWithRetry(this.state.contract.methods.isCarSetup(adId));
 
             var data = new Blob([decryptedFile]);
             var csvURL = window.URL.createObjectURL(data);

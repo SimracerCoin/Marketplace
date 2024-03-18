@@ -182,5 +182,28 @@ export default class UIHelper {
     return monthNames[month -1] + " " + day + ", " + year;
   }  
 
+  static async callWithRetry(callObject, options = {}) {
+    const maxAttempts = 10;
+    let result, attempt = 0;
+
+    const sleep = (milliseconds) => {
+      return new Promise(resolve => setTimeout(resolve, milliseconds));
+    }
+    
+    do {
+      try {
+        result = await callObject.call(options);
+      } catch(err) {
+        console.error(`Attempt ${attempt + 1} failed: ${err.message}`);
+        await sleep(1000 * (attempt+1));
+      }
+    } while(!result && ++attempt < maxAttempts);
+  
+    if(maxAttempts === attempt)
+      throw new Error("Exceeded maximum retries");
+  
+    return result;
+  }
+
  
 }

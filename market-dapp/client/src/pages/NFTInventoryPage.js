@@ -201,9 +201,9 @@ class NFTInventoryPage extends Component {
         //these won´t change, set only here
         this.setState(
           { 
-          contract: contract, 
-          contractNFTs: contractNFTs, 
-          contractMomentNFTs: contractMomentNFTs
+          contract, 
+          contractNFTs, 
+          contractMomentNFTs
         });
         
         UIHelper.hideSpinning();
@@ -220,14 +220,14 @@ class NFTInventoryPage extends Component {
      */
     loadCarOwnershipNFTs = async (contractNFTs, maxElems, simsList, simulatorsFilter, maxElems2) => {
 
-     const numNfts = await contractNFTs.methods.currentTokenId().call();
+     const numNfts = await UIHelper.callWithRetry(contractNFTs.methods.currentTokenId());
      console.log('ownership nft count:' + numNfts);
 
      let max = parseInt(numNfts) + 1;
 
      //use search params?
-     let queryString = this.state.searchQuery;
-     const considerSearchQuery = (queryString && queryString.length > 0) ? true : false;
+     const queryString = this.state.searchQuery;
+     const considerSearchQuery = queryString && queryString.length > 0;
 
      const currentAccount = this.state.currentAccount;
 
@@ -235,29 +235,28 @@ class NFTInventoryPage extends Component {
 
       for (let i = 1; i < max ; i++) {
         try {
-            //TODO: change for different ids
-            let ownerAddress = await contractNFTs.methods.ownerOf(i).call();
+            const ownerAddress = await UIHelper.callWithRetry(contractNFTs.methods.ownerOf(i));
             //console.log('ID:'+i+'ownerAddress: '+ownerAddress.toString()+'nfts addr: '+contractNFTs.address);
             if(ownerAddress === currentAccount) {
-               
-                let uri = await contractNFTs.methods.tokenURI(i).call();
-                //console.log('uri: ', uri);
-                let response = await fetch(uri);
-                let info = await contractNFTs.methods.getItem(i).call();
-                let data = {id: i, price: info[0], seriesOwner: info[1], ...await response.json()};
+
+              const [response, info] = await Promise.all([
+                UIHelper.callWithRetry(contractNFTs.methods.tokenURI(i)).then(fetch).then(r => r.json()),
+                UIHelper.callWithRetry(contractNFTs.methods.getItem(i))
+              ]);
+              const data = {id: i, price: info[0], seriesOwner: info[1], ...response};
                 
-                        /**  DATA example:
-                        {  
-                            "description": "Simthunder Car Ownership",
-                            "name": "Car",
-                            "image": "https://ipfs.io/ipfs/QmbM3fsbACwV887bMf73tvtY9iA5K1CSZ3kYdwj7G9bL7W",
-                            "series": "Simthunder Trophy",
-                            "owner": "0xA59DE47b6fa8911DF14F4524B853B742AF1F3a0c",
-                            "carNumber": "48",
-                            "simulator": "iRacing",
-                            "price": 1
-                        }
-                        */
+              /**  DATA example:
+              {  
+                  "description": "Simthunder Car Ownership",
+                  "name": "Car",
+                  "image": "https://ipfs.io/ipfs/QmbM3fsbACwV887bMf73tvtY9iA5K1CSZ3kYdwj7G9bL7W",
+                  "series": "Simthunder Trophy",
+                  "owner": "0xA59DE47b6fa8911DF14F4524B853B742AF1F3a0c",
+                  "carNumber": "48",
+                  "simulator": "iRacing",
+                  "price": 1
+              }
+              */
 
                     //global list of all
                     nftlist.push(data);
@@ -278,48 +277,40 @@ class NFTInventoryPage extends Component {
                         simsList.push(data.simulator);
 
                         if(!considerSearchQuery ) {
-                              simulatorsFilter.push({simulator: simulator, checked: true});
+                              simulatorsFilter.push({simulator, checked: true});
                         } else {
 
                           //matches query, push and check it
-                          if(simulator.toLowerCase().indexOf(queryString.toLowerCase())>-1) {
-                            simulatorsFilter.push({simulator: simulator, checked: true});
+                          if(simulator.toLowerCase().indexOf(queryString.toLowerCase()) > -1) {
+                            simulatorsFilter.push({simulator, checked: true});
                           } else {
                             //still push it but disabled
-                            simulatorsFilter.push({simulator: simulator, checked: false});
+                            simulatorsFilter.push({simulator, checked: false});
                           }
-
-                            
                         }
-
-                          
                     }
 
                     //this GET is assync, so we need to recalaculate the pagination after every grab
                     this.recalculatePaginationAndNumPages(maxElems2, maxElems, considerSearchQuery ? filteredMomentNFTsList : momentNftslist);
                     
-
                     this.setState({ 
-                                    latestNFTs: nftlist.reverse(), 
-                                    filteredNFTs: considerSearchQuery ? this.paginate(filteredNFTsList, this.state.currentPage): this.paginate(nftlist, this.state.currentPage), 
-                                    listSimulators: simsList, 
-                                    activeSimulatorsFilter: simulatorsFilter 
-                                  });
+                      latestNFTs: nftlist.reverse(), 
+                      filteredNFTs: considerSearchQuery ? this.paginate(filteredNFTsList, this.state.currentPage): this.paginate(nftlist, this.state.currentPage), 
+                      listSimulators: simsList, 
+                      activeSimulatorsFilter: simulatorsFilter 
+                    });
                 
             }
         } catch (e) {
             console.error(e);
         }
-        
+      }
     }
-
-    }
-
 
     loadMomentNFTs = async (contractMomentNFTs, maxElems, simsList, simulatorsFilter, maxElems2, filteredCarsList, filteredSkinsList) => {
       
       // get info from marketplace NFT contract
-      const numMomentNfts = await contractMomentNFTs.methods.currentTokenId().call();
+      const numMomentNfts = await UIHelper.callWithRetry(contractMomentNFTs.methods.currentTokenId());
       console.log('moment nft count:' + numMomentNfts);
 
       let max = parseInt(numMomentNfts) + 1;
@@ -333,15 +324,15 @@ class NFTInventoryPage extends Component {
       for (let i = 1; i < max; i++) {
         try {
             //TODO: change for different ids
-            let ownerAddress = await contractMomentNFTs.methods.ownerOf(i).call();
+            const ownerAddress = await UIHelper.callWithRetry(contractMomentNFTs.methods.ownerOf(i));
             //console.log('ID:'+i+'ownerAddress: '+ownerAddress.toString()+'nfts addr: '+contractMomentNFTs.address);
             if(ownerAddress === currentAccount) {
                
-                let uri = await contractMomentNFTs.methods.tokenURI(i).call();
-                //console.log('uri: ', uri);
-                let response = await fetch(uri);
-                let info = await contractMomentNFTs.methods.getItem(i).call();
-                let data = {id: i, price: info[0], seriesOwner: info[1], ...await response.json()};
+              const [response, info] = await Promise.all([
+                UIHelper.callWithRetry(contractMomentNFTs.methods.tokenURI(i)).then(fetch).then(r => r.json()),
+                UIHelper.callWithRetry(contractMomentNFTs.methods.getItem(i))
+              ]);
+                const data = {id: i, price: info[0], seriesOwner: info[1], ...response};
 
                 let metadata = this.extractMomentNFTTraitTypes(data.attributes);
                 //global list of all
@@ -350,8 +341,8 @@ class NFTInventoryPage extends Component {
                 //update the max elements every time, as we will consider this as the 
                 maxElems2 = momentNftslist.length;
                         
-                let queryString = this.state.searchQuery;
-                const considerSearchQuery = (queryString && queryString.length > 0) ? true : false;
+                const queryString = this.state.searchQuery;
+                const considerSearchQuery = queryString && queryString.length > 0;
                 //only filtered list?
 
                 if(considerSearchQuery && (this.shouldIncludeMomentNFTBySearchQuery(queryString.toLowerCase(), data)) ){
@@ -365,19 +356,16 @@ class NFTInventoryPage extends Component {
                     simsList.push(metadata.simulator);
 
                     if(!considerSearchQuery ) {
-                        simulatorsFilter.push({simulator: simulator, checked: true});
+                        simulatorsFilter.push({simulator, checked: true});
                     } else {
                       //matches query, push and check it
-                      if(simulator.toLowerCase().indexOf(queryString.toLowerCase())>-1) {
-                        simulatorsFilter.push({simulator: simulator, checked: true});
+                      if(simulator.toLowerCase().indexOf(queryString.toLowerCase()) > -1) {
+                        simulatorsFilter.push({simulator, checked: true});
                       } else {
                         //still push it but disabled
-                        simulatorsFilter.push({simulator: simulator, checked: false});
-                      }
-
-                            
-                    }
-                          
+                        simulatorsFilter.push({simulator, checked: false});
+                      }  
+                    }  
                 }
 
                 //this GET is assync, so we need to recalaculate the pagination after every grab
@@ -386,16 +374,15 @@ class NFTInventoryPage extends Component {
                 //console.log('considerSearchQuery ' + considerSearchQuery + 'momentNftslist size: ' + momentNftslist.length + " filteredMomentNFTsList: " + filteredMomentNFTsList.length)
 
                 this.setState({ 
-                                latestMomentNFTs: momentNftslist.reverse(), 
-                                filteredMomentNFTs: considerSearchQuery ? this.paginate(filteredMomentNFTsList, this.state.currentPage): this.paginate(momentNftslist, this.state.currentPage), 
-                                listSimulators: simsList, 
-                                activeSimulatorsFilter: simulatorsFilter 
-                              });
+                  latestMomentNFTs: momentNftslist.reverse(), 
+                  filteredMomentNFTs: considerSearchQuery ? this.paginate(filteredMomentNFTsList, this.state.currentPage): this.paginate(momentNftslist, this.state.currentPage), 
+                  listSimulators: simsList, 
+                  activeSimulatorsFilter: simulatorsFilter 
+                });
             }
         } catch (e) {
             console.error(e);
         }
-        
       }
     }
 
@@ -818,7 +805,7 @@ class NFTInventoryPage extends Component {
     //Obs: this function was way to many paramaters, bette make a JSON object/payload maybe?
     buyItem = async (event, itemId, track, simulator, season, series, description, price, carBrand, carNumber, address, ipfsPath, imagePath, videoPath, isNFT, isMomentNFT) =>{
       event.preventDefault();
-     
+
       this.setState({
           redirectBuyItem: true,
           selectedItemId: itemId,
@@ -832,7 +819,7 @@ class NFTInventoryPage extends Component {
           selectedCarBrand: carBrand,
           selectedImagePath: imagePath,
           vendorAddress: address,
-          vendorNickname: address ? (await this.state.contract.methods.getSeller(address).call()).nickname : "",
+          vendorNickname: address ? (await UIHelper.callWithRetry(this.state.contract.methods.getSeller(address))).nickname : "",
           ipfsPath: ipfsPath,
           videoPath: videoPath,
           isNFT: isNFT,

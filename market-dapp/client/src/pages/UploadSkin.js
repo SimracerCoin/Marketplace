@@ -49,7 +49,7 @@ class UploadSkin extends Component {
 
         const currentAccount = drizzleState.accounts[0];
         const contract = drizzle.contracts.STMarketplace;
-        const isSeller = (await contract.methods.getSeller(currentAccount).call()).active;
+        const isSeller = (await UIHelper.callWithRetry(contract.methods.getSeller(currentAccount))).active;
         const stSkin = await drizzle.contracts.STSkin;
 
         // TODO: rebuild image previewer

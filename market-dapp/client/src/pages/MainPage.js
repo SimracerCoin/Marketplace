@@ -26,9 +26,9 @@ class MainPage extends Component {
         this.state = {
             listCars: [],
             listSkins: [],
-            latestNFTs: [],
+            latestNFTs: 0,
             shorterNFTsList: [],
-            latestVideoNFTs: [],
+            latestVideoNFTs: 0,
             shorterVideosNftsList: [],
             redirectBuyItem: false,
             selectedItemId: "",
@@ -46,7 +46,7 @@ class MainPage extends Component {
             ipfsPath: "",
             contract: null,
             contractNFTs: null,
-            similarItems: [],
+            //similarItems: [],
             usdValue: 1
         }
 
@@ -57,7 +57,7 @@ class MainPage extends Component {
 
         const { drizzle } = this.props;
 
-        UIHelper.showSpinning('loading items ...');
+        UIHelper.showSpinning('Loading items...');
 
         const contract = await drizzle.contracts.STMarketplace;
         const contractNFTs = await drizzle.contracts.SimthunderOwner;
@@ -65,63 +65,34 @@ class MainPage extends Component {
         const stSetup = await drizzle.contracts.STSetup;
         const stSkin = await drizzle.contracts.STSkin;
 
-        const response_cars = (await stSetup.methods.getSetups().call()).filter(item => item.ad.active).slice(-NUM_ITEMS_LOAD);
-        const response_skins = (await stSkin.methods.getSkins().call()).filter(item => item.ad.active).slice(-NUM_ITEMS_LOAD);
+        const [listCars, listSkins, numNfts, numMomentNfts] = await Promise.all([
+            UIHelper.callWithRetry(stSetup.methods.getSetups()),
+            UIHelper.callWithRetry(stSkin.methods.getSkins()),
+            UIHelper.callWithRetry(contractNFTs.methods.currentTokenId()),
+            UIHelper.callWithRetry(contractMomentNFTs.methods.currentTokenId())
+        ]).then(values => [
+            values[0].filter(item => item.ad.active).slice(-NUM_ITEMS_LOAD), 
+            values[1].filter(item => item.ad.active).slice(-NUM_ITEMS_LOAD),
+            parseInt(values[2]), parseInt(values[3])]);
 
-        //car ownership nfts
-        
         const shorterNFTsList = []; //hold NUM_ITEMS_LOAD max
-
-        //simracing moment nfts
-        
         const shorterVideosNftsList = []; //hold NUM_ITEMS_LOAD max
-
-        // get info from marketplace NFT contract
-
-
-        /*let balance = await contractNFTs.methods.balanceOf(contractNFTs.address).call();
-        console.log("balance: ", balance);
-        for(var i = 0; i < balance; i++) {
-
-            let uri = await contractNFTs.methods.tokenURI(i).call();
-            console.log("token uri: ", uri);
-            contractNFTs.methods.tokenOfOwnerByIndex(contractNFTs.address, i).call()
-            .then((id) => { 
-                console.log("LOADED NFT ID ID: ", id);
-            });       
-        }*/
-      
-        const numNfts = Number(await contractNFTs.methods.currentTokenId().call());
-        const numMomentNfts = Number(await contractMomentNFTs.methods.currentTokenId().call());
-
-        //console.log('car ownership nfts count:' + numNfts);
-        //console.log('car moment nfts count:' + numMomentNfts);
-        //console.log("MAX NUM ITEMS 2 TO LOAD: ", NUM_ITEMS_LOAD);
 
         //laod only first NUM_ITEMS_LOAD items
         const numNFTs2Load = Math.min(numNfts, NUM_ITEMS_LOAD);
         //---------------------------------------------
-        //TODO start backwards
-        for (let i = numNfts;  i > 0; i--) {
+        for (let i = numNfts;  i > 0 && shorterNFTsList.length < numNFTs2Load; i--) {
             try {
-                //TODO: change for different ids
-                let ownerAddress = await contractNFTs.methods.ownerOf(i).call();
+                const ownerAddress = await UIHelper.callWithRetry(contractNFTs.methods.ownerOf(i));
               
                 if(ownerAddress === contractNFTs.address) {
+                    const [response, info] = await Promise.all([
+                        UIHelper.callWithRetry(contractNFTs.methods.tokenURI(i)).then(fetch).then(r => r.json()),
+                        UIHelper.callWithRetry(contractNFTs.methods.getItem(i))
+                    ]);
                     
-                    let uri = await contractNFTs.methods.tokenURI(i).call();
-                    //console.log("contractNFTs loaded: " + i + " uri: " + uri);
-                    let response = await fetch(uri);
-                    let info = await contractNFTs.methods.getItem(i).call();
-                    let data = {id: i, price: info[0], seriesOwner: info[1], ...await response.json()};
-
-                    //put on shorter list
-                    shorterNFTsList.push(data);  
-                    if(shorterNFTsList.length === numNFTs2Load) {
-                        break;
-                    }  
+                    shorterNFTsList.push({id: i, price: info[0], seriesOwner: info[1], ...response});
                 }
-
             } catch (e) {
                 console.error(e);
             }
@@ -129,25 +100,17 @@ class MainPage extends Component {
 
         const numMomentNFTs2Load = Math.min(numMomentNfts, NUM_ITEMS_LOAD);
         //moment nfts
-        //TODO start backwards
-        for (let i = numMomentNfts; i > 0 ; i--) {
+        for (let i = numMomentNfts; i > 0 && shorterVideosNftsList.length < numMomentNFTs2Load; i--) {
             try {
-                //TODO: change for different ids
-                let ownerAddress = await contractMomentNFTs.methods.ownerOf(i).call();
+                const ownerAddress = await UIHelper.callWithRetry(contractMomentNFTs.methods.ownerOf(i));
                 
                 if(ownerAddress === contractMomentNFTs.address) {
+                    const [response, info] = await Promise.all([
+                        UIHelper.callWithRetry(contractMomentNFTs.methods.tokenURI(i)).then(fetch).then(r => r.json()),
+                        UIHelper.callWithRetry(contractMomentNFTs.methods.getItem(i))
+                    ]);
                     
-                    let uri = await contractMomentNFTs.methods.tokenURI(i).call();
-                    //console.log("contractMomentNFTs loaded: " + i + " uri: " + uri);
-                    let response = await fetch(uri);
-                    let info = await contractMomentNFTs.methods.getItem(i).call();
-                    let data = {id: i, price: info[0], seriesOwner: info[1], ...await response.json()};
-
-                    shorterVideosNftsList.push(data);
-                    if(shorterVideosNftsList.length === numMomentNFTs2Load) {
-                        break;
-                    }
-                    
+                    shorterVideosNftsList.push({id: i, price: info[0], seriesOwner: info[1], ...response});
                 }
             } catch (e) {
                 console.error(e);
@@ -160,69 +123,32 @@ class MainPage extends Component {
         UIHelper.hideSpinning();
 
         //onwnership nfts
-        this.setState(
-            { 
-                shorterNFTsList: shorterNFTsList, 
-                shorterVideosNftsList: shorterVideosNftsList,
-                usdValue: await UIHelper.fetchSRCPriceVsUSD(), 
-                listCars: response_cars, 
-                listSkins: response_skins, 
-                contract: contract, 
-                contractNFTs: contractNFTs, 
-                contractMomentNFTs: contractMomentNFTs 
-            }); 
+        this.setState({ 
+            shorterNFTsList, 
+            shorterVideosNftsList,
+            usdValue: await UIHelper.fetchSRCPriceVsUSD(), 
+            listCars, 
+            listSkins, 
+            contract, 
+            contractNFTs, 
+            contractMomentNFTs 
+        }); 
         //simracing moment
         
-
         const totalNFTs = parseInt(numNfts);
         //load all remaining car ownership nfts
-
-        const alreadyLoadedNFTS = shorterNFTsList.length;
-        const nftlist = [...await this.loadRemainingCardOwnershipNFTS(contractNFTs, alreadyLoadedNFTS, totalNFTs), ...shorterNFTsList];
+        //const alreadyLoadedNFTS = shorterNFTsList.length;
+        //const nftlist = [...await this.loadRemainingCardOwnershipNFTS(contractNFTs, alreadyLoadedNFTS, totalNFTs), ...shorterNFTsList];
         
         const totalMomentNFTs = parseInt(numMomentNfts);
         //load all remaining simracing moment nfts
-        const alreadyLoadedMomentNFTS = shorterVideosNftsList.length;
-        
-        const videoNftsList = [...await this.loadRemainingSimracingMomentNFTS(contractMomentNFTs, alreadyLoadedMomentNFTS, totalMomentNFTs), ...shorterVideosNftsList];
+        //const alreadyLoadedMomentNFTS = shorterVideosNftsList.length;
+        //const videoNftsList = [...await this.loadRemainingSimracingMomentNFTS(contractMomentNFTs, alreadyLoadedMomentNFTS, totalMomentNFTs), ...shorterVideosNftsList];
 
-        console.log("loaded them all");
+        //console.log("loaded them all");
         
-        this.setState({latestNFTs: nftlist, latestVideoNFTs: videoNftsList});
+        this.setState({latestNFTs: totalNFTs, latestVideoNFTs: totalMomentNFTs});
     }
-
-    loadRemainingNFTS = async (contract, alreadyLoaded, total) => {
-        let nftlist = [];
-
-        for (let i = 1; i < (total - alreadyLoaded) + 1; i++) {
-            try {
-                let ownerAddress = await contract.methods.ownerOf(i).call();
-                if(ownerAddress === contract.address) {
-                    
-                    let uri = await contract.methods.tokenURI(i).call();
-                    let response = await fetch(uri);
-                    let data = await response.json();
-
-                    data.id=i;
-
-                    nftlist.push(data);
-                    
-                    // load only 10 nft's
-                    if(nftlist.length === 10) break;
-                }
-            } catch (e) {
-                console.error(e);
-            }
-        }
-
-        return nftlist;
-    }
-
-    loadRemainingSimracingMomentNFTS = async (contractMomentNFTs, alreadyLoaded, totalMomentNFTs) => 
-        this.loadRemainingNFTS(contractMomentNFTs, alreadyLoaded, totalMomentNFTs);
-        
-    loadRemainingCardOwnershipNFTS = async (contractNFTs, alreadyLoaded, totalNFTs) => 
-        this.loadRemainingNFTS(contractNFTs, alreadyLoaded, totalNFTs);
 
     componentDidMount = async () => this.updateData();
 
@@ -235,22 +161,22 @@ class MainPage extends Component {
         }
     }
 
-    buyItem = async (event, itemId, track, simulator, season, series, description, price, carBrand, carNumber, address, ipfsPath, imagePath, isNFT, isMomentNFT, videoPath, itemMetadata) => {
+    buyItem = async (event, itemId, track, simulator, season, series, description, price, carBrand, carNumber, address, ipfsPath, imagePath, isNFT, isMomentNFT, videoPath, metadata) => {
         event.preventDefault();
 
-        let similarItems = [];
+        //let similarItems = [];
         let category = "";
         if(isMomentNFT) {
-            similarItems = similarItems.concat(this.state.latestVideoNFTs);
+            //similarItems = similarItems.concat(this.state.latestVideoNFTs);
             category = "momentnfts";
         } else if(isNFT) {
-            similarItems = similarItems.concat(this.state.latestNFTs);
+            //similarItems = similarItems.concat(this.state.latestNFTs);
             category = "ownership";
         } else if(track == null || season == null) {
-            similarItems = similarItems.concat(this.state.listSkins);
+            //similarItems = similarItems.concat(this.state.listSkins);
             category = "carskins";
         } else {
-            similarItems = similarItems.concat(this.state.listCars);
+            //similarItems = similarItems.concat(this.state.listCars);
             category = "carsetup";
         }
 
@@ -268,13 +194,13 @@ class MainPage extends Component {
             selectedCarNumber: carNumber,
             selectedImagePath: imagePath,
             vendorAddress: address,
-            vendorNickname: address ? (await this.state.contract.methods.getSeller(address).call()).nickname : "",
-            ipfsPath: ipfsPath,
-            videoPath: videoPath,
+            vendorNickname: address ? (await UIHelper.callWithRetry(this.state.contract.methods.getSeller(address))).nickname : "",
+            ipfsPath,
+            videoPath,
             isNFT: isNFT,
-            isMomentNFT: isMomentNFT,
-            similarItems: similarItems,
-            metadata: itemMetadata
+            isMomentNFT,
+            //similarItems: similarItems,
+            metadata
         });
     }
 
@@ -337,7 +263,7 @@ class MainPage extends Component {
                             videoPath: this.state.videoPath,
                             isNFT: this.state.isNFT,
                             isMomentNFT: this.state.isMomentNFT,
-                            similarItems: this.state.similarItems,
+                            //similarItems: this.state.similarItems,
                             metadata: this.state.metadata
                         }
                     }}
@@ -584,7 +510,7 @@ class MainPage extends Component {
                                     {momentNfts}
                                 </div>
                             </div>
-                                {this.state.latestVideoNFTs.length > NUM_ITEMS_LOAD &&
+                                {this.state.latestVideoNFTs > NUM_ITEMS_LOAD &&
                                 <Link to="/store?m=momentnfts" className="view-more">View more &gt;&gt; </Link>
                                 }
                                 
@@ -605,7 +531,7 @@ class MainPage extends Component {
                                     {nfts}
                                 </div>
                             </div>
-                                {this.state.latestNFTs.length > NUM_ITEMS_LOAD &&
+                                {this.state.latestNFTs > NUM_ITEMS_LOAD &&
                                 <Link to="/store?m=ownership" className="view-more">View more &gt;&gt; </Link>
                                 }
                                 
