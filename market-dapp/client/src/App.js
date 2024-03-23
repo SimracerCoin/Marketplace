@@ -83,12 +83,10 @@ const providerOptions = {
      //}
   };
 
-console.log('providerOptions:', providerOptions);
-  
 const web3Modal = new Web3Modal({
-    //network: "mainnet", // optional
-    cacheProvider: true, // optional
-    providerOptions // required
+    //network: "mainnet",   // optional
+    cacheProvider: true,  // optional
+    providerOptions       // required
 });
 
 class App extends React.Component {
@@ -97,9 +95,9 @@ class App extends React.Component {
 
     this.state = {
       allow_wallets: [],
-      isLoggedIn: null,
-      wrongNetwork: null,
-      currentAccount:null,
+      isLoggedIn: false,
+      wrongNetwork: false,
+      currentAccount: null,
       provider: null,
     }
 
@@ -128,20 +126,19 @@ class App extends React.Component {
     const me = this;
     const { allow_wallets } = this.state;
 
-    let isLoggedIn = false;
-    let currentAccount = null;
- 
-    await window.web3.eth.getAccounts(function (err, accounts) {
+    const networkId = await window.web3.eth.net.getId();
+
+    await window.web3.eth.getAccounts((err, accounts) => {
       if (err != null) {
         console.error("An error occurred: " + err);
       }
       else if (accounts.length !== 0) {
-        isLoggedIn = true
-        currentAccount = accounts[0];
+        const isLoggedIn = true
+        const currentAccount = accounts[0];
         console.log('Accounts found: ', accounts);
-        allow_wallets.push(currentAccount);
+        allow_wallets.push(accounts[0]);
 
-        me.setState({currentAccount, provider, allow_wallets, isLoggedIn });
+        me.setState({currentAccount, provider, allow_wallets, isLoggedIn, wrongNetwork: (networkId !== NETWORK_ID) });
       }
     });
   }
@@ -190,12 +187,13 @@ class App extends React.Component {
 
   render() {
     const { state } = this;
+    const { web3 } = window;
 
     if(state.allow_wallets.length === 0 && !allowAllWallets) {
       return (<div id="wait-div" className="spinner-outer"><div className="spinner"></div></div>)
     }
+
     if (state.isLoggedIn) {
-      let web3 = window.web3;
       
       const drizzleOptions = {
         contracts: [
@@ -223,15 +221,8 @@ class App extends React.Component {
             contractName: "SimracingMomentOwner",
             web3Contract: new web3.eth.Contract(SimracingMomentOwner.abi, SimracingMomentOwner.address)
           }
-          //,
-          //{
-          //  contractName: "Descartes",
-          //  web3Contract: new web3.eth.Contract(Descartes.abi, Descartes.address, { data: Descartes.deployedBytecode })
-          //}
         ],
-        //web3: {
-        //  customProvider: state.provider
-        //}
+        web3
       };
 
       const drizzle = new Drizzle(drizzleOptions);
@@ -241,14 +232,7 @@ class App extends React.Component {
           <DrizzleContext.Consumer>
             {drizzleContext => {
               const { drizzle, drizzleState, initialized } = drizzleContext;
-              /*if(state.currentAccount) {
-                if(drizzleState.accounts.length > 0) {
-                  drizzleState.accounts[0] = state.currentAccount;
-                }
-                else {
-                  drizzleState.accounts.push(state.currentAccount);
-                }
-              }*/
+
               if (!initialized) {
                 return (<div id="wait-div" className="spinner-outer"><div className="spinner"></div></div>)
               }
@@ -265,7 +249,7 @@ class App extends React.Component {
                 ]
               } else {
                 return (
-                  <Underconstruction isLoggedIn={state.isLoggedIn} wrongNetwork={state.wrongNetwork} login={this.login}/>
+                  <Underconstruction isLoggedIn={state.isLoggedIn} wrongNetwork={state.wrongNetwork} login={this.login} />
                 )
               }
             }}
