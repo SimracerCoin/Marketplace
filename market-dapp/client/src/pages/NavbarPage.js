@@ -9,20 +9,13 @@ class NavbarPage extends React.Component {
     super(props);
 
     this.state = {
-      listCars: [],
-      listSkins: [],
       haveNotifications: false,
-      redirectBuyItem: false,
-      selectedItemId: "",
-      selectedTrack: "",
-      selectedSimulator: "",
-      selectedSeason: "",
-      selectedPrice: "",
-      selectedCarBrand: "",
-      searchQuery: "",
       isNFTOwner: false,
       isMomentNFTOwner: false,
-      expanded: false
+      expanded: false,
+      searchQuery: "",
+      currentAccount: null,
+      userBalance: 0
     };
 
     this.handleNavClick = this.handleNavClick.bind(this);
@@ -50,37 +43,23 @@ class NavbarPage extends React.Component {
     const contract = await drizzle.contracts.STMarketplace;
     const currentAccount = drizzleState.accounts[0];
     const haveNotifications = (await UIHelper.callWithRetry(contract.methods.listNotificationsUser(currentAccount))).length > 0;
-    const walletAddr = currentAccount.substr(0, 6) + "..." + currentAccount.substr(-4);
     const contractNFTs = await drizzle.contracts.SimthunderOwner;
     const contractMomentNFTs = await drizzle.contracts.SimracingMomentOwner;
-    const contractSimracerCoin = await drizzle.contracts.SimracerCoin;
-
     const ownerNFT = await UIHelper.callWithRetry(contractNFTs.methods.owner());
     const ownerMomentNFT = await UIHelper.callWithRetry(contractMomentNFTs.methods.owner());
-    //check if account is contract(s) owner
-    const isNFTOwner = ownerNFT === currentAccount;
-    const isMomentNFTOwner = ownerMomentNFT === currentAccount;
-
-    let previousSearch = localStorage.getItem("searchQuery");
-    let searchQuery = "";
-    if (previousSearch && previousSearch.length > 0) {
-      searchQuery = previousSearch;
-    }
 
     this.setState({
-      isNFTOwner,
-      isMomentNFTOwner,
-      currentAccountFullAddr: currentAccount,
-      currentAccount: walletAddr,
+      isNFTOwner: ownerNFT === currentAccount,
+      isMomentNFTOwner: ownerMomentNFT === currentAccount,
+      currentAccount: currentAccount.substr(0, 6) + "..." + currentAccount.substr(-4),
       haveNotifications,
-      contractSimracerCoin,
-      searchQuery
+      searchQuery: localStorage.getItem("searchQuery") ?? ""
     });
 
     this.getAccountBalance();
   };
 
-  componentWillUnmount = async (event) => {
+  componentWillUnmount = async () => {
     //clean if anything
     localStorage.removeItem("searchQuery");
   };
@@ -136,23 +115,21 @@ class NavbarPage extends React.Component {
   }
 
   getAccountBalance = async () => {
-    const { props, state } = this;
+    const { drizzle, drizzleState } = this.props;
 
     try {
-      const userBalance = props.drizzle.web3.utils.fromWei(
-        await UIHelper.callWithRetry(state.contractSimracerCoin.methods.balanceOf(state.currentAccountFullAddr)));
-      const balance = Number(Math.round(userBalance * 100) / 100).toFixed(2);
+      const userBalance = drizzle.web3.utils.fromWei(
+        await UIHelper.callWithRetry((await drizzle.contracts.SimracerCoin).methods.balanceOf(drizzleState.accounts[0])));
 
-      this.setState({
-        userBalance,
-        balance
-      });
+      this.setState({ userBalance });
     } catch (error) {
       console.log('Failed to access user balance', error);
     }
   };
 
   render() {
+    const balance = Number(Math.round(this.state.userBalance * 100) / 100).toFixed(2);
+
     return [
       <Navbar className="top-menu-navbar navbar navbar-expand-lg navbar-dark bg-dark border-nav zi-3">
         <Container>
@@ -170,7 +147,7 @@ class NavbarPage extends React.Component {
                     <span>{this.state.currentAccount}</span>
                   )}
                   {this.state.userBalance !== undefined ? (
-                    <span>Balance: {this.state.balance} SRC</span>
+                    <span>Balance: {balance} SRC</span>
                   ) : (
                     <span>Balance: 0 SRC</span>
                   )}
@@ -209,7 +186,7 @@ class NavbarPage extends React.Component {
                   )}
                   
                   {this.state.userBalance !== undefined ? (
-                    <span>Balance: {this.state.balance} SRC</span>
+                    <span>Balance: {balance} SRC</span>
                   ) : (
                     <span>Balance: 0 SRC</span>
                   )}

@@ -10,7 +10,6 @@
 
 # production
 /build
-/db
 
 # misc
 .DS_Store
@@ -26,3 +25,4 @@ yarn-debug.log*
 yarn-error.log*
 
 src/*.json
+*.sqlite

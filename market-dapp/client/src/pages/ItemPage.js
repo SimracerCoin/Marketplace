@@ -20,7 +20,6 @@ const PASSPHRASE = process.env.REACT_APP_PASSPHRASE;
 const NON_SECURE_SELL = process.env.REACT_APP_NON_SECURE_SELL === "true";
 const NON_SECURE_KEY= process.env.REACT_APP_NON_SECURE_KEY;
 const NUMBER_CONFIRMATIONS_NEEDED = Number(process.env.REACT_APP_NUMBER_CONFIRMATIONS_NEEDED);
-const NUMBER_LOAD_ITEMS = 10;
 
 class ItemPage extends Component {
 
@@ -139,7 +138,10 @@ class ItemPage extends Component {
             this.setState({ isNFTOwner, canDelete, currentAccount, isSeller, contract, contractMomentNFTs, contractNFTs, contractSimracerCoin, isSkin });
           }
   
-          this.setState({hasVideo, isMuted: hasVideo});
+          this.setState({
+            hasVideo, 
+            isMuted: hasVideo, 
+            vendorNickname: (await UIHelper.callWithRetry(contract.methods.getSeller(sellerAddress))).nickname});
         }
 
         const {category, id} = props.match.params;
@@ -157,7 +159,6 @@ class ItemPage extends Component {
             carBrand: props.location.state ? props.location.state.selectedCarBrand : "",
             carNumber: props.location.state ? props.location.state.selectedCarNumber : 0,
             vendorAddress: props.location.state ? props.location.state.vendorAddress : "",
-            vendorNickname: props.location.state ? props.location.state.vendorNickname : "",
             ipfsPath: props.location.state ? props.location.state.ipfsPath : "",
             videoPath: props.location.state ? props.location.state.videoPath : "",
             imagePath: props.location.state ? (Array.isArray(props.location.state.imagePath) ? props.location.state.imagePath : [props.location.state.imagePath]) : [],
@@ -202,7 +203,6 @@ class ItemPage extends Component {
             ...item.info,
             itemId: id,
             vendorAddress: item.ad.seller,
-            vendorNickname: (await UIHelper.callWithRetry(contract.methods.getSeller(item.ad.seller))).nickname
           }, updateAfterLoad);
         } else {
           alert("Item not found!");

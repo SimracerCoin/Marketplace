@@ -15,8 +15,8 @@ const PORT = process.env.PORT || 80;
 const INDEX = path.join(__dirname, '..', 'build', 'index.html'); // Initialization.
 
 app.use(express.static(
-	path.join(__dirname, '..','build'), 
-	{ maxAge: '7d' }
+	path.join(__dirname, '..', 'build'), 
+	{ maxAge: '30d' }
 ));
 
 app.use(cors());
@@ -35,7 +35,7 @@ app.post('/api/metatags', (req, res) => {
 	  });
 });
 
-app.get('*', (req, res) => {
+app.get('/item/:category/:id', (req, res) => {
 	fs.readFile(INDEX, 'utf8', (err, htmlData) => {
 		if (err) {
             console.error('Error during file reading', err);
@@ -43,23 +43,29 @@ app.get('*', (req, res) => {
 			return;
         }
 
-		console.error('params', req);
-		let sUrl = [];
-		if((sUrl = req.path.split('/')).length === 4) {
-			knex('metatags').where({id: sUrl[3]}).andWhere({category: sUrl[2]}).first().then(metatag => {
-				if(metatag) {
-					var fullUrl = 'https://' + req.get('host') + req.originalUrl;
-					htmlData = htmlData
-						.replace(/__TITLE__/g, metatag.title ?? "Simthunder "  +  ({"carskins": "skin", "carsetup": "setup", "momentnfts": "moment NFT", "ownership": "ownership NFT"}[metatag.category]) + " asset")
-						.replace(/__DESCRIPTION__/g, metatag.description)
-						.replace(/__IMAGE__/g, metatag.image ?? "https://simthunder.com/assets/img/logo-fb.png")
-						.replace("__URL__", fullUrl);
-				} 
+		//let sUrl = [];
+		//if((sUrl = req.path.split('/')).length === 4) {
+		knex('metatags').where({id: req.params.id}).andWhere({category: req.params.category}).first().then(metatag => {
+			const fullUrl = 'https://' + req.get('host') + req.originalUrl;
 
-				res.send(htmlData);
-				return;
-			});
-		}
+			if(metatag) {	
+				htmlData = htmlData
+					.replace(/__TITLE__/g, metatag.title ?? "Simthunder "  +  ({"carskins": "skin", "carsetup": "setup", "momentnfts": "moment NFT", "ownership": "ownership NFT"}[req.params.category]) + " asset")
+					.replace(/__DESCRIPTION__/g, metatag.description ?? "")
+					.replace(/__IMAGE__/g, metatag.image ?? "https://simthunder.com/assets/img/logo-fb.png")
+					.replace("__URL__", fullUrl);
+			} else {
+				htmlData = htmlData
+					.replace(/__TITLE__/g, "Simthunder "  +  ({"carskins": "skin", "carsetup": "setup", "momentnfts": "moment NFT", "ownership": "ownership NFT"}[req.params.category]) + " asset")
+					.replace(/__DESCRIPTION__/g, "")
+					.replace(/__IMAGE__/g, "https://simthunder.com/assets/img/logo-fb.png")
+					.replace("__URL__", fullUrl);
+			}
+
+			res.send(htmlData);
+			return;
+		});
+		//}
 	});
 });
 

@@ -15,7 +15,6 @@ class SellerPage extends Component {
             listComments: [],
             vendorAddress: "",
             vendorNickname: "",
-            contract: null,
             currentAccount: null,
             selectedItemId: "",
             selectedTrack: "",
@@ -51,7 +50,7 @@ class SellerPage extends Component {
             values[2]
         ]);
 
-        this.setState({ listCars, listSkins, contract, currentAccount, listComments, ...props.location.state });
+        this.setState({ listCars, listSkins, currentAccount, listComments, ...props.location.state });
     
         // scroll to top
         UIHelper.scrollToTop();
@@ -124,7 +123,7 @@ class SellerPage extends Component {
 
         let nickname = this.state.vendorNickname;
 
-        for (const [index, value] of this.state.listCars.entries()) {
+        for (const [_, value] of this.state.listCars.entries()) {
 
             let carBrand = value.info.carBrand
             let track = value.info.track
