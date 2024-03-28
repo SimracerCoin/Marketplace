@@ -119,7 +119,7 @@ class NavbarPage extends React.Component {
 
     try {
       const userBalance = drizzle.web3.utils.fromWei(
-        await UIHelper.callWithRetry((await drizzle.contracts.SimracerCoin).methods.balanceOf(drizzleState.accounts[0])));
+        await UIHelper.callWithRetry((await drizzle.contracts.SimracerCoin).methods.balanceOf(drizzleState.accounts[0]), {}, false));
 
       this.setState({ userBalance });
     } catch (error) {
