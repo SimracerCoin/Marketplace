@@ -365,6 +365,29 @@ class ItemPage extends Component {
       this.setState({sellFromWallet: true});
     }
 
+    checkAllowances = async (contract, paramsForCall, price) => {
+      const { state } = this;
+      const { web3 } = this.props.drizzle;
+
+      try {
+        const allowance = web3.utils.toBN(
+          await UIHelper.callWithRetry(state.contractSimracerCoin.methods.allowance(state.currentAccount, contract)));
+
+        console.log(allowance);
+        console.log(price);
+
+        if(allowance.lt(price))
+          return await state.contractSimracerCoin.methods.approve(contract, price)
+                .send(paramsForCall)
+                .catch(UIHelper.transactionOnError);
+
+        return true;
+      } catch(e) {
+        console.error(e);
+        return false;
+      }
+    }
+
     buyItem = async() => {
         const { state } = this;
         const { web3 } = this.props.drizzle;
@@ -432,9 +455,7 @@ class ItemPage extends Component {
             
             //approve contract ot spend our SRC
             const paramsForCall = await UIHelper.calculateGasUsingStation(state.currentAccount);
-            const approval = await state.contractSimracerCoin.methods.approve(state.contract.address, price)
-              .send(paramsForCall)
-              .catch(UIHelper.transactionOnError);
+            const approval = await this.checkAllowances(state.contract.address, paramsForCall, price);
 
             if(!approval) {
               UIHelper.transactionOnError("ERROR ON APPROVAL");
@@ -461,9 +482,7 @@ class ItemPage extends Component {
         } else {
             const contractAddressToApprove = state.isNFT ? state.contractNFTs.address : state.contractMomentNFTs.address;
             const paramsForCall = await UIHelper.calculateGasUsingStation(state.currentAccount);
-            const approval = await this.state.contractSimracerCoin.methods.approve(contractAddressToApprove, price)
-              .send(paramsForCall)
-              .catch(UIHelper.transactionOnError);
+            const approval = await this.checkAllowances(contractAddressToApprove, paramsForCall, price);
 
             if(!approval) {
               UIHelper.transactionOnError("ERROR ON APPROVAL");
@@ -769,22 +788,17 @@ class ItemPage extends Component {
           </Carousel>
         );
       } else if(hasVideo) {
-        if(this.state.isMuted) {
-          return <div className="carousel-product">
-                    <div className="slider text-secondary" data-slick="product-body">
-                        <video async className="videoContainer" loop muted autoPlay currenttime={0} src={this.state.videoPath} />  
-                        <button onClick={this.unmute} className="video-sound-control--btn video-sound-control--btn-off" label="Unmmute" type="button"></button> 
-                    </div>
-                </div>
-        } 
-        return (
-              <div className="carousel-product">
-                  <div className="slider text-secondary" data-slick="product-body">
-                    <video async className="videoContainer" loop autoPlay currenttime={0} src={this.state.videoPath} />  
-                    <button onClick={this.mute} className="video-sound-control--btn video-sound-control--btn-on" label="Mute" type="button"></button> 
-                  </div>
+          return (
+            <div className="carousel-product">
+              <div className="slider text-secondary" data-slick="product-body">
+                  <video async className="videoContainer" loop muted autoPlay currenttime={0} src={this.state.videoPath} />  
+                  {this.state.isMuted ? 
+                    <button onClick={this.unmute} className="video-sound-control--btn video-sound-control--btn-off" label="Unmmute"></button> :
+                    <button onClick={this.mute} className="video-sound-control--btn video-sound-control--btn-on" label="Mute"></button> 
+                  }
               </div>
-        );
+            </div>
+          );
       }
 
       return "";

@@ -71,6 +71,7 @@ export default class UIHelper {
     }
     alert("Something wrong. Please try again.");
     console.error(error);
+    return false;
   }
 
   /**
