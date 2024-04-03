@@ -64,13 +64,10 @@ class StorePage extends Component {
           selectedCarBrand: "",
           selectedImagePath: "",
           vendorAddress: "",
-          vendorNickname: "",
           ipfsPath: "",
           //-------------------- other stuff --------------
-          contract: null,
           currentPage: 1, //for future filtering purposes
           numPages: 1, //num pages by default
-          contractNFTs: null,
           context: props.context,
           //---------------------- filters -----------
           activeSimulatorsFilter: [{simulator: "All", checked: true}], //default filter
@@ -109,7 +106,7 @@ class StorePage extends Component {
     //scroll to top of page
     window.scrollTo(0, 0);
 
-    UIHelper.showSpinning("loading items ...");
+    UIHelper.showSpinning("Loading items ...");
 
     const usdValue = await UIHelper.fetchSRCPriceVsUSD();
     this.setState({usdValue});
@@ -154,8 +151,6 @@ class StorePage extends Component {
 
       const { drizzle } = this.props;
 
-        //market place
-        const contract = await drizzle.contracts.STMarketplace;
         //ownership nfts
         const contractNFTs = await drizzle.contracts.SimthunderOwner;
         //simracing moment nfts
@@ -244,10 +239,7 @@ class StorePage extends Component {
         this.setState(
           { 
           latestCars: response_cars, 
-          latestSkins: response_skins, 
-          contract: contract, 
-          contractNFTs: contractNFTs, 
-          contractMomentNFTs: contractMomentNFTs
+          latestSkins: response_skins
         });
         
         console.log("END getNFTSData");
@@ -972,7 +964,6 @@ class StorePage extends Component {
                     selectedCarNumber: this.state.selectedCarNumber,
                     imagePath: this.state.selectedImagePath,
                     vendorAddress: this.state.vendorAddress,
-                    vendorNickname: this.state.vendorNickname,
                     ipfsPath: this.state.ipfsPath,
                     isNFT: this.state.isNFT,
                     similarItems: this.state.similarItems
@@ -1016,7 +1007,6 @@ class StorePage extends Component {
           selectedImagePath: imagePath,
           selectedCategory: category,
           vendorAddress: address,
-          vendorNickname: address ? (await UIHelper.callWithRetry(this.state.contract.methods.getSeller(address))).nickname : "",
           ipfsPath: ipfsPath,
           isNFT: isNFT,
           isMomentNFT: isMomentNFT,

@@ -18,18 +18,11 @@ class SimilarItemsComponent extends React.Component {
     loadRemainingNFTS = async (contract) => {
       let nftlist = [];
 
-      for (let i = 1; i < parseInt(await contract.methods.currentTokenId().call()) + 1; i++) {
+      for (let i = 1; i < parseInt(await contract.methods.currentTokenId().call()) + 1 && nftlist.length < NUMBER_LOAD_ITEMS; i++) {
           try {
               let ownerAddress = await contract.methods.ownerOf(i).call();
               if(ownerAddress === contract.address) {
-                  
-                  let data = await contract.methods.tokenURI(i).call().then(u => fetch(u)).then(r => r.json());
-                  data.id = i;
-
-                  nftlist.push(data);
-                  
-                  // load only 10 nft's
-                  if(nftlist.length === NUMBER_LOAD_ITEMS) break;
+                  nftlist.push({id: i, ...await contract.methods.tokenURI(i).call().then(u => fetch(u)).then(r => r.json())});
               }
           } catch (e) {
               console.error("can't load " + i + " similar item - " + e);
@@ -76,7 +69,7 @@ class SimilarItemsComponent extends React.Component {
 
      filterSimilarItems = (items, referenceItem) => {
         if(items.length > 0) {
-          const filteredItems = items.filter(item => item && item.id && item.id !== referenceItem && (!item.ad || item.ad.active)).slice(0, NUMBER_LOAD_ITEMS);
+          const filteredItems = items.filter(item => item && item.id && item.id != referenceItem && (!item.ad || item.ad.active)).slice(0, NUMBER_LOAD_ITEMS);
           this.setState({filteredItems});
         } else {
           this.setState({filteredItems: []});

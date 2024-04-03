@@ -5,8 +5,13 @@ const monthNames = ["January", "February", "March", "April", "May", "June",
 const use_eip_1559 = process.env.REACT_APP_USE_EIP_1559 === "true";
 
 const web3 = require('web3');
+const createKeccakHash = require('keccak');
+const localForage = require('localforage');
 
-export default class UIHelper {
+// clear cache before exit
+window.addEventListener('beforeunload', () => localForage.clear());
+
+class UIHelper {
 
   static defaultGasLimit = 7500000;
   static simsElements = ["iRacing", "F12020", "rFactor", "Assetto Corsa"];
@@ -54,10 +59,17 @@ export default class UIHelper {
   }
 
   static transactionOnConfirmation = (message, redirect = "/") => {
+
+    // outdated cache
+    fetch("/api/lastupdate", {
+      method: 'PUT'
+    }); // not wait - keep flow
+
     const elem = document.getElementById("wait-div");
     if(elem) {
       elem.parentNode.removeChild(elem);
     }
+
     alert(message);
 
     if (redirect)
@@ -103,7 +115,6 @@ export default class UIHelper {
       return 1;
     }
   }
-
 
   //using gas station
   static calculateGasUsingStation = async (fromAccount) => {
@@ -183,17 +194,34 @@ export default class UIHelper {
     return monthNames[month -1] + " " + day + ", " + year;
   }  
 
-  static async callWithRetry(callObject, options = {}) {
+  static async callWithRetry(callObject, options = {}, useCache = true) {
     const maxAttempts = 10;
     let result, attempt = 0;
 
     const sleep = (milliseconds) => {
       return new Promise(resolve => setTimeout(resolve, milliseconds));
     }
+
+    const cacheIsValid = async (data) => {
+      return await fetch('/api/lastupdate').then(r => r.text()).then(lastupdateDate => {
+        return Number(lastupdateDate) <= data.created;
+      });
+    }
+
+    let key = createKeccakHash('keccak256').update(JSON.stringify({method: callObject._method.signature, address: callObject._parent._address, arguments: callObject.arguments})).digest('hex');
     
+    // get from cache
+    let cache_data = await localForage.getItem(key);
+    if(useCache && cache_data && await cacheIsValid(cache_data)) {
+      return cache_data.result;
+    }
+
     do {
       try {
         result = await callObject.call(options);
+        
+        // set cache
+        if(useCache) localForage.setItem(key, {created: Date.now(), result}); // not wait - keep flow
       } catch(err) {
         console.error(`Attempt ${attempt + 1} failed: ${err.message}`);
         await sleep(1000 * (attempt+1));
@@ -205,6 +233,6 @@ export default class UIHelper {
   
     return result;
   }
-
- 
 }
+
+export default UIHelper;

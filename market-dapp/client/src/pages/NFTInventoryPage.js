@@ -53,14 +53,11 @@ class NFTInventoryPage extends Component {
             selectedCarBrand: "",
             selectedImagePath: "",
             vendorAddress: "",
-            vendorNickname: "",
             ipfsPath: "",
             videoPath: "",
             //-------------------- other stuff --------------
-            contract: null,
             currentPage: 1, //for future filtering purposes
             numPages: 1, //num pages by default
-            contractNFTs: null,
             context: props.context,
             //---------------------- filters -----------
             activeSimulatorsFilter: [{simulator: "All", checked: true}], //default filter
@@ -105,7 +102,7 @@ class NFTInventoryPage extends Component {
       //scroll to top of page
       window.scrollTo(0, 0);
 
-      UIHelper.showSpinning("loading items ...");
+      UIHelper.showSpinning("Loading items ...");
 
       const usdValue = await UIHelper.fetchSRCPriceVsUSD();
       this.setState({usdValue, currentAccount});
@@ -153,8 +150,6 @@ class NFTInventoryPage extends Component {
 
         const { drizzle } = this.props;
 
-        //market place
-        const contract = await drizzle.contracts.STMarketplace;
         //ownership nfts
         const contractNFTs = await drizzle.contracts.SimthunderOwner;
         //simracing moment nfts
@@ -198,13 +193,6 @@ class NFTInventoryPage extends Component {
         //it must be done after a lazy load as well, always
         //NOTE: we might reach this part before processing all NFTS, so we also call this inside the loop above
         this.recalculatePaginationAndNumPages(maxElems2, maxElems, considerSearchQuery ? filteredMomentNFTsList: momentNftslist);
-        //these won´t change, set only here
-        this.setState(
-          { 
-          contract, 
-          contractNFTs, 
-          contractMomentNFTs
-        });
         
         UIHelper.hideSpinning();
     }
@@ -790,7 +778,6 @@ class NFTInventoryPage extends Component {
                     selectedCarNumber: this.state.selectedCarNumber,
                     imagePath: this.state.selectedImagePath,
                     vendorAddress: this.state.vendorAddress,
-                    vendorNickname: this.state.vendorNickname,
                     ipfsPath: this.state.ipfsPath,
                     videoPath: this.state.videoPath,
                     isNFT: this.state.isNFT,
@@ -819,7 +806,6 @@ class NFTInventoryPage extends Component {
           selectedCarBrand: carBrand,
           selectedImagePath: imagePath,
           vendorAddress: address,
-          vendorNickname: address ? (await UIHelper.callWithRetry(this.state.contract.methods.getSeller(address))).nickname : "",
           ipfsPath: ipfsPath,
           videoPath: videoPath,
           isNFT: isNFT,

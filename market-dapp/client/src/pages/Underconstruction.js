@@ -13,10 +13,7 @@ class Underconstruction extends Component {
         }
     }
 
-    requestBtnClick = (event) => {
-        event.preventDefault();
-        document.querySelector('.discord-dialog').className = 'discord-dialog discord-dialog--active';
-    }
+    requestBtnClick = () => document.querySelector('.discord-dialog').className = 'discord-dialog discord-dialog--active';
 
     switchNetwork = async () => {
         const ethereum = window.ethereum;
@@ -103,8 +100,8 @@ class Underconstruction extends Component {
                                     {switchNeeded && 
                                         this.renderSwitchButton()
                                     }
-                                    <a className={`btn btn-lg btn-round btn-outline-light mr-2 ${hiddenLoginBtn}`} onClick={this.props.login}>Login</a>
-                                    <a className={`btn btn-lg btn-round btn-outline-light ${hiddenRequestBtn}`} onClick={this.requestBtnClick}>Request Beta Access</a>
+                                    <button className={`btn btn-lg btn-round btn-outline-light mr-2 ${hiddenLoginBtn}`} onClick={this.props.login}>Login</button>
+                                    <button className={`btn btn-lg btn-round btn-outline-light ${hiddenRequestBtn}`} onClick={this.requestBtnClick}>Request Beta Access</button>
                                 </div>
                             </div>
                         </div>

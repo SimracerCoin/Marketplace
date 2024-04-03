@@ -15,12 +15,11 @@ const PORT = process.env.PORT || 80;
 const INDEX = path.join(__dirname, '..', 'build', 'index.html'); // Initialization.
 
 app.use(express.static(
-	path.join(__dirname, '..','build'), 
-	{ maxAge: '7d' }
+	path.join(__dirname, '..', 'build'), 
+	{ maxAge: '30d' }
 ));
 
 app.use(cors());
-app.use(helmet());
 app.use(express.json({limit: '1KB', extended: true}));
 
 app.post('/api/metatags', (req, res) => {
@@ -31,36 +30,56 @@ app.post('/api/metatags', (req, res) => {
 		  knex('metatags').insert(data)
 		  .then(() => {res.send({id: data.id, category: data.category})})
 		  .catch(err => {console.error("Impossible to insert data on metatags cache: ", err); res.send(500).end();});
+		} else {
+			res.send({id: data.id, category: data.category});
 		}
 	  });
 });
 
-app.get('*', (req, res) => {
-	fs.readFile(INDEX, 'utf8', (err, htmlData) => {
-		if (err) {
-            console.error('Error during file reading', err);
-            res.status(404).end();
-			return;
-        }
-
-		console.error('params', req);
-		let sUrl = [];
-		if((sUrl = req.path.split('/')).length === 4) {
-			knex('metatags').where({id: sUrl[3]}).andWhere({category: sUrl[2]}).first().then(metatag => {
-				if(metatag) {
-					var fullUrl = 'https://' + req.get('host') + req.originalUrl;
-					htmlData = htmlData
-						.replace(/__TITLE__/g, metatag.title ?? "Simthunder "  +  ({"carskins": "skin", "carsetup": "setup", "momentnfts": "moment NFT", "ownership": "ownership NFT"}[metatag.category]) + " asset")
-						.replace(/__DESCRIPTION__/g, metatag.description)
-						.replace(/__IMAGE__/g, metatag.image ?? "https://simthunder.com/assets/img/logo-fb.png")
-						.replace("__URL__", fullUrl);
-				} 
-
-				res.send(htmlData);
-				return;
-			});
-		}
-	});
+var lastUpdate = Date.now();
+app.get('/api/lastupdate', (req,res) => {
+	res.send(lastUpdate.toString());
+});
+app.put('/api/lastupdate', (req, res) => {
+	lastUpdate = Date.now();
+	res.status(204).send();
 });
 
+const cachedHTML = [];
+app.get('/item/:category/:id', (req, res) => {
+
+	if(cachedHTML[req.path]) {
+		return res.send(cachedHTML[req.path]);
+	}
+
+	if(!isNaN(req.params.id) && ["carskins", "carsetup", "momentnfts", "ownership"].includes(req.params.category)) {
+		fs.readFile(INDEX, 'utf8', (err, htmlData) => {
+			if (err) {
+				console.error('Error during file reading', err);
+				return res.status(404).end();
+			}
+
+			//let sUrl = [];
+			//if((sUrl = req.path.split('/')).length === 4) {
+			knex('metatags').where({id: req.params.id}).andWhere({category: req.params.category}).first().then(metatag => {
+				const fullUrl = 'https://' + req.get('host') + req.path;
+
+				if(metatag) {	
+					htmlData = htmlData
+						.replace(/__TITLE__/g, metatag.title ?? "Simthunder "  +  ({"carskins": "skin", "carsetup": "setup", "momentnfts": "moment NFT", "ownership": "ownership NFT"}[req.params.category]) + " asset")
+						.replace(/__DESCRIPTION__/g, metatag.description ?? "")
+						.replace(/__IMAGE__/g, metatag.image ?? "https://simthunder.com/assets/img/logo-fb.png")
+						.replace("__URL__", fullUrl);
+
+						cachedHTML[req.path] = htmlData;
+				}
+
+				res.send(htmlData);
+			});
+			//}
+		});
+	}
+});
+
+app.use(helmet());
 http.createServer(app).listen(PORT);

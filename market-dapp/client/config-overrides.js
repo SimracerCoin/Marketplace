@@ -1,5 +1,6 @@
 const ModuleScopePlugin = require('react-dev-utils/ModuleScopePlugin');
 const NodePolyfillPlugin = require("node-polyfill-webpack-plugin");
+const TerserPlugin = require("terser-webpack-plugin");
 
 module.exports = function override(config, env) {
     config.resolve = config.resolve || {};
@@ -17,6 +18,11 @@ module.exports = function override(config, env) {
         ...config.plugins,
         new NodePolyfillPlugin(),
     ];
+    config.optimization = {
+        ...config.optimization,
+        minimize: true,
+        minimizer: [new TerserPlugin()],
+    }
 
     config.resolve.plugins = config.resolve.plugins.filter(plugin => !(plugin instanceof ModuleScopePlugin));
     
