@@ -373,9 +373,6 @@ class ItemPage extends Component {
         const allowance = web3.utils.toBN(
           await UIHelper.callWithRetry(state.contractSimracerCoin.methods.allowance(state.currentAccount, contract)));
 
-        console.log(allowance);
-        console.log(price);
-
         if(allowance.lt(price))
           return await state.contractSimracerCoin.methods.approve(contract, price)
                 .send(paramsForCall)
