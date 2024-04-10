@@ -19,7 +19,7 @@ app.use(express.static(
 	{ maxAge: '30d' }
 ));
 
-app.use(cors());
+//app.use(cors());
 app.use(express.json({limit: '1KB', extended: true}));
 
 app.post('/api/metatags', (req, res) => {
@@ -69,7 +69,7 @@ app.get('/item/:category/:id', (req, res) => {
 						.replace(/__TITLE__/g, metatag.title ?? "Simthunder "  +  ({"carskins": "skin", "carsetup": "setup", "momentnfts": "moment NFT", "ownership": "ownership NFT"}[req.params.category]) + " asset")
 						.replace(/__DESCRIPTION__/g, metatag.description ?? "")
 						.replace(/__IMAGE__/g, metatag.image ?? "https://simthunder.com/assets/img/logo-fb.png")
-						.replace("__URL__", fullUrl);
+						.replace(/__URL__/g, fullUrl);
 
 						cachedHTML[req.path] = htmlData;
 				}
@@ -79,6 +79,10 @@ app.get('/item/:category/:id', (req, res) => {
 			//}
 		});
 	}
+});
+
+app.get('*', function (req, res) {
+	res.sendFile(INDEX);
 });
 
 app.use(helmet());
