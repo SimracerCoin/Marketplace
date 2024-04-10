@@ -19,7 +19,7 @@ app.use(express.static(
 	{ maxAge: '30d' }
 ));
 
-//app.use(cors());
+app.use(cors());
 app.use(express.json({limit: '1KB', extended: true}));
 
 app.post('/api/metatags', (req, res) => {
