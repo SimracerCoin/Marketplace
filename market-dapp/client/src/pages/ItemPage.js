@@ -149,7 +149,6 @@ class ItemPage extends Component {
         this.setState({category});
 
         if(props.location.state) {
-          console.log(props.location.state.metadata);
           this.setState({
             itemId: props.location.state.selectedItemId,
             track: props.location.state.selectedTrack,
