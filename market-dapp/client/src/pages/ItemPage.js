@@ -32,6 +32,8 @@ class ItemPage extends Component {
             simulator: "",
             season: "",
             series: "",
+            title: "",
+            rarity: "",
             description: "",
             price: "",
             carBrand: "",
@@ -44,7 +46,6 @@ class ItemPage extends Component {
             isNFT: false,
             isMomentNFT: false,
             usdValue: 1,
-            metadata: {},
             contract: null,
             currentAccount: "",
             comment: "",
@@ -148,23 +149,25 @@ class ItemPage extends Component {
         this.setState({category});
 
         if(props.location.state) {
+          console.log(props.location.state.metadata);
           this.setState({
-            itemId: props.location.state ? props.location.state.selectedItemId : "",
-            track: props.location.state ? props.location.state.selectedTrack : "",
-            simulator: props.location.state ? props.location.state.selectedSimulator  : "",
-            season: props.location.state ? props.location.state.selectedSeason : "",
-            series: props.location.state ? props.location.state.selectedSeries : "",
-            description: props.location.state ? props.location.state.selectedDescription : "",
-            price: props.location.state ? props.location.state.selectedPrice : "",
-            carBrand: props.location.state ? props.location.state.selectedCarBrand : "",
-            carNumber: props.location.state ? props.location.state.selectedCarNumber : 0,
-            vendorAddress: props.location.state ? props.location.state.vendorAddress : "",
-            ipfsPath: props.location.state ? props.location.state.ipfsPath : "",
-            videoPath: props.location.state ? props.location.state.videoPath : "",
-            imagePath: props.location.state ? (Array.isArray(props.location.state.imagePath) ? props.location.state.imagePath : [props.location.state.imagePath]) : [],
-            isNFT: props.location.state ? props.location.state.isNFT : false,
-            isMomentNFT: props.location.state ? props.location.state.isMomentNFT : false,
-            metadata: props.location.state ? props.location.state.metadata : {},
+            itemId: props.location.state.selectedItemId,
+            track: props.location.state.selectedTrack,
+            simulator: props.location.state.selectedSimulator,
+            season: props.location.state.selectedSeason,
+            series: props.location.state.selectedSeries,
+            title: props.location.state.selectedTitle,
+            description: props.location.state.selectedDescription,
+            price: props.location.state.selectedPrice,
+            carBrand: props.location.state.selectedCarBrand,
+            carNumber: props.location.state.selectedCarNumber,
+            vendorAddress: props.location.state.vendorAddress,
+            ipfsPath: props.location.state.ipfsPath,
+            videoPath: props.location.state.videoPath,
+            imagePath: Array.isArray(props.location.state.imagePath) ? props.location.state.imagePath : [props.location.state.imagePath],
+            isNFT: props.location.state.isNFT,
+            isMomentNFT: props.location.state.isMomentNFT,
+            ...props.location.state.metadata,
           }, updateAfterLoad);
         } else if(id) {
           let item, info, data;
@@ -181,12 +184,12 @@ class ItemPage extends Component {
               case "momentnfts":
                 [data, info] = await Promise.all([UIHelper.callWithRetry(contractMomentNFTs.methods.tokenURI(id)).then(uri => fetch(uri)).then(r => r.json()), UIHelper.callWithRetry(contractMomentNFTs.methods.getItem(id))]);
 
-                item = { ad: {price: info[0], seller: info[1], active: true}, info: {...data, imagePath: [data.image], isMomentNFT: true, metadata: this.extractNFTTraitTypes(data.attributes)}};
+                item = { ad: {price: info[0], seller: info[1], active: true}, info: {...data, imagePath: [data.image], isMomentNFT: true, title: data.name, ...this.extractNFTTraitTypes(data.attributes)}};
                 break;
               case "ownership":
                 [data, info] = await Promise.all([UIHelper.callWithRetry(contractNFTs.methods.tokenURI(id)).then(uri => fetch(uri)).then(r => r.json()), UIHelper.callWithRetry(contractNFTs.methods.getItem(id))]);
 
-                item = { ad: {price: info[0], seller: info[1], active: true}, info: {...data, imagePath: [data.image], isNFT: true, metadata: this.extractNFTTraitTypes(data.attributes)}};
+                item = { ad: {price: info[0], seller: info[1], active: true}, info: {...data, imagePath: [data.image], isNFT: true, ...this.extractNFTTraitTypes(data.attributes)}};
                 break;
                 default:
             }
@@ -263,6 +266,8 @@ class ItemPage extends Component {
                 itemId: state.itemId,
                 priceValue: Number(this.props.drizzle.web3.utils.fromWei(state.price)),
                 currentCar: state.carBrand,
+                currentTitle: state.title,
+                currentRarity: state.rarity,
                 currentSimulator: state.simulator,
                 currentDescription: state.description,
                 currentSeason: state.season,
@@ -687,21 +692,25 @@ class ItemPage extends Component {
 
     //NFT
     renderItemInformationForNFT = () => {
-
-      let date = "N/A";
-      if(this.state.isMomentNFT && this.state.metadata && this.state.metadata.date) {
-        date = UIHelper.formaDateAsString(this.state.metadata.date);
-      }
-      
-      const price = Number(this.props.drizzle.web3.utils.fromWei(this.state.price)).toFixed(2);
-
       return (
         <div className="row">
           <div className="col-xs-12 col-lg-6 mb-6 mb-lg-0">
             { this.state.isMomentNFT &&
             <div className="row mb-4 mb-sm-0">
               <div className="col-sm-4"><strong className="fw-500">Date:</strong></div>
-              <div className="col-sm-8">{date}</div>
+              <div className="col-sm-8">{this.state.date ? UIHelper.formaDateAsString(this.state.date) : "N/A"}</div>
+            </div>
+            }
+            { this.state.isMomentNFT &&
+            <div className="row mb-4 mb-sm-0">
+              <div className="col-sm-4"><strong className="fw-500">Title:</strong></div>
+              <div className="col-sm-8">{this.state.title || "N/A"}</div>
+            </div>
+            }
+            { this.state.isMomentNFT &&
+            <div className="row mb-4 mb-sm-0">
+              <div className="col-sm-4"><strong className="fw-500">Rarity:</strong></div>
+              <div className="col-sm-8">{this.state.rarity || "N/A"}</div>
             </div>
             }
             <div className="row mb-4 mb-sm-0">
@@ -726,7 +735,7 @@ class ItemPage extends Component {
             { !this.state.isNFTOwner && 
             <div className="row mb-4 mb-sm-0">
               <div className="col-sm-4"><strong className="fw-500">Price:</strong></div>
-              <div className="col-sm-8"><strong>{price} <sup className="main-sup">SRC</sup></strong><br/><span className="secondary-price">{this.renderUSDPrice()}</span></div>
+              <div className="col-sm-8"><strong>{Number(this.props.drizzle.web3.utils.fromWei(this.state.price)).toFixed(2)} <sup className="main-sup">SRC</sup></strong><br/><span className="secondary-price">{this.renderUSDPrice()}</span></div>
             </div>
             }
           </div>

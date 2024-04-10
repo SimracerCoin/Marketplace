@@ -34,6 +34,7 @@ class MainPage extends Component {
             selectedItemId: "",
             selectedTrack: "",
             selectedSimulator: "",
+            selectedTitle: "",
             selectedSeason: "",
             selectedSeries: "",
             selectedDescription: "",
@@ -121,7 +122,7 @@ class MainPage extends Component {
         }
     }
 
-    buyItem = async (event, itemId, track, simulator, season, series, description, price, carBrand, carNumber, address, ipfsPath, imagePath, isNFT, isMomentNFT, videoPath, metadata) => {
+    buyItem = async (event, itemId, track, simulator, season, series, description, price, carBrand, carNumber, address, ipfsPath, imagePath, isNFT, isMomentNFT, videoPath, metadata, title) => {
         event.preventDefault();
 
         //let similarItems = [];
@@ -148,6 +149,7 @@ class MainPage extends Component {
             selectedSeason: season,
             selectedSeries: series,
             selectedDescription: description,
+            selectedTitle: title,
             selectedPrice: price,
             selectedCategory: category,
             selectedCarBrand: carBrand,
@@ -211,6 +213,7 @@ class MainPage extends Component {
                             selectedSeason: this.state.selectedSeason,
                             selectedSeries: this.state.selectedSeries,
                             selectedDescription: this.state.selectedDescription,
+                            selectedTitle: this.state.selectedTitle,
                             selectedPrice: this.state.selectedPrice,
                             selectedCarBrand: this.state.selectedCarBrand,
                             selectedCarNumber: this.state.selectedCarNumber,
@@ -239,11 +242,11 @@ class MainPage extends Component {
             let imagePath = value.image;
 
             let metadata = this.extractMomentNFTTraitTypes(value.attributes);
-            let series = metadata.series;
             let simulator = metadata.simulator;
             let address = value.seriesOwner;
             let price = value.price;
             let video = value.animation_url; 
+            let title = value.name;
             let description = value.description;
 
             let price_src = Number(web3.utils.fromWei(price)).toFixed(2);
@@ -267,12 +270,12 @@ class MainPage extends Component {
             //console.log('attributes: ', value.attributes);
             momentNfts.push(
                     <div className="col-12 col-sm-6 col-md-4 col-lg-3 px-1">
-                    <Card className="card-block bg-dark_A-20 p-4 mx-1 mt-2" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, description, price, null, null, address, null, imagePath, false, true, video, metadata)}>
+                    <Card className="card-block bg-dark_A-20 p-4 mx-1 mt-2" onClick={(e) => this.buyItem(e, itemId, null, null, null, null, description, price, null, null, address, null, imagePath, false, true, video, metadata, title)}>
                         <Card.Header style={{height: '240px'}} className="d-flex flex-wrap align-items-center justify-content-center">
                             <Card.Img variant="top" src={imagePath} style={{width: 'auto', maxHeight: '100%'}} />
                         </Card.Header>
                         <Card.Body className="text-center">
-                            <Card.Title className="mt-5 font-weight-bold">{series}</Card.Title>
+                            <Card.Title className="mt-5 font-weight-bold">{title}</Card.Title>
                             <div className="text-left">
                             <div><strong  className="price_div_strong">{price_src} <sup className="main-sup">SRC</sup></strong><br/> <span className="secondary-price">{usdPrice}<sup className="secondary-sup">USD</sup></span></div>
                             {value.attributes.map( function(att) {
@@ -336,7 +339,7 @@ class MainPage extends Component {
             
             nfts.push(
                 <div className="col-12 col-sm-6 col-md-4 col-lg-3 px-1">
-                    <Card className="card-block bg-dark_A-20 p-4 mx-1 mt-2" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, description, price, null, carNumber, address, null, imagePath, true, false, null, metadata)}>
+                    <Card className="card-block bg-dark_A-20 p-4 mx-1 mt-2" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, null, description, price, null, carNumber, address, null, imagePath, true, false, null, metadata)}>
                         <Card.Header style={{height: '240px'}} className="d-flex flex-wrap align-items-center justify-content-center">
                             <Card.Img variant="top" src={imagePath} style={{width: 'auto', maxHeight: '100%'}} />
                         </Card.Header>

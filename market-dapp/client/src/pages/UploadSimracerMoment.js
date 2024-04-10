@@ -5,8 +5,9 @@ import ipfs from "../ipfs";
 import UIHelper from "../utils/uihelper";
 import "../css/auction.css";
 
+const simsElements = ["iRacing", "F12020", "rFactor", "Assetto Corsa"];
+const rarityOpt = ["Common", "Epic", "Legendary", "Unique"];
 const timingOpt = ["1 day", "3 days", "7 days", "1 month", "3 month", "6 month"];
-const timingOptions = [];
 const NUMBER_CONFIRMATIONS_NEEDED = Number(process.env.REACT_APP_NUMBER_CONFIRMATIONS_NEEDED);
 
 const FormatDate = (inputDate) => {
@@ -21,8 +22,7 @@ class UploadSimracerMoment extends Component {
 
         this.state = {
             currentAccount: null,
-            currentSimulator: "Choose your simulator",
-            contract: null,
+            currentSimulator: "Choose the simulator",
             ipfsPath: null,
             video_ipfsPath: "",
             image_ipfsPath: "",
@@ -34,9 +34,12 @@ class UploadSimracerMoment extends Component {
             videoBuffer: null,
             imageBuffer: null,
             priceValue: "",
+            currentDescription: "",
+            currentTitle: "",
             auctionItem: false,
             auctionTimeRange: false,
             currentTimingOption: timingOpt[0],
+            currentRarity: "Choose the rarity",
             auctionStart: FormatDate(new Date()),
             auctionEnd: FormatDate(new Date()),
             recordingDate: FormatDate(new Date())
@@ -45,6 +48,8 @@ class UploadSimracerMoment extends Component {
 
         //this.handleChangeHash = this.handleChangeHash.bind(this);
         this.handleFilePrice = this.handleFilePrice.bind(this);
+        this.handleDescription = this.handleDescription.bind(this);
+        this.handleTitle = this.handleTitle.bind(this);
         this.uploadVideo = this.uploadVideo.bind(this);
         this.saveVideo_toIPFS = this.saveVideo_toIPFS.bind(this);
         this.saveSimracingMomentNFT = this.saveSimracingMomentNFT.bind(this);
@@ -56,21 +61,17 @@ class UploadSimracerMoment extends Component {
 
 
     componentDidMount = async () => {
-        
-        for (const [index, value] of timingOpt.entries()) {
-            timingOptions.push(<Dropdown.Item eventKey={value} key={index}>{value}</Dropdown.Item>)
-        }
 
         const { drizzle, drizzleState } = this.props;
 
-        let now = new Date();
-        let daysForEnd = UIHelper.extractDaysFromAuctionString(timingOpt[0]);
-        let endDate = this.getUpdatedEndDate(now,daysForEnd);
+        const auctionStart = new Date();
+        const daysForEnd = UIHelper.extractDaysFromAuctionString(timingOpt[0]);
+        const auctionEnd = this.getUpdatedEndDate(auctionStart,daysForEnd);
         const currentAccount = drizzleState.accounts[0];
         const contract = drizzle.contracts.STMarketplace;
         const contractNFTs = drizzle.contracts.SimracingMomentOwner;
         const isSeller = (await UIHelper.callWithRetry(contract.methods.getSeller(currentAccount))).active;
-        this.setState({ auctionStart: now, auctionEnd:endDate, currentTimingOption: timingOpt[0], timingOptions: timingOptions, currentAccount, contract, contractNFTs, isSeller });
+        this.setState({ auctionStart, auctionEnd, currentAccount, contractNFTs, isSeller });
     };
 
 
@@ -95,6 +96,11 @@ class UploadSimracerMoment extends Component {
         this.setState({ currentDescription: event.target.value });
     };
 
+    handleTitle = (event) => {
+        console.log("Handling Title: " + event.target.value);
+        this.setState({ currentTitle: event.target.value });
+    };
+
     handleSeries = (event) => {
         console.log("Handling Series: " + event.target.value);
         this.setState({ currentSeries: event.target.value });
@@ -117,7 +123,6 @@ class UploadSimracerMoment extends Component {
     }
 
     getUpdatedEndDate = (now, currentTimingOption) => {
-       
         let daysForEnd = UIHelper.extractDaysFromAuctionString(currentTimingOption);
         let endDate = UIHelper.addDaysToDate(now, daysForEnd);
         return endDate;
@@ -134,7 +139,6 @@ class UploadSimracerMoment extends Component {
     }
 
     setRecordingDate = async (value)=> {
-        
         let elem = document.getElementById('ontopdate');
         if(elem) {
             if(elem.classList.contains('is-visible')) {
@@ -162,10 +166,13 @@ class UploadSimracerMoment extends Component {
         this.setState({ currentSimulator: event });
     };
 
-    createVideoScene = (description, series) => {
+    onSelectRarity = async (event) => {
+        console.log("Choosing rarity: " + event);
+        this.setState({ currentRarity: event });
+    };
 
+    createVideoScene = (description, series) => {
         return  {
-        
             "scenes": [
               {
                 "background-color": "#4392F1",
@@ -192,8 +199,7 @@ class UploadSimracerMoment extends Component {
                 ]
               }
             ]
-          }
-           
+        }
     };
 
 
@@ -266,7 +272,6 @@ class UploadSimracerMoment extends Component {
 
     //Guarda o screenshot no ipfs 
     saveImage_toIPFS = async () => {
-        
         console.log('saveImage_toIPFS....');
 
         if(this.state.imageBuffer === null) {
@@ -476,13 +481,26 @@ class UploadSimracerMoment extends Component {
             alert('Video and/or thumbnail are not ready to process. Please wait or try again!');
             return;
         }
-        if(!this.state.currentDescription || !this.state.currentSeries || this.state.currentDescription.length === 0 || this.state.currentSeries.length === 0) {
+        if(!this.state.currentDescription || !this.state.currentSeries) {
             alert('Series and Description must not be empty!');
             return;
         }
-
         if (!this.state.priceValue) {
-            alert('Item price must be a number');
+            alert('Item price must be a number!');
+            return;
+        }
+        if(!this.state.currentTitle) {
+            alert('Title must not be empty!')
+            return;
+        }
+
+        if(!simsElements.includes(this.state.currentSimulator)) {
+            alert('Simulator must be chosen!')
+            return;
+        }
+
+        if(!rarityOpt.includes(this.state.currentRarity)) {
+            alert('Rarity must be chosen!')
             return;
         }
     
@@ -556,46 +574,25 @@ class UploadSimracerMoment extends Component {
             }
         }
         */
-        var jsonData = { 'description': this.state.currentDescription, 
-                        'name': 'Simracing Moment NFT', 
-                        'image': 'https://simthunder.infura-ipfs.io/ipfs/' + imagePath, 
-                        'animation_url': 'https://simthunder.infura-ipfs.io/ipfs/' + videoPath
-                        //'seriesOwner': this.state.currentAccount
-                    };
-
-        jsonData.attributes = [];
-        //Opensea style attributes
-        jsonData.attributes.push(
-            {
-                "trait_type": "series", 
+        var jsonData = {
+            "description": this.state.currentDescription,
+            "name": this.state.currentTitle,
+            "image": "https://simthunder.infura-ipfs.io/ipfs/" + imagePath, 
+            "animation_url": "https://simthunder.infura-ipfs.io/ipfs/" + videoPath,
+            "attributes": [{
+                "trait_type": "series",
                 "value": this.state.currentSeries
-            },
-            {
-                "trait_type": "date", 
-                "value": this.state.recordingDate, //yyyy-MM-DD
-            },
-            //{
-            //    "trait_type": "seriesOwner", 
-            //    "value": this.state.currentAccount
-            //},
-            {
-                "trait_type": "simulator", 
+            }, {
+                "trait_type": "date",
+                "value": this.state.recordingDate //yyyy-MM-DD
+            }, {
+                "trait_type": "simulator",
                 "value": this.state.currentSimulator
-            },
-            //{
-            //    "trait_type": "price", 
-            //    "value": this.state.currentFilePrice
-            //},
-            //{
-            //    "trait_type": "auction_item", 
-            //    "value": this.state.auctionItem,
-            //}
-            //,
-            //{
-            //    "trait_type": "video", 
-            //    "value": 'https://ipfs.io/ipfs/' + videoPath
-            //}
-        );
+            }, {
+                "trait_type": "rarity",
+                "value": this.state.currentRarity
+            }]
+        };
 
         /*
         if(this.state.auctionItem) {
@@ -636,12 +633,21 @@ class UploadSimracerMoment extends Component {
     }
 
     render() {
-        const simsElements = ["iRacing", "F12020", "rFactor", "Assetto Corsa"];
+        
         const sims = [];
 
         for (const [index, value] of simsElements.entries()) {
             let thumb = "/assets/img/sims/" + value + ".png";
             sims.push(<Dropdown.Item eventKey={value} key={index}><img src={thumb} width="24" alt="thumbnail" /> {value}</Dropdown.Item>)
+        }
+
+        const timingOptions = [];
+        const rarityOptions = [];
+        for (const [index, value] of timingOpt.entries()) {
+            timingOptions.push(<Dropdown.Item eventKey={value} key={index}>{value}</Dropdown.Item>)
+        }
+        for (const [index, value] of rarityOpt.entries()) {
+            rarityOptions.push(<Dropdown.Item eventKey={value} key={index}>{value}</Dropdown.Item>)
         }
 
         return (
@@ -657,7 +663,9 @@ class UploadSimracerMoment extends Component {
                                     <div>
                                         <Form>
                                             <Form.Group controlId="formInsertCar">
-                                                <Form.Control type="text" placeholder="Enter Series name" onChange={this.handleSeries} />
+                                                <Form.Control tyoe="text" placeholder="Enter Title" onChange={this.handleTitle} />
+                                                <br></br>
+                                                <Form.Control type="text" placeholder="Enter Series" onChange={this.handleSeries} />
                                                 <br></br>
                                                 <Form.Control as="textarea" placeholder="Enter Description" onChange={this.handleDescription} />
                                                 <br></br>
@@ -665,6 +673,10 @@ class UploadSimracerMoment extends Component {
                                                 <br></br>
                                                 <DropdownButton id="dropdown-skin-button" title={this.state.currentSimulator} onSelect={this.onSelectSimulator}>
                                                     {sims}
+                                                </DropdownButton>
+                                                <br></br>
+                                                <DropdownButton id="dropdown-skin-button" title={this.state.currentRarity} onSelect={this.onSelectRarity}>
+                                                    {rarityOptions}
                                                 </DropdownButton>
                                                 <br></br>
                                                 {false &&
@@ -678,7 +690,7 @@ class UploadSimracerMoment extends Component {
                                                         <div>Duration:</div>   
                                                        
                                                         <DropdownButton className={`banner ${this.state.auctionItem ? 'auction_item_visible' : 'auction_item_invisible'}`} id="dropdown-choose-timing" title={this.state.currentTimingOption} onSelect={this.onSelectAuctionTiming}>
-                                                            {this.state.timingOptions}
+                                                            {timingOptions}
                                                         </DropdownButton>
                                                         <br></br>
                                                         <br></br>
