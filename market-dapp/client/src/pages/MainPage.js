@@ -243,6 +243,8 @@ class MainPage extends Component {
 
             let metadata = this.extractMomentNFTTraitTypes(value.attributes);
             let simulator = metadata.simulator;
+            let date = getProperDate(metadata.date);
+            let rarity = metadata.rarity;
             let address = value.seriesOwner;
             let price = value.price;
             let video = value.animation_url; 
@@ -277,28 +279,10 @@ class MainPage extends Component {
                         <Card.Body className="text-center">
                             <Card.Title className="mt-5 font-weight-bold">{title}</Card.Title>
                             <div className="text-left">
-                            <div><strong  className="price_div_strong">{price_src} <sup className="main-sup">SRC</sup></strong><br/> <span className="secondary-price">{usdPrice}<sup className="secondary-sup">USD</sup></span></div>
-                            {value.attributes.map( function(att) {
-                               let label = att.trait_type.charAt(0).toUpperCase() + att.trait_type.slice(1);
-                               let value2Render = att.value;
-                               if(att.trait_type === 'date') {
-                                value2Render = getProperDate(value2Render);
-                               } 
-
-                                if(label === 'SeriesOwner') {
-                                    return "";
-                                }
-                                if(att.trait_type === 'series') {
-                                    return "";
-                                }
-                                if(att.trait_type === 'video') {
-                                    return <div><a href={value2Render} rel="noreferrer" target="_blank">{value2Render}</a></div>
-                                }
-                                if(att.trait_type === 'simulator') {
-                                    return <div><img src={thumb} width="32" alt={value2Render} /> {value2Render}</div>
-                                }
-                                return <div>{value2Render}</div>
-                            }, this)}
+                                <div><img src={thumb} width="32" alt={simulator} /> {simulator}</div>
+                                <div>{rarity}</div>
+                                <div>{date}</div>
+                                <div><strong  className="price_div_strong">{price_src} <sup className="main-sup">SRC</sup></strong><br/> <span className="secondary-price">{usdPrice}<sup className="secondary-sup">USD</sup></span></div>
                             </div>
                         <Button variant="warning">Buy</Button>
                         </Card.Body>
@@ -346,8 +330,8 @@ class MainPage extends Component {
                         <Card.Body className="text-center">
                             <Card.Title className="mt-5 font-weight-bold text-truncate">{series}</Card.Title>
                             <div className="text-left">
-                            <div><img src={thumb} width="32" alt={simulator} /> {simulator}</div>
-                            <div className="price_div"><strong className="price_div_strong">{price_src} <sup className="main-sup">SRC</sup></strong><br/> <span className="secondary-price">{usdPrice}<sup className="secondary-sup">USD</sup></span></div>
+                                <div><img src={thumb} width="32" alt={simulator} /> {simulator}</div>
+                                <div className="price_div"><strong className="price_div_strong">{price_src} <sup className="main-sup">SRC</sup></strong><br/> <span className="secondary-price">{usdPrice}<sup className="secondary-sup">USD</sup></span></div>
                             </div>
                             <Button variant="warning">Buy</Button>
                         </Card.Body>
