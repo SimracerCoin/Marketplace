@@ -15,7 +15,6 @@ class SellerPage extends Component {
             listComments: [],
             vendorAddress: "",
             vendorNickname: "",
-            contract: null,
             currentAccount: null,
             selectedItemId: "",
             selectedTrack: "",
@@ -28,6 +27,8 @@ class SellerPage extends Component {
             selectedImagePath: "",
             ipfsPath:""
         }
+
+        this.props.history.push(this.props.match.url);
     }
 
     componentDidMount = async () => {
@@ -51,22 +52,17 @@ class SellerPage extends Component {
             values[2]
         ]);
 
-        this.setState({ listCars, listSkins, contract, currentAccount, listComments, ...props.location.state });
+        this.setState({ listCars, listSkins, currentAccount, listComments, ...props.location.state });
     
         // scroll to top
         UIHelper.scrollToTop();
     }
 
-    buyItem = async (event, itemId, track, simulator, season, series, description, price, carBrand, carNumber, address, ipfsPath, imagePath) => {
-        event.preventDefault();
-
-        let similarItems = [];
+    buyItem = async (itemId, track, simulator, season, series, description, price, carBrand, ipfsPath, imagePath) => {
         let category = "";
         if(track == null || season == null) {
-            similarItems = similarItems.concat(this.state.listSkins);
             category = "carskins";
         } else {
-            similarItems = similarItems.concat(this.state.listCars);
             category = "carsetup";
         }
         
@@ -80,12 +76,9 @@ class SellerPage extends Component {
             selectedDescription: description,
             selectedPrice: price,
             selectedCarBrand: carBrand,
-            selectedCarNumber: carNumber,
             selectedImagePath: imagePath,
             selectedCategory: category,
-            vendorAddress: address,
-            ipfsPath: ipfsPath,
-            similarItems: similarItems
+            ipfsPath
         });
     }
 
@@ -110,10 +103,8 @@ class SellerPage extends Component {
                             selectedDescription: this.state.selectedDescription,
                             selectedPrice: this.state.selectedPrice,
                             selectedCarBrand: this.state.selectedCarBrand,
-                            selectedCarNumber: this.state.selectedCarNumber,
                             imagePath: this.state.selectedImagePath,
                             vendorAddress: this.state.vendorAddress,
-                            vendorNickname: this.state.vendorNickname,
                             ipfsPath: this.state.ipfsPath,
                             similarItems: this.state.similarItems
                         }
@@ -124,7 +115,7 @@ class SellerPage extends Component {
 
         let nickname = this.state.vendorNickname;
 
-        for (const [index, value] of this.state.listCars.entries()) {
+        for (const [_, value] of this.state.listCars.entries()) {
 
             let carBrand = value.info.carBrand
             let track = value.info.track
@@ -133,9 +124,9 @@ class SellerPage extends Component {
             let series = value.info.series
             let description = value.info.description
             let price = value.ad.price
-            let address = value.ad.seller
             let itemId = value.id
             let ipfsPath = value.ad.ipfsPath
+
             cars.push(
                 <ListGroup.Item key={itemId}>
                     <Card className="card-block">
@@ -148,7 +139,7 @@ class SellerPage extends Component {
                                 <div><b>Price:</b> {Number(web3.utils.fromWei(price)).toFixed(2)} SRC</div>
                                 {/* <div><b>Vendor address:</b> {address}</div> */}
                             </div>
-                            <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, track, simulator, season, series, description, price, carBrand, address, nickname, ipfsPath)}> View item</Button>
+                            <Button variant="primary" onClick={(e) => this.buyItem(itemId, track, simulator, season, series, description, price, carBrand, ipfsPath)}>View item</Button>
                         </Card.Body>
                     </Card>
                 </ListGroup.Item>
@@ -157,15 +148,16 @@ class SellerPage extends Component {
 
         if(cars) cars.reverse();
 
-        for (const [index, value] of this.state.listSkins.entries()) {
+        for (const [_, value] of this.state.listSkins.entries()) {
 
             let carBrand = value.info.carBrand
             let simulator = value.info.simulator
             let price = value.ad.price
-            let address = value.ad.seller
             let itemId = value.id
             let ipfsPath = value.ad.ipfsPath
             let imagePath = value.info.skinPic
+            let description = value.info.description
+
             skins.push(
                 <ListGroup.Item key={itemId}>
                     <Card className="card-block">
@@ -177,7 +169,7 @@ class SellerPage extends Component {
                                 <div><b>Price:</b> {Number(web3.utils.fromWei(price)).toFixed(2)} SRC</div>
                                 {/* <div><b>Vendor address:</b> {address}</div> */}
                             </div>
-                            <Button variant="primary" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, null, null, price, carBrand , address, ipfsPath, imagePath)}> View item</Button>
+                            <Button variant="primary" onClick={(e) => this.buyItem(itemId, null, simulator, null, null, description, price, carBrand, ipfsPath, imagePath)}>View item</Button>
                         </Card.Body>
                     </Card>
                 </ListGroup.Item>

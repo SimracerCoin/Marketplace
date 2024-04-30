@@ -20,7 +20,6 @@ const PASSPHRASE = process.env.REACT_APP_PASSPHRASE;
 const NON_SECURE_SELL = process.env.REACT_APP_NON_SECURE_SELL === "true";
 const NON_SECURE_KEY= process.env.REACT_APP_NON_SECURE_KEY;
 const NUMBER_CONFIRMATIONS_NEEDED = Number(process.env.REACT_APP_NUMBER_CONFIRMATIONS_NEEDED);
-const NUMBER_LOAD_ITEMS = 10;
 
 class ItemPage extends Component {
 
@@ -33,6 +32,8 @@ class ItemPage extends Component {
             simulator: "",
             season: "",
             series: "",
+            title: "",
+            rarity: "",
             description: "",
             price: "",
             carBrand: "",
@@ -45,7 +46,6 @@ class ItemPage extends Component {
             isNFT: false,
             isMomentNFT: false,
             usdValue: 1,
-            metadata: {},
             contract: null,
             currentAccount: "",
             comment: "",
@@ -139,7 +139,10 @@ class ItemPage extends Component {
             this.setState({ isNFTOwner, canDelete, currentAccount, isSeller, contract, contractMomentNFTs, contractNFTs, contractSimracerCoin, isSkin });
           }
   
-          this.setState({hasVideo, isMuted: hasVideo});
+          this.setState({
+            hasVideo, 
+            isMuted: hasVideo, 
+            vendorNickname: (await UIHelper.callWithRetry(contract.methods.getSeller(sellerAddress))).nickname});
         }
 
         const {category, id} = props.match.params;
@@ -147,23 +150,23 @@ class ItemPage extends Component {
 
         if(props.location.state) {
           this.setState({
-            itemId: props.location.state ? props.location.state.selectedItemId : "",
-            track: props.location.state ? props.location.state.selectedTrack : "",
-            simulator: props.location.state ? props.location.state.selectedSimulator  : "",
-            season: props.location.state ? props.location.state.selectedSeason : "",
-            series: props.location.state ? props.location.state.selectedSeries : "",
-            description: props.location.state ? props.location.state.selectedDescription : "",
-            price: props.location.state ? props.location.state.selectedPrice : "",
-            carBrand: props.location.state ? props.location.state.selectedCarBrand : "",
-            carNumber: props.location.state ? props.location.state.selectedCarNumber : 0,
-            vendorAddress: props.location.state ? props.location.state.vendorAddress : "",
-            vendorNickname: props.location.state ? props.location.state.vendorNickname : "",
-            ipfsPath: props.location.state ? props.location.state.ipfsPath : "",
-            videoPath: props.location.state ? props.location.state.videoPath : "",
-            imagePath: props.location.state ? (Array.isArray(props.location.state.imagePath) ? props.location.state.imagePath : [props.location.state.imagePath]) : [],
-            isNFT: props.location.state ? props.location.state.isNFT : false,
-            isMomentNFT: props.location.state ? props.location.state.isMomentNFT : false,
-            metadata: props.location.state ? props.location.state.metadata : {},
+            itemId: props.location.state.selectedItemId,
+            track: props.location.state.selectedTrack,
+            simulator: props.location.state.selectedSimulator,
+            season: props.location.state.selectedSeason,
+            series: props.location.state.selectedSeries,
+            title: props.location.state.selectedTitle,
+            description: props.location.state.selectedDescription,
+            price: props.location.state.selectedPrice,
+            carBrand: props.location.state.selectedCarBrand,
+            carNumber: props.location.state.selectedCarNumber,
+            vendorAddress: props.location.state.vendorAddress,
+            ipfsPath: props.location.state.ipfsPath,
+            videoPath: props.location.state.videoPath,
+            imagePath: Array.isArray(props.location.state.imagePath) ? props.location.state.imagePath : [props.location.state.imagePath],
+            isNFT: props.location.state.isNFT,
+            isMomentNFT: props.location.state.isMomentNFT,
+            ...props.location.state.metadata,
           }, updateAfterLoad);
         } else if(id) {
           let item, info, data;
@@ -180,12 +183,12 @@ class ItemPage extends Component {
               case "momentnfts":
                 [data, info] = await Promise.all([UIHelper.callWithRetry(contractMomentNFTs.methods.tokenURI(id)).then(uri => fetch(uri)).then(r => r.json()), UIHelper.callWithRetry(contractMomentNFTs.methods.getItem(id))]);
 
-                item = { ad: {price: info[0], seller: info[1], active: true}, info: {...data, imagePath: [data.image], isMomentNFT: true, metadata: this.extractNFTTraitTypes(data.attributes)}};
+                item = { ad: {price: info[0], seller: info[1], active: true}, info: {...data, imagePath: [data.image], isMomentNFT: true, title: data.name, ...this.extractNFTTraitTypes(data.attributes)}};
                 break;
               case "ownership":
                 [data, info] = await Promise.all([UIHelper.callWithRetry(contractNFTs.methods.tokenURI(id)).then(uri => fetch(uri)).then(r => r.json()), UIHelper.callWithRetry(contractNFTs.methods.getItem(id))]);
 
-                item = { ad: {price: info[0], seller: info[1], active: true}, info: {...data, imagePath: [data.image], isNFT: true, metadata: this.extractNFTTraitTypes(data.attributes)}};
+                item = { ad: {price: info[0], seller: info[1], active: true}, info: {...data, imagePath: [data.image], isNFT: true, ...this.extractNFTTraitTypes(data.attributes)}};
                 break;
                 default:
             }
@@ -202,7 +205,6 @@ class ItemPage extends Component {
             ...item.info,
             itemId: id,
             vendorAddress: item.ad.seller,
-            vendorNickname: (await UIHelper.callWithRetry(contract.methods.getSeller(item.ad.seller))).nickname
           }, updateAfterLoad);
         } else {
           alert("Item not found!");
@@ -263,6 +265,8 @@ class ItemPage extends Component {
                 itemId: state.itemId,
                 priceValue: Number(this.props.drizzle.web3.utils.fromWei(state.price)),
                 currentCar: state.carBrand,
+                currentTitle: state.title,
+                currentRarity: state.rarity,
                 currentSimulator: state.simulator,
                 currentDescription: state.description,
                 currentSeason: state.season,
@@ -365,6 +369,26 @@ class ItemPage extends Component {
       this.setState({sellFromWallet: true});
     }
 
+    checkAllowances = async (contract, paramsForCall, price) => {
+      const { state } = this;
+      const { web3 } = this.props.drizzle;
+
+      try {
+        const allowance = web3.utils.toBN(
+          await UIHelper.callWithRetry(state.contractSimracerCoin.methods.allowance(state.currentAccount, contract)));
+
+        if(allowance.lt(price))
+          return await state.contractSimracerCoin.methods.approve(contract, price)
+                .send(paramsForCall)
+                .catch(UIHelper.transactionOnError);
+
+        return true;
+      } catch(e) {
+        console.error(e);
+        return false;
+      }
+    }
+
     buyItem = async() => {
         const { state } = this;
         const { web3 } = this.props.drizzle;
@@ -432,9 +456,7 @@ class ItemPage extends Component {
             
             //approve contract ot spend our SRC
             const paramsForCall = await UIHelper.calculateGasUsingStation(state.currentAccount);
-            const approval = await state.contractSimracerCoin.methods.approve(state.contract.address, price)
-              .send(paramsForCall)
-              .catch(UIHelper.transactionOnError);
+            const approval = await this.checkAllowances(state.contract.address, paramsForCall, price);
 
             if(!approval) {
               UIHelper.transactionOnError("ERROR ON APPROVAL");
@@ -461,9 +483,7 @@ class ItemPage extends Component {
         } else {
             const contractAddressToApprove = state.isNFT ? state.contractNFTs.address : state.contractMomentNFTs.address;
             const paramsForCall = await UIHelper.calculateGasUsingStation(state.currentAccount);
-            const approval = await this.state.contractSimracerCoin.methods.approve(contractAddressToApprove, price)
-              .send(paramsForCall)
-              .catch(UIHelper.transactionOnError);
+            const approval = await this.checkAllowances(contractAddressToApprove, paramsForCall, price);
 
             if(!approval) {
               UIHelper.transactionOnError("ERROR ON APPROVAL");
@@ -671,21 +691,25 @@ class ItemPage extends Component {
 
     //NFT
     renderItemInformationForNFT = () => {
-
-      let date = "N/A";
-      if(this.state.isMomentNFT && this.state.metadata && this.state.metadata.date) {
-        date = UIHelper.formaDateAsString(this.state.metadata.date);
-      }
-      
-      const price = Number(this.props.drizzle.web3.utils.fromWei(this.state.price)).toFixed(2);
-
       return (
         <div className="row">
           <div className="col-xs-12 col-lg-6 mb-6 mb-lg-0">
             { this.state.isMomentNFT &&
             <div className="row mb-4 mb-sm-0">
               <div className="col-sm-4"><strong className="fw-500">Date:</strong></div>
-              <div className="col-sm-8">{date}</div>
+              <div className="col-sm-8">{this.state.date ? UIHelper.formaDateAsString(this.state.date) : "N/A"}</div>
+            </div>
+            }
+            { this.state.isMomentNFT &&
+            <div className="row mb-4 mb-sm-0">
+              <div className="col-sm-4"><strong className="fw-500">Title:</strong></div>
+              <div className="col-sm-8">{this.state.title || "N/A"}</div>
+            </div>
+            }
+            { this.state.isMomentNFT &&
+            <div className="row mb-4 mb-sm-0">
+              <div className="col-sm-4"><strong className="fw-500">Rarity:</strong></div>
+              <div className="col-sm-8">{this.state.rarity || "N/A"}</div>
             </div>
             }
             <div className="row mb-4 mb-sm-0">
@@ -710,7 +734,7 @@ class ItemPage extends Component {
             { !this.state.isNFTOwner && 
             <div className="row mb-4 mb-sm-0">
               <div className="col-sm-4"><strong className="fw-500">Price:</strong></div>
-              <div className="col-sm-8"><strong>{price} <sup className="main-sup">SRC</sup></strong><br/><span className="secondary-price">{this.renderUSDPrice()}</span></div>
+              <div className="col-sm-8"><strong>{Number(this.props.drizzle.web3.utils.fromWei(this.state.price)).toFixed(2)} <sup className="main-sup">SRC</sup></strong><br/><span className="secondary-price">{this.renderUSDPrice()}</span></div>
             </div>
             }
           </div>
@@ -769,22 +793,17 @@ class ItemPage extends Component {
           </Carousel>
         );
       } else if(hasVideo) {
-        if(this.state.isMuted) {
-          return <div className="carousel-product">
-                    <div className="slider text-secondary" data-slick="product-body">
-                        <video async className="videoContainer" loop muted autoPlay currenttime={0} src={this.state.videoPath} />  
-                        <button onClick={this.unmute} className="video-sound-control--btn video-sound-control--btn-off" label="Unmmute" type="button"></button> 
-                    </div>
-                </div>
-        } 
-        return (
-              <div className="carousel-product">
-                  <div className="slider text-secondary" data-slick="product-body">
-                    <video async className="videoContainer" loop autoPlay currenttime={0} src={this.state.videoPath} />  
-                    <button onClick={this.mute} className="video-sound-control--btn video-sound-control--btn-on" label="Mute" type="button"></button> 
-                  </div>
+          return (
+            <div className="carousel-product">
+              <div className="slider text-secondary" data-slick="product-body">
+                  <video async className="videoContainer" loop muted autoPlay currenttime={0} src={this.state.videoPath} />  
+                  {this.state.isMuted ? 
+                    <button onClick={this.unmute} className="video-sound-control--btn video-sound-control--btn-off" label="Unmmute"></button> :
+                    <button onClick={this.mute} className="video-sound-control--btn video-sound-control--btn-on" label="Mute"></button> 
+                  }
               </div>
-        );
+            </div>
+          );
       }
 
       return "";

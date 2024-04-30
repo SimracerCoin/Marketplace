@@ -200,20 +200,22 @@ class SellOwnership extends Component {
 
     //Save JSON in ipfs 
     saveJSON_toIPFS = async (image) => {
-        var jsonData = { 'description': this.state.currentDescription, 'name': 'Car', 'image': 'https://simthunder.infura-ipfs.io/ipfs/' + image };
-        //TODO: Change to standard attributes, remove price
-        jsonData['series'] = this.state.currentSeries;
-        //jsonData['seriesOwner'] = this.state.currentAccount;
-        jsonData['carNumber'] = this.state.currentCarNumber;
-        jsonData['simulator'] = this.state.currentSimulator;
-
-        jsonData.attributes = [];
-/*        jsonData.attributes.push(
-            {
-                "trait_type": "auction_item", 
-                "value": this.state.auctionItem
-            });
-
+        var jsonData = { 
+            "description": this.state.currentDescription, 
+            "name": "Car",
+            "image": "https://simthunder.infura-ipfs.io/ipfs/" + image,
+            "attributes": [{
+                "trait_type": "series", 
+                "value": this.state.currentSeries
+            }, {
+                "trait_type": "car", 
+                "value": this.state.currentCarNumber
+            }, {
+                "trait_type": "simulator", 
+                "value": this.state.currentSimulator
+            }]
+        };
+            /*
         if(this.state.auctionItem) {
             jsonData.attributes.push(
                 {

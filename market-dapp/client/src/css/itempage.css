@@ -33,6 +33,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    flex-direction: column;
 }
 
 .video-sound-control--btn {
@@ -40,31 +41,23 @@
     height: 32px;
     display: block;
     position: relative;
-    bottom: 40px;
-    left: 45px;
+    align-self: flex-start;
+    bottom: 70px;
+    left: 10px;
     z-index: 1000;
     outline:none;
     border: none;
-    background: url('../imgs/ico-sound-on.svg') 50% 50% no-repeat;
     background-size: 32px 32px;
     cursor: pointer;
     -webkit-transition: none;
 }
 
+.video-sound-control--btn-on {
+    background: url('../imgs/ico-sound-on.svg') 50% 50% no-repeat;
+}
+
 .video-sound-control--btn-off {
-    width: 32px;
-    height: 32px;
-    display: block;
-    position: relative;
-    bottom: 40px;
-    left: 45px;
-    z-index: 1000;
-    border: none;
-    outline:none;
     background: url('../imgs/ico-sound-off.svg') 50% 50% no-repeat;
-    background-size: 32px 32px;
-    cursor: pointer;
-    -webkit-transition: none;
 }
 
 *:focus {
