@@ -203,7 +203,7 @@ class SellOwnership extends Component {
         var jsonData = { 
             "description": this.state.currentDescription, 
             "name": "Car",
-            "image": "https://simthunder.infura-ipfs.io/ipfs/" + image,
+            "image": "https://simthunder.com/ipfs/" + image,
             "attributes": [{
                 "trait_type": "series", 
                 "value": this.state.currentSeries
@@ -332,7 +332,7 @@ class SellOwnership extends Component {
                 let paramsForCall = await UIHelper.calculateGasUsingStation(this.state.currentAccount);
 
                 //'https://gateway.pinata.cloud/ipfs/Qmboj3b42aW2nHGuQizdi2Zp35g6TBKmec6g77X9UiWQXg'
-                await this.state.contractNFTs.methods.awardItem(this.state.contractNFTs.address, this.state.currentAccount, price, 'https://simthunder.infura-ipfs.io/ipfs/' + this.state.jsonData_ipfsPath)
+                await this.state.contractNFTs.methods.awardItem(this.state.contractNFTs.address, this.state.currentAccount, price, 'https://simthunder.com/ipfs/' + this.state.jsonData_ipfsPath)
                     .send(paramsForCall)
                     //.on('sent', UIHelper.transactionOnSent)
                     .on('confirmation', function (confNumber, receipt, latestBlockHash) {
