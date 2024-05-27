@@ -366,7 +366,7 @@ class MainPage extends Component {
                 <div className="col-12 col-sm-6 col-md-4 col-lg-3 px-1">
                     <Card className="card-block bg-dark_A-20 p-4 mx-1 mt-2" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, null, description, price, carBrand, null, address, ipfsPath, imagePath, false, false, null, null)}>
                         <Card.Header style={{height: '240px'}} className="d-flex flex-wrap align-items-center justify-content-center">
-                            <Card.Img variant="top" src={"https://simthunder.infura-ipfs.io/ipfs/"+imagePath[0]} style={{width: 'auto', maxHeight: '100%'}} />
+                            <Card.Img variant="top" src={"/ipfs/"+imagePath[0]} style={{width: 'auto', maxHeight: '100%'}} />
                         </Card.Header>
                         <Card.Body className="text-center">
                             <Card.Title className="mt-5 font-weight-bold">{carBrand}</Card.Title>

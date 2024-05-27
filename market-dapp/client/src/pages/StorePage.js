@@ -1442,7 +1442,7 @@ class StorePage extends Component {
                                         <Link to="#" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, null, description, price, carBrand, null, address, ipfsPath, imagePath, false)} className="product-item">
                                         <div className="row align-items-center no-gutters">
                                             <div className="item_img d-none d-sm-block">
-                                            <img className="img bl-3 text-primary" src={"https://simthunder.infura-ipfs.io/ipfs/"+imagePath[0]} alt="thumb"/>
+                                            <img className="img bl-3 text-primary" src={"/ipfs/"+imagePath[0]} alt="thumb"/>
                                             </div>
                                             <div className="item_content flex-1 flex-grow pl-0 pl-sm-6 pr-6">
                                             <h6 className="item_title ls-1 small-1 fw-600 text-uppercase mb-1">{carBrand}</h6> 

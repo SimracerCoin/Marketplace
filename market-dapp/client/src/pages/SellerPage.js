@@ -162,7 +162,7 @@ class SellerPage extends Component {
                 <ListGroup.Item key={itemId}>
                     <Card className="card-block">
                         <Card.Body>
-                            <Card.Img variant="top" src={"https://simthunder.infura-ipfs.io/ipfs/"+imagePath[0]} />
+                            <Card.Img variant="top" src={"/ipfs/"+imagePath[0]} />
                             <Card.Title>{carBrand}</Card.Title>
                             <div className="text-left">
                                 <div><b>Simulator:</b> {simulator}</div>
