@@ -124,23 +124,27 @@ class UploadSkin extends Component {
     //Guarda a imagem no ipfs 
     saveImage_toIPFS = async () => {
         let error = false;
-        const { imageBuffer, image_ipfsPath } = this.state;
+        const image_ipfsPath = [];
+        const { imageBuffer } = this.state;
 
         // TODO: edit mode, nothing to upload... continue and keep the same
         if("edit" === this.state.mode)
             return true;
 
-        $(".dzu-dropzone .dzu-previewImage").each(async (idx, elem) => {
-            const response = await ipfs.add(imageBuffer[$(elem).attr("alt").split(',')[0]]);
-
-            if(response) {
-                image_ipfsPath[idx] = response.path;
+        for(const img of $(".dzu-dropzone .dzu-previewImage").map( (_, img) => $(img).attr("alt").split(',')[0]).get()) {
+            let response;
+            if(imageBuffer[img] && (response = await ipfs.add(imageBuffer[img]))) {
+                image_ipfsPath.push(response.path);
             } else {
                 error = true;
-                return false;
+                break;
             }
-        });
-        if(error) { alert("Error on upload files. Please try again later."); return false; }
+        }
+        
+        if(error) { 
+            alert("Error on upload files. Please try again later."); 
+            return false; 
+        }
 
         this.setState({ image_ipfsPath });
         return true;
@@ -152,6 +156,9 @@ class UploadSkin extends Component {
         if("edit" === this.state.mode)
             return true;
 
+        const { web3 } = this.props.drizzle;
+
+        /*
         const password = NON_SECURE_SELL ? NON_SECURE_KEY : await Prompt('Type the password to encrypt the file. Use different password for each item.');
         if (!password) { alert("Invalid password"); return false; }
 
@@ -163,8 +170,11 @@ class UploadSkin extends Component {
         });
         const encryptedDataHash = computeMerkleRootHash(Buffer.from(encryptedBuffer));
         console.log(`Logger Root Hash: ${encryptedDataHash}`);
+        */
+        const encryptedBuffer = this.state.buffer;
+        const encryptedDataHash = web3.utils.padRight(web3.utils.asciiToHex(""), 64);
 
-        const response = await ipfs.add(encryptedBuffer, (err, ipfsPath) => {
+        const response = await ipfs.add(encryptedBuffer, err => {
             if(err) console.error(err);
         });
 
@@ -173,7 +183,7 @@ class UploadSkin extends Component {
             return false;
         }
 
-        this.setState({ ipfsPath: response.path, encryptedDataHash: encryptedDataHash });
+        this.setState({ ipfsPath: response.path, encryptedDataHash });
 
         return true;
     };
@@ -208,7 +218,6 @@ class UploadSkin extends Component {
             const { state } = this;
 
             const price = web3.utils.toWei(state.priceValue);
-            console.log(price);
             const ipfsPathBytes = web3.utils.asciiToHex(state.ipfsPath);
             const paramsForCall = await UIHelper.calculateGasUsingStation(state.currentAccount);
 
@@ -237,16 +246,12 @@ class UploadSkin extends Component {
                 }
             })
             .on('error', UIHelper.transactionOnError)
-            .catch( (e) => { 
-                console.error(e);
-                UIHelper.hideSpinning();
-            });
+            .catch(UIHelper.transactionOnError);
         }
     }
 
     onFileChange = ({ meta, file }, status) => {
         const { imageBuffer } = this.state;
-        console.log(imageBuffer);
 
         if(status === "done") {
             const reader = new window.FileReader();
@@ -255,9 +260,6 @@ class UploadSkin extends Component {
                 imageBuffer[meta.name] = Buffer(reader.result);
                 this.setState({imageBuffer});
             }
-        } else if(status === "removed") {
-            delete imageBuffer[meta.name];
-            this.setState({imageBuffer});
         }
     }
     getFilesFromEvent = e => {
