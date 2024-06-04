@@ -113,7 +113,7 @@ class ItemPage extends Component {
                   id: state.itemId,
                   category: state.category,
                   description: state.description,
-                  image: imagePath ? "/ipfs/" + imagePath[0] : null
+                  image: imagePath ? "https://simthunder.infura-ipfs.io/ipfs/" + imagePath[0] : null
                   })
               });
             } catch(e) {
@@ -415,18 +415,14 @@ class ItemPage extends Component {
             }
             const content = Buffer.concat(chunks);
 
-            let decryptedFile = content;
-            if(!NON_SECURE_SELL) {
-              const encryptedMessage = await openpgp.readMessage({
-                binaryMessage: content // parse encrypted bytes
-              });
-              const { data } = await openpgp.decrypt({
-                message: encryptedMessage,
-                passwords: [NON_SECURE_KEY],                       // decrypt with password
-                format: 'binary'                                   // output as Uint8Array
-              });
-              decryptedFile = data;
-            }
+            const encryptedMessage = await openpgp.readMessage({
+              binaryMessage: content // parse encrypted bytes
+            });
+            const { data: decryptedFile } = await openpgp.decrypt({
+              message: encryptedMessage,
+              passwords: [NON_SECURE_KEY],                       // decrypt with password
+              format: 'binary'                                   // output as Uint8Array
+            });
 
             const isSkin = state.isSkin;
             const isCarSetup = !isSkin && !state.isNFT && !state.isMomentNFT;
@@ -791,7 +787,7 @@ class ItemPage extends Component {
           <Carousel>
             {
               this.state.imagePath.map((value, idx) => {
-                return <img className="imageContainer" src={"/ipfs/"+value} alt={"slide_"+idx}/>
+                return <img className="imageContainer" src={"https://simthunder.infura-ipfs.io/ipfs/"+value} alt={"slide_"+idx}/>
               })
             }
           </Carousel>
@@ -906,7 +902,7 @@ class ItemPage extends Component {
                 <div className="col-lg-4">
                   <div className="bg-dark_A-20 p-4 mb-4">
                     { state.hasImage &&
-                      <img className="item-page-img mb-3" src={"/ipfs/"+state.imagePath[0]} alt="Product"/>
+                      <img className="item-page-img mb-3" src={"https://simthunder.infura-ipfs.io/ipfs/"+state.imagePath[0]} alt="Product"/>
                     }
                     <p>
                     { state.description && 
