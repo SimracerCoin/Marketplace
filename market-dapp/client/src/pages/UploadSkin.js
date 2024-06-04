@@ -148,31 +148,23 @@ class UploadSkin extends Component {
 
     onIPFSSubmit = async () => {
 
-        const { web3 } = this.props.drizzle;
-
         // edit mode, nothing to upload... continue and keep the same
         if("edit" === this.state.mode)
             return true;
 
-        let encryptedBuffer = this.state.buffer;
-        let encryptedDataHash = web3.utils.padRight(web3.utils.asciiToHex(""), 64);
+        const password = NON_SECURE_SELL ? NON_SECURE_KEY : await Prompt('Type the password to encrypt the file. Use different password for each item.');
+        if (!password) { alert("Invalid password"); return false; }
 
-        if(!NON_SECURE_SELL) {
-            const password = NON_SECURE_SELL ? NON_SECURE_KEY : await Prompt('Type the password to encrypt the file. Use different password for each item.');
-            if (!password) { alert("Invalid password"); return false; }
+        const message = await openpgp.createMessage({ binary: this.state.buffer });
+        const encryptedBuffer = await openpgp.encrypt({
+            message,                                                // input as Message object
+            passwords: [password],                                  // multiple passwords possible
+            format: 'binary'                                        // don't ASCII armor (for Uint8Array output)
+        });
+        const encryptedDataHash = computeMerkleRootHash(Buffer.from(encryptedBuffer));
+        console.log(`Logger Root Hash: ${encryptedDataHash}`);
 
-            const message = await openpgp.createMessage({ binary: encryptedBuffer });
-            encryptedBuffer = await openpgp.encrypt({
-                message,                                                // input as Message object
-                passwords: [password],                                  // multiple passwords possible
-                format: 'binary'                                        // don't ASCII armor (for Uint8Array output)
-            });
-
-            encryptedDataHash = computeMerkleRootHash(Buffer.from(encryptedBuffer));
-            console.log(`Logger Root Hash: ${encryptedDataHash}`);
-        }
-        
-        const response = await ipfs.add(encryptedBuffer, err => {
+        const response = await ipfs.add(encryptedBuffer, (err, ipfsPath) => {
             if(err) console.error(err);
         });
 
@@ -181,7 +173,7 @@ class UploadSkin extends Component {
             return false;
         }
 
-        this.setState({ ipfsPath: response.path, encryptedDataHash });
+        this.setState({ ipfsPath: response.path, encryptedDataHash: encryptedDataHash });
 
         return true;
     };
