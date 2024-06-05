@@ -92,7 +92,6 @@ app.post('/api/methods/:contract/:method', async (req, res) => {
 			// Get gas price estimates
 			tx = {...tx, ...await getGasPrice()};
 		}
-		console.log(tx);
 
 		// Sign the transaction
 		const signedTx = await web3.eth.accounts.signTransaction(tx, ownerPrivateKey);
