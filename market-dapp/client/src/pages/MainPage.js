@@ -241,7 +241,7 @@ class MainPage extends Component {
             let imagePath = value.image;
 
             const metadata = this.extractMomentNFTTraitTypes(value.attributes);
-            
+
             let simulator = metadata.simulator;
             let date = getProperDate(metadata.date);
             let rarity = metadata.rarity;
@@ -297,7 +297,7 @@ class MainPage extends Component {
             //console.log('ownership nft value is,',value);
             const metadata = this.extractMomentNFTTraitTypes(value.attributes);
 
-            let simulator = metadata.simulator || value.series;
+            let simulator = metadata.simulator || value.simulator;
             let series = metadata.series || value.series;
             let price = value.price;
             let address = value.seriesOwner;
