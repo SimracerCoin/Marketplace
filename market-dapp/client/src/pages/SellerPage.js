@@ -113,9 +113,7 @@ class SellerPage extends Component {
             );
         }
 
-        let nickname = this.state.vendorNickname;
-
-        for (const [_, value] of this.state.listCars.entries()) {
+        for (const value of this.state.listCars) {
 
             let carBrand = value.info.carBrand
             let track = value.info.track
@@ -148,7 +146,7 @@ class SellerPage extends Component {
 
         if(cars) cars.reverse();
 
-        for (const [_, value] of this.state.listSkins.entries()) {
+        for (const value of this.state.listSkins) {
 
             let carBrand = value.info.carBrand
             let simulator = value.info.simulator

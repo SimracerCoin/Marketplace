@@ -219,7 +219,7 @@ class UploadSkin extends Component {
 
             const price = web3.utils.toWei(state.priceValue);
             const ipfsPathBytes = web3.utils.asciiToHex(state.ipfsPath);
-            const paramsForCall = await UIHelper.calculateGasUsingStation(state.currentAccount);
+            //const paramsForCall = await UIHelper.calculateGasUsingStation(state.currentAccount);
 
             //document.getElementById('formInsertCar').reset()
             console.log("id:", state.itemId);
@@ -233,19 +233,28 @@ class UploadSkin extends Component {
             console.log("license:", state.license);
             console.log("image_ipfsPath:", state.image_ipfsPath);
             
-            await (state.mode === "create" ? 
-                state.stSkin.methods.newSkin(ipfsPathBytes, state.currentCar, state.currentSimulator, price, state.encryptedDataHash, nickname, state.image_ipfsPath, state.currentDescription, state.designer, state.license) : 
-                state.stSkin.methods.editSkin(state.itemId, state.currentCar, state.currentSimulator, price, state.image_ipfsPath, state.currentDescription, state.designer, state.license)
-            ).send(paramsForCall)
-            .on('confirmation', (confNumber, receipt, latestBlockHash) => {
-                window.localStorage.setItem('forceUpdate','yes');
-                if(confNumber === NUMBER_CONFIRMATIONS_NEEDED) {
-                    UIHelper.transactionOnConfirmation("create" === state.mode ? 
-                        "The new skin is available for sale!" : 
-                        "The skin was edited successfully", "/");
+            fetch('/api/methods/STSkin/' + (state.mode === "create" ? 'newSkinByOwner' : 'editSkinByOwner'), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: state.mode === "create" ? 
+                    JSON.stringify([state.currentAccount, ipfsPathBytes, state.currentCar, state.currentSimulator, price, state.encryptedDataHash, nickname, state.image_ipfsPath, state.currentDescription, state.designer, state.license]) :
+                    JSON.stringify([state.currentAccount, state.itemId, state.currentCar, state.currentSimulator, price, state.image_ipfsPath, state.currentDescription, state.designer, state.license])  
+            })
+            .then(async (res) => {
+                const data = await res.json();
+
+                if(!res.ok || !data.success) {
+                    UIHelper.transactionOnError(data.error || "Unexpected error. Please try again later.");
+                } 
+                else {
+                    window.localStorage.setItem('forceUpdate','yes');
+                    UIHelper.transactionOnConfirmation(state.mode === "create" ? 
+                            "The new skin is available for sale!" : 
+                            "The skin was edited successfully", "/");
                 }
             })
-            .on('error', UIHelper.transactionOnError)
             .catch(UIHelper.transactionOnError);
         }
     }

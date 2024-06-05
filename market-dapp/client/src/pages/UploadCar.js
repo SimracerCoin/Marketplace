@@ -91,6 +91,14 @@ class UploadCar extends Component {
     captureFile = (event) => {
         event.stopPropagation()
         event.preventDefault()
+
+        var fileName = event.target.value.toLowerCase();
+        if (!fileName.endsWith('.zip')) {
+            alert('You can only upload .zip files.');
+            event.target.value = "";
+            return false;
+        }
+
         const file = event.target.files[0]
         let reader = new window.FileReader()
         reader.readAsArrayBuffer(file)
@@ -102,12 +110,9 @@ class UploadCar extends Component {
         if("edit" === this.state.mode)
             return true;
 
-        var fileName = document.getElementById('car-file').value.toLowerCase();
-        if (!fileName.endsWith('.zip')) {
-            alert('You can upload .zip files only.');
-            return false;
-        }
+        const { web3 } = this.props.drizzle;
 
+        /*
         const password = NON_SECURE_SELL ? NON_SECURE_KEY : await Prompt('Type the password to encrypt the file. Use different password for each item.');
         if (!password) { alert("Invalid password"); return false; }
 
@@ -120,8 +125,11 @@ class UploadCar extends Component {
 
         const encryptedDataHash = computeMerkleRootHash(Buffer.from(encryptedBuffer));
         console.log(`Logger Root Hash: ${encryptedDataHash}`);
+        */
+        const encryptedBuffer = this.state.buffer;
+        const encryptedDataHash = web3.utils.padRight(web3.utils.asciiToHex(""), 64);
 
-        const response = await ipfs.add(encryptedBuffer, (err, ipfsPath) => {
+        const response = await ipfs.add(encryptedBuffer, err => {
             if(err) console.error(err);
         });
 
@@ -165,7 +173,7 @@ class UploadCar extends Component {
 
             const price = web3.utils.toWei(state.priceValue);
             const ipfsPathBytes = web3.utils.asciiToHex(state.ipfsPath);
-            const paramsForCall = await UIHelper.calculateGasUsingStation(state.currentAccount);
+            //const paramsForCall = await UIHelper.calculateGasUsingStation(state.currentAccount);
 
             console.log("account:", state.currentAccount);
             console.log("hash:", state.ipfsPath);
@@ -176,23 +184,29 @@ class UploadCar extends Component {
             console.log("price:", state.priceValue);
             console.log("description:", state.currentDescription);
 
-            await (state.mode === "create" ? 
-                state.stSetup.methods.newSetup(ipfsPathBytes, state.currentCar, state.currentTrack, state.currentSimulator, state.currentSeason, state.currentSeries, state.currentDescription, price, state.encryptedDataHash, nickname) :
-                state.stSetup.methods.editSetup(state.itemId, state.currentCar, state.currentTrack, state.currentSimulator, state.currentSeason, state.currentSeries, state.currentDescription, price)
-            ).send(paramsForCall)
-            .on('confirmation', (confNumber, receipt, latestBlockHash) => {
-                window.localStorage.setItem('forceUpdate','yes');
-                if(confNumber === NUMBER_CONFIRMATIONS_NEEDED) {
+            fetch('/api/methods/STSkin/' + (state.mode === "create" ? 'newSetupByOwner' : 'editSetupByOwner'), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: state.mode === "create" ? 
+                    JSON.stringify([state.currentAccount, ipfsPathBytes, state.currentCar, state.currentTrack, state.currentSimulator, state.currentSeason, state.currentSeries, state.currentDescription, price, state.encryptedDataHash, nickname]) :
+                    JSON.stringify([state.currentAccount, state.itemId, state.currentCar, state.currentTrack, state.currentSimulator, state.currentSeason, state.currentSeries, state.currentDescription, price])  
+            })
+            .then(async (res) => {
+                const data = await res.json();
+
+                if(!res.ok || !data.success) {
+                    UIHelper.transactionOnError(data.error || "Unexpected error. Please try again later.");
+                } 
+                else {
+                    window.localStorage.setItem('forceUpdate','yes');
                     UIHelper.transactionOnConfirmation(state.mode === "create" ? 
                         "The new car setup is available for sale!" : 
                         "The car setup was edited successfully", "/");
                 }
             })
-            .on('error', UIHelper.transactionOnError)
-            .catch( (e) => {
-                console.error(e);
-                UIHelper.hideSpinning();
-            });
+            .catch(UIHelper.transactionOnError);
         }
     }
 

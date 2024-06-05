@@ -27,18 +27,18 @@ abstract contract STStorage is Pausable, Ownable {
     event AdCreated(address seller, uint256 price, bytes ipfsPath);
     event AdEdited(address seller, uint256 price);
 
-    /// @notice creates a new advertisement for published and encrypted content
     function createAd(
+        address _seller,
         uint256 _price,                // trade price
         bytes32 _encryptedDataHash,    // merkle hash of encrypted data
         bytes memory _ipfsPath,        // ipfs path of encrypted data
         string memory _nick
     ) internal whenNotPaused returns (uint256 adId)
     {
-        createSeller(_msgSender(), _nick);
+        createSeller(_seller, _nick);
 
         Advertisement storage ad = ads[numAds];
-        ad.seller = payable(_msgSender());
+        ad.seller = payable(_seller);
         ad.price = _price;
         ad.encryptedDataHash = _encryptedDataHash;
         ad.ipfsPath = _ipfsPath;
@@ -46,37 +46,38 @@ abstract contract STStorage is Pausable, Ownable {
 
         adId = numAds++;
 
-        emit AdCreated(_msgSender(), _price, _ipfsPath);
+        emit AdCreated(_seller, _price, _ipfsPath);
     }
 
     /// @notice edit an advertisement
     function editAd(
+        address _seller,
         uint256 _adId,
         uint256 _price                // trade price
     ) internal whenNotPaused
     {
         require(ads[_adId].active, "ad not found");
-        require(_msgSender() == owner() || _msgSender() == ads[_adId].seller, "unauthorized call");
+        require(_seller == owner() || _seller == ads[_adId].seller, "unauthorized call");
 
         ads[_adId].price = _price;
 
-        emit AdEdited(_msgSender(), _price);
+        emit AdEdited(_seller, _price);
     }
 
     /// @notice Registers seller address
-    function createSeller(address _user, string memory _nick) public 
+    function createSeller(address _seller, string memory _nick) public 
     {
-        if(!isSeller(_user)) {
-            users[_user] = User(_user, true, false, _nick);
+        if(!isSeller(_seller)) {
+            users[_seller] = User(_seller, true, false, _nick);
             numUsers++;
 
-            emit UserCreated(_user);
+            emit UserCreated(_seller);
         }
     }
 
-    function isSeller(address _user) public view returns(bool) 
+    function isSeller(address _seller) public view returns(bool) 
     {
-        return users[_user].id != address(0);
+        return users[_seller].id != address(0);
     }
 
     /// @notice Tests if car setup exists

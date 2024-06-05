@@ -98,7 +98,7 @@ class AuctionPage extends Component {
         if (total === 0) {
             return counter_rating;
         } else {
-            for (const [index, value] of comments.entries()) {
+            for (const value of comments) {
                 let rating = parseInt(value.review);
                 counter_rating = counter_rating + rating;
             }
@@ -312,7 +312,7 @@ class AuctionPage extends Component {
       let numRatings = this.state.listComments.length;
       let reviewStars = 0;
       if (numRatings != 0) {
-        for (const [index, value] of this.state.listComments.entries()) {
+        for (const value of this.state.listComments) {
             let review = parseInt(value.review);
             reviewStars += review;
         }
