@@ -184,7 +184,7 @@ class UploadCar extends Component {
             console.log("price:", state.priceValue);
             console.log("description:", state.currentDescription);
 
-            fetch('/api/methods/STSkin/' + (state.mode === "create" ? 'newSetupByOwner' : 'editSetupByOwner'), {
+            fetch('/api/methods/STSetup/' + (state.mode === "create" ? 'newSetupByOwner' : 'editSetupByOwner'), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
