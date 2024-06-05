@@ -288,7 +288,7 @@ class NotificationsPage extends Component {
         let notifications = [];
 
         if (this.state.listNotifications != null) {
-            for (const [index, value] of this.state.listNotifications.entries()) {
+            for (const value of this.state.listNotifications) {
                 let purchase = value.purchase;
                 let ad = value.ad;
 

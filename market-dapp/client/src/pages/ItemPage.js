@@ -221,7 +221,7 @@ class ItemPage extends Component {
         if (total === 0) {
             return counter_rating;
         } else {
-            for (const [_,value] of comments.entries()) {
+            for (const value of comments) {
                 let rating = parseInt(value.review);
                 counter_rating = counter_rating + rating;
             }
@@ -415,6 +415,7 @@ class ItemPage extends Component {
             }
             const content = Buffer.concat(chunks);
 
+            /*
             const encryptedMessage = await openpgp.readMessage({
               binaryMessage: content // parse encrypted bytes
             });
@@ -422,7 +423,8 @@ class ItemPage extends Component {
               message: encryptedMessage,
               passwords: [NON_SECURE_KEY],                       // decrypt with password
               format: 'binary'                                   // output as Uint8Array
-            });
+            });*/
+            const decryptedFile = content;
 
             const isSkin = state.isSkin;
             const isCarSetup = !isSkin && !state.isNFT && !state.isMomentNFT;
@@ -549,7 +551,7 @@ class ItemPage extends Component {
       let numRatings = this.state.listComments.length;
       let reviewStars = 0;
       if (numRatings > 0) {
-        for (const [_,value] of this.state.listComments.entries()) {
+        for (const value of this.state.listComments) {
             let review = parseInt(value.review);
             reviewStars += review;
         }

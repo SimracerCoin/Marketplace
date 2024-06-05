@@ -65,10 +65,7 @@ class UIHelper {
       method: 'PUT'
     }); // not wait - keep flow
 
-    const elem = document.getElementById("wait-div");
-    if(elem) {
-      elem.parentNode.removeChild(elem);
-    }
+    UIHelper.hideSpinning();
 
     alert(message);
 
@@ -77,10 +74,7 @@ class UIHelper {
   }
 
   static transactionOnError = (error) => {
-    const elem = document.getElementById("wait-div");
-    if(elem) {
-      elem.parentNode.removeChild(elem);
-    }
+    UIHelper.hideSpinning();
     alert("Something wrong. Please try again.");
     console.error(error);
     return false;
@@ -118,37 +112,34 @@ class UIHelper {
 
   //using gas station
   static calculateGasUsingStation = async (fromAccount) => {
-   const convertGwei2Wei = (input) =>  {
-    console.log("convert " + input + " (gwei) to (wei) => " + web3.utils.toBN(Number(input) * 1000000000) );
-    return web3.utils.toBN(Number(input) * 1000000000);
-  }
+    const convertGwei2Wei = (input) => web3.utils.toBN(Number(input) * 1000000000);
 
-  let gas = {
-      gasLimit: UIHelper.defaultGasLimit,
-      from: fromAccount
-  };
+    let gas = {
+        gasLimit: UIHelper.defaultGasLimit,
+        from: fromAccount
+    };
 
-  if(use_eip_1559) {
-    try {
-        const response = await fetch('https://gasstation.polygon.technology/v2');
-        const feesData = await response.json();
-        //use "fast" instead of "standard"
-        if(feesData && feesData.fast) {
-          console.log('gassatation data: ', feesData);
+    if(use_eip_1559) {
+      try {
+          const response = await fetch('https://gasstation.polygon.technology/v2');
+          const feesData = await response.json();
+          //use "fast" instead of "standard"
+          if(feesData && feesData.fast) {
+            console.log('gassatation data: ', feesData);
 
-          gas.maxFeePerGas = convertGwei2Wei(feesData.fast.maxFee);
-          gas.maxPriorityFeePerGas = convertGwei2Wei(feesData.fast.maxPriorityFee);
-        }
-    } catch (error) {
-      console.log("gasstation error: ", error);
+            gas.maxFeePerGas = convertGwei2Wei(feesData.fast.maxFee);
+            gas.maxPriorityFeePerGas = convertGwei2Wei(feesData.fast.maxPriorityFee);
+          }
+      } catch (error) {
+        console.log("gasstation error: ", error);
 
-      gas.maxFeePerGas = convertGwei2Wei(40); //40 gwei
-      gas.maxPriorityFeePerGas = convertGwei2Wei(40);
+        gas.maxFeePerGas = convertGwei2Wei(40); //40 gwei
+        gas.maxPriorityFeePerGas = convertGwei2Wei(40);
+      }
     }
-  }
 
-  return gas;
-}
+    return gas;
+  }
 //PUT this on some other file in the future
   static addDaysToDate = (date, days) => {
     let result = new Date(date);

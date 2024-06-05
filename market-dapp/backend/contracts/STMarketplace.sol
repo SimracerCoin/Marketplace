@@ -10,17 +10,21 @@ contract STMarketplace is ContentMarketplace {
 
     // new constructor, without descartes address supplied
     constructor(address payable_token, address _stSetup, address _stSkin) ContentMarketplace(payable_token) {
-        bytes4[] memory setups_methods = new bytes4[](5);
+        bytes4[] memory setups_methods = new bytes4[](6);
         setups_methods[0] = bytes4(keccak256("newSetup(bytes,string,string,string,string,string,string,uint256,bytes32,string)"));
         setups_methods[1] = bytes4(keccak256("editSetup(uint256,string,string,string,string,string,string,uint256)"));
-        setups_methods[2] = bytes4(keccak256("getSetups()"));
-        setups_methods[3] = bytes4(keccak256("getSetup(uint256)"));
+        setups_methods[2] = bytes4(keccak256("newSetupByOwner(address,bytes,string,string,string,string,string,string,uint256,bytes32,string)"));
+        setups_methods[3] = bytes4(keccak256("editSetupByOwner(address,uint256,string,string,string,string,string,string,uint256)"));
+        setups_methods[4] = bytes4(keccak256("getSetups()"));
+        setups_methods[5] = bytes4(keccak256("getSetup(uint256)"));
 
-        bytes4[] memory skins_methods = new bytes4[](5);
+        bytes4[] memory skins_methods = new bytes4[](6);
         skins_methods[0] = bytes4(keccak256("newSkin(bytes,string,string,uint256,bytes32,string,string[],string,string,string)"));
         skins_methods[1] = bytes4(keccak256("editSkin(uint256,string,string,uint256,string[],string,string,string)"));
-        skins_methods[2] = bytes4(keccak256("getSkins()"));
-        skins_methods[3] = bytes4(keccak256("getSkin(uint256)"));
+        skins_methods[2] = bytes4(keccak256("newSkinByOwner(address,bytes,string,string,uint256,bytes32,string,string[],string,string,string)"));
+        skins_methods[3] = bytes4(keccak256("editSkinByOwner(address,uint256,string,string,uint256,string[],string,string,string)"));
+        skins_methods[4] = bytes4(keccak256("getSkins()"));
+        skins_methods[5] = bytes4(keccak256("getSkin(uint256)"));
 
         changeTargetForSelectors(setups_methods, _stSetup);
         changeTargetForSelectors(skins_methods, _stSkin);

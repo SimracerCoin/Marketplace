@@ -6,9 +6,9 @@ import "./STStorage.sol";
 
 contract STSkin is STStorage {
 
-    /// @notice Registers a new car skin for sale
-    function newSkin(
-        bytes memory _ipfsPath,        // ipfs path of encrypted data
+    function _newSkin(
+        address _seller,
+        bytes memory _ipfsPath,           // ipfs path of encrypted data
         string memory _carBrand,
         string memory _simulator,
         uint256 _price,                   // trade price
@@ -18,9 +18,10 @@ contract STSkin is STStorage {
         string memory _description,
         string memory _designer,
         string memory _license
-    ) external returns (uint256 id)
+    ) private returns (uint256 id)
     {
         id = createAd(
+            _seller,
             _price,
             _encryptedDataHash,
             _ipfsPath,
@@ -39,7 +40,42 @@ contract STSkin is STStorage {
     }
 
     /// @notice Registers a new car skin for sale
-    function editSkin(
+    function newSkin(
+        bytes memory _ipfsPath,           // ipfs path of encrypted data
+        string memory _carBrand,
+        string memory _simulator,
+        uint256 _price,                   // trade price
+        bytes32 _encryptedDataHash,       // merkle hash of encrypted data
+        string memory _nick,
+        string[] memory _imagePath,       // ipfs path for image skin
+        string memory _description,
+        string memory _designer,
+        string memory _license
+    ) external returns (uint256)
+    {
+        return _newSkin(_msgSender(), _ipfsPath, _carBrand, _simulator, _price, _encryptedDataHash, _nick, _imagePath, _description, _designer, _license);
+    }
+
+    /// @notice Owner registers a new car skin from a seller for sale 
+    function newSkinByOwner(
+        address _seller,
+        bytes memory _ipfsPath,           // ipfs path of encrypted data
+        string memory _carBrand,
+        string memory _simulator,
+        uint256 _price,                   // trade price
+        bytes32 _encryptedDataHash,       // merkle hash of encrypted data
+        string memory _nick,
+        string[] memory _imagePath,       // ipfs path for image skin
+        string memory _description,
+        string memory _designer,
+        string memory _license
+    ) external onlyOwner returns (uint256)
+    {
+        return _newSkin(_seller, _ipfsPath, _carBrand, _simulator, _price, _encryptedDataHash, _nick, _imagePath, _description, _designer, _license);
+    }
+
+    function _editSkin(
+        address _seller,
         uint256 _adId,
         string memory _carBrand,
         string memory _simulator,
@@ -48,9 +84,10 @@ contract STSkin is STStorage {
         string memory _description,
         string memory _designer,
         string memory _license
-    ) external
+    ) private
     {
         editAd(
+            _seller,
             _adId,
             _price
         );
@@ -62,6 +99,37 @@ contract STSkin is STStorage {
         info.description = _description;
         info.designer = _designer;
         info.license = _license;
+    }
+
+    /// @notice Edit a car skin
+    function editSkin(
+        uint256 _adId,
+        string memory _carBrand,
+        string memory _simulator,
+        uint256 _price,                   // trade price
+        string[] memory _imagePath,       // ipfs path for image skin
+        string memory _description,
+        string memory _designer,
+        string memory _license
+    ) external
+    {
+        _editSkin(_msgSender(), _adId, _carBrand, _simulator, _price, _imagePath, _description, _designer, _license);
+    }
+
+    /// @notice Owner edit a car skin
+    function editSkinByOwner(
+        address _seller,
+        uint256 _adId,
+        string memory _carBrand,
+        string memory _simulator,
+        uint256 _price,                   // trade price
+        string[] memory _imagePath,       // ipfs path for image skin
+        string memory _description,
+        string memory _designer,
+        string memory _license
+    ) external
+    {
+        _editSkin(_seller, _adId, _carBrand, _simulator, _price, _imagePath, _description, _designer, _license);
     }
     
     /// @notice Gets the list of all skin files
