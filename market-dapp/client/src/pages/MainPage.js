@@ -96,7 +96,6 @@ class MainPage extends Component {
             Promise.all(shorterNFTsList_p), 
             Promise.all(shorterVideosNftsList_p)]);
         //----------------------------------------------------
-
         //onwnership nfts
         this.setState({ 
             shorterNFTsList, 
@@ -178,7 +177,7 @@ class MainPage extends Component {
     extractMomentNFTTraitTypes(attributes) {
 
         let data = {};
-        for(let attribute of attributes) {
+        for(const attribute of attributes) {
             data[attribute.trait_type] = attribute.value;
         }
         return data;
@@ -232,7 +231,7 @@ class MainPage extends Component {
 
         //moment nfts
         //TODO we can use already videoNftsList here
-        for (const [_, value] of this.state.shorterVideosNftsList.entries()) {
+        for (const value of this.state.shorterVideosNftsList) {
             //console.log('moment nft value is,',value);
   
             let itemId = value.id;
@@ -241,7 +240,8 @@ class MainPage extends Component {
             //console.log(' ID NFT:'+value.id);
             let imagePath = value.image;
 
-            let metadata = this.extractMomentNFTTraitTypes(value.attributes);
+            const metadata = this.extractMomentNFTTraitTypes(value.attributes);
+            
             let simulator = metadata.simulator;
             let date = getProperDate(metadata.date);
             let rarity = metadata.rarity;
@@ -292,19 +292,18 @@ class MainPage extends Component {
         }
 
         //car ownership ones
-        for (const [index, value] of this.state.shorterNFTsList.entries()) {
+        for (const value of this.state.shorterNFTsList) {
 
             //console.log('ownership nft value is,',value);
-            let metadata = this.extractMomentNFTTraitTypes(value.attributes);
+            const metadata = this.extractMomentNFTTraitTypes(value.attributes);
 
-            let series = value.series;
-            let simulator = value.simulator;
+            let simulator = metadata.simulator || value.series;
+            let series = metadata.series || value.series;
             let price = value.price;
-            //TODO: change hardcode
             let address = value.seriesOwner;
             let itemId = value.id;
             let description = value.description;
-            let carNumber = value.carNumber;
+            let carNumber = metadata.car || value.carNumber;
             // let ipfsPath = value.ad.ipfsPath
             //console.log(' ID NFT:'+value.id);
             let imagePath = value.image;
