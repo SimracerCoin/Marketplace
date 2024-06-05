@@ -45,7 +45,7 @@ const web3 = new Web3(new Web3.providers.HttpProvider(process.env.REACT_APP_NETW
 // Get the contract owner's address
 const account = web3.eth.accounts.privateKeyToAccount(ownerPrivateKey);
 
-const chainId = process.env.REACT_APP_NETWORK_ID;
+const chainId = parseInt(process.env.REACT_APP_NETWORK_ID);
 const use_eip_1559 = process.env.REACT_APP_USE_EIP_1559 === "true";
 const confirmationsNeeded = parseInt(process.env.REACT_APP_NUMBER_CONFIRMATIONS_NEEDED);
 const contractAddress = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'STMarketplace.json'), 'utf8'))?.address;
@@ -92,6 +92,7 @@ app.post('/api/methods/:contract/:method', async (req, res) => {
 			// Get gas price estimates
 			tx = {...tx, ...await getGasPrice()};
 		}
+		console.log(tx);
 
 		// Sign the transaction
 		const signedTx = await web3.eth.accounts.signTransaction(tx, ownerPrivateKey);
