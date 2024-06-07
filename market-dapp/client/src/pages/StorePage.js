@@ -88,19 +88,14 @@ class StorePage extends Component {
           moreItems: ""
       }
 
-      console.log(this.props.match.url);
-      this.props.history.push(this.props.match.url);
+      this.props.history.push(window.location.pathname + window.location.search);
   }
 
   //-----------------------------------------------------------------------------------------------------
   //-----------------------------------------------------------------------------------------------------
-  componentWillUnmount = async () => this.unlisten();
+  componentWillUnmount = () => this.props.history.listen(() => localStorage.removeItem('searchQuery'));
 
   componentDidMount = async () => {
-
-    this.unlisten = this.props.history.listen((location, action) => {
-      localStorage.removeItem('searchQuery');
-    });
 
     //console.log("STORE: componentDidMount");
     //scroll to top of page
@@ -849,6 +844,7 @@ class StorePage extends Component {
 
     hasMoreItemsFilter() {
       const searchParams = new URLSearchParams(window.location.search);
+      console.log("searchParams:",window.location.search);
       if(searchParams) {
         const query = searchParams.get('m');
         //check if we have something valid
