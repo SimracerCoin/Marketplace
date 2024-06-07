@@ -263,7 +263,7 @@ class ItemPage extends Component {
               pathname: (state.isSkin?"/uploadskin":"/uploadcar"),
               state: {
                 itemId: state.itemId,
-                priceValue: Number(this.props.drizzle.web3.utils.fromWei(state.price)),
+                priceValue: this.props.drizzle.web3.utils.fromWei(state.price),
                 currentCar: state.carBrand,
                 currentTitle: state.title,
                 currentRarity: state.rarity,
@@ -923,7 +923,7 @@ class ItemPage extends Component {
                       </div>
                       { !state.isSeller && !state.isNFTOwner &&
                       <div className="price-box mb-4">
-                        <div className="flex-1"><button onClick={this.buyItem} className="btn btn-block btn-warning"><i className="fas fa-shopping-cart"></i> Buy</button></div>
+                        <div className="flex-1"><button onClick={this.buyItem} className="btn btn-block btn-warning"><i className="fas fa-shopping-cart"></i> {state.price == 0 ? "Download" : "Buy"}</button></div>
                       </div>
                       }
                       { state.isNFTOwner && 

@@ -82,20 +82,37 @@ class UploadSkin extends Component {
         this.setState({ currentDescription: event.target.value });
     }
 
-    handleSelectCar = async (event) => {
+    handleSelectCar = (event) => {
         this.setState({ currentCar: event.target.value });
     }
 
-    handleSelectSim = async (event) => {
+    handleSelectSim = (event) => {
         this.setState({ currentSimulator: event });
     }
 
-    convertToBuffer = async (reader) => {
-        //file is converted to a buffer for upload to IPFS
-        const buffer = await Buffer.from(reader.result);
-        //set this buffer -using es6 syntax
-        this.setState({ buffer });
-    };
+    convertToBuffer = (file) => {
+        return new Promise(async (resolve, reject) => {
+            const handleError = error => {
+                alert("Error on upload the file. Please try again.");
+                console.error('Error reading file:', error);
+                reject();
+            }
+
+            if(file) {
+                UIHelper.showSpinning("Wait for file upload...")
+                const reader = new FileReader()
+                reader.readAsArrayBuffer(file)
+                //file is converted to a buffer for upload to IPFS
+                reader.onloadend = () => {
+                    UIHelper.hideSpinning(); 
+                    resolve(Buffer.from(reader.result));
+                }
+                reader.onerror = event => handleError(event.target.error);
+            } else {
+                handleError("missing file");
+            }
+        });
+    }
 
     captureFile = (event) => {
         event.stopPropagation();
@@ -107,19 +124,19 @@ class UploadSkin extends Component {
             event.target.value = "";
             return false;
         }
-
-        /*if("edit" === this.state.mode) {
-            if(!window.confirm("Are you sure you want to change the original skin file?")) {
-                event.target.value = "";
-                return false;
-            }
-        }*/
-
-        const file = event.target.files[0]
-        let reader = new window.FileReader()
-        reader.readAsArrayBuffer(file)
-        reader.onloadend = () => this.convertToBuffer(reader)
+        this.convertToBuffer(event.target.files[0]).then(buffer => this.setState({buffer}));
     };
+
+    onFileChange = ({ meta, file }, status) => {
+        const { imageBuffer } = this.state;
+
+        if(status === "done") {
+            this.convertToBuffer(file).then(buffer => {
+                imageBuffer[meta.name] = buffer;
+                this.setState({imageBuffer});
+            })
+        }
+    }
 
     //Guarda a imagem no ipfs 
     saveImage_toIPFS = async () => {
@@ -256,19 +273,6 @@ class UploadSkin extends Component {
                 }
             })
             .catch(UIHelper.transactionOnError);
-        }
-    }
-
-    onFileChange = ({ meta, file }, status) => {
-        const { imageBuffer } = this.state;
-
-        if(status === "done") {
-            const reader = new window.FileReader();
-            reader.readAsArrayBuffer(file);
-            reader.onloadend = () => {
-                imageBuffer[meta.name] = Buffer(reader.result);
-                this.setState({imageBuffer});
-            }
         }
     }
     getFilesFromEvent = e => {

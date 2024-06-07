@@ -81,7 +81,7 @@ class NFTInventoryPage extends Component {
 
         // This binding is necessary to make `this` work in the callback
        //this.simulatorsFilterChanged = this.simulatorsFilterChanged.bind(this);
-
+       this.props.history.push(window.location.pathname + window.location.search);
     }
 
     
@@ -89,13 +89,9 @@ class NFTInventoryPage extends Component {
     //-----------------------------------------------------------------------------------------------------
     //-----------------------------------------------------------------------------------------------------
 
-    componentWillUnmount = async () => this.unlisten();
+    componentWillUnmount = () => this.props.history.listen(() => localStorage.removeItem('searchQuery'))
 
     componentDidMount = async () => {
-
-      this.unlisten = this.props.history.listen((location, action) => {
-        localStorage.removeItem('searchQuery');
-      });
 
       const currentAccount = await this.props.drizzleState.accounts[0];
 
