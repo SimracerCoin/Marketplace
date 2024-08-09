@@ -310,10 +310,11 @@ class UploadSkin extends Component {
         }
     }
     getFilesFromEvent = e => {
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
             getDroppedOrSelectedFiles(e).then(chosenFiles => {
                 resolve(chosenFiles.map(f => f.fileObject))
             })
+            .catch(err => {console.log(err); reject()});
         })
     }
     selectFileInput = ({ accept, onFiles, files, getFilesFromEvent }) => {
@@ -403,7 +404,7 @@ class UploadSkin extends Component {
                                                             validate={this.handleValidation}
                                                             onChangeStatus={this.onFileChange}
                                                             InputComponent={this.selectFileInput}
-                                                            //getFilesFromEvent={this.getFilesFromEvent}
+                                                            getFilesFromEvent={this.getFilesFromEvent}
                                                             SubmitButtonComponent={null}
                                                             autoUpload={false}
                                                             accept="image/*"
