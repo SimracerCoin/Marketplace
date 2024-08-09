@@ -4,18 +4,27 @@ import { Prompt } from 'react-st-modal';
 import { Buffer } from 'buffer';
 import { withRouter } from "react-router";
 import ipfs from "../ipfs";
-import computeMerkleRootHash from "../utils/merkle";
+//import computeMerkleRootHash from "../utils/merkle";
 import UIHelper from "../utils/uihelper";
 import Dropzone from 'react-dropzone-uploader';
 import { getDroppedOrSelectedFiles } from 'html5-file-selector';
-import * as $ from 'jquery';
-import * as openpgp from 'openpgp';
+//import * as openpgp from 'openpgp';
 
 import 'react-dropzone-uploader/dist/styles.css'
 
+/*
 const NON_SECURE_SELL = process.env.REACT_APP_NON_SECURE_SELL === "true";
 const NON_SECURE_KEY= process.env.REACT_APP_NON_SECURE_KEY;
 const NUMBER_CONFIRMATIONS_NEEDED = Number(process.env.REACT_APP_NUMBER_CONFIRMATIONS_NEEDED);
+*/
+
+function hashString(str) {
+    let hash = 5381;
+    for (let i = 0; i < str.length; i++) {
+        hash = (hash * 33) ^ str.charCodeAt(i);
+    }
+    return hash >>> 0; // Convert to unsigned 32-bit integer
+}
 
 class UploadSkin extends Component {
 
@@ -132,9 +141,14 @@ class UploadSkin extends Component {
 
         if(status === "done") {
             this.convertToBuffer(file).then(buffer => {
-                imageBuffer[meta.name] = buffer;
+                imageBuffer[hashString(meta.name)] = buffer;
                 this.setState({imageBuffer});
-            })
+            });
+        }
+
+        if(status === "removed") {
+            delete imageBuffer[hashString(meta.name)];
+            this.setState({imageBuffer});
         }
     }
 
@@ -147,12 +161,20 @@ class UploadSkin extends Component {
         // TODO: edit mode, nothing to upload... continue and keep the same
         if("edit" === this.state.mode)
             return true;
-
-        for(const img of $(".dzu-dropzone .dzu-previewImage").map( (_, img) => $(img).attr("alt").split(',')[0]).get()) {
-            let response;
-            if(imageBuffer[img] && (response = await ipfs.add(imageBuffer[img]))) {
-                image_ipfsPath.push(response.path);
-            } else {
+        //for(const img of $(".dzu-dropzone .dzu-previewImage").map( (_, img) => $(img).attr("alt").split(',')[0]).get()) {
+        for (const img of [...document.querySelectorAll(".dzu-dropzone .dzu-previewImage")].map(img => hashString(img.alt.split(',')[0]))) {
+            console.log("img:", img, imageBuffer[img]);
+            try {
+                let response = await ipfs.add(imageBuffer[img]);
+                if (response && response.path) {
+                    image_ipfsPath.push(response.path);
+                } else {
+                    console.error("IPFS response is missing the 'path' property:", response);
+                    error = true;
+                    break;
+                }
+            } catch (err) {
+                console.error("Error adding image to IPFS:", err);
                 error = true;
                 break;
             }
@@ -314,7 +336,7 @@ class UploadSkin extends Component {
     }
     
     handleValidation = ({meta}) => {
-      return this.state.imageBuffer[meta.name] !== undefined;
+      return (hashString(meta.name) in this.state.imageBuffer);
     };
 
     render() {
