@@ -136,19 +136,34 @@ class UploadSkin extends Component {
         this.convertToBuffer(event.target.files[0]).then(buffer => this.setState({buffer}));
     };
 
-    onFileChange = ({ meta, file }, status) => {
+    onFileChange = ({ meta, file, remove }, status) => {
         const { imageBuffer } = this.state;
+    
+        console.log("onFileChange:", status);
 
-        if(status === "done") {
-            this.convertToBuffer(file).then(buffer => {
-                imageBuffer[hashString(meta.name)] = buffer;
-                this.setState({imageBuffer});
-            });
-        }
-
-        if(status === "removed") {
-            delete imageBuffer[hashString(meta.name)];
-            this.setState({imageBuffer});
+        if(meta.error) return;
+    
+        switch (status) {
+            case "done":
+                this.convertToBuffer(file).then(buffer => {
+                    imageBuffer[hashString(meta.name)] = buffer;
+                    this.setState({ imageBuffer });
+                });
+                break;
+    
+            case "removed":
+                delete imageBuffer[hashString(meta.name)];
+                this.setState({ imageBuffer });
+                break;
+    
+            case "error_validation":
+                meta.error = true;
+                remove();
+                break;
+    
+            default:
+                console.log("Unhandled status:", status);
+                break;
         }
     }
 
@@ -163,7 +178,6 @@ class UploadSkin extends Component {
             return true;
         //for(const img of $(".dzu-dropzone .dzu-previewImage").map( (_, img) => $(img).attr("alt").split(',')[0]).get()) {
         for (const img of [...document.querySelectorAll(".dzu-dropzone .dzu-previewImage")].map(img => hashString(img.alt.split(',')[0]))) {
-            console.log("img:", img, imageBuffer[img]);
             try {
                 let response = await ipfs.add(imageBuffer[img]);
                 if (response && response.path) {
@@ -396,6 +410,8 @@ class UploadSkin extends Component {
                                                             autoUpload={false}
                                                             accept="image/*"
                                                             maxFiles={5}
+                                                            canCancel={false}
+                                                            canRestart={false}
                                                             inputContent={(files, extra) => (extra.reject ? 'Image files only' : 'Drag Files')}
                                                             initialFiles={this.state.files}
                                                             LayoutComponent={({input, previews, submitButton, dropzoneProps}) => {
@@ -412,13 +428,14 @@ class UploadSkin extends Component {
                                                                 );
                                                               }}
                                                             styles={{
-                                                                dropzone: { maxHeight: 400 },
+                                                                dropzone: { maxHeight: 500 },
                                                                 dropzoneActive: { borderColor: 'green' },
                                                                 previewImage: { maxHeight: 60 },
                                                                 dropzoneReject: { borderColor: 'red', backgroundColor: '#DAA' },
                                                                 inputLabel: (files, extra) => (extra.reject ? { color: 'red' } : {})
                                                             }}            
                                                         />
+                                                        <span>(max. 5 files)</span>
                                                     </div>
                                                 </div>
                                             }
