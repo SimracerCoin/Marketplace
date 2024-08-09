@@ -139,8 +139,6 @@ class UploadSkin extends Component {
     onFileChange = ({ meta, file, remove }, status) => {
         const { imageBuffer } = this.state;
     
-        console.log("onFileChange:", status);
-
         if(meta.error) return;
     
         switch (status) {
@@ -176,7 +174,7 @@ class UploadSkin extends Component {
         // TODO: edit mode, nothing to upload... continue and keep the same
         if("edit" === this.state.mode)
             return true;
-        //for(const img of $(".dzu-dropzone .dzu-previewImage").map( (_, img) => $(img).attr("alt").split(',')[0]).get()) {
+
         for (const img of [...document.querySelectorAll(".dzu-dropzone .dzu-previewImage")].map(img => hashString(img.alt.split(',')[0]))) {
             try {
                 let response = await ipfs.add(imageBuffer[img]);
@@ -405,28 +403,13 @@ class UploadSkin extends Component {
                                                             validate={this.handleValidation}
                                                             onChangeStatus={this.onFileChange}
                                                             InputComponent={this.selectFileInput}
-                                                            getFilesFromEvent={this.getFilesFromEvent}
+                                                            //getFilesFromEvent={this.getFilesFromEvent}
                                                             SubmitButtonComponent={null}
                                                             autoUpload={false}
                                                             accept="image/*"
                                                             maxFiles={5}
-                                                            canCancel={false}
-                                                            canRestart={false}
                                                             inputContent={(files, extra) => (extra.reject ? 'Image files only' : 'Drag Files')}
-                                                            initialFiles={this.state.files}
-                                                            LayoutComponent={({input, previews, submitButton, dropzoneProps}) => {
-                                                                // Remove previews which do not pass the validation
-                                                                const previewsToDisplay = previews.filter((preview) => {
-                                                                  return preview.props.meta.status !== 'error_validation';
-                                                                });
-                                                                return (
-                                                                  <div {...dropzoneProps}>
-                                                                    {previewsToDisplay}
-                                                                    {input}
-                                                                    {submitButton}
-                                                                  </div>
-                                                                );
-                                                              }}
+                                                            //initialFiles={this.state.files}
                                                             styles={{
                                                                 dropzone: { maxHeight: 500 },
                                                                 dropzoneActive: { borderColor: 'green' },
