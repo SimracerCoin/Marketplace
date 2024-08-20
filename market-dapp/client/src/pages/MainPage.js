@@ -284,7 +284,7 @@ class MainPage extends Component {
                                 <div>{date}</div>
                                 <div><strong  className="price_div_strong">{price_src} <sup className="main-sup">SRC</sup></strong><br/> <span className="secondary-price">{usdPrice}<sup className="secondary-sup">USD</sup></span></div>
                             </div>
-                        <Button variant="warning">Buy</Button>
+                        <Button variant="warning">View</Button>
                         </Card.Body>
                     </Card>
             </div>
@@ -332,7 +332,7 @@ class MainPage extends Component {
                                 <div><img src={thumb} width="32" alt={simulator} /> {simulator}</div>
                                 <div className="price_div"><strong className="price_div_strong">{price_src} <sup className="main-sup">SRC</sup></strong><br/> <span className="secondary-price">{usdPrice}<sup className="secondary-sup">USD</sup></span></div>
                             </div>
-                            <Button variant="warning">Buy</Button>
+                            <Button variant="warning">View</Button>
                         </Card.Body>
                     </Card>
                 </div> 
@@ -373,7 +373,7 @@ class MainPage extends Component {
                                 <div><img src={thumb} width="32" alt={simulator} /> {simulator}</div>
                                 <div className="price_div"><strong className="price_div_strong">{price_src} <sup className="main-sup">SRC</sup></strong><br/> <span className="secondary-price">{usdPrice}<sup className="secondary-sup">USD</sup></span></div>
                             </div>
-                            <Button variant="warning">Buy</Button>
+                            <Button variant="warning">View</Button>
                         </Card.Body>
                     </Card>
                 </div>
@@ -422,7 +422,7 @@ class MainPage extends Component {
 
                             {/* <div><b>Vendor address:</b> {address}</div> */}
                             </div>
-                            <Button variant="warning">Buy</Button>
+                            <Button variant="warning">View</Button>
                         </Card.Body>
                     </Card>
                 </div>
