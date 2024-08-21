@@ -250,9 +250,8 @@ class UploadSkin extends Component {
     onIPFSSubmit = async () => {
         const { web3 } = this.props.drizzle;
         
-        // Edit mode with no new file
-        if (this.state.mode === "edit" && !this.state.buffer) {
-            console.log("Edit mode: No new file to upload");
+        if (this.state.mode === "edit") {
+            console.log("Edit mode: Not allowed to upload a new zip file");
             return true;
         }
     
