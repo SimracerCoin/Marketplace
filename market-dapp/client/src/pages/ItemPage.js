@@ -166,6 +166,8 @@ class ItemPage extends Component {
             imagePath: Array.isArray(props.location.state.imagePath) ? props.location.state.imagePath : [props.location.state.imagePath],
             isNFT: props.location.state.isNFT,
             isMomentNFT: props.location.state.isMomentNFT,
+            date: props.location.state.selectedDate,
+            rarity: props.location.state.selectedRarity,
             ...props.location.state.metadata,
           }, updateAfterLoad);
         } else if(id) {
