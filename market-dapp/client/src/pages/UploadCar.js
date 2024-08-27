@@ -229,7 +229,9 @@ class UploadCar extends Component {
                     <div className="container position-relative">
                         <div className="row">
                             <div className="col-lg-8 mx-auto">
-                                <h2 className="ls-1 text-center">Add new Car Setup for sale</h2>
+                                <h2 className="ls-1 text-center">
+                                    {this.state.mode === "create" ? "Add new Car Setup for sale" : "Edit Car Setup"}
+                                </h2>
                                 <hr className="w-10 border-warning border-top-2 o-90" />
                                 <div className="mt-4">
                                     <Form>
@@ -281,7 +283,9 @@ class UploadCar extends Component {
                                     </Form>
                                 </div>
                                 <div className="form-row mt-4">
-                                    <Button onClick={this.saveCar}>Save Car</Button>
+                                    <Button onClick={this.saveCar}>
+                                        {this.state.mode === "create" ? "Save Car" : "Update Car"}
+                                    </Button>
                                 </div>
                             </div>
                         </div>

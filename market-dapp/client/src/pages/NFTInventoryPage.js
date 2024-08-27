@@ -45,6 +45,9 @@ class NFTInventoryPage extends Component {
             redirectBuyItem: false,
             selectedItemId: "",
             selectedTrack: "",
+            selectedDate: "",
+            selectedTitle: "",
+            selectedRarity: "",
             selectedSimulator: "",
             selectedSeason: "",
             selectedSeries: "",
@@ -778,7 +781,10 @@ class NFTInventoryPage extends Component {
                     videoPath: this.state.videoPath,
                     isNFT: this.state.isNFT,
                     isMomentNFT: this.state.isMomentNFT,
-                    similarItems: similarItems
+                    similarItems: similarItems,
+                    selectedDate: this.state.selectedDate,
+                    selectedTitle: this.state.selectedTitle,
+                    selectedRarity: this.state.selectedRarity,
                 }
             }}
         />
@@ -786,7 +792,7 @@ class NFTInventoryPage extends Component {
     }
 
     //Obs: this function was way to many paramaters, bette make a JSON object/payload maybe?
-    buyItem = async (event, itemId, track, simulator, season, series, description, price, carBrand, carNumber, address, ipfsPath, imagePath, videoPath, isNFT, isMomentNFT) =>{
+    buyItem = async (event, itemId, track, simulator, season, series, description, price, carBrand, carNumber, address, ipfsPath, imagePath, videoPath, isNFT, isMomentNFT, date, title, rarity) =>{
       event.preventDefault();
 
       this.setState({
@@ -805,7 +811,10 @@ class NFTInventoryPage extends Component {
           ipfsPath: ipfsPath,
           videoPath: videoPath,
           isNFT: isNFT,
-          isMomentNFT: isMomentNFT
+          isMomentNFT: isMomentNFT,
+          selectedDate: date,
+          selectedTitle: title,
+          selectedRarity: rarity
       });
   
     }
@@ -1039,8 +1048,12 @@ class NFTInventoryPage extends Component {
                       {this.state.filteredMomentNFTs.map(function(value, index){
                          
                                 let metadata = this.extractMomentNFTTraitTypes(value.attributes);
-
+                                console.log(`metadata: ${JSON.stringify(metadata, null, 2)}`);
+                                console.log(`value: ${JSON.stringify(value, null, 2)}`);
                                 let series = metadata.series;
+                                let date = metadata.date;
+                                let title = value.name;
+                                let rarity = metadata.rarity;
                                 let simulator = metadata.simulator;
                                 let price = value.price;
                                 //TODO: change hardcode
@@ -1053,9 +1066,8 @@ class NFTInventoryPage extends Component {
                                 //let name = value.name;
                                 let imagePath = value.image;
                                 let description = value.description;
-
                                 return <div className="col-md-12 mb-4" key={key}>
-                                <Link to="#" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, description, price, null , null, address, null, imagePath, video, false, true)} className="product-item">
+                                <Link to="#" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, description, price, null , null, address, null, imagePath, video, false, true, date, title, rarity)} className="product-item">
                                   <div className="row align-items-center no-gutters">
                                     <div className="item_img d-none d-sm-block">
                                       <img className="img bl-3 text-primary" src={image} alt="Games Store"/>
