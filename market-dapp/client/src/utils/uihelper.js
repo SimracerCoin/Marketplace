@@ -63,14 +63,15 @@ class UIHelper {
     // outdated cache
     fetch("/api/lastupdate", {
       method: 'PUT'
+    }).then(_ => {
+      UIHelper.hideSpinning();
+
+      alert(message);
+  
+      if (redirect) {
+        window.location.href = redirect;
+      }
     }); // not wait - keep flow
-
-    UIHelper.hideSpinning();
-
-    alert(message);
-
-    if (redirect)
-      window.location.href = redirect;
   }
 
   static transactionOnError = (error) => {
@@ -195,7 +196,7 @@ class UIHelper {
 
     const cacheIsValid = async (data) => {
       return await fetch('/api/lastupdate').then(r => r.text()).then(lastupdateDate => {
-        return Number(lastupdateDate) <= data.created;
+        return parseInt(lastupdateDate) <= parseInt(data.created);
       });
     }
 

@@ -10,6 +10,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const Web3 = require('web3');
 const axios = require('axios');
+const crypto = require('crypto');
 
 require('dotenv').config();
 
@@ -78,6 +79,16 @@ app.put('/api/lastupdate', (_, res) => {
 });
 
 app.post('/api/methods/:contract/:method', async (req, res) => {
+
+	// outdated cache if item edited
+	if(req.params.method.startsWith("edit")) {
+		const categories = {"STSetup": "carsetup", "STSkin": "carskins"};
+		const idx = hashCacheId(categories[req.params.contract] + req.body[1]);
+		if(cachedHTML[idx]) {
+			delete cachedHTML[idx];
+		}
+	}
+
 	try {
 		// Read contract ABI from the JSON file
 		const abiPath = path.resolve(__dirname, req.params.contract + '.json');
@@ -106,7 +117,6 @@ app.post('/api/methods/:contract/:method', async (req, res) => {
 		// Send the transaction and wait for 2 confirmations
 		await web3.eth.sendSignedTransaction(signedTx.rawTransaction)
 			.on('confirmation', (confNumber, receipt) => {
-				lastUpdate = Date.now();
 				if (confNumber === confirmationsNeeded) {
 					res.json({ success: true, receipt });
 				}
@@ -121,10 +131,13 @@ app.post('/api/methods/:contract/:method', async (req, res) => {
 });
 
 const cachedHTML = [];
+const hashCacheId = data => crypto.createHash('sha256').update(data).digest('hex');
 app.get('/item/:category/:id', (req, res) => {
 
-	if(cachedHTML[req.path]) {
-		return res.send(cachedHTML[req.path]);
+	const idx = hashCacheId(req.params.category + req.params.id);
+
+	if(cachedHTML[idx]) {
+		return res.send(cachedHTML[idx]);
 	}
 
 	if(!isNaN(req.params.id) && ["carskins", "carsetup", "momentnfts", "ownership"].includes(req.params.category)) {
@@ -146,7 +159,7 @@ app.get('/item/:category/:id', (req, res) => {
 						.replace(/__IMAGE__/g, metatag.image ?? "https://simthunder.com/assets/img/logo-fb.png")
 						.replace(/__URL__/g, fullUrl);
 
-						cachedHTML[req.path] = htmlData;
+						cachedHTML[idx] = htmlData;
 				}
 
 				res.send(htmlData);
