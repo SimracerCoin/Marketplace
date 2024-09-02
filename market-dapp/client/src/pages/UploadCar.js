@@ -173,7 +173,6 @@ class UploadCar extends Component {
 
             const price = web3.utils.toWei(state.priceValue);
             const ipfsPathBytes = web3.utils.asciiToHex(state.ipfsPath);
-            //const paramsForCall = await UIHelper.calculateGasUsingStation(state.currentAccount);
 
             console.log("account:", state.currentAccount);
             console.log("hash:", state.ipfsPath);

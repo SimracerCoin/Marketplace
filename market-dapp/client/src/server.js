@@ -53,21 +53,35 @@ const contractAddress = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'STMa
 
 // Function to get gas price estimates from Polygon Gas Station
 async function getGasPrice() {
-	try {
-		const response = await axios.get('https://gasstation.polygon.technology/v2');
-		const { fast } = response.data;
+	if(use_eip_1559) {
+		try {
+			const response = await axios.get('https://gasstation.polygon.technology/v2');
+			const { fast } = response.data;
 
-		const maxFeePerGas = web3.utils.toWei(fast.maxFee.toString(), 'gwei');
-		const maxPriorityFeePerGas = web3.utils.toWei(fast.maxPriorityFee.toString(), 'gwei');
+			const maxFeePerGas = web3.utils.toWei(fast.maxFee.toString(), 'gwei');
+			const maxPriorityFeePerGas = web3.utils.toWei(fast.maxPriorityFee.toString(), 'gwei');
 
-		return { maxFeePerGas, maxPriorityFeePerGas };
-	} catch (error) {
-		console.error('Error fetching gas price:', error);
-		// Fallback values in case of error
-		return {
-		maxFeePerGas: web3.utils.toWei('50', 'gwei'),
-		maxPriorityFeePerGas: web3.utils.toWei('2', 'gwei')
-		};
+			return { maxFeePerGas, maxPriorityFeePerGas };
+		} catch (error) {
+			console.error('Error fetching gas price:', error);
+			// Fallback values in case of error
+			return {
+				maxFeePerGas: web3.utils.toWei('50', 'gwei'),
+				maxPriorityFeePerGas: web3.utils.toWei('50', 'gwei')
+			};
+		}
+	} else {
+		try {
+			// Get the current gas price from the network
+			const gasPrice = await web3.eth.getGasPrice();
+			return { gasPrice };
+		} catch (error) {
+			console.error('Error fetching gas price:', error);
+			// Fallback value in case of error
+			return {
+				gasPrice: web3.utils.toWei('50', 'gwei')
+			};
+		}
 	}
 }
 
@@ -103,13 +117,9 @@ app.post('/api/methods/:contract/:method', async (req, res) => {
 			to: contractAddress,
 			chainId,
 			data: contract.methods[req.params.method](...req.body).encodeABI(),
-      		gas: await contract.methods[req.params.method](...req.body).estimateGas({ from: account?.address })
+      		gasLimit: await contract.methods[req.params.method](...req.body).estimateGas({ from: account?.address }),
+			...await getGasPrice()
 		};
-
-		if(use_eip_1559) {
-			// Get gas price estimates
-			tx = {...tx, ...await getGasPrice()};
-		}
 
 		// Sign the transaction
 		const signedTx = await web3.eth.accounts.signTransaction(tx, ownerPrivateKey);

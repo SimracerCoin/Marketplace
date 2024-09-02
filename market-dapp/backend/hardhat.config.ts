@@ -72,7 +72,7 @@ const config: HardhatUserConfig = {
     },
     arbitrum: {
       url: "https://arb1.arbitrum.io/rpc",
-      accounts: [`0x${mnemonic}`]
+      accounts: mnemonic ? { mnemonic } : undefined, //[`0x${mnemonic}`]
     }
   },
   solidity: {
