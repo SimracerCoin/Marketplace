@@ -284,33 +284,44 @@ class ItemPage extends Component {
       if(this.state.canDelete) {
         const id = Number(this.state.itemId);
         UIHelper.showSpinning();
-
+    
         const isSkin = this.state.isSkin;
         const isCarSetup = !isSkin && !this.state.isNFT && !this.state.isMomentNFT;
-        const paramsForCall = await UIHelper.calculateGasUsingStation(this.state.currentAccount);
-
-        if(isSkin || isCarSetup) {
-          await this.state.contract.methods.setAdActive(id, false)
-              .send(paramsForCall)
-              .on('confirmation', confNumber => {
-                    window.localStorage.setItem('forceUpdate','yes');
-                    if(confNumber === NUMBER_CONFIRMATIONS_NEEDED) {  
-                      UIHelper.transactionOnConfirmation("The item was removed from sale!","/");
-                    }
-                })
-                .on('error', UIHelper.transactionOnError)
-                .catch((e) => {
-                    console.error(e);
-                    UIHelper.hideSpinning();
-                });
-        } else if(this.state.isNFT) {
-          //normal nft
-          await this.deleteNFT(this.state.contractNFTs, id);
-        } else  { 
-          //moment nft
-          await this.deleteNFT(this.state.contractMomentNFTs, id);
+    
+        try {
+          if(isSkin || isCarSetup) {
+            const response = await fetch('/api/methods/STMarketplace/setAdActive', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify([id, false]),
+            });
+    
+            const result = await response.json();
+    
+            if (!result.success) {
+              throw new Error(result.error || 'Failed to delete item');
+            }
+    
+            // Use transactionOnConfirmation for successful deletion
+            UIHelper.transactionOnConfirmation(
+              `The ${isSkin ? 'skin' : 'car setup'} was removed from sale!`,
+              "/"
+            );
+          } else if(this.state.isNFT) {
+            await this.deleteNFT(this.state.contractNFTs, id);
+          } else { 
+            await this.deleteNFT(this.state.contractMomentNFTs, id);
+          }
+        } catch (error) {
+          UIHelper.transactionOnError(error);
         }
-      } else { alert("You have no permissions!"); }
+        // Remove UIHelper.hideSpinning() from here as it's handled in both 
+        // transactionOnConfirmation and transactionOnError
+      } else { 
+        alert("You have no permissions!"); 
+      }
     }
 
     deleteNFT = async (contract, itemId) => {
