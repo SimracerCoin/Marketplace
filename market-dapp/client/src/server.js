@@ -74,9 +74,14 @@ async function getGasPrice() {
 		try {
 			// Get the current gas price from the network
 			const gasPrice = await web3.eth.getGasPrice();
-			return { gasPrice };
+		
+			// Increase the gas price by 30%
+			const increasedGasPrice = Math.floor(gasPrice * 1.3);
+		
+			return { gasPrice: increasedGasPrice };
 		} catch (error) {
 			console.error('Error fetching gas price:', error);
+		
 			// Fallback value in case of error
 			return {
 				gasPrice: web3.utils.toWei('50', 'gwei')

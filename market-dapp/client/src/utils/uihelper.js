@@ -141,7 +141,10 @@ class UIHelper {
     } else {
       try {
         // Get the current gas price from the network
-        gas.gasPrice = await web3.eth.getGasPrice();
+        const gasPrice = await web3.eth.getGasPrice();
+    
+        // Increase the gas price by 30%
+        gas.gasPrice = Math.floor(gasPrice * 1.3);
       } catch (error) {
         console.error('Error fetching gas price:', error);
         // Fallback value in case of error
