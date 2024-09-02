@@ -439,6 +439,26 @@ class MainPage extends Component {
                             <h5>Buy, sell, discover, and trade sim racing goods</h5>
                         </div>
 
+                        { skins.length > 0 &&
+                        <div className="skinslist">
+                            <br /><br />
+                            <div>
+                                <h4 className="pl-1">Latest Car Skins</h4>
+                            </div>
+                            <div>
+                            <div className="container-fluid">
+                                <div className="row">
+                                    {skins}
+                                </div>
+                            </div>
+                                {this.state.listSkins.length === NUM_ITEMS_LOAD &&
+                                <Link to="/store?m=carskins" className="view-more">View more &gt;&gt; </Link>
+                                }
+                                
+                            </div>
+                        </div>    
+                        }
+
                         { momentNfts.length > 0 && 
                         <div className="momentslist">
 
@@ -480,26 +500,6 @@ class MainPage extends Component {
                                 
                             </div>
                         </div>
-                        }
-
-                        { skins.length > 0 &&
-                        <div className="skinslist">
-                            <br /><br />
-                            <div>
-                                <h4 className="pl-1">Latest Car Skins</h4>
-                            </div>
-                            <div>
-                            <div className="container-fluid">
-                                <div className="row">
-                                    {skins}
-                                </div>
-                            </div>
-                                {this.state.listSkins.length === NUM_ITEMS_LOAD &&
-                                <Link to="/store?m=carskins" className="view-more">View more &gt;&gt; </Link>
-                                }
-                                
-                            </div>
-                        </div>    
                         }
 
                         { cars.length > 0 && 
