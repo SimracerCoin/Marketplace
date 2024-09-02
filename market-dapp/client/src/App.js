@@ -27,7 +27,7 @@ import "./css/App.css";
 //var web3 = new Web3(Web3.givenProvider);
 
 const allowAllWallets = process.env.REACT_APP_ALLOW_ALL_WALLETS === "true";
-const NETWORK_ID = Number(process.env.REACT_APP_NETWORK_ID) || 137;
+const NETWORK_ID = parseInt(process.env.REACT_APP_NETWORK_ID) || 137;
 const NETWORK_URL = process.env.REACT_APP_NETWORK_URL;
 const INFURA_ID = process.env.REACT_APP_INFURA_ID;
 const tagManagerArgs = {
