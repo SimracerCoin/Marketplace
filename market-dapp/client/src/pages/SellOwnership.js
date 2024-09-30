@@ -177,7 +177,7 @@ class SellOwnership extends Component {
     saveImage_toIPFS = async () => {
         var fileName = document.getElementById('skin-image').value.toLowerCase();
 
-        console.log("Filename: " + fileName)
+        console.log("Filename:", fileName)
 
         const valid_fileName = fileName.endsWith('.jpg') || fileName.endsWith('.png') || fileName.endsWith('.jpeg')
         console.log("Valid filename: " + valid_fileName)
@@ -186,72 +186,56 @@ class SellOwnership extends Component {
             return false;
         }
 
-        const response = await ipfs.add(this.state.imageBuffer, (err, ipfsPath) => {
-            console.log(err, ipfsPath);
-            console.log("Response image: ", ipfsPath[0].hash)
-            //setState by setting ipfsPath to ipfsPath[0].hash 
-            this.setState({ image_ipfsPath: ipfsPath[0].hash });
-        })
+        try {
+            const { path } = await ipfs.add(this.state.imageBuffer)
 
-        this.setState({ image_ipfsPath: response.path });
-        return true;
+            if(path) {
+                this.setState({ image_ipfsPath: path });
+                return true;
+            }
+        } catch (err) {
+            console.error(err);
+        }
 
+        return false;
     }
 
     //Save JSON in ipfs 
-    saveJSON_toIPFS = async (image) => {
+    saveJSON_toIPFS = async () => {
+        const { state } = this;
+
         var jsonData = { 
-            "description": this.state.currentDescription, 
+            "description": state.currentDescription, 
             "name": "Car",
-            "image": "https://simthunder.infura-ipfs.io/ipfs/" + image,
+            "image": "https://simthunder.infura-ipfs.io/ipfs/" + state.image_ipfsPath,
             "attributes": [{
                 "trait_type": "series", 
-                "value": this.state.currentSeries
+                "value": state.currentSeries
             }, {
                 "trait_type": "car", 
-                "value": this.state.currentCarNumber
+                "value": state.currentCarNumber
             }, {
                 "trait_type": "simulator", 
-                "value": this.state.currentSimulator
+                "value": state.currentSimulator
             }]
         };
-            /*
-        if(this.state.auctionItem) {
-            jsonData.attributes.push(
-                {
-                    "trait_type": "auction_time_range", 
-                    "value": this.state.auctionTimeRange
-                },
-                {
-                    "trait_type": "auction_time_range", 
-                    "value": this.state.auctionTimeRange
-                },
-                {
-                    "trait_type": "auctionStart", 
-                    "value": this.state.auctionStart
-                },
-                {
-                        "trait_type": "auctionEnd", 
-                        "value": this.state.auctionEnd
-                }
-            )
-        }    */
 
+        console.log(jsonData);
         var jsonStr = JSON.stringify(jsonData);
 
-        const response = await ipfs.add(Buffer.from(jsonStr), (err, ipfsPath) => {
-            console.log(err, ipfsPath);
-            console.log("Response image: ", ipfsPath[0].hash)
-            //setState by setting ipfsPath to ipfsPath[0].hash 
-            this.setState({ jsonData_ipfsPath: ipfsPath[0].hash });
-        })
+        try {
+            const { path } = await ipfs.add(Buffer.from(jsonStr));
 
-        console.log('json ipfs: ' + response.path);
-        this.setState({ jsonData_ipfsPath: response.path });
-        return true;
+            if(path) {
+                console.log('json ipfs', path);
+                return path;
+            }
+        } catch (err) {
+            console.error(err);
+        }
 
+        return false;
     }
-
 
     //Transforma a imagem num buffer e guarda como estado
     uploadImageIPFS = (event) => {
@@ -265,8 +249,6 @@ class SellOwnership extends Component {
             console.log('buffer', this.state.imageBuffer)
         }
     }
-
-
 
     onIPFSSubmit = async (event) => {
         event.preventDefault();
@@ -290,61 +272,64 @@ class SellOwnership extends Component {
         const loggerRootHash = computeMerkleRootHash(Buffer.from(encryptedBuffer));
         console.log(`Logger Root Hash: ${loggerRootHash}`);
 
-        const response = await ipfs.add(encryptedBuffer, (err, ipfsPath) => {
-            console.log(err, ipfsPath);
-            //setState by setting ipfsPath to ipfsPath[0].hash 
-            this.setState({ ipfsPath: ipfsPath[0].hash });
-        })
-        this.setState({ ipfsPath: response.path });
+        try {
+            const { path } = await ipfs.add(encryptedBuffer);
+            if(path) {
+                this.setState({ ipfsPath: path });
+                return true;
+            }
+        } catch (err) {
+            console.error(err);
+        }
+
+        return false;
     };
 
     saveCarOwnershipNFT = async (event) => {
+        const { state, props } = this;
+
         event.preventDefault();
 
-        if (!this.state.priceValue) {
+        if (!state.priceValue) {
             alert('Item price must be a number');
             return;
         }
         
-        if(!this.state.imageBuffer) {
+        if(!state.imageBuffer) {
             alert('Image file missing or invalid!');
             return;
         }
 
-        if(!this.state.currentDescription) {
+        if(!state.currentDescription) {
             alert('Description must not be empty!');
             return;
         }
 
         UIHelper.showSpinning();
 
-        let response_saveImage = await this.saveImage_toIPFS();
+        if(await this.saveImage_toIPFS()) {
+            const jsonData_ipfsPath = await this.saveJSON_toIPFS();
+            if(jsonData_ipfsPath) {
 
-        if(response_saveImage) {
-            let response_saveJson = await this.saveJSON_toIPFS(this.state.image_ipfsPath);
-
-            if(response_saveJson) {
-
-                const price = this.props.drizzle.web3.utils.toWei(this.state.priceValue);
+                const price = props.drizzle.web3.utils.toWei(state.priceValue);
 
                 //some gas estimations
                 //estimate method gas consuption (units of gas)
-                let paramsForCall = await UIHelper.calculateGasUsingStation(this.state.currentAccount);
+                const data = [state.contractNFTs.address, state.currentAccount, price, 'https://simthunder.infura-ipfs.io/ipfs/' + jsonData_ipfsPath];
+                const paramsForCall = await UIHelper.calculateGasUsingStation(state.currentAccount, state.contractNFTs.methods.awardItem, data);
 
                 //'https://gateway.pinata.cloud/ipfs/Qmboj3b42aW2nHGuQizdi2Zp35g6TBKmec6g77X9UiWQXg'
-                await this.state.contractNFTs.methods.awardItem(this.state.contractNFTs.address, this.state.currentAccount, price, 'https://simthunder.infura-ipfs.io/ipfs/' + this.state.jsonData_ipfsPath)
+                await state.contractNFTs.methods.awardItem(...data)
                     .send(paramsForCall)
                     //.on('sent', UIHelper.transactionOnSent)
-                    .on('confirmation', function (confNumber, receipt, latestBlockHash) {
+                    .on('confirmation', confNumber => {
                         window.localStorage.setItem('forceUpdate','yes');
                         if(confNumber === NUMBER_CONFIRMATIONS_NEEDED) {
                             UIHelper.transactionOnConfirmation("The new car ownership NFT is available for sale!", "/");
                         }
                     })
                     .on('error', UIHelper.transactionOnError)
-                    .catch(function (e) {
-                        UIHelper.hideSpinning();
-                    });
+                    .catch(UIHelper.transactionOnError);
             }
         } else {
             UIHelper.hideSpinning();
@@ -420,15 +405,11 @@ class SellOwnership extends Component {
                                     </div>
                                     <div>
                                         <div> Add Image for new Car Ownership </div>
-                                        <Form onSubmit={this.saveImage_toIPFS}>
                                             <input id="skin-image"
                                                 type="file"
                                                 accept="image/*"
-                                                onChange={this.uploadImageIPFS}
-                                            />
+                                                onChange={this.uploadImageIPFS} />
                                             <br></br>
-
-                                        </Form>
                                     </div><br></br>
                                     <div>
                                         <Button onClick={this.saveCarOwnershipNFT}>Mint Car Ownership NFT</Button>

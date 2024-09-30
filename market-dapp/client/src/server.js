@@ -10,6 +10,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const Web3 = require('web3');
 const axios = require('axios');
+const crypto = require('crypto');
 
 require('dotenv').config();
 
@@ -52,21 +53,40 @@ const contractAddress = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'STMa
 
 // Function to get gas price estimates from Polygon Gas Station
 async function getGasPrice() {
-	try {
-		const response = await axios.get('https://gasstation.polygon.technology/v2');
-		const { fast } = response.data;
+	if(use_eip_1559) {
+		try {
+			const response = await axios.get('https://gasstation.polygon.technology/v2');
+			const { fast } = response.data;
 
-		const maxFeePerGas = web3.utils.toWei(fast.maxFee.toString(), 'gwei');
-		const maxPriorityFeePerGas = web3.utils.toWei(fast.maxPriorityFee.toString(), 'gwei');
+			const maxFeePerGas = web3.utils.toWei(fast.maxFee.toString(), 'gwei');
+			const maxPriorityFeePerGas = web3.utils.toWei(fast.maxPriorityFee.toString(), 'gwei');
 
-		return { maxFeePerGas, maxPriorityFeePerGas };
-	} catch (error) {
-		console.error('Error fetching gas price:', error);
-		// Fallback values in case of error
-		return {
-		maxFeePerGas: web3.utils.toWei('50', 'gwei'),
-		maxPriorityFeePerGas: web3.utils.toWei('2', 'gwei')
-		};
+			return { maxFeePerGas, maxPriorityFeePerGas };
+		} catch (error) {
+			console.error('Error fetching gas price:', error);
+			// Fallback values in case of error
+			return {
+				maxFeePerGas: web3.utils.toWei('50', 'gwei'),
+				maxPriorityFeePerGas: web3.utils.toWei('50', 'gwei')
+			};
+		}
+	} else {
+		try {
+			// Get the current gas price from the network
+			const gasPrice = await web3.eth.getGasPrice();
+		
+			// Increase the gas price by 30%
+			const increasedGasPrice = Math.floor(gasPrice * 1.3);
+		
+			return { gasPrice: increasedGasPrice };
+		} catch (error) {
+			console.error('Error fetching gas price:', error);
+		
+			// Fallback value in case of error
+			return {
+				gasPrice: web3.utils.toWei('50', 'gwei')
+			};
+		}
 	}
 }
 
@@ -78,6 +98,16 @@ app.put('/api/lastupdate', (_, res) => {
 });
 
 app.post('/api/methods/:contract/:method', async (req, res) => {
+
+	// outdated cache if item edited
+	if(req.params.method.startsWith("edit")) {
+		const categories = {"STSetup": "carsetup", "STSkin": "carskins"};
+		const idx = hashCacheId(categories[req.params.contract] + req.body[1]);
+		if(cachedHTML[idx]) {
+			delete cachedHTML[idx];
+		}
+	}
+
 	try {
 		// Read contract ABI from the JSON file
 		const abiPath = path.resolve(__dirname, req.params.contract + '.json');
@@ -92,13 +122,9 @@ app.post('/api/methods/:contract/:method', async (req, res) => {
 			to: contractAddress,
 			chainId,
 			data: contract.methods[req.params.method](...req.body).encodeABI(),
-      		gas: await contract.methods[req.params.method](...req.body).estimateGas({ from: account?.address })
+      		gasLimit: await contract.methods[req.params.method](...req.body).estimateGas({ from: account?.address }),
+			...await getGasPrice()
 		};
-
-		if(use_eip_1559) {
-			// Get gas price estimates
-			tx = {...tx, ...await getGasPrice()};
-		}
 
 		// Sign the transaction
 		const signedTx = await web3.eth.accounts.signTransaction(tx, ownerPrivateKey);
@@ -106,7 +132,6 @@ app.post('/api/methods/:contract/:method', async (req, res) => {
 		// Send the transaction and wait for 2 confirmations
 		await web3.eth.sendSignedTransaction(signedTx.rawTransaction)
 			.on('confirmation', (confNumber, receipt) => {
-				lastUpdate = Date.now();
 				if (confNumber === confirmationsNeeded) {
 					res.json({ success: true, receipt });
 				}
@@ -121,10 +146,13 @@ app.post('/api/methods/:contract/:method', async (req, res) => {
 });
 
 const cachedHTML = [];
+const hashCacheId = data => crypto.createHash('sha256').update(data).digest('hex');
 app.get('/item/:category/:id', (req, res) => {
 
-	if(cachedHTML[req.path]) {
-		return res.send(cachedHTML[req.path]);
+	const idx = hashCacheId(req.params.category + req.params.id);
+
+	if(cachedHTML[idx]) {
+		return res.send(cachedHTML[idx]);
 	}
 
 	if(!isNaN(req.params.id) && ["carskins", "carsetup", "momentnfts", "ownership"].includes(req.params.category)) {
@@ -146,7 +174,7 @@ app.get('/item/:category/:id', (req, res) => {
 						.replace(/__IMAGE__/g, metatag.image ?? "https://simthunder.com/assets/img/logo-fb.png")
 						.replace(/__URL__/g, fullUrl);
 
-						cachedHTML[req.path] = htmlData;
+						cachedHTML[idx] = htmlData;
 				}
 
 				res.send(htmlData);

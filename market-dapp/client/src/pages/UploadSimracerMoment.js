@@ -259,15 +259,19 @@ class UploadSimracerMoment extends Component {
     saveVideo_toIPFS = async () => {
         console.log('saveVideo_toIPFS....');
 
-        const response = await ipfs.add(this.state.videoBuffer, (err, ipfsPath) => {
-            console.log(err, ipfsPath);
-            console.log("Response video path on ipfs: ", ipfsPath[0].hash);
-            this.setState({ video_ipfsPath: ipfsPath[0].hash });
-        })
+        try {
+            const { path } = await ipfs.add(this.state.videoBuffer);
 
-        console.log('saveVideo_toIPFS - response.path', response.path);
-        this.setState({ video_ipfsPath: response.path });
-        return true;
+            if(path) {
+                console.log('saveVideo_toIPFS - response.path', path);
+                this.setState({ video_ipfsPath: path });
+                return true;
+            }
+        } catch (err) {
+            console.error(err);
+        }
+
+        return false;
     }
 
     //Guarda o screenshot no ipfs 
@@ -287,18 +291,20 @@ class UploadSimracerMoment extends Component {
                 return false;
             }
         } else {
-            const response = await ipfs.add(this.state.imageBuffer, (err, ipfsPath) => {
-                console.log(err, ipfsPath);
-                console.log("Response video path on ipfs: ", ipfsPath[0].hash);
-                this.setState({ image_ipfsPath: ipfsPath[0].hash });
-            })
-    
-            console.log('saveImage_toIPFS - response.path', response.path);
-            this.setState({ image_ipfsPath: response.path });
-            return true;
+            try {
+                const { path } = await ipfs.add(this.state.imageBuffer);
+        
+                if(path) {
+                    console.log('saveImage_toIPFS - response.path', path);
+                    this.setState({ image_ipfsPath: path });
+                    return true;
+                }
+            } catch (err) {
+                console.error(err);
+            }
+
+            return false;
         }
-
-
     }
 
     uploadImageIPFS = (event) => {
@@ -475,82 +481,76 @@ class UploadSimracerMoment extends Component {
     }
 
     saveSimracingMomentNFT = async (event) => {
+        const { state, props } = this;
         event.preventDefault();
 
-        if(!this.state.videoBuffer || !this.state.imageBuffer) {
+        if(!state.videoBuffer || !state.imageBuffer) {
             alert('Video and/or thumbnail are not ready to process. Please wait or try again!');
             return;
         }
-        if(!this.state.currentDescription || !this.state.currentSeries) {
+        if(!state.currentDescription || !state.currentSeries) {
             alert('Series and Description must not be empty!');
             return;
         }
-        if (!this.state.priceValue) {
+        if (!state.priceValue) {
             alert('Item price must be a number!');
             return;
         }
-        if(!this.state.currentTitle) {
+        if(!state.currentTitle) {
             alert('Title must not be empty!')
             return;
         }
 
-        if(!simsElements.includes(this.state.currentSimulator)) {
+        if(!simsElements.includes(state.currentSimulator)) {
             alert('Simulator must be chosen!')
             return;
         }
 
-        if(!rarityOpt.includes(this.state.currentRarity)) {
+        if(!rarityOpt.includes(state.currentRarity)) {
             alert('Rarity must be chosen!')
             return;
         }
     
         UIHelper.showSpinning();
 
-        const self = this;
-
         const response_saveVideo = await this.saveVideo_toIPFS();
         console.log('response_saveVideo: ', response_saveVideo);
         const response_saveImage = await this.saveImage_toIPFS();
         console.log('response_saveImage: ', response_saveImage);
-        const response_saveJson = await this.saveJSON_toIPFS(this.state.image_ipfsPath, this.state.video_ipfsPath);
-
+        const response_saveJson = await this.saveJSON_toIPFS();
         console.log('response_saveJson: ', response_saveJson);
 
         if(response_saveVideo && response_saveImage && response_saveJson) {
             //all good!
 
-            const price = this.props.drizzle.web3.utils.toWei(this.state.priceValue);
+            const price = props.drizzle.web3.utils.toWei(state.priceValue);
 
             //some gas estimations
             //estimate method gas consuption (units of gas)
-            let paramsForCall = await UIHelper.calculateGasUsingStation(this.state.currentAccount);
+            const data = [state.contractNFTs.address, state.currentAccount, price, 'https://simthunder.infura-ipfs.io/ipfs/' + response_saveJson];
+            const paramsForCall = await UIHelper.calculateGasUsingStation(state.currentAccount, state.contractNFTs.methods.awardItem, data);
             //console.log("params for call ", paramsForCall);
 
             //'https://gateway.pinata.cloud/ipfs/Qmboj3b42aW2nHGuQizdi2Zp35g6TBKmec6g77X9UiWQXg'
-            await this.state.contractNFTs.methods.awardItem(this.state.contractNFTs.address, this.state.currentAccount, price, 'https://simthunder.infura-ipfs.io/ipfs/' + this.state.jsonData_ipfsPath)
-                .send( paramsForCall )
-                //.on('sent', UIHelper.transactionOnSent)
-                .on('confirmation', function (confNumber, receipt, latestBlockHash) {
+            await state.contractNFTs.methods.awardItem(...data)
+                .send(paramsForCall)
+                .on('confirmation', confNumber => {
                     window.localStorage.setItem('forceUpdate','yes');
-
                     if(confNumber === NUMBER_CONFIRMATIONS_NEEDED) {
-                        UIHelper.transactionOnConfirmation("The new Simracing Moment NFT is available for sale!","/");     
-                        //reset stuff
-                        self.setState({videoBuffer: null, imageBuffer: null});                       
+                        UIHelper.transactionOnConfirmation("The new Simracing Moment NFT is available for sale!","/");                          
                     }
-                    
                 })
                 .on('error', UIHelper.transactionOnError)
-                .catch(function (e) { 
-                    UIHelper.hideSpinning();
-                });
+                .catch(UIHelper.transactionOnError);
         } else {
             UIHelper.hideSpinning();
         }
     }
 
     //Save JSON in ipfs 
-    saveJSON_toIPFS = async (imagePath, videoPath) => {
+    saveJSON_toIPFS = async () => {
+
+        const { state } = this;
 
         console.log('saveJSON_toIPFS... ');
         /*
@@ -575,22 +575,22 @@ class UploadSimracerMoment extends Component {
         }
         */
         var jsonData = {
-            "description": this.state.currentDescription,
-            "name": this.state.currentTitle,
-            "image": "https://simthunder.infura-ipfs.io/ipfs/" + imagePath, 
-            "animation_url": "https://simthunder.infura-ipfs.io/ipfs/" + videoPath,
+            "description": state.currentDescription,
+            "name": state.currentTitle,
+            "image": "https://simthunder.infura-ipfs.io/ipfs/" + state.image_ipfsPath, 
+            "animation_url": "https://simthunder.infura-ipfs.io/ipfs/" + state.video_ipfsPath,
             "attributes": [{
                 "trait_type": "series",
-                "value": this.state.currentSeries
+                "value": state.currentSeries
             }, {
                 "trait_type": "date",
-                "value": this.state.recordingDate //yyyy-MM-DD
+                "value": state.recordingDate //yyyy-MM-DD
             }, {
                 "trait_type": "simulator",
-                "value": this.state.currentSimulator
+                "value": state.currentSimulator
             }, {
                 "trait_type": "rarity",
-                "value": this.state.currentRarity
+                "value": state.currentRarity
             }]
         };
 
@@ -619,17 +619,18 @@ class UploadSimracerMoment extends Component {
         const jsonStr = JSON.stringify(jsonData);
         console.log('json str: ', jsonStr);
 
-        const response = await ipfs.add(Buffer.from(jsonStr), (err, ipfsPath) => {
-            console.log(err, ipfsPath);
-            console.log("Response image: ", ipfsPath[0].hash)
-            //setState by setting ipfsPath to ipfsPath[0].hash 
-            this.setState({ jsonData_ipfsPath: ipfsPath[0].hash });
-        })
+        try {
+            const { path } = await ipfs.add(Buffer.from(jsonStr));
 
-        console.log('json ipfs: ' + response.path);
-        this.setState({ jsonData_ipfsPath: response.path });
-        return true;
+            if(path) {
+                console.log('json ipfs: ' + path);
+                return path;
+            }
+        } catch (err) {
+            console.error(err);
+        }
 
+        return false;
     }
 
     render() {

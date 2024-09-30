@@ -166,6 +166,8 @@ class ItemPage extends Component {
             imagePath: Array.isArray(props.location.state.imagePath) ? props.location.state.imagePath : [props.location.state.imagePath],
             isNFT: props.location.state.isNFT,
             isMomentNFT: props.location.state.isMomentNFT,
+            date: props.location.state.selectedDate,
+            rarity: props.location.state.selectedRarity,
             ...props.location.state.metadata,
           }, updateAfterLoad);
         } else if(id) {
@@ -325,62 +327,57 @@ class ItemPage extends Component {
     }
 
     deleteNFT = async (contract, itemId) => {
-
-      let paramsForCall = await UIHelper.calculateGasUsingStation(this.state.currentAccount);
-        //delete itemId
-        await contract.methods.deleteItem(itemId)
-          .send(paramsForCall)
-          .on('confirmation', function (confNumber, receipt, latestBlockHash) {
-              window.localStorage.setItem('forceUpdate','yes');
-              if(confNumber === NUMBER_CONFIRMATIONS_NEEDED) {
-                UIHelper.transactionOnConfirmation("The item was removed from sale!","/");
-              }
-          })
-          .on('error', UIHelper.transactionOnError)
-          .catch(function (e) {
-              UIHelper.hideSpinning();
-          });
+      const paramsForCall = await UIHelper.calculateGasUsingStation(this.state.currentAccount, contract.methods.deleteItem, [itemId]);
+      //delete itemId
+      await contract.methods.deleteItem(itemId)
+        .send(paramsForCall)
+        .on('confirmation', confNumber => {
+            window.localStorage.setItem('forceUpdate','yes');
+            if(confNumber === NUMBER_CONFIRMATIONS_NEEDED) {
+              UIHelper.transactionOnConfirmation("The item was removed from sale!","/");
+            }
+        })
+        .on('error', UIHelper.transactionOnError)
+        .catch(UIHelper.transactionOnError);
     }
 
     approveSellItem = async (itemPrice) => {
+      const { state } = this;
       
       //wrong type of item
-      if(isNaN(this.state.itemId) || isNaN(itemPrice) || (!this.state.isMomentNFT && !this.state.isNFT) ) {
+      if(isNaN(state.itemId) || isNaN(itemPrice) || (!state.isMomentNFT && !state.isNFT) ) {
         return;
       }
-      let itemId = Number(this.state.itemId);
-      let isNFT = this.state.isNFT;
-      let contract = isNFT ? this.state.contractNFTs : this.state.contractMomentNFTs;
+      let itemId = Number(state.itemId);
+      let isNFT = state.isNFT;
+      let contract = isNFT ? state.contractNFTs : state.contractMomentNFTs;
 
       const price = this.props.drizzle.web3.utils.toWei(itemPrice);
 
+      UIHelper.showSpinning();
+
       //some gas estimations
       //estimate method gas consuption (units of gas)
-      let paramsForCall = await UIHelper.calculateGasUsingStation(this.state.currentAccount);
+      const data = [itemId, price];
+      const paramsForCall = await UIHelper.calculateGasUsingStation(state.currentAccount, contract.methods.sellFromWallet, data);
 
-      UIHelper.showSpinning();
-      await contract.methods.sellFromWallet(itemId, price)
-          .send( paramsForCall )
-          .on('confirmation', function (confNumber, receipt, latestBlockHash) {
+      await contract.methods.sellFromWallet(...data)
+          .send(paramsForCall)
+          .on('confirmation', confNumber => {
             window.localStorage.setItem('forceUpdate','yes');
             if(confNumber === NUMBER_CONFIRMATIONS_NEEDED) {
               UIHelper.transactionOnConfirmation("The item is now available for sale!","/");                            
             }
           })
-          .on('error', ()=> {
-              UIHelper.hideSpinning();
-              UIHelper.transactionOnError("Unable to sell NFT!");
-          })
-          .catch(function (e) { 
-            UIHelper.hideSpinning();
-          });
+          .on('error', UIHelper.transactionOnError)
+          .catch(UIHelper.transactionOnError);
     }
 
     sellItem = async() => {
       this.setState({sellFromWallet: true});
     }
 
-    checkAllowances = async (contract, paramsForCall, price) => {
+    checkAllowances = async (contract, price) => {
       const { state } = this;
       const { web3 } = this.props.drizzle;
 
@@ -388,10 +385,13 @@ class ItemPage extends Component {
         const allowance = web3.utils.toBN(
           await UIHelper.callWithRetry(state.contractSimracerCoin.methods.allowance(state.currentAccount, contract)));
 
-        if(allowance.lt(price))
-          return await state.contractSimracerCoin.methods.approve(contract, price)
+        if(allowance.lt(price)) {
+          const data = [contract, price];
+          const paramsForCall = await UIHelper.calculateGasUsingStation(state.currentAccount, state.contractSimracerCoin.methods.approve, data);
+          return await state.contractSimracerCoin.methods.approve(...data)
                 .send(paramsForCall)
                 .catch(UIHelper.transactionOnError);
+        }
 
         return true;
       } catch(e) {
@@ -468,16 +468,16 @@ class ItemPage extends Component {
             }
             
             //approve contract ot spend our SRC
-            const paramsForCall = await UIHelper.calculateGasUsingStation(state.currentAccount);
-            const approval = await this.checkAllowances(state.contract.address, paramsForCall, price);
+            const approval = await this.checkAllowances(state.contract.address, price);
 
             if(!approval) {
-              UIHelper.transactionOnError("ERROR ON APPROVAL");
+              UIHelper.transactionOnError("error while approve");
             } else {
               //approved
-              await state.contract.methods.requestPurchase(state.itemId, buyerKey, !NON_SECURE_SELL)
+              const data = [state.itemId, buyerKey, !NON_SECURE_SELL];
+              const paramsForCall = await UIHelper.calculateGasUsingStation(state.currentAccount, state.contract.methods.requestPurchase, data);
+              await state.contract.methods.requestPurchase(...data)
                 .send(paramsForCall)
-                //.on('sent', UIHelper.transactionOnSent)
                 .on('confirmation', async (confNumber) => {
                   if(confNumber === NUMBER_CONFIRMATIONS_NEEDED) {
                     if(!NON_SECURE_SELL) {
@@ -490,42 +490,29 @@ class ItemPage extends Component {
                   }
                 })
                 .on('error', UIHelper.transactionOnError)
-                .catch(console.error);
+                .catch(UIHelper.transactionOnError);
             }
           }
         } else {
             const contractAddressToApprove = state.isNFT ? state.contractNFTs.address : state.contractMomentNFTs.address;
-            const paramsForCall = await UIHelper.calculateGasUsingStation(state.currentAccount);
-            const approval = await this.checkAllowances(contractAddressToApprove, paramsForCall, price);
+            const approval = await this.checkAllowances(contractAddressToApprove, price);
 
             if(!approval) {
-              UIHelper.transactionOnError("ERROR ON APPROVAL");
+              UIHelper.transactionOnError("error while approve");
             } else {
-              //SimthunderOwner NFT
-              if(state.isNFT) {
-              
-                await state.contractNFTs.methods.buyItem(state.itemId, price)
-                  .send(paramsForCall)
-                  .on('confirmation', (confNumber) => {
-                    if(confNumber === NUMBER_CONFIRMATIONS_NEEDED) {
-                      UIHelper.transactionOnConfirmation("Thank you for your purchase.", "/");
-                    }
-                  })
-                  .on('error', UIHelper.transactionOnError)
-                  .catch(console.error);
+              const data = [state.itemId, price];
+              const contract = state.isNFT ? state.contractNFTs : state.contractMomentNFTs;
+              const paramsForCall = await UIHelper.calculateGasUsingStation(state.currentAccount, contract.methods.buyItem, data);
 
-                //SimracingMomentOwner NFT
-              } else if(state.isMomentNFT) {
-                await state.contractMomentNFTs.methods.buyItem(state.itemId, price)
-                  .send(paramsForCall)
-                  .on('confirmation', (confNumber) => {
-                    if(confNumber === NUMBER_CONFIRMATIONS_NEEDED) {
-                      UIHelper.transactionOnConfirmation("Thank you for your purchase.", "/");
-                    }
-                  })
-                  .on('error', UIHelper.transactionOnError)
-                  .catch(console.error);
-              }
+              await contract.methods.buyItem(...data)
+                .send(paramsForCall)
+                .on('confirmation', confNumber => {
+                  if(confNumber === NUMBER_CONFIRMATIONS_NEEDED) {
+                    UIHelper.transactionOnConfirmation("Thank you for your purchase.", "/");
+                  }
+                })
+                .on('error', UIHelper.transactionOnError)
+                .catch(UIHelper.transactionOnError);
             }
         }
     }

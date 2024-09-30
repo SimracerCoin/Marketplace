@@ -4,7 +4,6 @@ const monthNames = ["January", "February", "March", "April", "May", "June",
 
 const use_eip_1559 = process.env.REACT_APP_USE_EIP_1559 === "true";
 
-const web3 = require('web3');
 const createKeccakHash = require('keccak');
 const localForage = require('localforage');
 
@@ -63,14 +62,15 @@ class UIHelper {
     // outdated cache
     fetch("/api/lastupdate", {
       method: 'PUT'
+    }).then(_ => {
+      UIHelper.hideSpinning();
+
+      alert(message);
+  
+      if (redirect) {
+        window.location.href = redirect;
+      }
     }); // not wait - keep flow
-
-    UIHelper.hideSpinning();
-
-    alert(message);
-
-    if (redirect)
-      window.location.href = redirect;
   }
 
   static transactionOnError = (error) => {
@@ -111,12 +111,14 @@ class UIHelper {
   }
 
   //using gas station
-  static calculateGasUsingStation = async (fromAccount) => {
-    const convertGwei2Wei = (input) => web3.utils.toBN(Number(input) * 1000000000);
+  static calculateGasUsingStation = async (from, method, data) => {
+    const { web3 } = window;
+
+    const convertGwei2Wei = input => web3.utils.toBN(Number(input) * 1000000000);
 
     let gas = {
-        gasLimit: UIHelper.defaultGasLimit,
-        from: fromAccount
+        from,
+        gasLimit: method ? await method(...data).estimateGas({ from }) : UIHelper.defaultGasLimit
     };
 
     if(use_eip_1559) {
@@ -133,8 +135,20 @@ class UIHelper {
       } catch (error) {
         console.log("gasstation error: ", error);
 
-        gas.maxFeePerGas = convertGwei2Wei(40); //40 gwei
-        gas.maxPriorityFeePerGas = convertGwei2Wei(40);
+        gas.maxFeePerGas = convertGwei2Wei(50); //40 gwei
+        gas.maxPriorityFeePerGas = convertGwei2Wei(50);
+      }
+    } else {
+      try {
+        // Get the current gas price from the network
+        const gasPrice = await web3.eth.getGasPrice();
+    
+        // Increase the gas price by 30%
+        gas.gasPrice = Math.floor(gasPrice * 1.3);
+      } catch (error) {
+        console.error('Error fetching gas price:', error);
+        // Fallback value in case of error
+        gas.gasPrice = web3.utils.toWei('50', 'gwei');
       }
     }
 
@@ -195,7 +209,7 @@ class UIHelper {
 
     const cacheIsValid = async (data) => {
       return await fetch('/api/lastupdate').then(r => r.text()).then(lastupdateDate => {
-        return Number(lastupdateDate) <= data.created;
+        return parseInt(lastupdateDate) <= parseInt(data.created);
       });
     }
 

@@ -69,6 +69,10 @@ const config: HardhatUserConfig = {
       url: "https://polygon-rpc.com/",
       chainId: 137,
       accounts: mnemonic ? { mnemonic } : undefined, //[`0x${mnemonic}`]
+    },
+    arbitrum: {
+      url: "https://arb1.arbitrum.io/rpc",
+      accounts: mnemonic ? { mnemonic } : undefined, //[`0x${mnemonic}`]
     }
   },
   solidity: {

@@ -2,6 +2,39 @@ import React, { Component } from 'react';
 import "../css/mainpage.css";
 
 const allowAllWallets = (process.env.REACT_APP_ALLOW_ALL_WALLETS === "true" ? true : false);
+const networkId = parseInt(process.env.REACT_APP_NETWORK_ID);
+const networkParams = {
+137: [{
+  chainId: "0x89",
+  chainName: "Polygon",
+  rpcUrls: ["https://polygon-rpc.com"],
+  nativeCurrency: {
+    name: "Matic",
+    symbol: "Matic",
+    decimals: 18,
+  },
+}],
+42161: [{
+  chainId: "0xA4B1",
+  chainName: "Arbitrum One Mainnet",
+  rpcUrls: ["https://arb1.arbitrum.io/rpc"],
+  blockExplorerUrls: ["https://arbiscan.io/"],
+  nativeCurrency: {
+    name: "ETH",
+    symbol: "ETH",
+    decimals: 18,
+  },
+}],
+31337: [{
+  chainId: "0x7A69",
+  chainName: "Localhost 8545",
+  rpcUrls: ["http://localhost:8545"],
+  nativeCurrency: {
+    name: "ETH",
+    symbol: "ETH",
+    decimals: 18,
+  },
+}]};
 
 class Underconstruction extends Component {
 
@@ -16,54 +49,33 @@ class Underconstruction extends Component {
     requestBtnClick = () => document.querySelector('.discord-dialog').className = 'discord-dialog discord-dialog--active';
 
     switchNetwork = async () => {
-        const ethereum = window.ethereum;
+        const { ethereum } = window;
+
         if(ethereum !== 'undefined') {
-  
+          try {
+            await ethereum.request({
+              method: 'wallet_switchEthereumChain',
+              params: [{ chainId: networkParams[networkId][0].chainId }],
+            });
+            console.log("Sucessfully switched network");
+            window.location.reload();
+          } catch (switchError) {
+            console.log("error switching network:", switchError);
             try {
-                await ethereum.request({
-                  method: 'wallet_switchEthereumChain',
-                  params: [{ chainId: '0x89' }],
-                });
-                console.log("Sucessfully switched to Polygon");
-                window.location.reload();
-              } catch (switchError) {
-                // This error code indicates that the chain has not been added to MetaMask.
-                console.log("error switching network:", switchError);
-                if (switchError.code === 4902) {
-                  try {
-                    await ethereum.request({
-                      method: 'wallet_addEthereumChain',
-                      params: [
-                        {
-                          chainId: '0x89', //137 in hex
-                          chainName: 'Polygon',
-                          rpcUrls: ['https://polygon-rpc.com'],
-                          nativeCurrency: {
-                            name: 'Matic',
-                            symbol: 'Matic', // 2-6 characters long
-                            decimals: 18
-                          }
-                        },
-                      ],
-                    });
-                  } catch (addError) {
-                    // handle "add" error
-                    console.log("error switching network:", addError);
-                  }
-                }
-                // handle other "switch" errors
-              }
+              await ethereum.request({
+                method: 'wallet_addEthereumChain',
+                params: networkParams[networkId],
+              });
+            } catch (addError) {
+              // handle "add" error
+              console.error("error switching network:", addError);
+            }
+          }
         }
-  
       }
 
-    renderSwitchButton = () => {
-        return (
-          <div>
-            <button className="switch-btn" onClick={(e) => this.switchNetwork()}>Switch Network</button>
-          </div>
-        );
-    }
+    renderSwitchButton = () =>
+          <div><button className="switch-btn" onClick={(e) => this.switchNetwork()}>Switch Network</button></div>
 
     render() {
         const { props } = this;
@@ -79,7 +91,7 @@ class Underconstruction extends Component {
                 error_msg = "No Ethereum wallet detected.";
                 hiddenLoginBtn = '';
             } else if(props.isLoggedIn && props.wrongNetwork) {
-                error_msg = "Wrong network! SimThunder is now on Polygon Network.";
+                error_msg = `Wrong network! SimThunder is now on ${networkId === 137 ? "Polygon" : "Arbitrum"} network.`;
             }
         }
 

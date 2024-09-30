@@ -73,7 +73,7 @@ class MainPage extends Component {
         ]);
 
         const loadNftsAsync = (i, contract) => Promise.all([
-                UIHelper.callWithRetry(contract.methods.tokenURI(i)).then(fetch).then(r => r.json()),
+                UIHelper.callWithRetry(contract.methods.tokenURI(i)).then(fetch).then(r => r.json()).catch(console.error),
                 UIHelper.callWithRetry(contract.methods.getItem(i))
             ]).then(values => ({id: i, price: values[1][0], seriesOwner: values[1][1], ...values[0]}));
 
@@ -174,8 +174,7 @@ class MainPage extends Component {
         return false;
     }
 
-    extractMomentNFTTraitTypes(attributes) {
-
+    extractMomentNFTTraitTypes(attributes = []) {
         let data = {};
         for(const attribute of attributes) {
             data[attribute.trait_type] = attribute.value;
@@ -183,7 +182,6 @@ class MainPage extends Component {
         return data;
     }
       
-
     render() {
 
         const { web3 } = this.props.drizzle;
@@ -284,7 +282,7 @@ class MainPage extends Component {
                                 <div>{date}</div>
                                 <div><strong  className="price_div_strong">{price_src} <sup className="main-sup">SRC</sup></strong><br/> <span className="secondary-price">{usdPrice}<sup className="secondary-sup">USD</sup></span></div>
                             </div>
-                        <Button variant="warning">Buy</Button>
+                        <Button variant="warning">View</Button>
                         </Card.Body>
                     </Card>
             </div>
@@ -332,7 +330,7 @@ class MainPage extends Component {
                                 <div><img src={thumb} width="32" alt={simulator} /> {simulator}</div>
                                 <div className="price_div"><strong className="price_div_strong">{price_src} <sup className="main-sup">SRC</sup></strong><br/> <span className="secondary-price">{usdPrice}<sup className="secondary-sup">USD</sup></span></div>
                             </div>
-                            <Button variant="warning">Buy</Button>
+                            <Button variant="warning">View</Button>
                         </Card.Body>
                     </Card>
                 </div> 
@@ -373,7 +371,7 @@ class MainPage extends Component {
                                 <div><img src={thumb} width="32" alt={simulator} /> {simulator}</div>
                                 <div className="price_div"><strong className="price_div_strong">{price_src} <sup className="main-sup">SRC</sup></strong><br/> <span className="secondary-price">{usdPrice}<sup className="secondary-sup">USD</sup></span></div>
                             </div>
-                            <Button variant="warning">Buy</Button>
+                            <Button variant="warning">View</Button>
                         </Card.Body>
                     </Card>
                 </div>
@@ -422,7 +420,7 @@ class MainPage extends Component {
 
                             {/* <div><b>Vendor address:</b> {address}</div> */}
                             </div>
-                            <Button variant="warning">Buy</Button>
+                            <Button variant="warning">View</Button>
                         </Card.Body>
                     </Card>
                 </div>
