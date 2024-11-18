@@ -300,6 +300,11 @@ class NavbarPage extends React.Component {
               <NavLink className="nav-link mr-2" to="/inventory" onClick={this.handleNavClick}>
                 NFT Inventory
               </NavLink>
+              <NavDropdown title="Collections">
+                <Link to="/drops" onClick={this.handleNavClick}>
+                  <NavDropdown.Item as="div">Drops</NavDropdown.Item>
+                </Link>
+              </NavDropdown>
             </Nav>
           </Navbar.Collapse>
         </Container>
