@@ -1001,8 +1001,6 @@ class ItemPage extends Component {
           </section>
           }
           </main>
-          <script src="assets/js/main.js" id="_mainJS" data-plugins="load"></script>
-
           {this.state.sellFromWallet && 
             <SimpleModal onApproval={this.approveSellItem} open={true}></SimpleModal>
           }

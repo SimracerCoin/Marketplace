@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { Button, Card } from 'react-bootstrap';
 import { Redirect, withRouter, Link } from "react-router-dom";
 import UIHelper from "../utils/uihelper";
+import Countdown from "../components/CountdownComponent"
 import "../css/mainpage.css";
 
 const NUM_ITEMS_LOAD = Number(process.env.REACT_APP_NUM_ITEMS_LOAD) || 4;
@@ -26,6 +27,7 @@ class MainPage extends Component {
         this.state = {
             listCars: [],
             listSkins: [],
+            listDrops: [],
             shorterNFTsList: [],
             shorterVideosNftsList: [],
             latestNFTs: 0,
@@ -72,6 +74,16 @@ class MainPage extends Component {
             parseInt(values[2]), parseInt(values[3])
         ]);
 
+        const listDrops = [{
+            id: 1,
+            title: "Lorem ipsum dolor sit.",
+            cover: "https://simthunder.infura-ipfs.io/ipfs/QmYQM7fe7JUxncS3yQfPat6UvtjJu8urjzr7Z7gJYXVbdb",
+            totalPacks: 76,
+            boughtPacks: 0,
+            saleStart: 1734881280000,
+            description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus a tortor ut velit consectetur gravida sit amet quis orci. Nunc mattis tortor magna, vitae pretium nunc porttitor vel. Donec ut elit efficitur, accumsan leo id, tincidunt lorem. Pellentesque consequat augue ante. Quisque vel magna non diam feugiat mattis. Donec non sem ac eros semper dignissim. Sed ut magna nec arcu feugiat facilisis."
+        }];
+
         const loadNftsAsync = (i, contract) => Promise.all([
                 UIHelper.callWithRetry(contract.methods.tokenURI(i)).then(fetch).then(r => r.json()).catch(console.error),
                 UIHelper.callWithRetry(contract.methods.getItem(i))
@@ -103,6 +115,7 @@ class MainPage extends Component {
             usdValue: await UIHelper.fetchSRCPriceVsUSD(), 
             listCars, 
             listSkins,
+            listDrops,
             latestNFTs: parseInt(numNfts),
             latestVideoNFTs: parseInt(numMomentNfts)
         }, () => {
@@ -165,7 +178,6 @@ class MainPage extends Component {
 
     /** @deprecated */
     isMomentVideoNFT(attributes) {
-        
         for(let attribute of attributes) {
             if(attribute.trait_type === 'video') {
                 return true;
@@ -183,7 +195,6 @@ class MainPage extends Component {
     }
       
     render() {
-
         const { web3 } = this.props.drizzle;
         const cars = [];
         const skins = [];
@@ -437,6 +448,63 @@ class MainPage extends Component {
                             <h5>Buy, sell, discover, and trade sim racing goods</h5>
                         </div>
 
+                        { this.state.listDrops.length > 0 &&
+                        <div className="skinslist">
+                            <br /><br />
+                            <div>
+                                <h4 className="pl-1">Latest Simracing Moment Drops</h4>
+                            </div>
+                            <div>
+                            <div className="container-fluid">
+                                <div className="row">
+                                    {this.state.listDrops.map((drop, index) => (
+                                        <div className={index === 0 ? "col-12 col-md-8 col-lg-6 px-1" : "col-12 col-md-4 col-lg-3 px-1"}>
+                                            <a href={`/drops/${drop.id}`}>
+                                                <Card className="card-block bg-dark_A-20 p-4 mx-1 mt-2">
+                                                    { index > 0 &&
+                                                    <Card.Header style={{ height: '240px' }} className="d-flex flex-wrap align-items-center justify-content-center">
+                                                        <Card.Img variant="top" src={drop.cover} style={{ width: 'auto', maxHeight: '100%' }} />
+                                                    </Card.Header>
+                                                    }
+                                                    <Card.Body className={index > 0 && "text-center"}>
+                                                        { index === 0 &&
+                                                        <div className="row">
+                                                            <div className="col-8">
+                                                                <h5>Drop #{drop.id}</h5>
+                                                                <h6>{drop.title}</h6>
+                                                                <Countdown saleStart={drop.saleStart} />
+                                                                <p>{drop.description}</p>
+                                                                <Button variant="warning">KNOW MORE</Button>
+                                                            </div>
+                                                            <div className="col-4">
+                                                                <Card.Img variant="top" src={drop.cover} style={{ width: 'auto', maxHeight: '100%' }} />
+                                                            </div>
+                                                        </div>
+                                                        }
+                                                        { index > 0 &&
+                                                        <div className="row">
+                                                            <Card.Title className="mt-5 font-weight-bold col-8">DROP #{drop.id} {drop.title}</Card.Title>
+                                                            <div className="mt-5 font-weight-bold col-4 h4">
+                                                                {drop.boughtPacks} / {drop.totalPacks}
+                                                            </div>
+                                                            <Button variant="warning">View</Button>
+                                                        </div>
+                                                        }
+                                                    </Card.Body>
+                                                </Card>
+                                            </a>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                                {this.state.listDrops.length === NUM_ITEMS_LOAD - 1 &&
+                                <Link to="/drops" className="view-more">View more &gt;&gt;</Link>
+                                }
+                                
+                            </div>
+                        </div>    
+                        }
+
                         { skins.length > 0 &&
                         <div className="skinslist">
                             <br /><br />
@@ -459,7 +527,6 @@ class MainPage extends Component {
 
                         { momentNfts.length > 0 && 
                         <div className="momentslist">
-
                             <br /><br />
                             <div>
                                 <h4 className="pl-1">Latest Simracing Moment NFTs</h4>

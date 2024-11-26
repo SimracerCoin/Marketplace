@@ -1,9 +1,11 @@
 /* eslint-disable no-loop-func */
 import React, { Component } from 'react';
 import { Redirect, Link } from "react-router-dom";
+import { Button, Card } from 'react-bootstrap';
 import { withRouter } from "react-router";
 import * as $ from 'jquery';
 import UIHelper from "../utils/uihelper";
+import { Modal, Box, Typography } from '@mui/material';
 import "../css/itempage.css";
 
 //pagination is out of scope for now, also would require more items to test properly
@@ -11,8 +13,22 @@ const MAX_ITEMS_PER_PAGE = 10;
 
 const VIEW_ITEMS = {
   OWNERSHIP: 'ownership', 
-  MOMENTNFTS: 'momentnfts'
+  MOMENTNFTS: 'momentnfts',
+  PACKS: 'packs'
 }
+
+const modalStyle = {
+  position: 'absolute',
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+  width: 1000,
+  bgcolor: '#000',
+  border: '2px solid #000',
+  color: 'white',
+  minHeight: '300',
+  boxShadow: 24
+};
 
 //moment nfts
 let momentNftslist = []; //not filtered list
@@ -39,8 +55,12 @@ class NFTInventoryPage extends Component {
             latestMomentNFTs: [], //contains all the nfts returned by the contracts
             filteredMomentNFTs: [], // list of nfst but filtered
 
+            latestPacks: [],
+            filteredPacks: [],
+            packMoments: [],
+            showPackModal: false,
+
             listSimulators: [], //list of all simulators available
-            filteredSimulators: [], //list of filtered simulators
             //---------------- buy / view item ----------
             redirectBuyItem: false,
             selectedItemId: "",
@@ -117,7 +137,7 @@ class NFTInventoryPage extends Component {
         this.setState({viewItems});
       }
 
-      this.getNFTsData();
+     await this.getNFTsData();
     
       //------------------------- Collapser hack -------------------------
       //all the js/jquery will get loaded before the elements are displayed on page so the handlers on main.js don´t work
@@ -144,7 +164,7 @@ class NFTInventoryPage extends Component {
         //but probably never happens anyway
         if(!currentAccount) {
             currentAccount = await this.props.drizzleState.accounts[0];
-            this.setState({currentAccount: currentAccount});
+            this.setState({currentAccount});
         }
 
         const { drizzle } = this.props;
@@ -169,31 +189,28 @@ class NFTInventoryPage extends Component {
 
 
         //by default on load, these filtered lists inlcude all the items, unless we are searching for somethign specific
-
-    //-------------------------- MOMENT NFTS -----------------------------------
-    
-        this.loadMomentNFTs(contractMomentNFTs, maxElems, simsList, simulatorsFilter, maxElems2);
-    
-      //--------------------------------------------------------------------------
-  
-        
-        //------------------------ Car ownership nfts ------------------------------
-        //--------------------------------------------------------------------------
-        this.loadCarOwnershipNFTs(contractNFTs, maxElems, simsList, simulatorsFilter, maxElems2);
-        //--------------------------------------------------------------------------
-
-        
-
-
-        //-------------------
-        
+        await Promise.all([
+            this.loadMomentNFTs(contractMomentNFTs, maxElems, simsList, simulatorsFilter, maxElems2),
+            this.loadCarOwnershipNFTs(contractNFTs, maxElems, simsList, simulatorsFilter, maxElems2),
+            this.loadPacks()
+        ]);
 
         //get the number of elements of the bigger list, use it to define the number of pages, minimum 1
         //it must be done after a lazy load as well, always
-        //NOTE: we might reach this part before processing all NFTS, so we also call this inside the loop above
         this.recalculatePaginationAndNumPages(maxElems2, maxElems, considerSearchQuery ? filteredMomentNFTsList: momentNftslist);
         
         UIHelper.hideSpinning();
+    }
+
+    loadPacks = async () => {
+      const packs = [{
+        id: 1,
+        cover: "https://simthunder.infura-ipfs.io/ipfs/QmYQM7fe7JUxncS3yQfPat6UvtjJu8urjzr7Z7gJYXVbdb",
+        drop: 1,
+        opened: false
+      }];
+
+      this.setState({latestPacks: packs.reverse(), filteredPacks: this.paginate(packs, this.state.currentPage)});
     }
 
     /**
@@ -245,48 +262,45 @@ class NFTInventoryPage extends Component {
               }
               */
 
-                    //global list of all
-                    nftlist.push(data);
+              //global list of all
+              nftlist.push(data);
 
-                    //update the max elements every time, as we will consider this as the 
-                    maxElems = nftlist.length;
+              //update the max elements every time, as we will consider this as the 
+              maxElems = nftlist.length;
 
-                    //only filtered list
-                    if(considerSearchQuery && (this.shouldIncludeNFTBySearchQuery(queryString.toLowerCase(), data)) ){
-                        filteredNFTsList.push(data);
-                    }//otherwise goes on the default list => nftlist
-                        
+              //only filtered list
+              if(considerSearchQuery && (this.shouldIncludeNFTBySearchQuery(queryString.toLowerCase(), data)) ){
+                  filteredNFTsList.push(data);
+              }//otherwise goes on the default list => nftlist
+                  
 
-                    //add simulator if not present already 
-                    let simulator = data.simulator;
-                    if(simulator && !simsList.includes(simulator)) {
+              //add simulator if not present already 
+              let simulator = data.simulator;
+              if(simulator && !simsList.includes(simulator)) {
+                  simsList.push(data.simulator);
 
-                        simsList.push(data.simulator);
-
-                        if(!considerSearchQuery ) {
-                              simulatorsFilter.push({simulator, checked: true});
-                        } else {
-
-                          //matches query, push and check it
-                          if(simulator.toLowerCase().indexOf(queryString.toLowerCase()) > -1) {
-                            simulatorsFilter.push({simulator, checked: true});
-                          } else {
-                            //still push it but disabled
-                            simulatorsFilter.push({simulator, checked: false});
-                          }
-                        }
+                  if(!considerSearchQuery ) {
+                    simulatorsFilter.push({simulator, checked: true});
+                  } else {
+                    //matches query, push and check it
+                    if(simulator.toLowerCase().indexOf(queryString.toLowerCase()) > -1) {
+                      simulatorsFilter.push({simulator, checked: true});
+                    } else {
+                      //still push it but disabled
+                      simulatorsFilter.push({simulator, checked: false});
                     }
+                  }
+              }
 
-                    //this GET is assync, so we need to recalaculate the pagination after every grab
-                    this.recalculatePaginationAndNumPages(maxElems2, maxElems, considerSearchQuery ? filteredMomentNFTsList : momentNftslist);
-                    
-                    this.setState({ 
-                      latestNFTs: nftlist.reverse(), 
-                      filteredNFTs: considerSearchQuery ? this.paginate(filteredNFTsList, this.state.currentPage): this.paginate(nftlist, this.state.currentPage), 
-                      listSimulators: simsList, 
-                      activeSimulatorsFilter: simulatorsFilter 
-                    });
-                
+              //this GET is assync, so we need to recalaculate the pagination after every grab
+              //this.recalculatePaginationAndNumPages(maxElems2, maxElems, considerSearchQuery ? filteredMomentNFTsList : momentNftslist);
+              
+              this.setState({ 
+                latestNFTs: nftlist.reverse(), 
+                filteredNFTs: considerSearchQuery ? this.paginate(filteredNFTsList, this.state.currentPage): this.paginate(nftlist, this.state.currentPage), 
+                listSimulators: simsList, 
+                activeSimulatorsFilter: simulatorsFilter 
+              });
             }
         } catch (e) {
             console.error(e);
@@ -294,7 +308,7 @@ class NFTInventoryPage extends Component {
       }
     }
 
-    loadMomentNFTs = async (contractMomentNFTs, maxElems, simsList, simulatorsFilter, maxElems2, filteredCarsList, filteredSkinsList) => {
+    loadMomentNFTs = async (contractMomentNFTs, maxElems, simsList, simulatorsFilter, maxElems2) => {
       
       // get info from marketplace NFT contract
       const numMomentNfts = await UIHelper.callWithRetry(contractMomentNFTs.methods.currentTokenId());
@@ -319,53 +333,53 @@ class NFTInventoryPage extends Component {
                 UIHelper.callWithRetry(contractMomentNFTs.methods.tokenURI(i)).then(fetch).then(r => r.json()),
                 UIHelper.callWithRetry(contractMomentNFTs.methods.getItem(i))
               ]);
-                const data = {id: i, price: info[0], seriesOwner: info[1], ...response};
+              const data = {id: i, price: info[0], seriesOwner: info[1], ...response};
 
-                let metadata = this.extractMomentNFTTraitTypes(data.attributes);
-                //global list of all
-                momentNftslist.push(data);
+              let metadata = this.extractMomentNFTTraitTypes(data.attributes);
+              //global list of all
+              momentNftslist.push(data);
 
-                //update the max elements every time, as we will consider this as the 
-                maxElems2 = momentNftslist.length;
-                        
-                const queryString = this.state.searchQuery;
-                const considerSearchQuery = queryString && queryString.length > 0;
-                //only filtered list?
+              //update the max elements every time, as we will consider this as the 
+              maxElems2 = momentNftslist.length;
+                      
+              const queryString = this.state.searchQuery;
+              const considerSearchQuery = queryString && queryString.length > 0;
+              //only filtered list?
 
-                if(considerSearchQuery && (this.shouldIncludeMomentNFTBySearchQuery(queryString.toLowerCase(), data)) ){
-                    filteredMomentNFTsList.push(data);
-                }//otherwise goes on the default list => nftlist
-                        
-                //add simulator if not present already 
-                let simulator = metadata.simulator;
-                if(simulator && !simsList.includes(simulator)) {
+              if(considerSearchQuery && (this.shouldIncludeMomentNFTBySearchQuery(queryString.toLowerCase(), data)) ){
+                  filteredMomentNFTsList.push(data);
+              }//otherwise goes on the default list => nftlist
+                      
+              //add simulator if not present already 
+              let simulator = metadata.simulator;
+              if(simulator && !simsList.includes(simulator)) {
 
-                    simsList.push(metadata.simulator);
+                  simsList.push(metadata.simulator);
 
-                    if(!considerSearchQuery ) {
-                        simulatorsFilter.push({simulator, checked: true});
+                  if(!considerSearchQuery ) {
+                      simulatorsFilter.push({simulator, checked: true});
+                  } else {
+                    //matches query, push and check it
+                    if(simulator.toLowerCase().indexOf(queryString.toLowerCase()) > -1) {
+                      simulatorsFilter.push({simulator, checked: true});
                     } else {
-                      //matches query, push and check it
-                      if(simulator.toLowerCase().indexOf(queryString.toLowerCase()) > -1) {
-                        simulatorsFilter.push({simulator, checked: true});
-                      } else {
-                        //still push it but disabled
-                        simulatorsFilter.push({simulator, checked: false});
-                      }  
+                      //still push it but disabled
+                      simulatorsFilter.push({simulator, checked: false});
                     }  
-                }
+                  }  
+              }
 
-                //this GET is assync, so we need to recalaculate the pagination after every grab
-                this.recalculatePaginationAndNumPages(maxElems2, maxElems, considerSearchQuery ? filteredMomentNFTsList : momentNftslist);
-                        
-                //console.log('considerSearchQuery ' + considerSearchQuery + 'momentNftslist size: ' + momentNftslist.length + " filteredMomentNFTsList: " + filteredMomentNFTsList.length)
+              //this GET is assync, so we need to recalaculate the pagination after every grab
+              //this.recalculatePaginationAndNumPages(maxElems2, maxElems, considerSearchQuery ? filteredMomentNFTsList : momentNftslist);
+                      
+              //console.log('considerSearchQuery ' + considerSearchQuery + 'momentNftslist size: ' + momentNftslist.length + " filteredMomentNFTsList: " + filteredMomentNFTsList.length)
 
-                this.setState({ 
-                  latestMomentNFTs: momentNftslist.reverse(), 
-                  filteredMomentNFTs: considerSearchQuery ? this.paginate(filteredMomentNFTsList, this.state.currentPage): this.paginate(momentNftslist, this.state.currentPage), 
-                  listSimulators: simsList, 
-                  activeSimulatorsFilter: simulatorsFilter 
-                });
+              this.setState({ 
+                latestMomentNFTs: momentNftslist.reverse(), 
+                filteredMomentNFTs: considerSearchQuery ? this.paginate(filteredMomentNFTsList, this.state.currentPage): this.paginate(momentNftslist, this.state.currentPage), 
+                listSimulators: simsList, 
+                activeSimulatorsFilter: simulatorsFilter 
+              });
             }
         } catch (e) {
             console.error(e);
@@ -389,7 +403,7 @@ class NFTInventoryPage extends Component {
      * @param {*} filteredCarsList 
      * @param {*} filteredSkinsList 
      */
-    recalculatePaginationAndNumPages(maxMomentNFTsElems, maxNFTsElems,filteredMomentNFTsList) {
+    recalculatePaginationAndNumPages(maxMomentNFTsElems, maxNFTsElems, filteredMomentNFTsList) {
 
       let maxElems = 0;
       if(maxMomentNFTsElems > maxElems) {
@@ -404,10 +418,10 @@ class NFTInventoryPage extends Component {
         maxElems = filteredMomentNFTsList.length;
       }
       
-      console.log("max elemenst: " + maxElems + " num pages: " +  Math.ceil((maxElems / MAX_ITEMS_PER_PAGE)) || 1 );
+      console.log("max elements: " + maxElems + " num pages: " +  Math.ceil((maxElems / MAX_ITEMS_PER_PAGE)) || 1 );
       
       this.setState(
-        { 
+        {
         numPages: ( Math.ceil((maxElems / MAX_ITEMS_PER_PAGE) ) || 1),
         filteredMomentNFTs: this.paginate(filteredMomentNFTsList, this.state.currentPage)
       });
@@ -450,13 +464,10 @@ class NFTInventoryPage extends Component {
         if(enabledSimulators.length === 0) {
           this.setState({filteredNFTs : [], filteredSkins: [], filteredCars: [], currentPage: 1, numPages: 1 });
         } else {
-
           this.filterNFTsBySimulator(enabledSimulators);
           this.filterMomentNFTsBySimulator(enabledSimulators);
         }
     }
-
-  
 
     //filter NFTs by simulator
     filterNFTsBySimulator(enabledSimulators) {
@@ -592,8 +603,6 @@ class NFTInventoryPage extends Component {
      * @returns 
      */
     shouldIncludeNFTBySearchQuery(queryString, NFT) {
-
-
         let series = NFT.series;
         let simulator = NFT.simulator;                 
         let name = NFT.name;
@@ -608,7 +617,6 @@ class NFTInventoryPage extends Component {
             return true;
           }
         return false;
-
     }
 
     /**
@@ -618,8 +626,6 @@ class NFTInventoryPage extends Component {
      * @returns 
      */
      shouldIncludeMomentNFTBySearchQuery(queryString, NFT) {
-
-
       let series = NFT.series;
       let simulator = NFT.simulator;                 
       let name = NFT.name;
@@ -653,16 +659,16 @@ class NFTInventoryPage extends Component {
     }
 
     isValidItemType(itemType) {
-      return  itemType === VIEW_ITEMS.OWNERSHIP || itemType === VIEW_ITEMS.MOMENTNFTS;
+      return  Object.values(VIEW_ITEMS).includes(itemType);
     }
 
     hasViewItemsFilter() {
-      const searchParams = this.props.location.state;
+      const searchParams = new URLSearchParams(window.location.search);
       if(searchParams) {
-        const query = searchParams.view;
+        const query = searchParams.get("v");
         //check if we have something valid
         if(query && this.isValidItemType(query)) {
-          //searchParams.delete("view");
+          searchParams.delete("v");
           return query;
         }
      
@@ -670,17 +676,18 @@ class NFTInventoryPage extends Component {
       return null;
     }
 
-    changeActivePage(evt,pageNum) {
-      evt.preventDefault();
+    changeActivePage(e, pageNum) {
+      e.preventDefault();
       //console.log("PAGE NUM: " + pageNum);
-      let arrayPaginatedNFTS = this.paginate(this.state.latestNFTs, pageNum);
-      let arrayPaginatedMomentNFTS = this.paginate(this.state.latestMomentNFTs, pageNum);
+      const filteredNFTs = this.paginate(this.state.latestNFTs, pageNum);
+      const filteredMomentNFTs = this.paginate(this.state.latestMomentNFTs, pageNum);
+      const filteredPacks = this.paginate(this.state.latestPacks, pageNum);
       
-      this.setState({currentPage: pageNum, filteredNFTs: arrayPaginatedNFTS, filteredMomentNFTs: arrayPaginatedMomentNFTS});
+      this.setState({currentPage: pageNum, filteredNFTs, filteredMomentNFTs, filteredPacks});
     }
 
-    moveNextPage(evt) {
-      evt.preventDefault();
+    moveNextPage(e) {
+      e.preventDefault();
       let currPage = this.state.currentPage;
       if(currPage>= this.state.numPages) {
         //go to first
@@ -689,14 +696,16 @@ class NFTInventoryPage extends Component {
         currPage = currPage + 1;
       }
 
-      let arrayPaginatedNFTS = this.paginate(this.state.latestNFTs, currPage);
-      let arrayPaginatedMomentNFTS = this.paginate(this.state.latestMomentNFTs, currPage);
+      const filteredNFTs = this.paginate(this.state.latestNFTs, currPage);
+      const filteredMomentNFTs = this.paginate(this.state.latestMomentNFTs, currPage);
+      const filteredPacks = this.paginate(this.state.latestPacks, currPage);
       
-      this.setState({currentPage: currPage, filteredNFTs: arrayPaginatedNFTS, filteredMomentNFTs: arrayPaginatedMomentNFTS});
+      this.setState({currentPage: currPage, filteredNFTs, filteredMomentNFTs, filteredPacks});
     }
 
-    movePreviousPage(evt) {
-      evt.preventDefault();
+    movePreviousPage(e) {
+      e.preventDefault();
+
       let currPage = this.state.currentPage;
       if(currPage <= 1) {
         //go to last
@@ -705,10 +714,12 @@ class NFTInventoryPage extends Component {
         currPage = currPage - 1;
       }
 
-      let arrayPaginatedNFTS = this.paginate(this.state.latestNFTs, currPage);
-      let arrayPaginatedMomentNFTS = this.paginate(this.state.latestMomentNFTs, currPage);
+      const filteredNFTs = this.paginate(this.state.latestNFTs, currPage);
+      const filteredMomentNFTs = this.paginate(this.state.latestMomentNFTs, currPage);
+      const filteredPacks = this.paginate(this.state.latestPacks, currPage);
       
-      this.setState({currentPage: currPage, filteredNFTs: arrayPaginatedNFTS, filteredMomentNFTs: arrayPaginatedMomentNFTS});
+      
+      this.setState({currentPage: currPage, filteredNFTs, filteredMomentNFTs, filteredPacks});
     }
 
     renderPagination = (suffix) => {
@@ -722,9 +733,7 @@ class NFTInventoryPage extends Component {
                   <ul className="pagination justify-content-end">
                     {this.state.numPages > 1 &&
                     <li key={previousKey} className="page-item">
-                    <a className="page-link" href="#" onClick={(e) => this.movePreviousPage(e)} aria-label="Previous">
-                      {/*<!--<span className="ti-angle-left small-7" aria-hidden="true"></span>
-                      <span className="sr-only">Previous</span>-->*/}
+                    <a className="page-link" href="#" onClick={this.movePreviousPage} aria-label="Previous">
                       &lt;
                     </a>
                     </li>
@@ -738,9 +747,7 @@ class NFTInventoryPage extends Component {
                     }
                     {this.state.numPages > 1 &&
                     <li key={nextKey} className="page-item">
-                      <a className="page-link" href="#" onClick={(e) => this.moveNextPage(e)} aria-label="Next">
-                        {/*<!--<span className="ti-angle-right small-7" aria-hidden="true"></span>
-                        <span className="sr-only">Next</span>-->*/}
+                      <a className="page-link" href="#" onClick={this.moveNextPage} aria-label="Next">
                         &gt;
                       </a>
                     </li>
@@ -792,8 +799,8 @@ class NFTInventoryPage extends Component {
     }
 
     //Obs: this function was way to many paramaters, bette make a JSON object/payload maybe?
-    buyItem = async (event, itemId, track, simulator, season, series, description, price, carBrand, carNumber, address, ipfsPath, imagePath, videoPath, isNFT, isMomentNFT, date, title, rarity) =>{
-      event.preventDefault();
+    buyItem = async (e, itemId, track, simulator, season, series, description, price, carBrand, carNumber, address, ipfsPath, imagePath, videoPath, isNFT, isMomentNFT, date, title, rarity) =>{
+      e.preventDefault();
 
       this.setState({
           redirectBuyItem: true,
@@ -819,12 +826,48 @@ class NFTInventoryPage extends Component {
   
     }
 
+    openPack = async (packId) => {
+      const moments = [{
+        image: "https://simthunder.infura-ipfs.io/ipfs/QmYQM7fe7JUxncS3yQfPat6UvtjJu8urjzr7Z7gJYXVbdb",
+        rarity: "COMMON",
+        name: "Lorem ipsum dolor sit.",
+        simulator: "iRacing"
+      },{
+        image: "https://simthunder.infura-ipfs.io/ipfs/QmYQM7fe7JUxncS3yQfPat6UvtjJu8urjzr7Z7gJYXVbdb",
+        rarity: "COMMON",
+        name: "Lorem ipsum dolor sit.",
+        simulator: "iRacing"
+      },{
+        image: "https://simthunder.infura-ipfs.io/ipfs/QmYQM7fe7JUxncS3yQfPat6UvtjJu8urjzr7Z7gJYXVbdb",
+        rarity: "COMMON",
+        name: "Lorem ipsum dolor sit.",
+        simulator: "iRacing"
+      },{
+        image: "https://simthunder.infura-ipfs.io/ipfs/QmYQM7fe7JUxncS3yQfPat6UvtjJu8urjzr7Z7gJYXVbdb",
+        rarity: "COMMON",
+        name: "Lorem ipsum dolor sit.",
+        simulator: "iRacing"
+      },{
+        image: "https://simthunder.infura-ipfs.io/ipfs/QmYQM7fe7JUxncS3yQfPat6UvtjJu8urjzr7Z7gJYXVbdb",
+        rarity: "COMMON",
+        name: "Lorem ipsum dolor sit.",
+        simulator: "iRacing"
+      }];
+
+      this.setState({showPackModal: true, packMoments: moments})
+    }
+
     getFilteredListWithResults = () => {
-      if(this.state.filteredNFTs.length > 0) {
+      const { filteredNFTs, filteredMomentNFTs, filteredPacks } = this.state;
+      
+      if(filteredNFTs.length > 0) {
         return "ownership";
       }
-      else if(this.state.filteredMomentNFTs.length > 0) {
+      else if(filteredMomentNFTs.length > 0) {
         return "momentnfts";
+      }
+      else if(filteredPacks.length > 0) {
+        return "packs";
       }
 
       return "ownership";
@@ -839,23 +882,18 @@ class NFTInventoryPage extends Component {
       const considerMoreItems = (viewItems && viewItems.length > 0);
 
       if(!considerSearchQuery) {
-        
         if(!considerMoreItems) {
           //as usual
           if(key === "ownership") {
             return "nav-link active show";
-          } else {
-            return "nav-link";
           }
         } else {
-
           if(key === viewItems) {
             return "nav-link active show";
-          } else {
-            return "nav-link";
           }
         }
         
+        return "nav-link";
         
       } else {
         let active = this.getFilteredListWithResults();
@@ -884,18 +922,14 @@ class NFTInventoryPage extends Component {
           //business as usual
           if(key === "ownership") {
             return "tab-pane fade active show";
-          } else {
-            return "tab-pane fade";
           }
         } else {
           if(key === viewItems) {
             return "tab-pane fade active show";
-          } else {
-            return "tab-pane fade";
           }
         }
 
-        
+        return "tab-pane fade";
       } else {
         let active = this.getFilteredListWithResults();
         //consider search
@@ -904,7 +938,6 @@ class NFTInventoryPage extends Component {
          }
          return "tab-pane fade";
       }
-     
     }
 
     render() {
@@ -918,7 +951,7 @@ class NFTInventoryPage extends Component {
         return this.performBuyItemRedirection();
       }
 
-      return (
+      return [
             
     <div className="page-body">
 
@@ -934,9 +967,9 @@ class NFTInventoryPage extends Component {
           <div className="position-relative">
             <div className="row">
               <div className="col-lg-8">
-              <div className="navigation-aligned-right">
-                {this.renderPagination('top')}
-              </div>
+                <div className="navigation-aligned-right">
+                  {this.renderPagination('top')}
+                </div>
                 {/*<!-- nav tabs -->*/}
                 <ul className="spotlight-tabs spotlight-tabs-dark nav nav-tabs border-0 mb-5 position-relative flex-nowrap" id="most_popular_products-carousel-01" role="tablist">
                   <li key="ownership" className="nav-item text-fnwp position-relative">
@@ -944,6 +977,9 @@ class NFTInventoryPage extends Component {
                   </li>
                   <li key="momentnfts" className="nav-item text-fnwp position-relative"> 
                     <a className={this.getActiveClasses('momentnfts')} id="mp-2-04-tab" data-toggle="tab" href="#mp-2-04-c" role="tab" aria-controls="mp-2-04-c" aria-selected="false">Simracing Moment NFTs</a>
+                  </li>
+                  <li key="packs" className="nav-item text-fnwp position-relative"> 
+                    <a className={this.getActiveClasses('packs')} id="mp-2-08-tab" data-toggle="tab" href="#mp-2-08-c" role="tab" aria-controls="mp-2-08-c" aria-selected="false">Simracing Moment Packs</a>
                   </li>
                 </ul>
                 {/*<!-- tab panes -->*/}
@@ -956,7 +992,7 @@ class NFTInventoryPage extends Component {
                               <div className="col-md-12 mb-4"><span>No items found in this category</span></div>
                             }
 
-                            {this.state.filteredNFTs.map(function(value, index){
+                            {this.state.filteredNFTs.map((value, index) => {
                                 
                                 let series = value.series;
                                 let simulator = value.simulator;
@@ -976,7 +1012,7 @@ class NFTInventoryPage extends Component {
                                 }*/
                                 return (
                                 <div className="col-md-12 mb-4" key={key}>
-                                  <Link to="#" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, description, price, null, carNumber, address, null, imagePath, null, true, false)} className="product-item">
+                                  <Link onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, description, price, null, carNumber, address, null, imagePath, null, true, false)} className="product-item">
                                     <div className="row align-items-center no-gutters">
                                       <div className="item_img d-none d-sm-block">
                                         <img className="img bl-3 text-primary" src={image} alt="Games Store"/>
@@ -1028,16 +1064,13 @@ class NFTInventoryPage extends Component {
                                   </Link>
                                 </div>
                                 );
-                           
-                
                             }, this)} {/*Obs: need to pass the context to the map function*/}
-                  
                     </div>
                   </div>
                   {/*<!-- tab item -->*/}
 
                   {/* start moment nfts*/}
-                        {/*<!-- tab item -->*/}
+                  {/*<!-- tab item -->*/}
                   <div className={this.getPanelActiveClasses('momentnfts')} id="mp-2-04-c" role="tabpanel" aria-labelledby="mp-2-04-tab">
                     <div className="row">
                       {/*<!-- item -->*/}
@@ -1045,8 +1078,7 @@ class NFTInventoryPage extends Component {
                       {this.state.filteredMomentNFTs.length === 0 &&
                           <div className="col-md-12 mb-4"><span>No items found in this category</span></div>
                       }
-                      {this.state.filteredMomentNFTs.map(function(value, index){
-                         
+                      {this.state.filteredMomentNFTs.map((value, index) => {
                                 let metadata = this.extractMomentNFTTraitTypes(value.attributes);
                                 console.log(`metadata: ${JSON.stringify(metadata, null, 2)}`);
                                 console.log(`value: ${JSON.stringify(value, null, 2)}`);
@@ -1118,8 +1150,6 @@ class NFTInventoryPage extends Component {
                                   </div>
                                 </Link>
                                 </div>
-                           
-                
                             }, this)} {/*Obs: need to pass the context to the map function*/}
 
                       
@@ -1128,10 +1158,42 @@ class NFTInventoryPage extends Component {
                     
                     </div>
                   </div>
-                  {/*end moment nfts */}
+                  {/* end moment nfts */}
 
+                  {/* start packs */}
+                  {/*<!-- tab item -->*/}
+                  <div className={this.getPanelActiveClasses('packs')} id="mp-2-08-c" role="tabpanel" aria-labelledby="mp-2-08-tab">
+                    <div className="row">
+                      {/*<!-- item -->*/}
+
+                      {this.state.filteredPacks.length === 0 &&
+                          <div className="col-md-12 mb-4"><span>No items found in this category</span></div>
+                      }
+                      {this.state.filteredPacks.map((pack, index) => (
+                        <div className="col-md-12 mb-4" key={`${pack.id}_${index}`}>
+                          <div className="product-item">
+                            <div className="row align-items-center no-gutters">
+                              <div className="item_img d-none d-sm-block">
+                                <img className="img bl-3 text-primary" src={pack.cover} alt="Pack cover"/>
+                              </div>
+                              <div className="item_content flex-1 flex-grow pl-0 pl-sm-6 pr-6">
+                                <h6 className="item_title ls-1 small-1 fw-600 text-uppercase mb-1">Drop #{pack.drop}</h6>
+                                <h4 className="item_title ls-1 small-1 fw-600 text-uppercase mb-1">Pack #{pack.id}</h4>
+                                <div className="position-relative">
+                                  <span className="item_genre small fw-600">
+                                  Opened: {pack.opened.toString()}
+                                  </span>
+                                </div>
+                                <Button variant="warning" onClick={() => this.openPack(pack.id)} className="product-item">{pack.opened ? "View" : "Open"}</Button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  {/*end packs */}
                 </div>
-
                 {/*<!-- pagination -->*/}
                 {this.renderPagination('bottom')}
                 {/*<!-- /.pagination -->*/}
@@ -1194,26 +1256,49 @@ class NFTInventoryPage extends Component {
                       </div>
                         </li>-->*/}
                 
-                    
                     <li key="resetfilter" className="nav-item text-light transition mt-4">
                       <button onClick={this.resetFilters} className="btn btn-warning w-100">Reset Filter</button>
                     </li>
                   </ul>
                 </div>
               </div>
+              </div>
             </div>
           </div>
-        </div>  
       </section>
       {/*<!-- /.End Content Area -->*/}
-
     </main>
-    {/*<!-- Main JS -->*/}
-    <script src="assets/js/main.js" id="_mainJS" data-plugins="load"></script>
-    </div>
-
-
-   ); //end return statment on render()
+    </div>,
+    <Modal open={this.state.showPackModal} onClose={() => this.setState({showPackModal: false})}>
+        <div className="main-container">
+          <Box className="simple-modal" sx={modalStyle}>
+            <Typography id="modal-modal-title" className="simple-modal-title border-bottom border-secondary" variant="h6" component="h2">
+                <strong>Simracing Moment NFTs in the Pack</strong>
+            </Typography>
+            <div className="container-fluid">
+              <div className="row justify-content-center">
+                {this.state.packMoments.map(moment => (
+                  <div className="col-auto" key={moment.id}>
+                      <Card className="card-block bg-dark_A-20 p-4 mx-1 mt-2">
+                          <Card.Header style={{ height: '120px' }} className="d-flex flex-wrap align-items-center justify-content-center">
+                              <Card.Img variant="top" src={moment.image} style={{ width: 'auto', maxHeight: '100%' }} />
+                          </Card.Header>
+                          <Card.Body className="text-center">
+                              <Card.Title className="mt-5 font-weight-bold">{moment.name}</Card.Title>
+                              <div className="text-left">
+                                <div>{moment.simulator}</div>
+                                <div>{moment.rarity}</div>
+                              </div>
+                          </Card.Body>
+                      </Card>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Box>
+        </div>
+    </Modal>
+    ]; //end return statment on render()
   } //end render()
 }
 

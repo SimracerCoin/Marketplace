@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import UIHelper from "../utils/uihelper";
 import { Button, Card } from 'react-bootstrap';
-import { withRouter, Link } from "react-router-dom";
+import { withRouter } from "react-router-dom";
 
 class DropsPage extends Component {
     constructor(props) {
@@ -9,11 +9,13 @@ class DropsPage extends Component {
         this.state = {
             drops: [],
             id: null, // To track single drop data when id is provided
+            usdValue: 1
         };
     }
     
     componentDidMount = async () => {
-        const { match } = this.props;
+        const { match, drizzle } = this.props;
+        const { web3 } = drizzle;
         const dropId = match?.params.id;
 
         UIHelper.showSpinning('Loading items ...');
@@ -35,12 +37,39 @@ class DropsPage extends Component {
                 title: "Lorem ipsum dolor sit.",
                 description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus a tortor ut velit consectetur gravida sit amet quis orci. Nunc mattis tortor magna, vitae pretium nunc porttitor vel. Donec ut elit efficitur, accumsan leo id, tincidunt lorem. Pellentesque consequat augue ante. Quisque vel magna non diam feugiat mattis. Donec non sem ac eros semper dignissim. Sed ut magna nec arcu feugiat facilisis. Duis porta ipsum in massa suscipit congue. Suspendisse a orci id est sodales maximus. Etiam ultricies pharetra nisi non maximus. Pellentesque scelerisque in arcu eget malesuada. Phasellus pellentesque orci quis nisl laoreet, quis suscipit purus vehicula. Mauris mattis enim lectus, ut congue sapien porttitor vel. Morbi auctor lobortis augue, sed molestie sem luctus eget. Aenean dignissim accumsan massa, non finibus lorem.",
                 cover: "https://simthunder.infura-ipfs.io/ipfs/QmYQM7fe7JUxncS3yQfPat6UvtjJu8urjzr7Z7gJYXVbdb",
+                totalPacks: 76,
+                boughtPacks: 0,
+                price: Number(web3.utils.fromWei("10000000000000000000000")).toFixed(2),
+                available: 79,
+                usdValue: await UIHelper.fetchSRCPriceVsUSD()
             }, UIHelper.hideSpinning);
         }
     }
 
+    buyItem = async (e) => {
+        e.preventDefault();
+
+        const { state, props } = this;
+        const { drizzle, drizzleState } = props;
+        const { web3, contracts } = drizzle;
+        const { SimracerCoin } = contracts;
+        const currentAccount = await drizzleState.accounts[0];
+
+        const balance = web3.utils.toBN(await UIHelper.callWithRetry(SimracerCoin.methods.balanceOf(currentAccount)));
+        const price = web3.utils.toBN(web3.utils.toWei(state.price.toString(), "ether"));
+
+        if(balance.lt(price)) {
+            alert("Insufficient balance to purchase the item!");
+            return;
+        }
+
+        UIHelper.showSpinning();
+    }
+
     render() {
         const { state } = this;
+
+        const usdPrice = price => Number(Math.round(parseFloat(price)  * state.usdValue * 100) / 100).toFixed(2);
 
         let rContent = [];
         if(state.drops.length) {
@@ -58,7 +87,7 @@ class DropsPage extends Component {
                                         </Card.Header>
                                         <Card.Body className="text-center">
                                             <div className="row">
-                                                <Card.Title className="mt-5 font-weight-bold col-8">DROP #{drop.id} {drop.title}</Card.Title>
+                                                <Card.Title className="mt-5 col-8 text-left"><strong>DROP #{drop.id}</strong><br />{drop.title}</Card.Title>
                                                 <div className="mt-5 font-weight-bold col-4 h4">
                                                     {drop.boughtPacks} / {drop.totalPacks}
                                                 </div>
@@ -100,12 +129,14 @@ class DropsPage extends Component {
                                                     <h4>{state.title}</h4>
                                                 </header>
                                             </div>
-                                            <div className="row">
-                                                {state.description}
+                                            <div className="row" style={{ flexFlow: 'column' }}>
+                                                <p>{state.description}</p>
+                                                <div><strong>{state.available} available</strong></div>
+                                                <div className="price_div"><strong className="price_div_strong">{state.price}<sup className="main-sup">SRC</sup></strong><br /><span className="secondary-price">{usdPrice(state.price)}<sup className="secondary-sup">USD</sup></span></div>
                                             </div>
                                             <div className="row mt-5">
-                                                <a href={`/packs/${state.id}`} className="btn btn-warning">GET PACKS</a>
-                                                <Button variant="primary" className="ml-2">COLLECT MOMENTS</Button>
+                                                <Button variant="warning" onClick={this.buyItem}>GET PACK</Button>
+                                                <a href="/inventory?v=packs" className="btn btn-primary ml-2">COLLECT MOMENTS</a>
                                             </div>
                                         </div>
                                         <div className="col-4 text-center">
