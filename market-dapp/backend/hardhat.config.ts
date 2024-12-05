@@ -1,11 +1,12 @@
 import { HardhatUserConfig, task } from "hardhat/config";
 import { HttpNetworkUserConfig } from "hardhat/types";
 
+import "@nomicfoundation/hardhat-ethers"
 import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-waffle";
 import "hardhat-typechain";
 import "hardhat-deploy";
-
+import "@openzeppelin/hardhat-upgrades";
 import "@nomiclabs/hardhat-solpp";
 // import "solidity-coverage"; @dev WIP this plugin is not updated to hardhat yet
 
