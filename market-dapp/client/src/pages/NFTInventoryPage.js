@@ -10,6 +10,7 @@ import "../css/itempage.css";
 
 //pagination is out of scope for now, also would require more items to test properly
 const MAX_ITEMS_PER_PAGE = 10;
+const NUMBER_CONFIRMATIONS_NEEDED = Number(process.env.REACT_APP_NUMBER_CONFIRMATIONS_NEEDED);
 
 const VIEW_ITEMS = {
   OWNERSHIP: 'ownership', 
@@ -22,7 +23,7 @@ const modalStyle = {
   top: '50%',
   left: '50%',
   transform: 'translate(-50%, -50%)',
-  width: 1000,
+  width: 1380,
   bgcolor: '#000',
   border: '2px solid #000',
   color: 'white',
@@ -43,85 +44,79 @@ let maxElems, maxElems2 = 0;
 
 class NFTInventoryPage extends Component {
 
-    constructor(props) {
-        super(props);
-       
-        this.state = {
-            //-------------------- lists ----------
-           
-            latestNFTs: [], //contains all the nfts returned by the contracts
-            filteredNFTs: [], // list of nfst but filtered
-            
-            latestMomentNFTs: [], //contains all the nfts returned by the contracts
-            filteredMomentNFTs: [], // list of nfst but filtered
+  constructor(props) {
+      super(props);
+      
+      this.state = {
+          //-------------------- lists ----------
+          
+          latestNFTs: [], //contains all the nfts returned by the contracts
+          filteredNFTs: [], // list of nfst but filtered
+          
+          latestMomentNFTs: [], //contains all the nfts returned by the contracts
+          filteredMomentNFTs: [], // list of nfst but filtered
 
-            latestPacks: [],
-            filteredPacks: [],
-            packMoments: [],
-            showPackModal: false,
+          latestPacks: [],
+          filteredPacks: [],
+          packMoments: [],
+          showPackModal: false,
 
-            listSimulators: [], //list of all simulators available
-            //---------------- buy / view item ----------
-            redirectBuyItem: false,
-            selectedItemId: "",
-            selectedTrack: "",
-            selectedDate: "",
-            selectedTitle: "",
-            selectedRarity: "",
-            selectedSimulator: "",
-            selectedSeason: "",
-            selectedSeries: "",
-            selectedDescription: "",
-            selectedPrice: "",
-            selectedCarBrand: "",
-            selectedImagePath: "",
-            vendorAddress: "",
-            ipfsPath: "",
-            videoPath: "",
-            //-------------------- other stuff --------------
-            currentPage: 1, //for future filtering purposes
-            numPages: 1, //num pages by default
-            context: props.context,
-            //---------------------- filters -----------
-            activeSimulatorsFilter: [{simulator: "All", checked: true}], //default filter
-            priceStep: 0.0001,
-            priceMin: 0,
-            priceMinDefault: 0,
-            priceMax: 10000,
-            priceMaxDefault: 10000,
+          listSimulators: [], //list of all simulators available
+          //---------------- buy / view item ----------
+          redirectBuyItem: false,
+          selectedItemId: "",
+          selectedTrack: "",
+          selectedDate: "",
+          selectedTitle: "",
+          selectedRarity: "",
+          selectedSimulator: "",
+          selectedSeason: "",
+          selectedSeries: "",
+          selectedDescription: "",
+          selectedPrice: "",
+          selectedCarBrand: "",
+          selectedImagePath: "",
+          vendorAddress: "",
+          ipfsPath: "",
+          videoPath: "",
+          //-------------------- other stuff --------------
+          currentPage: 1, //for future filtering purposes
+          numPages: 1, //num pages by default
+          context: props.context,
+          //---------------------- filters -----------
+          activeSimulatorsFilter: [{simulator: "All", checked: true}], //default filter
+          priceStep: 0.0001,
+          priceMin: 0,
+          priceMinDefault: 0,
+          priceMax: 10000,
+          priceMaxDefault: 10000,
 
-            //just as reference, we can define others intervals if needed
-            //activePriceFilters: [
-            //  {name: "min", label: "min", default_value: 0.00000001, value: 0.00000001},
-            //  {name: "max", label: "max", default_value: 100000000, value: 100000000}
-            //],
-            searchQuery: "",
-            //searchRef: props.searchRef //search field
-            usdValue: 1,
-            viewItems: "",
-            currentAccount: null
-        }
+          //just as reference, we can define others intervals if needed
+          //activePriceFilters: [
+          //  {name: "min", label: "min", default_value: 0.00000001, value: 0.00000001},
+          //  {name: "max", label: "max", default_value: 100000000, value: 100000000}
+          //],
+          searchQuery: "",
+          //searchRef: props.searchRef //search field
+          usdValue: 1,
+          viewItems: "",
+          currentAccount: null
+      }
 
-        // This binding is necessary to make `this` work in the callback
-       //this.simulatorsFilterChanged = this.simulatorsFilterChanged.bind(this);
-       this.props.history.push(window.location.pathname + window.location.search);
-    }
+      // This binding is necessary to make `this` work in the callback
+      //this.simulatorsFilterChanged = this.simulatorsFilterChanged.bind(this);
+      this.props.history.push(window.location.pathname + window.location.search);
+  }
+  //-----------------------------------------------------------------------------------------------------
+  //-----------------------------------------------------------------------------------------------------
+  componentWillUnmount = () => this.props.history.listen(() => localStorage.removeItem('searchQuery'))
 
-    
-
-    //-----------------------------------------------------------------------------------------------------
-    //-----------------------------------------------------------------------------------------------------
-
-    componentWillUnmount = () => this.props.history.listen(() => localStorage.removeItem('searchQuery'))
-
-    componentDidMount = async () => {
+  componentDidMount = async () => {
 
       const currentAccount = await this.props.drizzleState.accounts[0];
 
       //scroll to top of page
       window.scrollTo(0, 0);
-
-      UIHelper.showSpinning("Loading items ...");
 
       const usdValue = await UIHelper.fetchSRCPriceVsUSD();
       this.setState({usdValue, currentAccount});
@@ -156,343 +151,351 @@ class NFTInventoryPage extends Component {
   renderUSDPrice = (price) =>
     ["$" + Number(Math.round(Number(this.props.drizzle.web3.utils.fromWei(price)) * this.state.usdValue * 100) / 100).toFixed(2), <sup className="secondary-sup">USD</sup>];
 
-    //get all contracts data
-    async getNFTsData() {
+  //get all contracts data
+  async getNFTsData() {
 
-        //double check
-        let currentAccount = this.state.currentAccount;
-        //but probably never happens anyway
-        if(!currentAccount) {
-            currentAccount = await this.props.drizzleState.accounts[0];
-            this.setState({currentAccount});
-        }
+      //double check
+      let currentAccount = this.state.currentAccount;
+      //but probably never happens anyway
+      if(!currentAccount) {
+          currentAccount = await this.props.drizzleState.accounts[0];
+          this.setState({currentAccount});
+      }
 
-        const { drizzle } = this.props;
+      const { drizzle } = this.props;
 
-        //ownership nfts
-        const contractNFTs = await drizzle.contracts.SimthunderOwner;
-        //simracing moment nfts
-        const contractMomentNFTs = await drizzle.contracts.SimracingMomentOwner;
-        
-        let simsList = [];
-        let simulatorsFilter = [];
-        simulatorsFilter.push(this.state.activeSimulatorsFilter[0]);
+      //ownership nfts
+      const contractNFTs = await drizzle.contracts.SimthunderOwner;
+      //simracing moment nfts
+      const contractMomentNFTs = await drizzle.contracts.SimracingMomentOwner;
+      
+      let simsList = [];
+      let simulatorsFilter = [];
+      simulatorsFilter.push(this.state.activeSimulatorsFilter[0]);
 
-        //use search params?
-        let queryString = this.state.searchQuery;
-        const considerSearchQuery = (queryString && queryString.length > 0) ? true : false;
+      //use search params?
+      let queryString = this.state.searchQuery;
+      const considerSearchQuery = (queryString && queryString.length > 0) ? true : false;
 
-        //let moreItems = this.state.moreItems;
-        //const considerMoreItems = this.isValidItemType(moreItems) ? true : false;
+      //let moreItems = this.state.moreItems;
+      //const considerMoreItems = this.isValidItemType(moreItems) ? true : false;
 
-        //load them all, then filter them!
+      //load them all, then filter them!
 
+      UIHelper.showSpinning("Loading items ...");
 
-        //by default on load, these filtered lists inlcude all the items, unless we are searching for somethign specific
-        await Promise.all([
-            this.loadMomentNFTs(contractMomentNFTs, maxElems, simsList, simulatorsFilter, maxElems2),
-            this.loadCarOwnershipNFTs(contractNFTs, maxElems, simsList, simulatorsFilter, maxElems2),
-            this.loadPacks()
-        ]);
+      //by default on load, these filtered lists inlcude all the items, unless we are searching for somethign specific
+      await Promise.all([
+          this.loadMomentNFTs(contractMomentNFTs, maxElems, simsList, simulatorsFilter, maxElems2),
+          this.loadCarOwnershipNFTs(contractNFTs, maxElems, simsList, simulatorsFilter, maxElems2),
+          this.loadPacks()
+      ]);
 
-        //get the number of elements of the bigger list, use it to define the number of pages, minimum 1
-        //it must be done after a lazy load as well, always
-        this.recalculatePaginationAndNumPages(maxElems2, maxElems, considerSearchQuery ? filteredMomentNFTsList: momentNftslist);
-        
-        UIHelper.hideSpinning();
+      //get the number of elements of the bigger list, use it to define the number of pages, minimum 1
+      //it must be done after a lazy load as well, always
+      this.recalculatePaginationAndNumPages(maxElems2, maxElems, considerSearchQuery ? filteredMomentNFTsList: momentNftslist);
+      
+      UIHelper.hideSpinning();
+  }
+
+  loadPacks = async () => {
+    const { drizzle, drizzleState } = this.props;
+    const currentAccount = await drizzleState.accounts[0];
+
+    let dropContract, packs = [], i = 0;
+    while((dropContract = await drizzle.contracts["SimracingMomentDrop"+(i++)])) {
+      const drop = await UIHelper.callWithRetry(dropContract.methods.getDrop());
+      const bPacks = await UIHelper.callWithRetry(dropContract.methods.getPacksByBuyer(currentAccount));
+      for(const id of (bPacks || [])) {
+        packs.push({id, drop: drop.id, cover: drop.cover, saleEnd: drop.saleEnd, ...(await UIHelper.callWithRetry(dropContract.methods.getPackById(id)))});
+      }
     }
 
-    loadPacks = async () => {
-      const packs = [{
-        id: 1,
-        cover: "https://simthunder.infura-ipfs.io/ipfs/QmYQM7fe7JUxncS3yQfPat6UvtjJu8urjzr7Z7gJYXVbdb",
-        drop: 1,
-        opened: false
-      }];
+    this.setState({latestPacks: packs.reverse(), filteredPacks: this.paginate(packs, this.state.currentPage)});
+  }
 
-      this.setState({latestPacks: packs.reverse(), filteredPacks: this.paginate(packs, this.state.currentPage)});
-    }
+  /**
+   * 
+   * @param {*} maxElems max elems i can load
+   * @param {*} simsList simulators list
+   * @param {*} simulatorsFilter simulators filter
+   * @param {*} maxElems2 max elemens on biggest list found
+   * @param {*} filteredCarsList list of possibly filtered cars
+   * @param {*} filteredSkinsList list of possibly filtered skins
+   */
+  loadCarOwnershipNFTs = async (contractNFTs, maxElems, simsList, simulatorsFilter, maxElems2) => {
 
-    /**
-     * 
-     * @param {*} maxElems max elems i can load
-     * @param {*} simsList simulators list
-     * @param {*} simulatorsFilter simulators filter
-     * @param {*} maxElems2 max elemens on biggest list found
-     * @param {*} filteredCarsList list of possibly filtered cars
-     * @param {*} filteredSkinsList list of possibly filtered skins
-     */
-    loadCarOwnershipNFTs = async (contractNFTs, maxElems, simsList, simulatorsFilter, maxElems2) => {
+    const numNfts = await UIHelper.callWithRetry(contractNFTs.methods.currentTokenId());
+    console.log('ownership nft count:' + numNfts);
 
-     const numNfts = await UIHelper.callWithRetry(contractNFTs.methods.currentTokenId());
-     console.log('ownership nft count:' + numNfts);
+    let max = parseInt(numNfts) + 1;
 
-     let max = parseInt(numNfts) + 1;
+    //use search params?
+    const queryString = this.state.searchQuery;
+    const considerSearchQuery = queryString && queryString.length > 0;
 
-     //use search params?
-     const queryString = this.state.searchQuery;
-     const considerSearchQuery = queryString && queryString.length > 0;
+    const currentAccount = this.state.currentAccount;
 
-     const currentAccount = this.state.currentAccount;
+    nftlist = filteredNFTsList = [];
 
-     nftlist = filteredNFTsList = [];
+    for (let i = 1; i < max ; i++) {
+      try {
+          const ownerAddress = await UIHelper.callWithRetry(contractNFTs.methods.ownerOf(i));
+          //console.log('ID:'+i+'ownerAddress: '+ownerAddress.toString()+'nfts addr: '+contractNFTs.address);
+          if(ownerAddress === currentAccount) {
 
-      for (let i = 1; i < max ; i++) {
-        try {
-            const ownerAddress = await UIHelper.callWithRetry(contractNFTs.methods.ownerOf(i));
-            //console.log('ID:'+i+'ownerAddress: '+ownerAddress.toString()+'nfts addr: '+contractNFTs.address);
-            if(ownerAddress === currentAccount) {
+            const [response, info] = await Promise.all([
+              UIHelper.callWithRetry(contractNFTs.methods.tokenURI(i)).then(fetch).then(r => r.json()),
+              UIHelper.callWithRetry(contractNFTs.methods.getItem(i))
+            ]);
+            const data = {id: i, price: info[0], seriesOwner: info[1], ...response};
+              
+            /**  DATA example:
+            {  
+                "description": "Simthunder Car Ownership",
+                "name": "Car",
+                "image": "https://ipfs.io/ipfs/QmbM3fsbACwV887bMf73tvtY9iA5K1CSZ3kYdwj7G9bL7W",
+                "series": "Simthunder Trophy",
+                "owner": "0xA59DE47b6fa8911DF14F4524B853B742AF1F3a0c",
+                "carNumber": "48",
+                "simulator": "iRacing",
+                "price": 1
+            }
+            */
 
-              const [response, info] = await Promise.all([
-                UIHelper.callWithRetry(contractNFTs.methods.tokenURI(i)).then(fetch).then(r => r.json()),
-                UIHelper.callWithRetry(contractNFTs.methods.getItem(i))
-              ]);
-              const data = {id: i, price: info[0], seriesOwner: info[1], ...response};
+            //global list of all
+            nftlist.push(data);
+
+            //update the max elements every time, as we will consider this as the 
+            maxElems = nftlist.length;
+
+            //only filtered list
+            if(considerSearchQuery && (this.shouldIncludeNFTBySearchQuery(queryString.toLowerCase(), data)) ){
+                filteredNFTsList.push(data);
+            }//otherwise goes on the default list => nftlist
                 
-              /**  DATA example:
-              {  
-                  "description": "Simthunder Car Ownership",
-                  "name": "Car",
-                  "image": "https://ipfs.io/ipfs/QmbM3fsbACwV887bMf73tvtY9iA5K1CSZ3kYdwj7G9bL7W",
-                  "series": "Simthunder Trophy",
-                  "owner": "0xA59DE47b6fa8911DF14F4524B853B742AF1F3a0c",
-                  "carNumber": "48",
-                  "simulator": "iRacing",
-                  "price": 1
-              }
-              */
 
-              //global list of all
-              nftlist.push(data);
+            //add simulator if not present already 
+            let simulator = data.simulator;
+            if(simulator && !simsList.includes(simulator)) {
+                simsList.push(data.simulator);
 
-              //update the max elements every time, as we will consider this as the 
-              maxElems = nftlist.length;
-
-              //only filtered list
-              if(considerSearchQuery && (this.shouldIncludeNFTBySearchQuery(queryString.toLowerCase(), data)) ){
-                  filteredNFTsList.push(data);
-              }//otherwise goes on the default list => nftlist
-                  
-
-              //add simulator if not present already 
-              let simulator = data.simulator;
-              if(simulator && !simsList.includes(simulator)) {
-                  simsList.push(data.simulator);
-
-                  if(!considerSearchQuery ) {
+                if(!considerSearchQuery ) {
+                  simulatorsFilter.push({simulator, checked: true});
+                } else {
+                  //matches query, push and check it
+                  if(simulator.toLowerCase().indexOf(queryString.toLowerCase()) > -1) {
                     simulatorsFilter.push({simulator, checked: true});
                   } else {
-                    //matches query, push and check it
-                    if(simulator.toLowerCase().indexOf(queryString.toLowerCase()) > -1) {
-                      simulatorsFilter.push({simulator, checked: true});
-                    } else {
-                      //still push it but disabled
-                      simulatorsFilter.push({simulator, checked: false});
-                    }
+                    //still push it but disabled
+                    simulatorsFilter.push({simulator, checked: false});
                   }
-              }
-
-              //this GET is assync, so we need to recalaculate the pagination after every grab
-              //this.recalculatePaginationAndNumPages(maxElems2, maxElems, considerSearchQuery ? filteredMomentNFTsList : momentNftslist);
-              
-              this.setState({ 
-                latestNFTs: nftlist.reverse(), 
-                filteredNFTs: considerSearchQuery ? this.paginate(filteredNFTsList, this.state.currentPage): this.paginate(nftlist, this.state.currentPage), 
-                listSimulators: simsList, 
-                activeSimulatorsFilter: simulatorsFilter 
-              });
+                }
             }
-        } catch (e) {
-            console.error(e);
-        }
-      }
-    }
 
-    loadMomentNFTs = async (contractMomentNFTs, maxElems, simsList, simulatorsFilter, maxElems2) => {
-      
-      // get info from marketplace NFT contract
-      const numMomentNfts = await UIHelper.callWithRetry(contractMomentNFTs.methods.currentTokenId());
-      console.log('moment nft count:' + numMomentNfts);
-
-      let max = parseInt(numMomentNfts) + 1;
-
-    //--------------------------------------------------------------------------
-
-      const currentAccount = this.state.currentAccount;
-      //clear the lists
-      momentNftslist = filteredMomentNFTsList = [];
-      
-      for (let i = 1; i < max; i++) {
-        try {
-            //TODO: change for different ids
-            const ownerAddress = await UIHelper.callWithRetry(contractMomentNFTs.methods.ownerOf(i));
-            //console.log('ID:'+i+'ownerAddress: '+ownerAddress.toString()+'nfts addr: '+contractMomentNFTs.address);
-            if(ownerAddress === currentAccount) {
-               
-              const [response, info] = await Promise.all([
-                UIHelper.callWithRetry(contractMomentNFTs.methods.tokenURI(i)).then(fetch).then(r => r.json()),
-                UIHelper.callWithRetry(contractMomentNFTs.methods.getItem(i))
-              ]);
-              const data = {id: i, price: info[0], seriesOwner: info[1], ...response};
-
-              let metadata = this.extractMomentNFTTraitTypes(data.attributes);
-              //global list of all
-              momentNftslist.push(data);
-
-              //update the max elements every time, as we will consider this as the 
-              maxElems2 = momentNftslist.length;
-                      
-              const queryString = this.state.searchQuery;
-              const considerSearchQuery = queryString && queryString.length > 0;
-              //only filtered list?
-
-              if(considerSearchQuery && (this.shouldIncludeMomentNFTBySearchQuery(queryString.toLowerCase(), data)) ){
-                  filteredMomentNFTsList.push(data);
-              }//otherwise goes on the default list => nftlist
-                      
-              //add simulator if not present already 
-              let simulator = metadata.simulator;
-              if(simulator && !simsList.includes(simulator)) {
-
-                  simsList.push(metadata.simulator);
-
-                  if(!considerSearchQuery ) {
-                      simulatorsFilter.push({simulator, checked: true});
-                  } else {
-                    //matches query, push and check it
-                    if(simulator.toLowerCase().indexOf(queryString.toLowerCase()) > -1) {
-                      simulatorsFilter.push({simulator, checked: true});
-                    } else {
-                      //still push it but disabled
-                      simulatorsFilter.push({simulator, checked: false});
-                    }  
-                  }  
-              }
-
-              //this GET is assync, so we need to recalaculate the pagination after every grab
-              //this.recalculatePaginationAndNumPages(maxElems2, maxElems, considerSearchQuery ? filteredMomentNFTsList : momentNftslist);
-                      
-              //console.log('considerSearchQuery ' + considerSearchQuery + 'momentNftslist size: ' + momentNftslist.length + " filteredMomentNFTsList: " + filteredMomentNFTsList.length)
-
-              this.setState({ 
-                latestMomentNFTs: momentNftslist.reverse(), 
-                filteredMomentNFTs: considerSearchQuery ? this.paginate(filteredMomentNFTsList, this.state.currentPage): this.paginate(momentNftslist, this.state.currentPage), 
-                listSimulators: simsList, 
-                activeSimulatorsFilter: simulatorsFilter 
-              });
-            }
-        } catch (e) {
-            console.error(e);
-        }
-      }
-    }
-
-    //specific for moment NFTS
-    extractMomentNFTTraitTypes(attributes) {
-
-      let data = {};
-      for(let attribute of attributes) {
-          data[attribute.trait_type] = attribute.value;
-      }
-      return data;
-     }
-
-    /**
-     * Calculate pagination and set state
-     * @param {*} maxElems 
-     * @param {*} filteredCarsList 
-     * @param {*} filteredSkinsList 
-     */
-    recalculatePaginationAndNumPages(maxMomentNFTsElems, maxNFTsElems, filteredMomentNFTsList) {
-
-      let maxElems = 0;
-      if(maxMomentNFTsElems > maxElems) {
-        maxElems = maxMomentNFTsElems;
-      }
-
-      if(maxNFTsElems > maxElems) {
-        maxElems = maxNFTsElems;
-      }
-
-      if(filteredMomentNFTsList && filteredMomentNFTsList.length > maxElems) {
-        maxElems = filteredMomentNFTsList.length;
-      }
-      
-      console.log("max elements: " + maxElems + " num pages: " +  Math.ceil((maxElems / MAX_ITEMS_PER_PAGE)) || 1 );
-      
-      this.setState(
-        {
-        numPages: ( Math.ceil((maxElems / MAX_ITEMS_PER_PAGE) ) || 1),
-        filteredMomentNFTs: this.paginate(filteredMomentNFTsList, this.state.currentPage)
-      });
-    }
-
-    /**
-     * Method for pagination, can be used for any input collection
-     * @param {*} array 
-     * @param {*} page_number 
-     * @returns 
-     */
-    paginate(array, page_number) {
-      if(array.length <= MAX_ITEMS_PER_PAGE) {
-        return array;
-      }
-      // human-readable page numbers usually start with 1, so we reduce 1 in the first argument
-      return array.slice((page_number - 1) * MAX_ITEMS_PER_PAGE, page_number * MAX_ITEMS_PER_PAGE);
-    }
-
-    //-----------------------------------------------------------------------------------------------------
-    //-----------------------------------------------------------------------------------------------------
-    simulatorsFilterChanged = (event) => {
-      
-      let enabledSimulators = [];
-      let filters = this.state.activeSimulatorsFilter;
-        filters.forEach(filter => {
-           if (filter.simulator === event.target.value) {
-              filter.checked =  event.target.checked;
-           }
-          
-           if(filter.checked) {
-             enabledSimulators.push(filter);
-           }
-           
-        })
-       
-        this.setState({activeSimulatorsFilter: filters})
-
-        //nothing to show, all price filters disabled
-        if(enabledSimulators.length === 0) {
-          this.setState({filteredNFTs : [], filteredSkins: [], filteredCars: [], currentPage: 1, numPages: 1 });
-        } else {
-          this.filterNFTsBySimulator(enabledSimulators);
-          this.filterMomentNFTsBySimulator(enabledSimulators);
-        }
-    }
-
-    //filter NFTs by simulator
-    filterNFTsBySimulator(enabledSimulators) {
-
-       //get all the nfts available
-      let filteredListBySimulator = this.state.latestNFTs.filter( function(NFT){
-        
-        for (let simulator of enabledSimulators) {
-           
-          let include = ( NFT.simulator  === simulator.simulator) || simulator.simulator === "All";
-
-          if(include) {
-            return true;
+            //this GET is assync, so we need to recalaculate the pagination after every grab
+            //this.recalculatePaginationAndNumPages(maxElems2, maxElems, considerSearchQuery ? filteredMomentNFTsList : momentNftslist);
+            
+            this.setState({ 
+              latestNFTs: nftlist.reverse(), 
+              filteredNFTs: considerSearchQuery ? this.paginate(filteredNFTsList, this.state.currentPage): this.paginate(nftlist, this.state.currentPage), 
+              listSimulators: simsList, 
+              activeSimulatorsFilter: simulatorsFilter 
+            });
           }
-                
-        }
-        return false;
-          
-      });
+      } catch (e) {
+          console.error(e);
+      }
+    }
+  }
 
-      this.setState({filteredNFTs: this.paginate(filteredListBySimulator, this.state.currentPage)});
+  loadMomentNFTs = async (contractMomentNFTs, maxElems, simsList, simulatorsFilter, maxElems2) => {
+    
+    // get info from marketplace NFT contract
+    const numMomentNfts = await UIHelper.callWithRetry(contractMomentNFTs.methods.currentTokenId());
+    console.log('moment nft count:' + numMomentNfts);
+
+    let max = parseInt(numMomentNfts) + 1;
+
+  //--------------------------------------------------------------------------
+
+    const currentAccount = this.state.currentAccount;
+    //clear the lists
+    momentNftslist = filteredMomentNFTsList = [];
+    
+    for (let i = 1; i < max; i++) {
+      try {
+          //TODO: change for different ids
+          const ownerAddress = await UIHelper.callWithRetry(contractMomentNFTs.methods.ownerOf(i));
+          //console.log('ID:'+i+'ownerAddress: '+ownerAddress.toString()+'nfts addr: '+contractMomentNFTs.address);
+          if(ownerAddress === currentAccount) {
+              
+            const [response, info] = await Promise.all([
+              UIHelper.callWithRetry(contractMomentNFTs.methods.tokenURI(i))
+                .then(r => fetch(r.replace("ipfs://", 'https://simthunder.infura-ipfs.io/ipfs/')))
+                .then(r => r.json()),
+              UIHelper.callWithRetry(contractMomentNFTs.methods.getItem(i))
+            ]);
+            const data = {id: i, price: info[0], seriesOwner: info[1], ...response};
+
+            let metadata = this.extractMomentNFTTraitTypes(data.attributes);
+            //global list of all
+            momentNftslist.push(data);
+
+            //update the max elements every time, as we will consider this as the 
+            maxElems2 = momentNftslist.length;
+                    
+            const queryString = this.state.searchQuery;
+            const considerSearchQuery = queryString && queryString.length > 0;
+            //only filtered list?
+
+            if(considerSearchQuery && (this.shouldIncludeMomentNFTBySearchQuery(queryString.toLowerCase(), data)) ){
+                filteredMomentNFTsList.push(data);
+            }//otherwise goes on the default list => nftlist
+                    
+            //add simulator if not present already 
+            let simulator = metadata.simulator;
+            if(simulator && !simsList.includes(simulator)) {
+
+                simsList.push(metadata.simulator);
+
+                if(!considerSearchQuery ) {
+                    simulatorsFilter.push({simulator, checked: true});
+                } else {
+                  //matches query, push and check it
+                  if(simulator.toLowerCase().indexOf(queryString.toLowerCase()) > -1) {
+                    simulatorsFilter.push({simulator, checked: true});
+                  } else {
+                    //still push it but disabled
+                    simulatorsFilter.push({simulator, checked: false});
+                  }  
+                }  
+            }
+
+            //this GET is assync, so we need to recalaculate the pagination after every grab
+            //this.recalculatePaginationAndNumPages(maxElems2, maxElems, considerSearchQuery ? filteredMomentNFTsList : momentNftslist);
+                    
+            //console.log('considerSearchQuery ' + considerSearchQuery + 'momentNftslist size: ' + momentNftslist.length + " filteredMomentNFTsList: " + filteredMomentNFTsList.length)
+
+            this.setState({ 
+              latestMomentNFTs: momentNftslist.reverse(), 
+              filteredMomentNFTs: considerSearchQuery ? this.paginate(filteredMomentNFTsList, this.state.currentPage): this.paginate(momentNftslist, this.state.currentPage), 
+              listSimulators: simsList, 
+              activeSimulatorsFilter: simulatorsFilter 
+            });
+          }
+      } catch (e) {
+          console.error(e);
+      }
+    }
+  }
+
+  //specific for moment NFTS
+  extractMomentNFTTraitTypes(attributes) {
+
+    let data = {};
+    for(let attribute of attributes) {
+        data[attribute.trait_type] = attribute.value;
+    }
+    return data;
+  }
+
+  /**
+   * Calculate pagination and set state
+   * @param {*} maxElems 
+   * @param {*} filteredCarsList 
+   * @param {*} filteredSkinsList 
+   */
+  recalculatePaginationAndNumPages(maxMomentNFTsElems, maxNFTsElems, filteredMomentNFTsList) {
+
+    let maxElems = 0;
+    if(maxMomentNFTsElems > maxElems) {
+      maxElems = maxMomentNFTsElems;
     }
 
-    //filter Moment NFTs by simulator
-    filterMomentNFTsBySimulator(enabledSimulators) {
+    if(maxNFTsElems > maxElems) {
+      maxElems = maxNFTsElems;
+    }
+
+    if(filteredMomentNFTsList && filteredMomentNFTsList.length > maxElems) {
+      maxElems = filteredMomentNFTsList.length;
+    }
+    
+    console.log("max elements: " + maxElems + " num pages: " +  Math.ceil((maxElems / MAX_ITEMS_PER_PAGE)) || 1 );
+    
+    this.setState(
+      {
+      numPages: ( Math.ceil((maxElems / MAX_ITEMS_PER_PAGE) ) || 1),
+      filteredMomentNFTs: this.paginate(filteredMomentNFTsList, this.state.currentPage)
+    });
+  }
+
+  /**
+   * Method for pagination, can be used for any input collection
+   * @param {*} array 
+   * @param {*} page_number 
+   * @returns 
+   */
+  paginate(array, page_number) {
+    if(array.length <= MAX_ITEMS_PER_PAGE) {
+      return array;
+    }
+    // human-readable page numbers usually start with 1, so we reduce 1 in the first argument
+    return array.slice((page_number - 1) * MAX_ITEMS_PER_PAGE, page_number * MAX_ITEMS_PER_PAGE);
+  }
+
+  //-----------------------------------------------------------------------------------------------------
+  //-----------------------------------------------------------------------------------------------------
+  simulatorsFilterChanged = (event) => {
+    
+    let enabledSimulators = [];
+    let filters = this.state.activeSimulatorsFilter;
+      filters.forEach(filter => {
+          if (filter.simulator === event.target.value) {
+            filter.checked =  event.target.checked;
+          }
+        
+          if(filter.checked) {
+            enabledSimulators.push(filter);
+          }
+          
+      })
+      
+      this.setState({activeSimulatorsFilter: filters})
+
+      //nothing to show, all price filters disabled
+      if(enabledSimulators.length === 0) {
+        this.setState({filteredNFTs : [], filteredSkins: [], filteredCars: [], currentPage: 1, numPages: 1 });
+      } else {
+        this.filterNFTsBySimulator(enabledSimulators);
+        this.filterMomentNFTsBySimulator(enabledSimulators);
+      }
+  }
+
+  //filter NFTs by simulator
+  filterNFTsBySimulator(enabledSimulators) {
+
+      //get all the nfts available
+    let filteredListBySimulator = this.state.latestNFTs.filter( function(NFT){
+      
+      for (let simulator of enabledSimulators) {
+          
+        let include = ( NFT.simulator  === simulator.simulator) || simulator.simulator === "All";
+
+        if(include) {
+          return true;
+        }
+              
+      }
+      return false;
+        
+    });
+
+    this.setState({filteredNFTs: this.paginate(filteredListBySimulator, this.state.currentPage)});
+  }
+
+  //filter Moment NFTs by simulator
+  filterMomentNFTsBySimulator(enabledSimulators) {
 
       //get all the nfts available
      let filteredListBySimulator = this.state.latestMomentNFTs.filter( function(NFT){
@@ -513,60 +516,60 @@ class NFTInventoryPage extends Component {
      }, this);
 
      this.setState({filteredMomentNFTs: this.paginate(filteredListBySimulator, this.state.currentPage)});
-   }
+  }
 
-    filterNFTsByPrice(priceMin, priceMax) {
+  filterNFTsByPrice(priceMin, priceMax) {
 
-       //get all the nfts available
-      let filteredListByPrice = this.state.latestNFTs.filter( function(NFT){
+      //get all the nfts available
+    let filteredListByPrice = this.state.latestNFTs.filter( function(NFT){
 
-          return (NFT.price >= priceMin &&  NFT.price <= priceMax );
-          
-      });
+        return (NFT.price >= priceMin &&  NFT.price <= priceMax );
+        
+    });
 
-      this.setState({filteredNFTs: this.paginate(filteredListByPrice, this.state.currentPage)});
+    this.setState({filteredNFTs: this.paginate(filteredListByPrice, this.state.currentPage)});
+  }
+
+  filterMomentNFTsByPrice(priceMin, priceMax) {
+
+      //get all the nfts available
+    let filteredListByPrice = this.state.latestMomentNFTs.filter( function(NFT){
+        return (NFT.price >= priceMin &&  NFT.price <= priceMax );
+    }, this);
+
+    this.setState({filteredMomentNFTs: this.paginate(filteredListByPrice, this.state.currentPage)});
+  }
+
+  priceFilterChanged = (event, name) => {
+
+    let { value, min, max } = event.target;
+    value = Math.max(Number(min), Math.min(Number(max), Number(value)));
+    
+
+    if(name === "min") {
+      min = value;
+      max = this.state.priceMax;
+    } else {
+      min = this.state.priceMin;
+      max = value;
     }
 
-    filterMomentNFTsByPrice(priceMin, priceMax) {
+    this.setState({priceMin: min, priceMax: max});
 
-       //get all the nfts available
-      let filteredListByPrice = this.state.latestMomentNFTs.filter( function(NFT){
-          return (NFT.price >= priceMin &&  NFT.price <= priceMax );
-      }, this);
+      this.filterNFTsByPrice(min, max);
+      this.filterMomentNFTsByPrice(min, max);
 
-      this.setState({filteredMomentNFTs: this.paginate(filteredListByPrice, this.state.currentPage)});
-    }
+  }
 
-    priceFilterChanged = (event, name) => {
+  //reset filtering by price
+  resetPriceFilters() {
 
-      let { value, min, max } = event.target;
-      value = Math.max(Number(min), Math.min(Number(max), Number(value)));
-      
+    this.setState({priceMin: this.state.priceMinDefault, priceMax: this.state.priceMaxDefault});
 
-      if(name === "min") {
-        min = value;
-        max = this.state.priceMax;
-      } else {
-        min = this.state.priceMin;
-        max = value;
-      }
-
-      this.setState({priceMin: min, priceMax: max});
-
-        this.filterNFTsByPrice(min, max);
-        this.filterMomentNFTsByPrice(min, max);
-
-    }
-
-    //reset filtering by price
-    resetPriceFilters() {
-
-      this.setState({priceMin: this.state.priceMinDefault, priceMax: this.state.priceMaxDefault});
-  
-        this.filterNFTsByPrice(this.state.priceMinDefault, this.state.priceMaxDefault);
-        this.filterMomentNFTsByPrice(this.state.priceMinDefault, this.state.priceMaxDefault);
-      
-    }
+      this.filterNFTsByPrice(this.state.priceMinDefault, this.state.priceMaxDefault);
+      this.filterMomentNFTsByPrice(this.state.priceMinDefault, this.state.priceMaxDefault);
+    
+  }
 
     //reset filtering by simulator
     resetSimulatorsFilters() {
@@ -826,35 +829,69 @@ class NFTInventoryPage extends Component {
   
     }
 
-    openPack = async (packId) => {
-      const moments = [{
-        image: "https://simthunder.infura-ipfs.io/ipfs/QmYQM7fe7JUxncS3yQfPat6UvtjJu8urjzr7Z7gJYXVbdb",
-        rarity: "COMMON",
-        name: "Lorem ipsum dolor sit.",
-        simulator: "iRacing"
-      },{
-        image: "https://simthunder.infura-ipfs.io/ipfs/QmYQM7fe7JUxncS3yQfPat6UvtjJu8urjzr7Z7gJYXVbdb",
-        rarity: "COMMON",
-        name: "Lorem ipsum dolor sit.",
-        simulator: "iRacing"
-      },{
-        image: "https://simthunder.infura-ipfs.io/ipfs/QmYQM7fe7JUxncS3yQfPat6UvtjJu8urjzr7Z7gJYXVbdb",
-        rarity: "COMMON",
-        name: "Lorem ipsum dolor sit.",
-        simulator: "iRacing"
-      },{
-        image: "https://simthunder.infura-ipfs.io/ipfs/QmYQM7fe7JUxncS3yQfPat6UvtjJu8urjzr7Z7gJYXVbdb",
-        rarity: "COMMON",
-        name: "Lorem ipsum dolor sit.",
-        simulator: "iRacing"
-      },{
-        image: "https://simthunder.infura-ipfs.io/ipfs/QmYQM7fe7JUxncS3yQfPat6UvtjJu8urjzr7Z7gJYXVbdb",
-        rarity: "COMMON",
-        name: "Lorem ipsum dolor sit.",
-        simulator: "iRacing"
-      }];
+    openPack = async (pack) => {
+      const { id: packId, drop: dropId, opened, initialNFTId, nftAmount } = pack;
+      const { drizzle, drizzleState } = this.props;
+      const currentAccount = await drizzleState.accounts[0];
+      const dropContract = drizzle.contracts["SimracingMomentDrop"+(dropId-1)];
 
-      this.setState({showPackModal: true, packMoments: moments})
+      UIHelper.showSpinning();
+
+      try {
+        const packMoments = [];
+        for(let i = parseInt(initialNFTId); i < parseInt(initialNFTId) + parseInt(nftAmount); i++) {
+          const moment = await fetch('/api/drops/'+dropId+'/'+i).then(r => r.json()).then(d => d[0]);
+          const data = await fetch('https://simthunder.infura-ipfs.io/ipfs/' + moment.metadata).then(r => r.json());
+          const metadata = await this.extractMomentNFTTraitTypes(data.attributes);
+
+          packMoments.push({
+            id: i,
+            image: data.image.replace("ipfs://", 'https://simthunder.infura-ipfs.io/ipfs/'),
+            name: data.name,
+            rarity: metadata.rarity,
+            simulator: metadata.simulator,
+            metadata: moment.metadata,
+            drop: dropId
+          });
+        }
+
+        if(!opened) {
+          const data = [packId];
+          await dropContract.methods.openPack(...data).send(
+            await UIHelper.calculateGasUsingStation(currentAccount, dropContract.methods.openPack, data)
+          ).on("confirmation", confNumber => {
+              if(confNumber === NUMBER_CONFIRMATIONS_NEEDED) {          
+                this.setState({showPackModal: true, packMoments}, UIHelper.hideSpinning);
+              }
+          });
+        } else {
+          this.setState({showPackModal: true, packMoments}, UIHelper.hideSpinning);
+        }
+      } catch (err) {
+        UIHelper.transactionOnError(err);
+      }
+    }
+
+    mint = async (moment) => {
+      const { metadata, drop: dropId, id: tokenId } = moment;
+      const { drizzle, drizzleState } = this.props;
+      const currentAccount = await drizzleState.accounts[0];
+      const dropContract = drizzle.contracts["SimracingMomentDrop"+(dropId-1)];
+
+      UIHelper.showSpinning();
+
+      const data = [tokenId, "ipfs://"+metadata];
+      try {
+        await dropContract.methods.mint(...data).send(
+          await UIHelper.calculateGasUsingStation(currentAccount, dropContract.methods.mint, data)
+        ).on("confirmation", confNumber => {
+            if(confNumber === NUMBER_CONFIRMATIONS_NEEDED) {          
+              UIHelper.transactionOnConfirmation("Simracing moment collected!", false);
+            }
+        });
+      } catch (err) {
+          UIHelper.transactionOnError(err, err.message.includes("Already minted") ? "Already minted" : null);
+      }
     }
 
     getFilteredListWithResults = () => {
@@ -1004,7 +1041,7 @@ class NFTInventoryPage extends Component {
                                 let image = value.image;
                                 let carNumber = value.carNumber;
                                 //let name = value.name;
-                                let imagePath = value.image;
+                                //let imagePath = value.image;
                                 let description = value.description;
                                 
                                 /*let payload = {
@@ -1012,7 +1049,7 @@ class NFTInventoryPage extends Component {
                                 }*/
                                 return (
                                 <div className="col-md-12 mb-4" key={key}>
-                                  <Link onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, description, price, null, carNumber, address, null, imagePath, null, true, false)} className="product-item">
+                                  <Link onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, description, price, null, carNumber, address, null, image, null, true, false)} className="product-item">
                                     <div className="row align-items-center no-gutters">
                                       <div className="item_img d-none d-sm-block">
                                         <img className="img bl-3 text-primary" src={image} alt="Games Store"/>
@@ -1080,8 +1117,6 @@ class NFTInventoryPage extends Component {
                       }
                       {this.state.filteredMomentNFTs.map((value, index) => {
                                 let metadata = this.extractMomentNFTTraitTypes(value.attributes);
-                                console.log(`metadata: ${JSON.stringify(metadata, null, 2)}`);
-                                console.log(`value: ${JSON.stringify(value, null, 2)}`);
                                 let series = metadata.series;
                                 let date = metadata.date;
                                 let title = value.name;
@@ -1092,14 +1127,14 @@ class NFTInventoryPage extends Component {
                                 let address = value.seriesOwner;
                                 let itemId = value.id;
                                 let key = itemId + "_" + index
-                                let image = value.image;
+                                let image = value.image?.replace("ipfs://", 'https://simthunder.infura-ipfs.io/ipfs/');
                                 let video = value.animation_url; 
                                 //let carNumber = value.carNumber;
                                 //let name = value.name;
-                                let imagePath = value.image;
+                                //let imagePath = value.image;
                                 let description = value.description;
                                 return <div className="col-md-12 mb-4" key={key}>
-                                <Link to="#" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, description, price, null , null, address, null, imagePath, video, false, true, date, title, rarity)} className="product-item">
+                                <Link to="#" onClick={(e) => this.buyItem(e, itemId, null, simulator, null, series, description, price, null , null, address, null, image, video, false, true, date, title, rarity)} className="product-item">
                                   <div className="row align-items-center no-gutters">
                                     <div className="item_img d-none d-sm-block">
                                       <img className="img bl-3 text-primary" src={image} alt="Games Store"/>
@@ -1184,7 +1219,7 @@ class NFTInventoryPage extends Component {
                                   Opened: {pack.opened.toString()}
                                   </span>
                                 </div>
-                                <Button variant="warning" onClick={() => this.openPack(pack.id)} className="product-item">{pack.opened ? "View" : "Open"}</Button>
+                                <Button disabled={Math.floor(Date.now() / 1000) < pack.saleEnd} variant="warning" onClick={() => this.openPack(pack)} className="product-item">{pack.opened ? "View" : "Open"}</Button>
                               </div>
                             </div>
                           </div>
@@ -1269,7 +1304,7 @@ class NFTInventoryPage extends Component {
       {/*<!-- /.End Content Area -->*/}
     </main>
     </div>,
-    <Modal open={this.state.showPackModal} onClose={() => this.setState({showPackModal: false})}>
+    <Modal open={this.state.showPackModal} onClose={async () => { await this.getNFTsData(); this.setState({showPackModal: false}); }}>
         <div className="main-container">
           <Box className="simple-modal" sx={modalStyle}>
             <Typography id="modal-modal-title" className="simple-modal-title border-bottom border-secondary" variant="h6" component="h2">
@@ -1279,7 +1314,7 @@ class NFTInventoryPage extends Component {
               <div className="row justify-content-center">
                 {this.state.packMoments.map(moment => (
                   <div className="col-auto" key={moment.id}>
-                      <Card className="card-block bg-dark_A-20 p-4 mx-1 mt-2">
+                      <Card className="card-block bg-dark_A-20 p-4 mx-1 mt-2" onClick={() => this.mint(moment)}>
                           <Card.Header style={{ height: '120px' }} className="d-flex flex-wrap align-items-center justify-content-center">
                               <Card.Img variant="top" src={moment.image} style={{ width: 'auto', maxHeight: '100%' }} />
                           </Card.Header>
@@ -1289,6 +1324,7 @@ class NFTInventoryPage extends Component {
                                 <div>{moment.simulator}</div>
                                 <div>{moment.rarity}</div>
                               </div>
+                              <Button>Collect</Button>
                           </Card.Body>
                       </Card>
                   </div>

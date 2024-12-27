@@ -2,6 +2,9 @@ import React, { Component } from 'react';
 import UIHelper from "../utils/uihelper";
 import { Button, Card } from 'react-bootstrap';
 import { withRouter } from "react-router-dom";
+import Countdown from "../components/CountdownComponent"
+
+const NUMBER_CONFIRMATIONS_NEEDED = Number(process.env.REACT_APP_NUMBER_CONFIRMATIONS_NEEDED);
 
 class DropsPage extends Component {
     constructor(props) {
@@ -22,25 +25,23 @@ class DropsPage extends Component {
 
         if (!dropId) {
             // Load multiple drops
-            const drops = [{
-                id: 1,
-                title: "Lorem ipsum dolor sit.",
-                cover: "https://simthunder.infura-ipfs.io/ipfs/QmYQM7fe7JUxncS3yQfPat6UvtjJu8urjzr7Z7gJYXVbdb",
-                totalPacks: 76,
-                boughtPacks: 0 
-            }];
-            this.setState({ drops, id: null}, UIHelper.hideSpinning);
+            let dropContract, drops = [], i = 0;
+            while((dropContract = await drizzle.contracts["SimracingMomentDrop" + i++])) {
+                const drop = await UIHelper.callWithRetry(dropContract.methods.getDrop());
+                if(!drop.closed && parseInt(drop.saleStart) > 0) {
+                    drops.push(drop);
+                }
+            }
+
+            this.setState({ drops: drops?.reverse(), id: null}, UIHelper.hideSpinning);
         } else {
+            const dropContract = await drizzle.contracts["SimracingMomentDrop" + (dropId-1)];
             // Load single drop
+            const drop = await UIHelper.callWithRetry(dropContract.methods.getDrop());
+            const price = await UIHelper.callWithRetry(dropContract.methods.getPackPrice(drop.boughtPacks+1));
             this.setState({
-                id: dropId,
-                title: "Lorem ipsum dolor sit.",
-                description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus a tortor ut velit consectetur gravida sit amet quis orci. Nunc mattis tortor magna, vitae pretium nunc porttitor vel. Donec ut elit efficitur, accumsan leo id, tincidunt lorem. Pellentesque consequat augue ante. Quisque vel magna non diam feugiat mattis. Donec non sem ac eros semper dignissim. Sed ut magna nec arcu feugiat facilisis. Duis porta ipsum in massa suscipit congue. Suspendisse a orci id est sodales maximus. Etiam ultricies pharetra nisi non maximus. Pellentesque scelerisque in arcu eget malesuada. Phasellus pellentesque orci quis nisl laoreet, quis suscipit purus vehicula. Mauris mattis enim lectus, ut congue sapien porttitor vel. Morbi auctor lobortis augue, sed molestie sem luctus eget. Aenean dignissim accumsan massa, non finibus lorem.",
-                cover: "https://simthunder.infura-ipfs.io/ipfs/QmYQM7fe7JUxncS3yQfPat6UvtjJu8urjzr7Z7gJYXVbdb",
-                totalPacks: 76,
-                boughtPacks: 0,
-                price: Number(web3.utils.fromWei("10000000000000000000000")).toFixed(2),
-                available: 79,
+                ...drop,
+                price: Number(web3.utils.fromWei(price)).toFixed(2),
                 usdValue: await UIHelper.fetchSRCPriceVsUSD()
             }, UIHelper.hideSpinning);
         }
@@ -54,16 +55,39 @@ class DropsPage extends Component {
         const { web3, contracts } = drizzle;
         const { SimracerCoin } = contracts;
         const currentAccount = await drizzleState.accounts[0];
-
-        const balance = web3.utils.toBN(await UIHelper.callWithRetry(SimracerCoin.methods.balanceOf(currentAccount)));
-        const price = web3.utils.toBN(web3.utils.toWei(state.price.toString(), "ether"));
-
-        if(balance.lt(price)) {
-            alert("Insufficient balance to purchase the item!");
-            return;
-        }
+        const dropContract = await drizzle.contracts["SimracingMomentDrop"+(state.id-1)];
 
         UIHelper.showSpinning();
+
+        try {
+            const balance = web3.utils.toBN(await UIHelper.callWithRetry(SimracerCoin.methods.balanceOf(currentAccount)));
+            const price = web3.utils.toBN(web3.utils.toWei(state.price.toString(), "ether"));
+
+            if(balance.lt(price)) {
+                UIHelper.transactionOnError("Insufficient balance to purchase the item!");
+                return;
+            }
+
+            const allowance = web3.utils.toBN(await UIHelper.callWithRetry(SimracerCoin.methods.allowance(currentAccount, dropContract.address)));
+    
+            if(allowance.lt(price)) {
+                const data = [dropContract.address, price];
+                await SimracerCoin.methods.approve(...data).send(
+                    await UIHelper.calculateGasUsingStation(currentAccount, SimracerCoin.methods.approve, data)
+                );
+            }
+
+            const data = [parseInt(state.boughtPacks) + 1];
+            await dropContract.methods.buyPack(...data).send(
+                await UIHelper.calculateGasUsingStation(currentAccount, dropContract.methods.buyPack, data)
+            ).on("confirmation", confNumber => {
+                if(confNumber === NUMBER_CONFIRMATIONS_NEEDED) {
+                    UIHelper.transactionOnConfirmation("Thank you for your purchase!", false);
+                }
+            });
+        } catch(err) {
+            UIHelper.transactionOnError(err);
+        }
     }
 
     render() {
@@ -78,21 +102,39 @@ class DropsPage extends Component {
             for (let i = 0; i < Math.ceil(state.drops.length / 4); i++) {
                 rDrops.push(
                     <div className="row" key={i}>
-                        {this.state.drops.slice(i * 4, (i * 4) + 4).map(drop => (
+                        {this.state.drops.slice(i * 4, (i * 4) + 4).map((drop, idx) => (
                             <div className="col-12 col-sm-6 col-md-4 col-lg-3 px-1" key={drop.id}>
-                                <a href={`/drops/${drop.id}`}>
+                                <a href={`/drops/${drop.id}`} className="link-no-hover">
                                     <Card className="card-block bg-dark_A-20 p-4 mx-1 mt-2">
+                                        { (i > 0 || idx > 0) &&
                                         <Card.Header style={{ height: '240px' }} className="d-flex flex-wrap align-items-center justify-content-center">
                                             <Card.Img variant="top" src={drop.cover} style={{ width: 'auto', maxHeight: '100%' }} />
                                         </Card.Header>
-                                        <Card.Body className="text-center">
+                                        }
+                                        <Card.Body className={(i > 0 || idx > 0) && "text-center"}>
+                                            { (i === 0 && idx === 0) &&
+                                            <div className="row">
+                                                <div className="col-8">
+                                                    <h5>Drop #{drop.id}</h5>
+                                                    <h6>{drop.title}</h6>
+                                                    <Countdown saleStart={drop.saleStart} saleEnd={drop.saleEnd} />
+                                                    <p>{drop.description}</p>
+                                                    <Button variant="warning">KNOW MORE</Button>
+                                                </div>
+                                                <div className="col-4">
+                                                    <Card.Img variant="top" src={drop.cover} style={{ width: 'auto', maxHeight: '100%' }} />
+                                                </div>
+                                            </div>
+                                            }
+                                            { (i > 0 || idx > 0) &&
                                             <div className="row">
                                                 <Card.Title className="mt-5 col-8 text-left"><strong>DROP #{drop.id}</strong><br />{drop.title}</Card.Title>
                                                 <div className="mt-5 font-weight-bold col-4 h4">
                                                     {drop.boughtPacks} / {drop.totalPacks}
                                                 </div>
+                                                <Button variant="warning">View</Button>
                                             </div>
-                                            <Button variant="warning">View</Button>
+                                            }
                                         </Card.Body>
                                     </Card>
                                 </a>
@@ -131,11 +173,12 @@ class DropsPage extends Component {
                                             </div>
                                             <div className="row" style={{ flexFlow: 'column' }}>
                                                 <p>{state.description}</p>
-                                                <div><strong>{state.available} available</strong></div>
+                                                <Countdown saleStart={state.saleStart} saleEnd={state.saleEnd} />
+                                                <div><strong>{state.totalPacks - state.boughtPacks} available</strong></div>
                                                 <div className="price_div"><strong className="price_div_strong">{state.price}<sup className="main-sup">SRC</sup></strong><br /><span className="secondary-price">{usdPrice(state.price)}<sup className="secondary-sup">USD</sup></span></div>
                                             </div>
                                             <div className="row mt-5">
-                                                <Button variant="warning" onClick={this.buyItem}>GET PACK</Button>
+                                                <Button disabled={state.totalPacks - state.boughtPacks === 0 || Math.floor(Date.now() / 1000) < state.saleStart || Math.floor(Date.now() / 1000) > state.saleEnd} variant="warning" onClick={this.buyItem}>GET PACK</Button>
                                                 <a href="/inventory?v=packs" className="btn btn-primary ml-2">COLLECT MOMENTS</a>
                                             </div>
                                         </div>

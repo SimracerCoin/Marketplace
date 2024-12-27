@@ -73,9 +73,9 @@ class UIHelper {
     }); // not wait - keep flow
   }
 
-  static transactionOnError = (error) => {
+  static transactionOnError = (error, message) => {
     UIHelper.hideSpinning();
-    alert("Something wrong. Please try again.");
+    alert(message || "Something wrong. Please try again.");
     console.error(error);
     return false;
   }
@@ -208,9 +208,14 @@ class UIHelper {
     }
 
     const cacheIsValid = async (data) => {
-      return await fetch('/api/lastupdate').then(r => r.text()).then(lastupdateDate => {
-        return parseInt(lastupdateDate) <= parseInt(data.created);
-      });
+      try {
+        return await fetch('/api/lastupdate').then(r => r.text()).then(lastupdateDate => {
+          return parseInt(lastupdateDate) <= parseInt(data.created);
+        });
+      } catch(err) {
+        console.error(err);
+        return false;
+      }
     }
 
     let key = createKeccakHash('keccak256').update(JSON.stringify({method: callObject._method.signature, address: callObject._parent._address, arguments: callObject.arguments})).digest('hex');

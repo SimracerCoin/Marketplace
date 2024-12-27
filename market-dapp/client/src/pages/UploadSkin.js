@@ -3,7 +3,6 @@ import { Dropdown, Form, DropdownButton, Button, FormLabel } from 'react-bootstr
 import { Prompt } from 'react-st-modal';
 import { Buffer } from 'buffer';
 import { withRouter } from "react-router";
-import ipfs from "../ipfs";
 //import computeMerkleRootHash from "../utils/merkle";
 import UIHelper from "../utils/uihelper";
 import Dropzone from 'react-dropzone-uploader';
@@ -11,6 +10,8 @@ import { getDroppedOrSelectedFiles } from 'html5-file-selector';
 //import * as openpgp from 'openpgp';
 
 import 'react-dropzone-uploader/dist/styles.css'
+
+const ipfs = require('../ipfs');
 
 /*
 const NON_SECURE_SELL = process.env.REACT_APP_NON_SECURE_SELL === "true";

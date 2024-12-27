@@ -5,6 +5,7 @@ import STMarketplace from "./STMarketplace.json";
 import SimracerCoin from "./SimracerCoin.json";
 import SimthunderOwner from "./SimthunderOwner.json";
 import SimracingMomentOwner from "./SimracingMomentOwner.json";
+import SimracingMomentDrop from "./SimracingMomentDrop.json";
 import STSetup from "./STSetup.json";
 import STSkin from "./STSkin.json";
 //import Descartes from "./Descartes.json";
@@ -30,6 +31,7 @@ const allowAllWallets = process.env.REACT_APP_ALLOW_ALL_WALLETS === "true";
 const NETWORK_ID = parseInt(process.env.REACT_APP_NETWORK_ID) || 137;
 const NETWORK_URL = process.env.REACT_APP_NETWORK_URL;
 const INFURA_ID = process.env.REACT_APP_INFURA_ID;
+const DROPS = process.env.REACT_APP_DROPS;
 const tagManagerArgs = {
   gtmId: 'G-152H5MJ0P0'
 }
@@ -224,6 +226,13 @@ class App extends React.Component {
         ],
         web3
       };
+
+      for(const [idx, address] of Object.entries(DROPS.split(","))) {
+        drizzleOptions.contracts.push({
+          contractName: "SimracingMomentDrop"+idx,
+          web3Contract: new web3.eth.Contract(SimracingMomentDrop.abi, address)
+        });
+      }
 
       const drizzle = new Drizzle(drizzleOptions);
 

@@ -1832,3 +1832,9 @@ input[type=number]::-webkit-outer-spin-button {
    opacity: 1;
 
 }
+
+.link-no-hover:hover {
+  text-decoration: none; /* Disable hover underline */
+  color: inherit; /* Disable hover color change */
+  cursor: default; /* Optional: prevent pointer cursor */
+}

@@ -1,12 +1,13 @@
 import React, { Component } from 'react';
 import { Dropdown, Form, DropdownButton, Button, FormCheck } from 'react-bootstrap';
 import { Buffer } from 'buffer';
-import ipfs from "../ipfs";
 import UIHelper from "../utils/uihelper";
 import "../css/auction.css";
 
+const ipfs = require('../ipfs');
+
 const simsElements = ["iRacing", "F12020", "rFactor", "Assetto Corsa"];
-const rarityOpt = ["Common", "Epic", "Legendary", "Unique"];
+const rarityOpt = ["Common", "Special", "Epic", "Legendary", "Unique"];
 const timingOpt = ["1 day", "3 days", "7 days", "1 month", "3 month", "6 month"];
 const NUMBER_CONFIRMATIONS_NEEDED = Number(process.env.REACT_APP_NUMBER_CONFIRMATIONS_NEEDED);
 

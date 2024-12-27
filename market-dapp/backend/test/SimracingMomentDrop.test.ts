@@ -1,4 +1,4 @@
-import { ethers, upgrades } from "hardhat";
+import { ethers } from "hardhat";
 import { expect } from "chai";
 import { Contract } from "ethers";
 
@@ -25,24 +25,24 @@ describe("SimracingMomentDrop", function () {
     simracingMomentOwner = await SimracingMomentOwner.deploy(simracerCoin.address);
     await simracingMomentOwner.deployed();
 
-    // Deploy SimracingMomentDrop as an upgradeable proxy
+    // Deploy SimracingMomentDrop (non-upgradable contract)
     const SimracingMomentDrop = await ethers.getContractFactory("SimracingMomentDrop");
-    simracingMomentDrop = await upgrades.deployProxy(SimracingMomentDrop, [
+    simracingMomentDrop = await SimracingMomentDrop.deploy(
       "Simracing Drop Title",       // Title
       "Simracing Drop Description", // Description
       "https://example.com/cover.jpg", // Cover URL
       1,                            // Drop ID
       simracerCoin.address,         // Purchase token
-      simracingMomentOwner.address, // SimracingMomentOwner contract
-    ]);
+      simracingMomentOwner.address  // SimracingMomentOwner contract
+    );
     await simracingMomentDrop.deployed();
   });
 
   describe("Initialization", function () {
     it("should initialize with correct values", async function () {
-      expect(await simracingMomentDrop.title()).to.equal("Simracing Drop Title");
-      expect(await simracingMomentDrop.description()).to.equal("Simracing Drop Description");
-      expect(await simracingMomentDrop.cover()).to.equal("https://example.com/cover.jpg");
+      expect(await simracingMomentDrop._title()).to.equal("Simracing Drop Title");
+      expect(await simracingMomentDrop._description()).to.equal("Simracing Drop Description");
+      expect(await simracingMomentDrop._cover()).to.equal("https://example.com/cover.jpg");
       expect(await simracingMomentDrop.drop()).to.equal(1);
       expect(await simracingMomentDrop.purchaseToken()).to.equal(simracerCoin.address);
     });
@@ -66,7 +66,7 @@ describe("SimracingMomentDrop", function () {
         marketplaceDistributionAmounts
       );
 
-      const pack = await simracingMomentDrop.getPackbyId(1);
+      const pack = await simracingMomentDrop.getPackById(1);
       expect(pack.packId).to.equal(1);
       expect(pack.nftAmount).to.equal(5);
       expect(pack.price).to.equal(ethers.utils.parseEther("10"));
@@ -75,20 +75,20 @@ describe("SimracingMomentDrop", function () {
     });
 
     it("should fail if the sale distribution percentages do not add up to 100", async function () {
-        const invalidDistributionAmounts = [50, 30]; // Doesn't sum to 100
-        await expect(
-          simracingMomentDrop.createPack(
-            5,
-            ethers.utils.parseEther("10"),
-            "Serie 2",
-            "Pack Type 2",
-            [deployer, user],
-            invalidDistributionAmounts,
-            [deployer],
-            [100]
-          )
-        ).to.be.revertedWith("Total distribution percentages must equal 100");
-      });      
+      const invalidDistributionAmounts = [50, 30]; // Doesn't sum to 100
+      await expect(
+        simracingMomentDrop.createPack(
+          5,
+          ethers.utils.parseEther("10"),
+          "Serie 2",
+          "Pack Type 2",
+          [deployer, user],
+          invalidDistributionAmounts,
+          [deployer],
+          [100]
+        )
+      ).to.be.revertedWith("Total distribution percentages must equal 100");
+    });
   });
 
   describe("Pack Purchase", function () {
@@ -124,21 +124,31 @@ describe("SimracingMomentDrop", function () {
     });
 
     it("should fail if the user does not have enough allowance", async function () {
-        const userSigner = await ethers.getSigner(user);
+      const userSigner = await ethers.getSigner(user);
 
-        // Transfer tokens and set insufficient allowance
-        await simracerCoin.transfer(user, ethers.utils.parseEther("50"));
-        await simracerCoin.connect(userSigner).approve(simracingMomentDrop.address, ethers.utils.parseEther("5")); // Less than required
+      // Transfer tokens and set insufficient allowance
+      await simracerCoin.transfer(user, ethers.utils.parseEther("50"));
+      await simracerCoin.connect(userSigner).approve(simracingMomentDrop.address, ethers.utils.parseEther("5")); // Less than required
 
-        // Attempt to purchase the pack
-        await expect(simracingMomentDrop.connect(userSigner).buyPack(2)).to.be.revertedWith("Insufficient allowance");
+      await simracingMomentDrop.createPack(
+        5,
+        ethers.utils.parseEther("10"),
+        "Serie 1",
+        "Pack Type 1",
+        [deployer],
+        [100],
+        [deployer],
+        [100]
+      );
+
+      // Attempt to purchase the pack
+      await expect(simracingMomentDrop.connect(userSigner).buyPack(2)).to.be.revertedWith("Insufficient allowance");
     });
+  });
       
-
-    it("should fail if the pack does not exist", async function () {
-        const userSigner = await ethers.getSigner(user);
-        await expect(simracingMomentDrop.connect(userSigner).buyPack(99)).to.be.revertedWith("Pack does not exist");
-    });      
+  it("should fail if the pack does not exist", async function () {
+    const userSigner = await ethers.getSigner(user);
+    await expect(simracingMomentDrop.connect(userSigner).buyPack(99)).to.be.revertedWith("Pack does not exist");
   });
 
   describe("Pack Opening", function () {
@@ -217,7 +227,7 @@ describe("SimracingMomentDrop", function () {
       const newPrice = ethers.utils.parseEther("15");
       await simracingMomentDrop.editPackInfo(1, "Updated Serie", "Updated Pack Type", newPrice);
 
-      const updatedPack = await simracingMomentDrop.getPackbyId(1);
+      const updatedPack = await simracingMomentDrop.getPackById(1);
       expect(updatedPack.price).to.equal(newPrice);
       expect(updatedPack.serie).to.equal("Updated Serie");
       expect(updatedPack.packType).to.equal("Updated Pack Type");
@@ -262,8 +272,8 @@ describe("SimracingMomentDrop", function () {
       await simracingMomentDrop.connect(userSigner).openPack(4);
       await simracingMomentDrop.connect(userSigner).openPack(5);
 
-      const pack1 = await simracingMomentDrop.getPackbyId(4);
-      const pack2 = await simracingMomentDrop.getPackbyId(5);
+      const pack1 = await simracingMomentDrop.getPackById(4);
+      const pack2 = await simracingMomentDrop.getPackById(5);
       expect(pack1.opened).to.equal(true);
       expect(pack2.opened).to.equal(true);
     });
@@ -316,7 +326,7 @@ describe("SimracingMomentDrop", function () {
       await simracingMomentDrop.deletePackById(newPackId);
 
       // Fetch the pack and verify it has default values
-      const deletedPack = await simracingMomentDrop.getPackbyId(newPackId);
+      const deletedPack = await simracingMomentDrop.getPackById(newPackId);
 
       expect(deletedPack.packId).to.equal(0); // Default value for uint256
       expect(deletedPack.nftAmount).to.equal(0); // Default value for uint256

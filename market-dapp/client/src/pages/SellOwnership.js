@@ -2,12 +2,13 @@ import React, { Component } from 'react';
 import { Dropdown, Form, DropdownButton, Button, FormCheck } from 'react-bootstrap';
 import { Prompt } from 'react-st-modal';
 import { Buffer } from 'buffer';
-import ipfs from "../ipfs";
 import computeMerkleRootHash from "../utils/merkle";
 import UIHelper from "../utils/uihelper";
 import * as openpgp from 'openpgp';
 
 import "../css/auction.css";
+
+const ipfs = require('../ipfs');
 
 const timingOpt = ["1 day", "3 days", "7 days", "1 month", "3 month", "6 month"];
 const timingOptions = [];

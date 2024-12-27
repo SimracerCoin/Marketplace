@@ -3,10 +3,10 @@ import { Link } from 'react-router-dom';
 import { confirmAlert } from 'react-confirm-alert';
 import { Prompt } from 'react-st-modal';
 import { Buffer } from 'buffer';
-import ipfs from "../ipfs";
 import 'react-confirm-alert/src/react-confirm-alert.css';
 import UIHelper from "../utils/uihelper"
 
+const ipfs = require('../ipfs');
 const openpgp = require('openpgp');
 
 // TODO: use addresses from config file of the Cartesi nodes that will participating

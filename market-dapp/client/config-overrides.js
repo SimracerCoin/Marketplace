@@ -12,7 +12,8 @@ module.exports = function override(config, env) {
         assert: require.resolve("assert"),
         http: require.resolve("stream-http"),
         os: require.resolve("os-browserify/browser"),
-        url: require.resolve("url")
+        url: require.resolve("url"),
+        fs: false
     };
     config.plugins = [
         ...config.plugins,

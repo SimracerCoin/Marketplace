@@ -26,7 +26,7 @@ app.use(cors());
 app.use(express.json({limit: '1KB', extended: true}));
 
 app.post('/api/metatags', (req, res) => {
-	let data = req.body;
+	const data = req.body;
 
 	knex('metatags').where({id: data.id}).andWhere({category: data.category}).first().then(metatag => {
 		if(!metatag) {
@@ -37,6 +37,18 @@ app.post('/api/metatags', (req, res) => {
 			res.send({id: data.id, category: data.category});
 		}
 	  });
+});
+
+app.get('/api/drops/:drop/:moment', (req, res) => {
+	const { drop, moment } = req.params;
+
+	knex('drops').where({drop}).andWhere({moment}).then(result => {
+		if(result) {
+			res.send(result);
+		} else {
+			res.status(404).end();
+		}
+	});
 });
 
 // Configure web3 with your Polygon provider

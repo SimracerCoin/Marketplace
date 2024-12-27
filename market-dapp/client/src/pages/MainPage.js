@@ -16,7 +16,7 @@ const getProperDate = (metadataDate) => {
     }
     return (
         <div>{date}</div> 
-    ) 
+    )
 } 
 
 class MainPage extends Component {
@@ -74,15 +74,14 @@ class MainPage extends Component {
             parseInt(values[2]), parseInt(values[3])
         ]);
 
-        const listDrops = [{
-            id: 1,
-            title: "Lorem ipsum dolor sit.",
-            cover: "https://simthunder.infura-ipfs.io/ipfs/QmYQM7fe7JUxncS3yQfPat6UvtjJu8urjzr7Z7gJYXVbdb",
-            totalPacks: 76,
-            boughtPacks: 0,
-            saleStart: 1734881280000,
-            description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus a tortor ut velit consectetur gravida sit amet quis orci. Nunc mattis tortor magna, vitae pretium nunc porttitor vel. Donec ut elit efficitur, accumsan leo id, tincidunt lorem. Pellentesque consequat augue ante. Quisque vel magna non diam feugiat mattis. Donec non sem ac eros semper dignissim. Sed ut magna nec arcu feugiat facilisis."
-        }];
+        // Load multiple drops
+        let dropContract, drops = [], i = 0;
+        while((dropContract = await drizzle.contracts["SimracingMomentDrop"+i]) && i++ < NUM_ITEMS_LOAD - 1) {
+            const drop = await UIHelper.callWithRetry(dropContract.methods.getDrop());
+            if(!drop.closed && parseInt(drop.saleStart) > 0) {
+                drops.push(drop);
+            }
+        }
 
         const loadNftsAsync = (i, contract) => Promise.all([
                 UIHelper.callWithRetry(contract.methods.tokenURI(i)).then(fetch).then(r => r.json()).catch(console.error),
@@ -115,12 +114,10 @@ class MainPage extends Component {
             usdValue: await UIHelper.fetchSRCPriceVsUSD(), 
             listCars, 
             listSkins,
-            listDrops,
+            listDrops: drops?.reverse(),
             latestNFTs: parseInt(numNfts),
             latestVideoNFTs: parseInt(numMomentNfts)
-        }, () => {
-            UIHelper.hideSpinning();
-        });
+        }, UIHelper.hideSpinning);
     }
 
     componentDidMount = async () => await this.updateData();
@@ -459,7 +456,7 @@ class MainPage extends Component {
                                 <div className="row">
                                     {this.state.listDrops.map((drop, index) => (
                                         <div className={index === 0 ? "col-12 col-md-8 col-lg-6 px-1" : "col-12 col-md-4 col-lg-3 px-1"}>
-                                            <a href={`/drops/${drop.id}`}>
+                                            <Link to={`/drops/${drop.id}`} className="link-no-hover">
                                                 <Card className="card-block bg-dark_A-20 p-4 mx-1 mt-2">
                                                     { index > 0 &&
                                                     <Card.Header style={{ height: '240px' }} className="d-flex flex-wrap align-items-center justify-content-center">
@@ -472,7 +469,7 @@ class MainPage extends Component {
                                                             <div className="col-8">
                                                                 <h5>Drop #{drop.id}</h5>
                                                                 <h6>{drop.title}</h6>
-                                                                <Countdown saleStart={drop.saleStart} />
+                                                                <Countdown saleStart={drop.saleStart} saleEnd={drop.saleEnd} />
                                                                 <p>{drop.description}</p>
                                                                 <Button variant="warning">KNOW MORE</Button>
                                                             </div>
@@ -492,7 +489,7 @@ class MainPage extends Component {
                                                         }
                                                     </Card.Body>
                                                 </Card>
-                                            </a>
+                                            </Link>
                                         </div>
                                     ))}
                                 </div>

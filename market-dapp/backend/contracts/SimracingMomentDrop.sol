@@ -2,24 +2,12 @@
 pragma solidity ^0.7.0;
 pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 
-/// @title SimracingMomentDrop
-/// @notice This contract manages the creation, sale, and distribution of NFT packs for sim racing moments.
-/// @dev This contract is upgradeable using OpenZeppelin's Initializable and OwnableUpgradeable patterns.
 interface IAwardItem {
-    /**
-     * @notice Awards a new item to a recipient.
-     * @param recipient The address to receive the awarded item.
-     * @param seriesOwner The address of the series owner (optional logic in implementation).
-     * @param itemPrice The price or value associated with the item (optional logic in implementation).
-     * @param metadata Metadata URI for the new item.
-     * @return The ID of the newly awarded item.
-     */
     function awardItem(
         address recipient,
         address payable seriesOwner,
@@ -28,60 +16,39 @@ interface IAwardItem {
     ) external returns (uint256);
 }
 
-contract SimracingMomentDrop is Initializable, OwnableUpgradeable, ReentrancyGuardUpgradeable {
+/// @title SimracingMomentDrop
+/// @notice This contract manages the creation, sale, and distribution of NFT packs for sim racing moments.
+contract SimracingMomentDrop is Ownable, ReentrancyGuard {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
-    /// @notice Token used for purchases
     IERC20 public purchaseToken;
-
-    /// @notice Interface to interact with the NFT awarding logic
     IAwardItem public simracingMoment;
 
-    /// @notice ID of the current drop
     uint256 public drop;
-
-    /// @notice Title of the drop
-    string public title;
-
-    /// @notice Description of the drop
-    string public description;
-
-    /// @notice Cover image URL of the drop
-    string public cover;
+    string public _title;
+    string public _description;
+    string public _cover;
 
     mapping(address => mapping(uint256 => bool)) public registeredIDs;
     mapping(address => uint256[]) public registeredIDsArray;
     mapping(uint256 => bool) public alreadyMinted;
 
     mapping(uint256 => Pack) public packs;
+    mapping(address => uint256[]) public packsBuyer;
     mapping(uint256 => MarketplaceDistribution) private marketplaceDistributions;
 
-    /// @notice Incremental ID for packs
     uint256 public packIncrementId;
-
-    /// @notice ID of the last minted NFT
     uint256 public lastNFTID;
 
-    /// @notice Indicates whether the contract is locked
     bool public _closed;
-
-    /// @notice Tracks the number of opened packs
     uint256 public _openedPacks;
-
-    /// @notice Tracks the number of bought packs
     uint256 public _boughtPacks;
-
-    /// @notice Tracks the number of offered packs
     uint256 public _offeredPacks;
 
-    /// @notice Start time of the sale
     uint256 public _saleStart;
-
-    /// @notice End time of the sale
     uint256 public _saleEnd;
 
-    /// @notice Structure to define a pack
     struct Pack {
         uint256 packId;
         uint256 nftAmount;
@@ -95,52 +62,30 @@ contract SimracingMomentDrop is Initializable, OwnableUpgradeable, ReentrancyGua
         address buyer;
     }
 
-    /// @notice Structure to define marketplace distribution
     struct MarketplaceDistribution {
         uint256[] marketplaceDistributionAmounts;
         address[] marketplaceDistributionAddresses;
     }
 
-    /// @notice Emitted when a new pack is created
     event PackCreated(uint256 packId, string indexed serie, string indexed packType, uint256 dropId);
-
-    /// @notice Emitted when a pack is bought
     event PackBought(address indexed by, uint256 packId);
-
-    /// @notice Emitted when a pack is opened
     event PackOpened(address indexed by, uint256 packId);
-
-    /// @notice Emitted when a pack is deleted
     event PackDeleted(uint256 packId);
-
-    /// @notice Emitted when an NFT is minted
     event NftMinted(uint256 nftId);
 
-    /**
-     * @notice Initializes the contract with the given parameters.
-     * @param _title The title of the drop.
-     * @param _description The description of the drop.
-     * @param _cover The cover image URL of the drop.
-     * @param _drop The ID of the drop.
-     * @param _purchaseToken The ERC20 token used for purchases.
-     * @param _simracingMoment The IAwardItem interface for NFT awarding.
-     */
-    function initialize(
-        string memory _title,
-        string memory _description,
-        string memory _cover,
+    constructor(
+        string memory title,
+        string memory description,
+        string memory cover,
         uint256 _drop,
         IERC20 _purchaseToken,
         IAwardItem _simracingMoment
-    ) public initializer {
-        __Ownable_init();
-        __ReentrancyGuard_init();
-
+    ) {
         purchaseToken = _purchaseToken;
         simracingMoment = _simracingMoment;
-        title = _title;
-        description = _description;
-        cover = _cover;
+        _title = title;
+        _description = description;
+        _cover = cover;
         drop = _drop;
 
         packIncrementId = 1;
@@ -176,8 +121,8 @@ contract SimracingMomentDrop is Initializable, OwnableUpgradeable, ReentrancyGua
     }
 
     /// @notice Sets the title of the drop
-    function setTitle(string memory _title) public onlyOwner {
-        title = _title;
+    function setTitle(string memory title) public onlyOwner {
+        _title = title;
     }
     
     /// @notice Sets the ID of the drop
@@ -186,13 +131,13 @@ contract SimracingMomentDrop is Initializable, OwnableUpgradeable, ReentrancyGua
     }
 
     /// @notice Sets the cover image URL of the drop
-    function setCover(string memory _cover) public onlyOwner {
-        cover = _cover;
+    function setCover(string memory cover) public onlyOwner {
+        _cover = cover;
     }
 
     /// @notice Sets the description of the drop
-    function setDescription(string memory _description) public onlyOwner {
-        description = _description;
+    function setDescription(string memory description) public onlyOwner {
+        _description = description;
     }
 
     /// @notice Sets the start time for the sale
@@ -205,6 +150,28 @@ contract SimracingMomentDrop is Initializable, OwnableUpgradeable, ReentrancyGua
         _saleEnd = saleEnd;
     }
 
+    function getDrop() public view returns(
+        uint256 id,
+        string memory title,
+        string memory cover,
+        string memory description,
+        uint256 totalPacks,
+        uint256 saleStart,
+        uint256 saleEnd,
+        uint256 boughtPacks,
+        bool closed
+    ) {
+        id = drop;
+        title = _title;
+        cover = _cover;
+        description = _description;
+        totalPacks = packIncrementId - 1;
+        saleStart = _saleStart;
+        saleEnd = _saleEnd;
+        boughtPacks = _boughtPacks;
+        closed = _closed;
+    }
+
     /// @notice Retrieves the registered IDs for a given address
     function getRegisteredIDs(
         address _address
@@ -212,9 +179,16 @@ contract SimracingMomentDrop is Initializable, OwnableUpgradeable, ReentrancyGua
         return registeredIDsArray[_address];
     }
 
+    /// @notice Retreives pack ids for a given address
+    function getPacksByBuyer(
+        address _address
+    ) public view returns (uint256[] memory) {
+        return packsBuyer[_address];
+    }
+
     /// @notice Retrieves pack details by pack ID
-    function getPackbyId(uint256 _packId) public view returns (Pack memory) {
-        return packs[_packId];
+    function getPackById(uint256 packId) public view returns (Pack memory) {
+        return packs[packId];
     }
 
     /// @notice Retrieves marketplace distribution for a specific ERC721 token ID
@@ -240,7 +214,7 @@ contract SimracingMomentDrop is Initializable, OwnableUpgradeable, ReentrancyGua
      * @notice Allows a user to purchase a pack.
      * @param packId The ID of the pack to purchase.
      */
-    function buyPack(uint256 packId) public {
+    function buyPack(uint256 packId) public nonReentrant {
         require(!_closed, "Contract is locked");
         require(packs[packId].buyer == address(0), "Pack already bought");
         require(packs[packId].price != 0, "Pack does not exist");
@@ -268,6 +242,7 @@ contract SimracingMomentDrop is Initializable, OwnableUpgradeable, ReentrancyGua
         }
 
         packs[packId].buyer = msg.sender;
+        packsBuyer[msg.sender].push(packId);
 
         emit PackBought(msg.sender, packId);
     }
@@ -473,6 +448,4 @@ contract SimracingMomentDrop is Initializable, OwnableUpgradeable, ReentrancyGua
     function unlock() public onlyOwner {
         _closed = false;
     }
-
-    uint256[50] private __gap;
 }

@@ -9,12 +9,13 @@ import UIHelper from "../utils/uihelper";
 import ReviewsComponent from "../components/ReviewsComponent";
 import SimilarItemsComponent from '../components/SimilarItemsComponent';
 import SimpleModal from '../components/SimpleModal';
-import ipfs from "../ipfs";
 import * as openpgp from 'openpgp';
 
 import 'react-responsive-carousel/lib/styles/carousel.min.css';
 import '../css/custom-carousel.css';
 import "../css/itempage.css";
+
+const ipfs = require('../ipfs');
 
 const PASSPHRASE = process.env.REACT_APP_PASSPHRASE;
 const NON_SECURE_SELL = process.env.REACT_APP_NON_SECURE_SELL === "true";
@@ -796,7 +797,7 @@ class ItemPage extends Component {
           return (
             <div className="carousel-product">
               <div className="slider text-secondary" data-slick="product-body">
-                  <video async className="videoContainer" loop muted autoPlay currenttime={0} src={this.state.videoPath} />  
+                  <video async className="videoContainer" loop muted autoPlay currenttime={0} src={this.state.videoPath?.replace("ipfs://", "https://simthunder.infura-ipfs.io/ipfs/")} />  
                   {this.state.isMuted ? 
                     <button onClick={this.unmute} className="video-sound-control--btn video-sound-control--btn-off" label="Unmmute"></button> :
                     <button onClick={this.mute} className="video-sound-control--btn video-sound-control--btn-on" label="Mute"></button> 

@@ -3,14 +3,16 @@ import { Dropdown, Form, DropdownButton, Button, FormLabel } from 'react-bootstr
 import { Prompt } from 'react-st-modal';
 import { Buffer } from 'buffer';
 import { withRouter } from "react-router";
-import ipfs from "../ipfs";
-import computeMerkleRootHash from "../utils/merkle";
 import UIHelper from "../utils/uihelper";
-import * as openpgp from 'openpgp';
 
-const NON_SECURE_SELL = process.env.REACT_APP_NON_SECURE_SELL === "true";
-const NON_SECURE_KEY= process.env.REACT_APP_NON_SECURE_KEY;
-const NUMBER_CONFIRMATIONS_NEEDED = Number(process.env.REACT_APP_NUMBER_CONFIRMATIONS_NEEDED);
+//import computeMerkleRootHash from "../utils/merkle";
+//import * as openpgp from 'openpgp';
+
+const ipfs = require('../ipfs');
+
+//const NON_SECURE_SELL = process.env.REACT_APP_NON_SECURE_SELL === "true";
+//const NON_SECURE_KEY= process.env.REACT_APP_NON_SECURE_KEY;
+//const NUMBER_CONFIRMATIONS_NEEDED = Number(process.env.REACT_APP_NUMBER_CONFIRMATIONS_NEEDED);
 
 class UploadCar extends Component {
 
