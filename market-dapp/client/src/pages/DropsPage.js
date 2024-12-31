@@ -38,7 +38,7 @@ class DropsPage extends Component {
             const dropContract = await drizzle.contracts["SimracingMomentDrop" + (dropId-1)];
             // Load single drop
             const drop = await UIHelper.callWithRetry(dropContract.methods.getDrop());
-            const price = await UIHelper.callWithRetry(dropContract.methods.getPackPrice(drop.boughtPacks+1));
+            const price = await UIHelper.callWithRetry(dropContract.methods.getPackPrice(parseInt(drop.boughtPacks)+1));
             this.setState({
                 ...drop,
                 price: Number(web3.utils.fromWei(price)).toFixed(2),
@@ -61,7 +61,7 @@ class DropsPage extends Component {
 
         try {
             const balance = web3.utils.toBN(await UIHelper.callWithRetry(SimracerCoin.methods.balanceOf(currentAccount)));
-            const price = web3.utils.toBN(web3.utils.toWei(state.price.toString(), "ether"));
+            const price = web3.utils.toBN(web3.utils.toWei(state.price, "ether"));
 
             if(balance.lt(price)) {
                 UIHelper.transactionOnError("Insufficient balance to purchase the item!");
