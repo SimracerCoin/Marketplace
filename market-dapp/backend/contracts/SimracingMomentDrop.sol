@@ -47,7 +47,6 @@ contract SimracingMomentDrop is Ownable, ReentrancyGuard {
     uint256 public _offeredPacks;
 
     uint256 public _saleStart;
-    uint256 public _saleEnd;
 
     struct Pack {
         uint256 packId;
@@ -95,7 +94,6 @@ contract SimracingMomentDrop is Ownable, ReentrancyGuard {
         _boughtPacks = 0;
         _offeredPacks = 0;
         _saleStart = 0;
-        _saleEnd = 0;
     }
 
     /**
@@ -145,11 +143,6 @@ contract SimracingMomentDrop is Ownable, ReentrancyGuard {
         _saleStart = saleStart;
     }
 
-    /// @notice Sets the end time for the sale
-    function setSaleEnd(uint256 saleEnd) public onlyOwner {
-        _saleEnd = saleEnd;
-    }
-
     function getDrop() public view returns(
         uint256 id,
         string memory title,
@@ -157,7 +150,7 @@ contract SimracingMomentDrop is Ownable, ReentrancyGuard {
         string memory description,
         uint256 totalPacks,
         uint256 saleStart,
-        uint256 saleEnd,
+        bool saleEnd,
         uint256 boughtPacks,
         bool closed
     ) {
@@ -167,7 +160,7 @@ contract SimracingMomentDrop is Ownable, ReentrancyGuard {
         description = _description;
         totalPacks = packIncrementId - 1;
         saleStart = _saleStart;
-        saleEnd = _saleEnd;
+        saleEnd = totalPacks - _boughtPacks == 0;
         boughtPacks = _boughtPacks;
         closed = _closed;
     }
@@ -219,32 +212,31 @@ contract SimracingMomentDrop is Ownable, ReentrancyGuard {
         require(packs[packId].buyer == address(0), "Pack already bought");
         require(packs[packId].price != 0, "Pack does not exist");
         require(block.timestamp >= _saleStart, "Sale has not started yet");
-        require(block.timestamp <= _saleEnd, "Sale has finished already");
 
         uint256 price = packs[packId].price;
 
         require(
-            purchaseToken.allowance(msg.sender, address(this)) >= price,
+            purchaseToken.allowance(_msgSender(), address(this)) >= price,
             "Insufficient allowance"
         );
         require(
-            purchaseToken.balanceOf(msg.sender) >= price,
+            purchaseToken.balanceOf(_msgSender()) >= price,
             "Insufficient balance"
         );
 
-        _distributePackShares(msg.sender, packId, price);
+        _distributePackShares(_msgSender(), packId, price);
 
         _boughtPacks = _boughtPacks.add(1);
 
         for (uint i = 0; i < packs[packId].nftAmount; i++) {
-            registeredIDs[msg.sender][packs[packId].initialNFTId.add(i)] = true;
-            registeredIDsArray[msg.sender].push(packs[packId].initialNFTId.add(i));
+            registeredIDs[_msgSender()][packs[packId].initialNFTId.add(i)] = true;
+            registeredIDsArray[_msgSender()].push(packs[packId].initialNFTId.add(i));
         }
 
-        packs[packId].buyer = msg.sender;
-        packsBuyer[msg.sender].push(packId);
+        packs[packId].buyer = _msgSender();
+        packsBuyer[_msgSender()].push(packId);
 
-        emit PackBought(msg.sender, packId);
+        emit PackBought(_msgSender(), packId);
     }
 
     /**
@@ -255,13 +247,12 @@ contract SimracingMomentDrop is Ownable, ReentrancyGuard {
         require(!_closed, "Contract is locked");
         require(!packs[packId].opened, "Pack already opened");
         require(packs[packId].buyer != address(0), "Pack not bought");
-        require(packs[packId].buyer == msg.sender, "Not the pack buyer");
-        require(block.timestamp >= _saleEnd, "Sale has not ended yet");
+        require(packs[packId].buyer == _msgSender(), "Not the pack buyer");
 
         _openedPacks = _openedPacks.add(1);
         packs[packId].opened = true;
 
-        emit PackOpened(msg.sender, packId);
+        emit PackOpened(_msgSender(), packId);
     }
 
     /**
@@ -374,6 +365,10 @@ contract SimracingMomentDrop is Ownable, ReentrancyGuard {
         emit PackDeleted(packId);
     }
 
+    function isMinted(uint256 tokenId) public view returns (bool) {
+        return alreadyMinted[tokenId];
+    }
+
     /**
      * @notice Mints NFTs in a batch by the owner.
      * @param receiver The address to receive the NFTs.
@@ -398,7 +393,7 @@ contract SimracingMomentDrop is Ownable, ReentrancyGuard {
      * @param metadata An array of metadata for each NFT.
      */
     function mintInBatch(string[] memory metadata) public {
-        _mint(msg.sender, metadata);
+        _mint(_msgSender(), metadata);
     }
 
     /**
@@ -406,8 +401,8 @@ contract SimracingMomentDrop is Ownable, ReentrancyGuard {
      * @param tokenIdToMint The ID of the NFT to mint.
      * @param metadata The metadata for the NFT.
      */
-    function mint(uint256 tokenIdToMint, string memory metadata) public {
-        _mint(msg.sender, tokenIdToMint, metadata);
+    function mint(uint256 tokenIdToMint, string memory metadata) public nonReentrant {
+        _mint(_msgSender(), tokenIdToMint, metadata);
     }
 
     /**
@@ -429,7 +424,7 @@ contract SimracingMomentDrop is Ownable, ReentrancyGuard {
      * @param tokenIdToMint The ID of the NFT to mint.
      * @param metadata The metadata for the NFT.
      */
-    function _mint(address receiver, uint256 tokenIdToMint, string memory metadata) private nonReentrant {
+    function _mint(address receiver, uint256 tokenIdToMint, string memory metadata) private {
         require(registeredIDs[receiver][tokenIdToMint], "Token not registered or not the rightful owner");
         require(!alreadyMinted[tokenIdToMint], "Already minted");
 

@@ -843,6 +843,7 @@ class NFTInventoryPage extends Component {
           const moment = await fetch('/api/drops/'+dropId+'/'+i).then(r => r.json()).then(d => d[0]);
           const data = await fetch('https://simthunder.infura-ipfs.io/ipfs/' + moment.metadata).then(r => r.json());
           const metadata = await this.extractMomentNFTTraitTypes(data.attributes);
+          const isMinted = await UIHelper.callWithRetry(dropContract.methods.isMinted(i));
 
           packMoments.push({
             id: i,
@@ -851,7 +852,8 @@ class NFTInventoryPage extends Component {
             rarity: metadata.rarity,
             simulator: metadata.simulator,
             metadata: moment.metadata,
-            drop: dropId
+            drop: dropId,
+            isMinted
           });
         }
 
@@ -872,7 +874,7 @@ class NFTInventoryPage extends Component {
       }
     }
 
-    mint = async (moment) => {
+    mint = async (e, moment) => {
       const { metadata, drop: dropId, id: tokenId } = moment;
       const { drizzle, drizzleState } = this.props;
       const currentAccount = await drizzleState.accounts[0];
@@ -887,6 +889,11 @@ class NFTInventoryPage extends Component {
         ).on("confirmation", confNumber => {
             if(confNumber === NUMBER_CONFIRMATIONS_NEEDED) {          
               UIHelper.transactionOnConfirmation("Simracing moment collected!", false);
+
+              if (e.target) {
+                e.target.disabled = true;
+                e.target.innerText = "Minted";
+              }
             }
         });
       } catch (err) {
@@ -1214,12 +1221,7 @@ class NFTInventoryPage extends Component {
                               <div className="item_content flex-1 flex-grow pl-0 pl-sm-6 pr-6">
                                 <h6 className="item_title ls-1 small-1 fw-600 text-uppercase mb-1">Drop #{pack.drop}</h6>
                                 <h4 className="item_title ls-1 small-1 fw-600 text-uppercase mb-1">Pack #{pack.id}</h4>
-                                <div className="position-relative">
-                                  <span className="item_genre small fw-600">
-                                  Opened: {pack.opened.toString()}
-                                  </span>
-                                </div>
-                                <Button disabled={Math.floor(Date.now() / 1000) < pack.saleEnd} variant="warning" onClick={() => this.openPack(pack)} className="product-item">{pack.opened ? "View" : "Open"}</Button>
+                                <Button disabled={pack.saleEnd} variant="warning" onClick={() => this.openPack(pack)} className="product-item">{pack.opened ? "View" : "Open"}</Button>
                               </div>
                             </div>
                           </div>
@@ -1307,6 +1309,7 @@ class NFTInventoryPage extends Component {
     <Modal open={this.state.showPackModal} onClose={async () => { await this.getNFTsData(); this.setState({showPackModal: false}); }}>
         <div className="main-container">
           <Box className="simple-modal" sx={modalStyle}>
+            <button onClick={() => this.setState({showPackModal: false})} style={{ position: 'absolute', top: 10, right: 10, background: 'none', border: 'none', fontSize: '2.5rem', cursor: 'pointer', lineHeight: 0, fontWeight: 'bold', color: 'white' }}>&times;</button>
             <Typography id="modal-modal-title" className="simple-modal-title border-bottom border-secondary" variant="h6" component="h2">
                 <strong>Simracing Moment NFTs in the Pack</strong>
             </Typography>
@@ -1314,7 +1317,7 @@ class NFTInventoryPage extends Component {
               <div className="row justify-content-center">
                 {this.state.packMoments.map(moment => (
                   <div className="col-auto" key={moment.id}>
-                      <Card className="card-block bg-dark_A-20 p-4 mx-1 mt-2" onClick={() => this.mint(moment)}>
+                      <Card className="card-block bg-dark_A-20 p-4 mx-1 mt-2">
                           <Card.Header style={{ height: '120px' }} className="d-flex flex-wrap align-items-center justify-content-center">
                               <Card.Img variant="top" src={moment.image} style={{ width: 'auto', maxHeight: '100%' }} />
                           </Card.Header>
@@ -1324,7 +1327,7 @@ class NFTInventoryPage extends Component {
                                 <div>{moment.simulator}</div>
                                 <div>{moment.rarity}</div>
                               </div>
-                              <Button>Collect</Button>
+                              <Button disabled={moment.isMinted} onClick={(e) => this.mint(e, moment)}>{moment.isMinted ? "Minted" : "Collect"}</Button>
                           </Card.Body>
                       </Card>
                   </div>

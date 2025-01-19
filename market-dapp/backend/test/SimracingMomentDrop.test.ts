@@ -94,10 +94,8 @@ describe("SimracingMomentDrop", function () {
   describe("Pack Purchase", function () {
     beforeEach(async function () {
       const saleStart = Math.floor(Date.now() / 1000) - 100;
-      const saleEnd = Math.floor(Date.now() / 1000) + 1000;
 
       await simracingMomentDrop.setSaleStart(saleStart);
-      await simracingMomentDrop.setSaleEnd(saleEnd);
 
       await simracingMomentDrop.createPack(
         5,
@@ -154,10 +152,8 @@ describe("SimracingMomentDrop", function () {
   describe("Pack Opening", function () {
     beforeEach(async function () {
       const saleStart = Math.floor(Date.now() / 1000) - 100;
-      const saleEnd = Math.floor(Date.now() / 1000) + 1000;
 
       await simracingMomentDrop.setSaleStart(saleStart);
-      await simracingMomentDrop.setSaleEnd(saleEnd);
 
       await simracingMomentDrop.createPack(
         5,
@@ -188,10 +184,8 @@ describe("SimracingMomentDrop", function () {
   describe("Extended Tests", function () {
     beforeEach(async function () {
         const saleStart = Math.floor(Date.now() / 1000) - 100;
-        const saleEnd = Math.floor(Date.now() / 1000) + 1000;
   
         await simracingMomentDrop.setSaleStart(saleStart);
-        await simracingMomentDrop.setSaleEnd(saleEnd);
   
         await simracingMomentDrop.createPack(
           5,
@@ -264,9 +258,6 @@ describe("SimracingMomentDrop", function () {
       // Verify ownership
       const registeredIDs1 = await simracingMomentDrop.getRegisteredIDs(user);
       expect(registeredIDs1.length).to.equal(25); // 5 from Pack 1, 3 from Pack 2
-
-      const saleEnd = Math.floor(Date.now() / 1000) - 100;
-      await simracingMomentDrop.setSaleEnd(saleEnd);
 
       // Open both packs
       await simracingMomentDrop.connect(userSigner).openPack(4);

@@ -178,8 +178,8 @@ class DropsPage extends Component {
                                                 <div className="price_div"><strong className="price_div_strong">{state.price}<sup className="main-sup">SRC</sup></strong><br /><span className="secondary-price">{usdPrice(state.price)}<sup className="secondary-sup">USD</sup></span></div>
                                             </div>
                                             <div className="row mt-5">
-                                                <Button disabled={state.totalPacks - state.boughtPacks === 0 || Math.floor(Date.now() / 1000) < state.saleStart || Math.floor(Date.now() / 1000) > state.saleEnd} variant="warning" onClick={this.buyItem}>GET PACK</Button>
-                                                <a href="/inventory?v=packs" className="btn btn-primary ml-2">COLLECT MOMENTS</a>
+                                                <Button disabled={state.saleEnd || Math.floor(Date.now() / 1000) < state.saleStart} variant="warning" onClick={this.buyItem}>GET PACK</Button>
+                                                <a disabled={Math.floor(Date.now() / 1000) < state.saleStart} href="/inventory?v=packs" className={`btn btn-primary ml-2 ${Math.floor(Date.now() / 1000) < state.saleStart ? 'disabled' : ''}`}>COLLECT MOMENTS</a>
                                             </div>
                                         </div>
                                         <div className="col-4 text-center">

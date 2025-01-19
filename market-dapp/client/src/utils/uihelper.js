@@ -236,9 +236,9 @@ class UIHelper {
         console.error(`Attempt ${attempt + 1} failed: ${err.message}`);
         await sleep(1000 * (attempt+1));
       }
-    } while(!result && ++attempt < maxAttempts);
+    } while(result === undefined && ++attempt < maxAttempts);
   
-    if(maxAttempts === attempt)
+    if(result === undefined)
       throw new Error("Exceeded maximum retries");
   
     return result;
